@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indicators", "Indicators\In
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndicatorsTest", "IndicatorsTest\IndicatorsTest.csproj", "{926891F2-4232-4D5E-88F0-3145B3ED57B5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Binance", "Binance", "{EF591927-1055-4A5A-9DD3-A3FC03A6342A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binance", "Binance\Binance.csproj", "{87DDFD00-AA74-42FA-B83F-4596A6D6FA41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +33,10 @@ Global
 		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87DDFD00-AA74-42FA-B83F-4596A6D6FA41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87DDFD00-AA74-42FA-B83F-4596A6D6FA41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87DDFD00-AA74-42FA-B83F-4596A6D6FA41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87DDFD00-AA74-42FA-B83F-4596A6D6FA41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +44,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{643F691B-2902-4B24-9B83-8A3903D79ACB} = {74CA8D2A-573D-471B-A800-D19C0B90A02D}
 		{926891F2-4232-4D5E-88F0-3145B3ED57B5} = {74CA8D2A-573D-471B-A800-D19C0B90A02D}
+		{87DDFD00-AA74-42FA-B83F-4596A6D6FA41} = {EF591927-1055-4A5A-9DD3-A3FC03A6342A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {045A562A-50E5-412C-B751-1CA730CE879D}

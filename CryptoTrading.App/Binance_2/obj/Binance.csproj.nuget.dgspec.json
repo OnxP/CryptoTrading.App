@@ -1,0 +1,83 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\ankur\\OneDrive\\Documents\\GitHub\\CryptoTrading.App\\CryptoTrading.App\\Binance\\Binance.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\ankur\\OneDrive\\Documents\\GitHub\\CryptoTrading.App\\CryptoTrading.App\\Binance\\Binance.csproj": {
+      "version": "0.2.0-beta902",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\ankur\\OneDrive\\Documents\\GitHub\\CryptoTrading.App\\CryptoTrading.App\\Binance\\Binance.csproj",
+        "projectName": "Binance",
+        "projectPath": "C:\\Users\\ankur\\OneDrive\\Documents\\GitHub\\CryptoTrading.App\\CryptoTrading.App\\Binance\\Binance.csproj",
+        "packagesPath": "C:\\Users\\ankur\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ankur\\OneDrive\\Documents\\GitHub\\CryptoTrading.App\\CryptoTrading.App\\Binance\\obj\\",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\ankur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net80": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net80": {
+          "dependencies": {
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
+            "System.Net.Http": {
+              "target": "Package",
+              "version": "[4.3.4, )"
+            },
+            "System.Net.WebSockets.Client": {
+              "target": "Package",
+              "version": "[4.3.2, )"
+            },
+            "System.Threading.Tasks.Dataflow": {
+              "target": "Package",
+              "version": "[4.9.0, )"
+            },
+            "System.Threading.Tasks.Extensions": {
+              "target": "Package",
+              "version": "[4.5.1, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.302\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
