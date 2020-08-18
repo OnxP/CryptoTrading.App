@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App", "CryptoTrading.App\CryptoTrading.App.csproj", "{AC077FDA-3BE7-4BAE-9A42-DC7CDEF50103}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TechnicalIndicators", "TechnicalIndicators", "{74CA8D2A-573D-471B-A800-D19C0B90A02D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indicators", "Indicators\Indicators.csproj", "{643F691B-2902-4B24-9B83-8A3903D79ACB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndicatorsTest", "IndicatorsTest\IndicatorsTest.csproj", "{926891F2-4232-4D5E-88F0-3145B3ED57B5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC077FDA-3BE7-4BAE-9A42-DC7CDEF50103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC077FDA-3BE7-4BAE-9A42-DC7CDEF50103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC077FDA-3BE7-4BAE-9A42-DC7CDEF50103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC077FDA-3BE7-4BAE-9A42-DC7CDEF50103}.Release|Any CPU.Build.0 = Release|Any CPU
+		{643F691B-2902-4B24-9B83-8A3903D79ACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{643F691B-2902-4B24-9B83-8A3903D79ACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{643F691B-2902-4B24-9B83-8A3903D79ACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{643F691B-2902-4B24-9B83-8A3903D79ACB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{926891F2-4232-4D5E-88F0-3145B3ED57B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{643F691B-2902-4B24-9B83-8A3903D79ACB} = {74CA8D2A-573D-471B-A800-D19C0B90A02D}
+		{926891F2-4232-4D5E-88F0-3145B3ED57B5} = {74CA8D2A-573D-471B-A800-D19C0B90A02D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {045A562A-50E5-412C-B751-1CA730CE879D}
+	EndGlobalSection
+EndGlobal

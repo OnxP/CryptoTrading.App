@@ -1,0 +1,2 @@
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\CryptoTrading.App\IndicatorsTest\obj\Debug\IndicatorsTest.csprojAssemblyReference.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\CryptoTrading.App\IndicatorsTest\obj\Debug\IndicatorsTest.csproj.CoreCompileInputs.cache
