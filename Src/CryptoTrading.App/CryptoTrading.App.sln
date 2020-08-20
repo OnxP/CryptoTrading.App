@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Binance", "Binance\Binance.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tulip.NETCore", "Indicators\Tulip.NETCore.csproj", "{DD384E8F-60A8-4B5E-A6C5-16DFCB182E39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndicatorsTest", "IndicatorsTest\IndicatorsTest.csproj", "{E463A148-BF2F-4EB7-B985-8AE02FF366F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{DD384E8F-60A8-4B5E-A6C5-16DFCB182E39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD384E8F-60A8-4B5E-A6C5-16DFCB182E39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD384E8F-60A8-4B5E-A6C5-16DFCB182E39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E463A148-BF2F-4EB7-B985-8AE02FF366F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E463A148-BF2F-4EB7-B985-8AE02FF366F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E463A148-BF2F-4EB7-B985-8AE02FF366F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E463A148-BF2F-4EB7-B985-8AE02FF366F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -38,6 +44,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{C402DEBD-AA33-4BE5-B433-2A79AB353127} = {CB9B59BB-DC16-4904-86D4-B54B34B0582E}
 		{DD384E8F-60A8-4B5E-A6C5-16DFCB182E39} = {58B8D20B-EFCE-4360-8FDF-FF835D932C76}
+		{E463A148-BF2F-4EB7-B985-8AE02FF366F9} = {58B8D20B-EFCE-4360-8FDF-FF835D932C76}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {657F2AA5-BF55-41F9-996F-48DDC1FBAA71}
