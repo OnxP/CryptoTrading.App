@@ -27,7 +27,6 @@ namespace Ankur.Trading.Test.IndicatorsTests
             return list;
         }
 
-        private string pair = "";
         [TestMethod]
         public void Ema_Test_5()
         {
@@ -48,7 +47,7 @@ namespace Ankur.Trading.Test.IndicatorsTests
         [TestMethod]
         public void Ema_Test_3()
         {
-            double[] close_prices = new double[] { 5, 4, 5, 4, 4, 6, 5, 4, 5, 2, 5, 5, 5, 4, 4, 3 };
+            double[] close_prices = BuildCandleSticks().ToArray();
             double[] options = new double[] { 3 };
 
             //Find output size and allocate output space.
@@ -58,14 +57,14 @@ namespace Ankur.Trading.Test.IndicatorsTests
             double[][] inputs = { close_prices };
             double[][] outputs = { output };
             int success = Indicators.ema.Run(inputs, options, outputs);
-            
-            Assert.AreEqual(20, outputs[0]);
+            var value = outputs[0][output.Length - 1];
+            Assert.AreEqual(20, Math.Round(value, 0));
         }
 
         [TestMethod]
         public void Ema_Test_7()
         {
-            double[] close_prices = new double[] { 5, 4, 5, 4, 4, 6, 5, 4, 5, 2, 5, 5, 5, 4, 4, 3 };
+            double[] close_prices = BuildCandleSticks().ToArray();
             double[] options = new double[] { 7 };
 
             //Find output size and allocate output space.
@@ -75,14 +74,15 @@ namespace Ankur.Trading.Test.IndicatorsTests
             double[][] inputs = { close_prices };
             double[][] outputs = { output };
             int success = Indicators.ema.Run(inputs, options, outputs);
-            
-            Assert.AreEqual(18, outputs[0]);
+
+            var value = outputs[0][output.Length - 1];
+            Assert.AreEqual(18, Math.Round(value, 0));
         }
 
         [TestMethod]
         public void Ema_Test_9()
         {
-            double[] close_prices = new double[] { 5, 4, 5, 4, 4, 6, 5, 4, 5, 2, 5, 5, 5, 4, 4, 3 };
+            double[] close_prices = BuildCandleSticks().ToArray();
             double[] options = new double[] { 9 };
 
             //Find output size and allocate output space.
@@ -92,8 +92,9 @@ namespace Ankur.Trading.Test.IndicatorsTests
             double[][] inputs = { close_prices };
             double[][] outputs = { output };
             int success = Indicators.ema.Run(inputs, options, outputs);
-          
-            Assert.AreEqual(17, outputs[0]);
+
+            var value = outputs[0][output.Length - 1];
+            Assert.AreEqual(17, Math.Round(value, 0));
         }
 
 
