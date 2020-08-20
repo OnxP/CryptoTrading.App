@@ -1,0 +1,9 @@
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\bin\Debug\netstandard2.1\Tulip.NETCore.deps.json
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\bin\Debug\netstandard2.1\Tulip.NETCore.dll
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\bin\Debug\netstandard2.1\Tulip.NETCore.pdb
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\obj\Debug\netstandard2.1\Tulip.NETCore.csprojAssemblyReference.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\obj\Debug\netstandard2.1\Tulip.NETCore.AssemblyInfoInputs.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\obj\Debug\netstandard2.1\Tulip.NETCore.AssemblyInfo.cs
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\obj\Debug\netstandard2.1\Tulip.NETCore.csproj.CoreCompileInputs.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\obj\Debug\netstandard2.1\Tulip.NETCore.dll
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicators\obj\Debug\netstandard2.1\Tulip.NETCore.pdb

@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "8LQ0uwrJZtfL3+TI96MqOObUD/CXKhikKBOHk3OvYykuSoRfxRrI/yNmjjYb6Y0KhUTkP1pz6FGaTwMWraQwwQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\ankur\\OneDrive\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\CryptoTrading.App.Core\\CryptoTrading.App.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

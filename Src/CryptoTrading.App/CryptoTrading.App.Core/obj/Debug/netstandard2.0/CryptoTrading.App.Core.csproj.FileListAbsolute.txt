@@ -1,0 +1,9 @@
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\bin\Debug\netstandard2.0\CryptoTrading.App.Core.deps.json
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\bin\Debug\netstandard2.0\CryptoTrading.App.Core.dll
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\bin\Debug\netstandard2.0\CryptoTrading.App.Core.pdb
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\obj\Debug\netstandard2.0\CryptoTrading.App.Core.csprojAssemblyReference.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\obj\Debug\netstandard2.0\CryptoTrading.App.Core.AssemblyInfoInputs.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\obj\Debug\netstandard2.0\CryptoTrading.App.Core.AssemblyInfo.cs
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\obj\Debug\netstandard2.0\CryptoTrading.App.Core.csproj.CoreCompileInputs.cache
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\obj\Debug\netstandard2.0\CryptoTrading.App.Core.dll
+C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.Core\obj\Debug\netstandard2.0\CryptoTrading.App.Core.pdb
