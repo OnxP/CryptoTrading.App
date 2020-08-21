@@ -1,0 +1,386 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance24HourStatistics\\Binance24HourStatistics.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj": {
+      "version": "0.2.0-beta902",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj",
+        "projectName": "Binance",
+        "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj",
+        "packagesPath": "C:\\Users\\Ankur\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\obj\\",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "configFilePaths": [
+          "C:\\Users\\Ankur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/abtsoftware/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
+            "System.Net.Http": {
+              "target": "Package",
+              "version": "[4.3.4, )"
+            },
+            "System.Net.WebSockets.Client": {
+              "target": "Package",
+              "version": "[4.3.2, )"
+            },
+            "System.Threading.Tasks.Dataflow": {
+              "target": "Package",
+              "version": "[4.9.0, )"
+            },
+            "System.Threading.Tasks.Extensions": {
+              "target": "Package",
+              "version": "[4.5.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.401\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.Application\\Binance.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.Application\\Binance.Application.csproj",
+        "projectName": "Binance.Application",
+        "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.Application\\Binance.Application.csproj",
+        "packagesPath": "C:\\Users\\Ankur\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.Application\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Ankur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/abtsoftware/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Logging": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.401\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocket4Net\\Binance.WebSocket.WebSocket4Net.csproj": {
+      "version": "0.2.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocket4Net\\Binance.WebSocket.WebSocket4Net.csproj",
+        "projectName": "Binance.WebSocket.WebSocket4Net",
+        "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocket4Net\\Binance.WebSocket.WebSocket4Net.csproj",
+        "packagesPath": "C:\\Users\\Ankur\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocket4Net\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Ankur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/abtsoftware/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "WebSocket4Net": {
+              "target": "Package",
+              "version": "[0.15.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.401\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocketSharp\\Binance.WebSocket.WebSocketSharp.csproj": {
+      "version": "0.2.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocketSharp\\Binance.WebSocket.WebSocketSharp.csproj",
+        "projectName": "Binance.WebSocket.WebSocketSharp",
+        "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocketSharp\\Binance.WebSocket.WebSocketSharp.csproj",
+        "packagesPath": "C:\\Users\\Ankur\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocketSharp\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Ankur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/abtsoftware/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "WebSocketSharp-netstandard": {
+              "target": "Package",
+              "version": "[1.0.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.401\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance24HourStatistics\\Binance24HourStatistics.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance24HourStatistics\\Binance24HourStatistics.csproj",
+        "projectName": "Binance24HourStatistics",
+        "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance24HourStatistics\\Binance24HourStatistics.csproj",
+        "packagesPath": "C:\\Users\\Ankur\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance24HourStatistics\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Ankur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/abtsoftware/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.0": {
+            "projectReferences": {
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Binance\\Binance.csproj"
+              },
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.Application\\Binance.Application.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.Application\\Binance.Application.csproj"
+              },
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocket4Net\\Binance.WebSocket.WebSocket4Net.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocket4Net\\Binance.WebSocket.WebSocket4Net.csproj"
+              },
+              "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocketSharp\\Binance.WebSocket.WebSocketSharp.csproj": {
+                "projectPath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\Samples\\Binance.WebSocket.WebSocketSharp\\Binance.WebSocket.WebSocketSharp.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.0": {
+          "dependencies": {
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.Extensions.Logging": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.0, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.401\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

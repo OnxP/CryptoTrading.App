@@ -1,0 +1,12 @@
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.csproj.CoreCompileInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\bin\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.deps.json
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\bin\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\bin\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\bin\Debug\netstandard2.0\Binance.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\bin\Debug\netstandard2.0\Binance.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.csproj.CopyComplete
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocketSharp\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocketSharp.pdb
