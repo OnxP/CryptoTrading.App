@@ -9,40 +9,85 @@
       "CryptoTrading.App.MarketDataTesting/1.0.0": {
         "dependencies": {
           "Binance": "0.2.0-beta902",
-          "Binance.Application": "1.0.0"
+          "Binance.Application": "1.0.0",
+          "Microsoft.Extensions.Configuration.Binder": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Configuration.Json": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.DependencyInjection": "2.2.0"
         },
         "runtime": {
           "CryptoTrading.App.MarketDataTesting.dll": {}
         }
       },
-      "Microsoft.Extensions.Configuration/2.2.0": {
+      "Microsoft.Extensions.Configuration/5.0.0-preview.7.20364.11": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "2.2.0"
+          "Microsoft.Extensions.Configuration.Abstractions": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Primitives": "5.0.0-preview.7.20364.11"
         },
         "runtime": {
           "lib/netstandard2.0/Microsoft.Extensions.Configuration.dll": {
-            "assemblyVersion": "2.2.0.0",
-            "fileVersion": "2.2.0.18315"
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
           }
         }
       },
-      "Microsoft.Extensions.Configuration.Abstractions/2.2.0": {
+      "Microsoft.Extensions.Configuration.Abstractions/5.0.0-preview.7.20364.11": {
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "2.2.0"
+          "Microsoft.Extensions.Primitives": "5.0.0-preview.7.20364.11"
         },
         "runtime": {
           "lib/netstandard2.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
-            "assemblyVersion": "2.2.0.0",
-            "fileVersion": "2.2.0.18315"
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
           }
         }
       },
-      "Microsoft.Extensions.Configuration.Binder/2.2.0": {
+      "Microsoft.Extensions.Configuration.Binder/5.0.0-preview.7.20364.11": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration": "2.2.0"
+          "Microsoft.Extensions.Configuration.Abstractions": "5.0.0-preview.7.20364.11"
         },
         "runtime": {
           "lib/netstandard2.0/Microsoft.Extensions.Configuration.Binder.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.FileExtensions/5.0.0-preview.7.20364.11": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Configuration.Abstractions": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.FileProviders.Abstractions": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.FileProviders.Physical": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Primitives": "5.0.0-preview.7.20364.11"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.Configuration.FileExtensions.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.Json/5.0.0-preview.7.20364.11": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Configuration.Abstractions": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Configuration.FileExtensions": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.FileProviders.Abstractions": "5.0.0-preview.7.20364.11",
+          "System.Text.Json": "5.0.0-preview.7.20364.11"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.Configuration.Json.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection/2.2.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.2.0"
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.dll": {
             "assemblyVersion": "2.2.0.0",
             "fileVersion": "2.2.0.18315"
           }
@@ -56,9 +101,41 @@
           }
         }
       },
+      "Microsoft.Extensions.FileProviders.Abstractions/5.0.0-preview.7.20364.11": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "5.0.0-preview.7.20364.11"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Physical/5.0.0-preview.7.20364.11": {
+        "dependencies": {
+          "Microsoft.Extensions.FileProviders.Abstractions": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.FileSystemGlobbing": "5.0.0-preview.7.20364.11",
+          "Microsoft.Extensions.Primitives": "5.0.0-preview.7.20364.11"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Physical.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileSystemGlobbing/5.0.0-preview.7.20364.11": {
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.FileSystemGlobbing.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
       "Microsoft.Extensions.Logging/2.2.0": {
         "dependencies": {
-          "Microsoft.Extensions.Configuration.Binder": "2.2.0",
+          "Microsoft.Extensions.Configuration.Binder": "5.0.0-preview.7.20364.11",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "2.2.0",
           "Microsoft.Extensions.Logging.Abstractions": "2.2.0",
           "Microsoft.Extensions.Options": "2.2.0"
@@ -81,7 +158,7 @@
       "Microsoft.Extensions.Options/2.2.0": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "2.2.0",
-          "Microsoft.Extensions.Primitives": "2.2.0",
+          "Microsoft.Extensions.Primitives": "5.0.0-preview.7.20364.11",
           "System.ComponentModel.Annotations": "4.5.0"
         },
         "runtime": {
@@ -91,15 +168,14 @@
           }
         }
       },
-      "Microsoft.Extensions.Primitives/2.2.0": {
+      "Microsoft.Extensions.Primitives/5.0.0-preview.7.20364.11": {
         "dependencies": {
-          "System.Memory": "4.5.1",
-          "System.Runtime.CompilerServices.Unsafe": "4.5.1"
+          "System.Runtime.CompilerServices.Unsafe": "5.0.0-preview.7.20364.11"
         },
         "runtime": {
-          "lib/netstandard2.0/Microsoft.Extensions.Primitives.dll": {
-            "assemblyVersion": "2.2.0.0",
-            "fileVersion": "2.2.0.18315"
+          "lib/netcoreapp3.0/Microsoft.Extensions.Primitives.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
           }
         }
       },
@@ -273,7 +349,6 @@
           "System.Runtime.Extensions": "4.3.0"
         }
       },
-      "System.Memory/4.5.1": {},
       "System.Net.Http/4.3.4": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.1",
@@ -449,7 +524,14 @@
           "Microsoft.NETCore.Targets": "1.1.0"
         }
       },
-      "System.Runtime.CompilerServices.Unsafe/4.5.1": {},
+      "System.Runtime.CompilerServices.Unsafe/5.0.0-preview.7.20364.11": {
+        "runtime": {
+          "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
       "System.Runtime.Extensions/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "1.1.1",
@@ -654,6 +736,26 @@
           "System.Text.Encoding": "4.3.0"
         }
       },
+      "System.Text.Encodings.Web/5.0.0-preview.7.20364.11": {
+        "runtime": {
+          "lib/netcoreapp3.0/System.Text.Encodings.Web.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
+      "System.Text.Json/5.0.0-preview.7.20364.11": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "5.0.0-preview.7.20364.11",
+          "System.Text.Encodings.Web": "5.0.0-preview.7.20364.11"
+        },
+        "runtime": {
+          "lib/netcoreapp3.0/System.Text.Json.dll": {
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.36411"
+          }
+        }
+      },
       "System.Threading/4.3.0": {
         "dependencies": {
           "System.Runtime": "4.3.0",
@@ -700,7 +802,7 @@
       "Binance.Application/1.0.0": {
         "dependencies": {
           "Binance": "0.2.0-beta902",
-          "Microsoft.Extensions.Configuration.Abstractions": "2.2.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "5.0.0-preview.7.20364.11",
           "Microsoft.Extensions.Logging": "2.2.0"
         },
         "runtime": {
@@ -715,26 +817,47 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.Extensions.Configuration/2.2.0": {
+    "Microsoft.Extensions.Configuration/5.0.0-preview.7.20364.11": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-nOP8R1mVb/6mZtm2qgAJXn/LFm/2kMjHDAg/QJLFG6CuWYJtaD3p1BwQhufBVvRzL9ceJ/xF0SQ0qsI2GkDQAA==",
-      "path": "microsoft.extensions.configuration/2.2.0",
-      "hashPath": "microsoft.extensions.configuration.2.2.0.nupkg.sha512"
+      "sha512": "sha512-2rr8r66lVPxYgen2JxX8Be9D3HAfNVP8KLmW83lf4S0yjEPbUU432/UePt1ccVIvvRkhBkXYPI6cRxebe7urGg==",
+      "path": "microsoft.extensions.configuration/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.configuration.5.0.0-preview.7.20364.11.nupkg.sha512"
     },
-    "Microsoft.Extensions.Configuration.Abstractions/2.2.0": {
+    "Microsoft.Extensions.Configuration.Abstractions/5.0.0-preview.7.20364.11": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-65MrmXCziWaQFrI0UHkQbesrX5wTwf9XPjY5yFm/VkgJKFJ5gqvXRoXjIZcf2wLi5ZlwGz/oMYfyURVCWbM5iw==",
-      "path": "microsoft.extensions.configuration.abstractions/2.2.0",
-      "hashPath": "microsoft.extensions.configuration.abstractions.2.2.0.nupkg.sha512"
+      "sha512": "sha512-uMag7sr+VG/1o9cEKYnKYGK0700xog1JTV8vjS5EWvdUaXaUUm8s0sXM9aIKE/8ibs83MIGoSo5smBtM+N2OWA==",
+      "path": "microsoft.extensions.configuration.abstractions/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.configuration.abstractions.5.0.0-preview.7.20364.11.nupkg.sha512"
     },
-    "Microsoft.Extensions.Configuration.Binder/2.2.0": {
+    "Microsoft.Extensions.Configuration.Binder/5.0.0-preview.7.20364.11": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-vJ9xvOZCnUAIHcGC3SU35r3HKmHTVIeHzo6u/qzlHAqD8m6xv92MLin4oJntTvkpKxVX3vI1GFFkIQtU3AdlsQ==",
-      "path": "microsoft.extensions.configuration.binder/2.2.0",
-      "hashPath": "microsoft.extensions.configuration.binder.2.2.0.nupkg.sha512"
+      "sha512": "sha512-R69xwaTbrmIkAWCy4C7CxPR81vxl0gFFOJbX4Z0uV/fYIA32X/p3/o7nhBXcCD9SbkR0uhSgoq+E5Sg6i/0JUQ==",
+      "path": "microsoft.extensions.configuration.binder/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.configuration.binder.5.0.0-preview.7.20364.11.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.FileExtensions/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3FV8Vq3dkFBOctw6+mETnrhRHDalVjF/bTx2x7Rn04lsxg2jnPds2b04hyXvHRALhzqZgqxgPoZU8WUDzKnvrQ==",
+      "path": "microsoft.extensions.configuration.fileextensions/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.configuration.fileextensions.5.0.0-preview.7.20364.11.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.Json/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CY7arFrIQqfq58fKTS6zSgYiYIy6xhKB5nWpnG1blsuh2G0c7s5iF/wZshpVwLvtPbWWaSfq4eK+JAnPvrRP4Q==",
+      "path": "microsoft.extensions.configuration.json/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.configuration.json.5.0.0-preview.7.20364.11.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MZtBIwfDFork5vfjpJdG5g8wuJFt7d/y3LOSVVtDK/76wlbtz6cjltfKHqLx2TKVqTj5/c41t77m1+h20zqtPA==",
+      "path": "microsoft.extensions.dependencyinjection/2.2.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.2.2.0.nupkg.sha512"
     },
     "Microsoft.Extensions.DependencyInjection.Abstractions/2.2.0": {
       "type": "package",
@@ -742,6 +865,27 @@
       "sha512": "sha512-f9hstgjVmr6rmrfGSpfsVOl2irKAgr1QjrSi3FgnS7kulxband50f2brRLwySAQTADPZeTdow0mpSMcoAdadCw==",
       "path": "microsoft.extensions.dependencyinjection.abstractions/2.2.0",
       "hashPath": "microsoft.extensions.dependencyinjection.abstractions.2.2.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileProviders.Abstractions/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WC0AAPa5yefCMqTwyBCh9d7Ubo89TqmmVmDllzOWwmxanQbE4Ea/LvfoRZ0eJHJAYabV8bjXR9lczL0R8QksIA==",
+      "path": "microsoft.extensions.fileproviders.abstractions/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.fileproviders.abstractions.5.0.0-preview.7.20364.11.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileProviders.Physical/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yyIc1w93ZQrEBVFzItGbuIpzvmWtmlSbPu5OuXbqYA+VIYT9PLTRcZAwPfR9TL3Bnpe9kN/vh2myBHlE9f2caA==",
+      "path": "microsoft.extensions.fileproviders.physical/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.fileproviders.physical.5.0.0-preview.7.20364.11.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileSystemGlobbing/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7Z6CSGc8XTutriYL4iSaVZODZVW/ZFfkjS+ihJ1s0KKXdaV2cv+FD19FkeUDaHvOZb7g2JWux3jwlZeQUcallw==",
+      "path": "microsoft.extensions.filesystemglobbing/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.filesystemglobbing.5.0.0-preview.7.20364.11.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging/2.2.0": {
       "type": "package",
@@ -764,12 +908,12 @@
       "path": "microsoft.extensions.options/2.2.0",
       "hashPath": "microsoft.extensions.options.2.2.0.nupkg.sha512"
     },
-    "Microsoft.Extensions.Primitives/2.2.0": {
+    "Microsoft.Extensions.Primitives/5.0.0-preview.7.20364.11": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-azyQtqbm4fSaDzZHD/J+V6oWMFaf2tWP4WEGIYePLCMw3+b2RQdj9ybgbQyjCshcitQKQ4lEDOZjmSlTTrHxUg==",
-      "path": "microsoft.extensions.primitives/2.2.0",
-      "hashPath": "microsoft.extensions.primitives.2.2.0.nupkg.sha512"
+      "sha512": "sha512-ddBYIH2AlflSH7wMT8XKpWpfA08lAn+fU/pVCvY3kt5TRRMXpBgzUDZ39S8MRNXFlqBsJDuapkxKjsv193we6g==",
+      "path": "microsoft.extensions.primitives/5.0.0-preview.7.20364.11",
+      "hashPath": "microsoft.extensions.primitives.5.0.0-preview.7.20364.11.nupkg.sha512"
     },
     "Microsoft.NETCore.Platforms/1.1.1": {
       "type": "package",
@@ -1002,13 +1146,6 @@
       "path": "system.linq/4.3.0",
       "hashPath": "system.linq.4.3.0.nupkg.sha512"
     },
-    "System.Memory/4.5.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-sDJYJpGtTgx+23Ayu5euxG5mAXWdkDb4+b0rD0Cab0M1oQS9H0HXGPriKcqpXuiJDTV7fTp/d+fMDJmnr6sNvA==",
-      "path": "system.memory/4.5.1",
-      "hashPath": "system.memory.4.5.1.nupkg.sha512"
-    },
     "System.Net.Http/4.3.4": {
       "type": "package",
       "serviceable": true,
@@ -1093,12 +1230,12 @@
       "path": "system.runtime/4.3.0",
       "hashPath": "system.runtime.4.3.0.nupkg.sha512"
     },
-    "System.Runtime.CompilerServices.Unsafe/4.5.1": {
+    "System.Runtime.CompilerServices.Unsafe/5.0.0-preview.7.20364.11": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-Zh8t8oqolRaFa9vmOZfdQm/qKejdqz0J9kr7o2Fu0vPeoH3BL1EOXipKWwkWtLT1JPzjByrF19fGuFlNbmPpiw==",
-      "path": "system.runtime.compilerservices.unsafe/4.5.1",
-      "hashPath": "system.runtime.compilerservices.unsafe.4.5.1.nupkg.sha512"
+      "sha512": "sha512-6oEx3elihyJmDIcofF5g5AB2hSk0P+lc9WIyDEEVxi6BlBk1xkoOik/r16YlLT/rq/a7rUdyXzbRtabH9N+Dxg==",
+      "path": "system.runtime.compilerservices.unsafe/5.0.0-preview.7.20364.11",
+      "hashPath": "system.runtime.compilerservices.unsafe.5.0.0-preview.7.20364.11.nupkg.sha512"
     },
     "System.Runtime.Extensions/4.3.0": {
       "type": "package",
@@ -1211,6 +1348,20 @@
       "sha512": "sha512-YVMK0Bt/A43RmwizJoZ22ei2nmrhobgeiYwFzC4YAN+nue8RF6djXDMog0UCn+brerQoYVyaS+ghy9P/MUVcmw==",
       "path": "system.text.encoding.extensions/4.3.0",
       "hashPath": "system.text.encoding.extensions.4.3.0.nupkg.sha512"
+    },
+    "System.Text.Encodings.Web/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ohiQMnNqQ6qzyuRBuJcxjd+Syz/8O6PRYseztoTaoL3iYKGvDc0A5UnWFCgn56T1x7NkmFcvnKpv1oNaLz9i1Q==",
+      "path": "system.text.encodings.web/5.0.0-preview.7.20364.11",
+      "hashPath": "system.text.encodings.web.5.0.0-preview.7.20364.11.nupkg.sha512"
+    },
+    "System.Text.Json/5.0.0-preview.7.20364.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-El7cfvRK+rBm1OlNKn/B6Y+WE+VyJZ6kT5MYc0CiLtfs2FA5GzM4CytnFjA+LItgraI3mzS97ChpCEeIKguUSw==",
+      "path": "system.text.json/5.0.0-preview.7.20364.11",
+      "hashPath": "system.text.json.5.0.0-preview.7.20364.11.nupkg.sha512"
     },
     "System.Threading/4.3.0": {
       "type": "package",
