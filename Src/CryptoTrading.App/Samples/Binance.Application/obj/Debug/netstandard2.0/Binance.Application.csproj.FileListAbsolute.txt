@@ -1,12 +1,12 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.csprojAssemblyReference.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\bin\Debug\netstandard2.0\Binance.Application.deps.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\bin\Debug\netstandard2.0\Binance.Application.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\bin\Debug\netstandard2.0\Binance.Application.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\bin\Debug\netstandard2.0\Binance.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\bin\Debug\netstandard2.0\Binance.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.Application\obj\Debug\netstandard2.0\Binance.Application.pdb

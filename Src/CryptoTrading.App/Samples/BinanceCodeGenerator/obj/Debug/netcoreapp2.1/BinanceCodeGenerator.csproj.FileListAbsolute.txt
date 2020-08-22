@@ -1,6 +1,3 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\bin\Debug\netcoreapp2.1\Asset.template.cs
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\bin\Debug\netcoreapp2.1\Symbol.template.cs
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\bin\Debug\netcoreapp2.1\BinanceCodeGenerator.deps.json
@@ -11,6 +8,9 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\bin\Debug\netcoreapp2.1\Binance.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\bin\Debug\netcoreapp2.1\Binance.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceCodeGenerator\obj\Debug\netcoreapp2.1\BinanceCodeGenerator.pdb

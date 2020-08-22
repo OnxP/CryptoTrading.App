@@ -1,12 +1,12 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.csprojAssemblyReference.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\bin\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.deps.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\bin\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\bin\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\bin\Debug\netstandard2.0\Binance.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\bin\Debug\netstandard2.0\Binance.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance.WebSocket.WebSocket4Net\obj\Debug\netstandard2.0\Binance.WebSocket.WebSocket4Net.pdb

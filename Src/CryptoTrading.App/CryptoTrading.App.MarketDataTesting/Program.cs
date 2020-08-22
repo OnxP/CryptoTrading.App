@@ -58,7 +58,6 @@ namespace CryptoTrading.App.MarketDataTesting
                 case CandlestickInterval.Minutes_15:
                 case CandlestickInterval.Minutes_30:
                     return SplitByDay(from, to);
-                    break;
                 case CandlestickInterval.Hour:
                 case CandlestickInterval.Hours_2:
                 case CandlestickInterval.Hours_4:
@@ -66,10 +65,8 @@ namespace CryptoTrading.App.MarketDataTesting
                 case CandlestickInterval.Hours_8:
                 case CandlestickInterval.Hours_12:
                     return SplitByWeek(from, to);
-                    break;
                 default:
                     return new List<DateTime> { to };
-                    break;
             }
         }
 

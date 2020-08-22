@@ -1,7 +1,3 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.csprojAssemblyReference.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\bin\Debug\netcoreapp2.1\appsettings.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\bin\Debug\netcoreapp2.1\BinancePriceChart.deps.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\bin\Debug\netcoreapp2.1\BinancePriceChart.runtimeconfig.json
@@ -16,6 +12,10 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\bin\Debug\netcoreapp2.1\Binance.Application.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\bin\Debug\netcoreapp2.1\Binance.WebSocket.WebSocket4Net.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\bin\Debug\netcoreapp2.1\Binance.WebSocket.WebSocketSharp.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinancePriceChart\obj\Debug\netcoreapp2.1\BinancePriceChart.pdb

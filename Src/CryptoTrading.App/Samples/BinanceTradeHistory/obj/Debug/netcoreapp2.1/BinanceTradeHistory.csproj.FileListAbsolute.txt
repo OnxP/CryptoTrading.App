@@ -1,6 +1,3 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\bin\Debug\netcoreapp2.1\appsettings.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\bin\Debug\netcoreapp2.1\BinanceTradeHistory.deps.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\bin\Debug\netcoreapp2.1\BinanceTradeHistory.runtimeconfig.json
@@ -16,6 +13,9 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\bin\Debug\netcoreapp2.1\Binance.WebSocket.WebSocket4Net.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\bin\Debug\netcoreapp2.1\Binance.WebSocket.WebSocketSharp.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceTradeHistory\obj\Debug\netcoreapp2.1\BinanceTradeHistory.pdb

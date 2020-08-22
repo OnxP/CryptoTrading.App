@@ -1,7 +1,3 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.csprojAssemblyReference.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\bin\Debug\netcoreapp2.0\appsettings.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\bin\Debug\netcoreapp2.0\Binance24HourStatistics.deps.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\bin\Debug\netcoreapp2.0\Binance24HourStatistics.runtimeconfig.json
@@ -16,6 +12,10 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\bin\Debug\netcoreapp2.0\Binance.Application.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\bin\Debug\netcoreapp2.0\Binance.WebSocket.WebSocket4Net.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\bin\Debug\netcoreapp2.0\Binance.WebSocket.WebSocketSharp.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\Binance24HourStatistics\obj\Debug\netcoreapp2.0\Binance24HourStatistics.pdb

@@ -1,7 +1,3 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.csprojAssemblyReference.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\bin\Debug\netcoreapp2.1\appsettings.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\bin\Debug\netcoreapp2.1\BinanceMarketDepth.deps.json
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\bin\Debug\netcoreapp2.1\BinanceMarketDepth.runtimeconfig.json
@@ -16,6 +12,10 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\bin\Debug\netcoreapp2.1\Binance.Application.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\bin\Debug\netcoreapp2.1\Binance.WebSocket.WebSocket4Net.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\bin\Debug\netcoreapp2.1\Binance.WebSocket.WebSocketSharp.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.csprojAssemblyReference.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.AssemblyInfoInputs.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.AssemblyInfo.cs
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Samples\BinanceMarketDepth\obj\Debug\netcoreapp2.1\BinanceMarketDepth.pdb

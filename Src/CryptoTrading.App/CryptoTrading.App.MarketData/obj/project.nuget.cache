@@ -1,11 +1,28 @@
 {
   "version": 2,
-  "dgSpecHash": "iakv4CjKNgNh8fpZUdu5a2s9Ztirdhmtoc2oIDf8ZstYKAF/hp2f0Rynrqe9ek10NOfae9q1nZUrtGswi4YZ2Q==",
+  "dgSpecHash": "iP2s/xFm130Jt16QJYI4ua/GacyAr/smPfpKM247tnYJcmPZuuqNnpPo/7nl4eNFaUeHjbflRxGC+xzG5QhMtA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Ankur\\Documents\\GitHub\\CryptoTrading.App\\Src\\CryptoTrading.App\\CryptoTrading.App.MarketData\\CryptoTrading.App.MarketData.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
-    "C:\\Users\\Ankur\\.nuget\\packages\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\1.0.0\\microsoft.bcl.asyncinterfaces.1.0.0.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.configuration\\5.0.0-preview.7.20364.11\\microsoft.extensions.configuration.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\5.0.0-preview.7.20364.11\\microsoft.extensions.configuration.abstractions.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.configuration.binder\\5.0.0-preview.7.20364.11\\microsoft.extensions.configuration.binder.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.configuration.fileextensions\\5.0.0-preview.7.20364.11\\microsoft.extensions.configuration.fileextensions.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.configuration.json\\5.0.0-preview.7.20364.11\\microsoft.extensions.configuration.json.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\5.0.0-preview.7.20364.11\\microsoft.extensions.dependencyinjection.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\5.0.0-preview.7.20364.11\\microsoft.extensions.dependencyinjection.abstractions.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\5.0.0-preview.7.20364.11\\microsoft.extensions.fileproviders.abstractions.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.fileproviders.physical\\5.0.0-preview.7.20364.11\\microsoft.extensions.fileproviders.physical.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.filesystemglobbing\\5.0.0-preview.7.20364.11\\microsoft.extensions.filesystemglobbing.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\microsoft.extensions.primitives\\5.0.0-preview.7.20364.11\\microsoft.extensions.primitives.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.buffers\\4.5.0\\system.buffers.4.5.0.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\5.0.0-preview.7.20364.11\\system.runtime.compilerservices.unsafe.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.text.encodings.web\\5.0.0-preview.7.20364.11\\system.text.encodings.web.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.text.json\\5.0.0-preview.7.20364.11\\system.text.json.5.0.0-preview.7.20364.11.nupkg.sha512",
+    "C:\\Users\\Ankur\\.nuget\\packages\\system.threading.tasks.extensions\\4.5.2\\system.threading.tasks.extensions.4.5.2.nupkg.sha512"
   ],
   "logs": []
 }
