@@ -7,3 +7,10 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTr
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.1\CryptoTrading.App.MarketData.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.1\CryptoTrading.App.MarketData.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.1\CryptoTrading.App.MarketData.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.1\Binance.Application.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.1\Binance.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.1\CryptoTrading.App.Core.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.1\Binance.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.1\CryptoTrading.App.Core.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.1\Binance.Application.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.1\CryptoTrading.App.MarketData.csproj.CopyComplete

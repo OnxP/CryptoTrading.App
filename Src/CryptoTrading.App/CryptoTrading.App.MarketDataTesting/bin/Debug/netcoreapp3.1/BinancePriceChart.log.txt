@@ -119,3 +119,71 @@
        "wss://stream.binance.com:9443/stream?streams=xrpusdt@kline_1m/ethusdt@kline_1m/ltcusdt@kline_1m/neousdt@kline_1m/bnbusdt@kline_1m"
 [dbug] 21/08/2020 23:52:25 +01:00
        BinanceWebSocketStream.StreamAsync: Streaming complete.  [thread: 8]
+[dbug] 23/08/2020 11:39:30 +01:00
+       CandlestickClient.Subscribe: "BTCUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       JsonClient.SubscribeStream: Adding stream "btcusdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       CandlestickClient.Subscribe: "ETHUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       JsonClient.SubscribeStream: Adding stream "ethusdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       CandlestickClient.Subscribe: "LTCUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       JsonClient.SubscribeStream: Adding stream "ltcusdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       CandlestickClient.Subscribe: "NEOUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       JsonClient.SubscribeStream: Adding stream "neousdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       CandlestickClient.Subscribe: "BNBUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       JsonClient.SubscribeStream: Adding stream "bnbusdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:30 +01:00
+       BinanceWebSocketStream.StreamAsync: Streaming initiated.  [thread: 4]
+[info] 23/08/2020 11:39:31 +01:00
+       WebSocketStream.StreamActionAsync: Begin streaming...
+       "wss://stream.binance.com:9443/stream?streams=btcusdt@kline_1m/ethusdt@kline_1m/ltcusdt@kline_1m/neousdt@kline_1m/bnbusdt@kline_1m"
+[info] 23/08/2020 11:39:31 +01:00
+       DefaultWebSocketClient.StreamAsync: Web socket connecting...
+[info] 23/08/2020 11:39:32 +01:00
+       DefaultWebSocketClient.OnOpen: Web Socket OPEN.
+[dbug] 23/08/2020 11:39:33 +01:00
+       BinanceWebSocketStream: Buffering JSON data...  [thread: 8]
+[dbug] 23/08/2020 11:39:58 +01:00
+       CandlestickClient.Unsubscribe: "BTCUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:58 +01:00
+       JsonClient.UnsubscribeStream: Removing stream "btcusdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:58 +01:00
+       CandlestickClient.Subscribe: "XRPUSDT" "1m" (callback: no).  [thread: 1]
+[dbug] 23/08/2020 11:39:58 +01:00
+       JsonClient.SubscribeStream: Adding stream "xrpusdt@kline_1m".  [thread: 1]
+[dbug] 23/08/2020 11:39:58 +01:00
+       BinanceWebSocketStream.Pause: Pause streaming.  [thread: 1]
+[info] 23/08/2020 11:39:58 +01:00
+       DefaultWebSocketClient.OnClose: Web Socket CLOSED.
+[dbug] 23/08/2020 11:39:58 +01:00
+       DefaultWebSocketClient.StreamAsync: Task complete.  [thread: 8]
+[info] 23/08/2020 11:39:58 +01:00
+       WebSocketStream.StreamActionAsync: End streaming...
+       "wss://stream.binance.com:9443/stream?streams=btcusdt@kline_1m/ethusdt@kline_1m/ltcusdt@kline_1m/neousdt@kline_1m/bnbusdt@kline_1m"
+[dbug] 23/08/2020 11:39:58 +01:00
+       BinanceWebSocketStream.Resume: Resume streaming.  [thread: 1]
+[info] 23/08/2020 11:39:59 +01:00
+       WebSocketStream.StreamActionAsync: Begin streaming...
+       "wss://stream.binance.com:9443/stream?streams=xrpusdt@kline_1m/ethusdt@kline_1m/ltcusdt@kline_1m/neousdt@kline_1m/bnbusdt@kline_1m"
+[info] 23/08/2020 11:39:59 +01:00
+       DefaultWebSocketClient.StreamAsync: Web socket connecting...
+[info] 23/08/2020 11:40:00 +01:00
+       DefaultWebSocketClient.OnOpen: Web Socket OPEN.
+[dbug] 23/08/2020 11:40:00 +01:00
+       BinanceWebSocketStream: Buffering JSON data...  [thread: 8]
+[info] 23/08/2020 11:40:07 +01:00
+       DefaultWebSocketClient.OnClose: Web Socket CLOSED.
+[dbug] 23/08/2020 11:40:07 +01:00
+       DefaultWebSocketClient.StreamAsync: Task complete.  [thread: 8]
+[info] 23/08/2020 11:40:07 +01:00
+       WebSocketStream.StreamActionAsync: End streaming...
+       "wss://stream.binance.com:9443/stream?streams=xrpusdt@kline_1m/ethusdt@kline_1m/ltcusdt@kline_1m/neousdt@kline_1m/bnbusdt@kline_1m"
+[dbug] 23/08/2020 11:40:07 +01:00
+       BinanceWebSocketStream.StreamAsync: Streaming complete.  [thread: 8]

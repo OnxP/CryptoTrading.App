@@ -25,7 +25,13 @@ namespace CryptoTrading.App.MarketDataTesting
             //System.Threading.Tasks.Task task = PingAsync(api);
             //task.Wait();
 
-            //LiveStream.StreamData();
+            LiveStream.StreamData();
+            //LoadHistoricData(api);
+
+        }
+
+        private static void LoadHistoricData(BinanceApi api)
+        {
             var from = new DateTime(2020, 01, 29);
             var to = new DateTime(2020, 07, 29);
             var interval = CandlestickInterval.Hour;
@@ -36,7 +42,6 @@ namespace CryptoTrading.App.MarketDataTesting
                 from = dt;
                 task.Wait();
             }
-
         }
 
         private static async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, string symbol, DateTime from, DateTime to)

@@ -9,6 +9,7 @@ using System.IO;
 using Binance;
 using Binance.Client;
 using Binance.Application;
+using Binance.Utility;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -23,7 +24,7 @@ namespace CryptoTrading.App.MarketData
 
         public void InitialDataLoadSubscribe(Action<IList<CandlestickEventArgs>> callback)
         {
-
+            _client.Subscribe()
         }
         public void InitialDataLoadUnSubscribe(Action<IList<CandlestickEventArgs>> callback)
         {
@@ -60,13 +61,38 @@ namespace CryptoTrading.App.MarketData
 
             // Initialize the stream.
             var webSocket = services.GetService<IBinanceWebSocketStream>();
+            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
 
         }
 
         public void StartStream()
         {
-            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
-        }
+            try
+            {
+                _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
 
-    }
+                using var controller = new RetryTaskController(_webSocket.StreamAsync);
+                controller.Error += (s, e) => HandleError(e.Exception);
+                controller.Begin();
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine();
+                Console.WriteLine("  ...press any key to close window.");
+                Console.ReadKey(true);
+            }
+        }
+        private static void HandleError(Exception e)
+        {
+            //lock (_sync)
+            //{
+                Console.WriteLine(e.Message);
+            //}
+        }
+    } 
 }
+
+    
+
