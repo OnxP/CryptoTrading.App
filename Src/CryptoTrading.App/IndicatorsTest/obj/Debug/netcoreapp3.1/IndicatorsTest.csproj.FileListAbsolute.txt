@@ -190,3 +190,4 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Indicato
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\IndicatorsTest\obj\Debug\netcoreapp3.1\IndicatorsTest.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\IndicatorsTest\obj\Debug\netcoreapp3.1\IndicatorsTest.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\IndicatorsTest\obj\Debug\netcoreapp3.1\IndicatorsTest.genruntimeconfig.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\IndicatorsTest\bin\Debug\netcoreapp3.1\testhost.exe

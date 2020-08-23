@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CryptoTrading.App.Core
 {
-    class IRequest
+    public interface IRequest
     {
     }
 }
