@@ -6,9 +6,13 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Binance;
 using Binance.Application;
+using Binance.Application.Logging;
 using Binance.Client;
 using Binance.Utility;
 using Binance.WebSocket;
+using CryptoTrading.App.MarketData;
+using log4net;
+using log4net.Repository.Hierarchy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,6 +21,7 @@ namespace CryptoTrading.App.MarketDataTesting
 {
     class Program
     {
+        static StreamWriter writer;
         public static void Main(string[] args)
         {
             var api = new BinanceApi();
@@ -25,9 +30,53 @@ namespace CryptoTrading.App.MarketDataTesting
             //System.Threading.Tasks.Task task = PingAsync(api);
             //task.Wait();
 
-            LiveStream.StreamData();
+            //LiveStream.StreamData();
             //LoadHistoricData(api);
+            writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
+            HistoricalMarketData marketDate = new HistoricalMarketData();
+            marketDate.Configure(null);
+            marketDate.From = new DateTime(2020, 01, 24).ToUniversalTime();
+            //subscribe to several symbols
 
+            marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+
+            marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+
+            marketDate.StartStream();
+
+            writer.Flush();
+            writer.Close();
+        }
+
+        private static void DisplayCandleStick(CandlestickEventArgs obj)
+        {
+            var candlestick = obj.Candlestick;
+                Console.WriteLine($"  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
+                writer.WriteLine($"  {candlestick.Symbol} , {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")} , {candlestick.CloseTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")}".PadRight(119));
+            
+        }
+
+        private static void DisplayHistoricCandleStick(IEnumerable<Candlestick> obj)
+        {
+            foreach (var candlestick in obj.Reverse())
+            {
+                Console.WriteLine($"Historic,  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
+                writer.WriteLine($"Historic,  {candlestick.Symbol} ,  {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")} , {candlestick.CloseTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")}".PadRight(119));
+            }
         }
 
         private static void LoadHistoricData(BinanceApi api)

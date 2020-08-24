@@ -32,8 +32,14 @@ C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTr
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.csprojAssemblyReference.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.AssemblyInfoInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.csproj.CoreCompileInputs.cache
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.csproj.CopyComplete
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.dll
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.pdb
 C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.genruntimeconfig.cache
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\bin\Debug\netcoreapp3.1\CryptoTrading.App.Core.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\bin\Debug\netcoreapp3.1\CryptoTrading.App.MarketData.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\bin\Debug\netcoreapp3.1\CryptoTrading.App.MarketData.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\bin\Debug\netcoreapp3.1\CryptoTrading.App.Core.pdb
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\bin\Debug\netcoreapp3.1\log4net.dll
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\bin\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.dll.config
+C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketDataTesting\obj\Debug\netcoreapp3.1\CryptoTrading.App.MarketDataTesting.csproj.CoreCompileInputs.cache
