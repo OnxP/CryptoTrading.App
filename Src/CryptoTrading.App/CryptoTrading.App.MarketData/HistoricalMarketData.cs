@@ -95,8 +95,14 @@ namespace CryptoTrading.App.MarketData
                 //StreamHistoricData
                 foreach (var item in _subscribers)
                 {
-                    tasks.Add(StreamData(api, item.Key, From, item.Value));
-                    
+                    var from = From;
+                    foreach (var to in SplitDates(item.Key.interval, from, DateTime.Now.ToUniversalTime()))
+                    {
+                        tasks.Add(StreamData(api, item.Key, From, to));
+                        from = to;
+                        //sleep for 30 seconds
+                        Thread.Sleep(3000);
+                    }
                 }
                 Task.WaitAll(tasks.ToArray());
 
@@ -126,19 +132,12 @@ namespace CryptoTrading.App.MarketData
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
 
-        private async System.Threading.Tasks.Task StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime startFrom, IList<Action<CandlestickEventArgs>> callback)
+        private async System.Threading.Tasks.Task StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-            var from = startFrom;
-            foreach (var to in SplitDates(symbol.interval, from, DateTime.Now.ToUniversalTime()))
+            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 500, from.ToUniversalTime(), to.ToUniversalTime());
+            foreach (var candleStick in candleSticks)
             {
-                var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 500, from.ToUniversalTime(), to.ToUniversalTime());
-                foreach (var candleStick in candleSticks)
-                {
-                    candleSticksToStream.Add((candleStick, symbol.interval));
-                }
-                from = to;
-                //sleep for 30 seconds
-                Thread.Sleep(3000);
+                candleSticksToStream.Add((candleStick, symbol.interval));
             }
         }
 
