@@ -84,7 +84,7 @@ namespace CryptoTrading.App.MarketData
                 var tasks = new List<Task>();
                 foreach (var item in _historicDataSubscribers)
                 {
-                    tasks.Add(LoadHistoricData(api, item.Key, CalculateFrom(DateTime.Now.ToUniversalTime(), item.Key.interval), item.Value));
+                    tasks.Add(LoadHistoricData(api, item.Key, From, item.Value));
                 }
                 Task.WaitAll(tasks.ToArray());
 
@@ -100,8 +100,10 @@ namespace CryptoTrading.App.MarketData
                     {
                         tasks.Add(StreamData(api, item.Key, From, to));
                         from = to;
-                        //sleep for 30 seconds
-                        Thread.Sleep(3000);
+                        if(tasks.Count % 50 == 0)
+                        {
+                            Thread.Sleep(60000);
+                        }
                     }
                 }
                 Task.WaitAll(tasks.ToArray());
@@ -131,13 +133,17 @@ namespace CryptoTrading.App.MarketData
         }
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
+        private static readonly object _sync = new object();
 
         private async System.Threading.Tasks.Task StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 500, from.ToUniversalTime(), to.ToUniversalTime());
             foreach (var candleStick in candleSticks)
             {
-                candleSticksToStream.Add((candleStick, symbol.interval));
+                lock (_sync)
+                {
+                    candleSticksToStream.Add((candleStick, symbol.interval));
+                }
             }
         }
 
@@ -184,9 +190,11 @@ namespace CryptoTrading.App.MarketData
 
         private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol,CandlestickInterval interval) symbol, DateTime from, Action<IEnumerable<Candlestick>> callback)
         {
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 500, from.ToUniversalTime(), DateTime.Now.ToUniversalTime());
-
-            callback.Invoke(candleSticks);
+            var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
+            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime());
+            //need to drop first candle
+            var sticks = candleSticks.Reverse().Skip(1);
+            callback.Invoke(sticks);
         }
 
         
@@ -215,18 +223,40 @@ namespace CryptoTrading.App.MarketData
         protected IEnumerable<DateTime> SplitByWeek(DateTime from, DateTime to)
         {
             var daysdiff = (to - from).TotalDays;
-            for (int i = 0; i < daysdiff; i++)
+            if (daysdiff <= 7)
             {
-                yield return from.AddDays(i);
+                yield return to;
+                yield break;
+            }
+            var j = 0;
+            for (int i = 0; i < daysdiff; i+=7)
+            {
+                yield return from.AddDays(i * 7);
+                j += 7;
+            }
+            if (daysdiff - j > 0)
+            {
+                yield return from.AddDays(daysdiff - j);
             }
         }
 
         protected IEnumerable<DateTime> SplitByDay(DateTime from, DateTime to)
         {
             var daysdiff = (to - from).TotalDays;
+            if (daysdiff < 1)
+            {
+                yield return to;
+                yield break;
+            }
+            var j = 0;
             for (int i = 1; i <= daysdiff; i++)
             {
                 yield return from.AddDays(i);
+                j += 7;
+            }
+            if (daysdiff - j > 0)
+            {
+                yield return from.AddDays(daysdiff - j);
             }
         }
     } 

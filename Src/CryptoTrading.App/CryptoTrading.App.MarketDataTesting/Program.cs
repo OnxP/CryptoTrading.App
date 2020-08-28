@@ -22,6 +22,7 @@ namespace CryptoTrading.App.MarketDataTesting
     class Program
     {
         static StreamWriter writer;
+        private static readonly object _sync = new object();
         public static void Main(string[] args)
         {
             var api = new BinanceApi();
@@ -33,28 +34,29 @@ namespace CryptoTrading.App.MarketDataTesting
             //LiveStream.StreamData();
             //LoadHistoricData(api);
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
+            writer.WriteLine($"Historic, Symbol ,  Open ,Close , Open Time , Close Time".PadRight(119));
             HistoricalMarketData marketDate = new HistoricalMarketData();
             marketDate.Configure(null);
-            marketDate.From = new DateTime(2020, 01, 24).ToUniversalTime();
+            marketDate.From = new DateTime(2020, 08, 24);
             //subscribe to several symbols
 
-            marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
-            marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Minute, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
 
-            marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayCandleStick);
-            marketDate.InitialDataStreamSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Minute, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayCandleStick);
 
             marketDate.StartStream();
 
@@ -64,18 +66,23 @@ namespace CryptoTrading.App.MarketDataTesting
 
         private static void DisplayCandleStick(CandlestickEventArgs obj)
         {
-            var candlestick = obj.Candlestick;
-                Console.WriteLine($"  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
-                writer.WriteLine($"  {candlestick.Symbol} , {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")} , {candlestick.CloseTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")}".PadRight(119));
-            
+            lock (_sync)
+            {
+                var candlestick = obj.Candlestick;
+                Console.WriteLine($"Live,  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
+                writer.WriteLine($"Live,  {candlestick.Symbol} , {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime:dd/MM/yyyy HH:mm:ss} , {candlestick.CloseTime:dd/MM/yyyy HH:mm:ss}".PadRight(119));
+            }
         }
 
         private static void DisplayHistoricCandleStick(IEnumerable<Candlestick> obj)
         {
-            foreach (var candlestick in obj.Reverse())
+            lock (_sync)
             {
-                Console.WriteLine($"Historic,  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
-                writer.WriteLine($"Historic,  {candlestick.Symbol} ,  {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")} , {candlestick.CloseTime.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss")}".PadRight(119));
+                foreach (var candlestick in obj)
+                {
+                    Console.WriteLine($"Historic,  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
+                    writer.WriteLine($"Historic,  {candlestick.Symbol} ,  {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime:dd/MM/yyyy HH:mm:ss} , {candlestick.CloseTime:dd/MM/yyyy HH:mm:ss}".PadRight(119));
+                }
             }
         }
 
