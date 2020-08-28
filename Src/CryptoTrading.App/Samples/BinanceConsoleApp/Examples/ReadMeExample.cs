@@ -23,7 +23,7 @@ namespace BinanceConsoleApp
 
 
             // Create user with API-Key and API-Secret.
-            using (var user = new BinanceApiUser("<API-Key>", "<API-Secret>"))
+            using (var user = new BinanceApiUser("C5ILSb0VCvBN3BgHMW4MlEqeNKtlif7w7Ib3Jgspl0tdefJZ3WnRn64YKaiPEkTE", "7guaW7iFbPwKqT3dgpL7Tht2L6xPNAxkIk41teMzjxD6G4qn5KaGCi4rCqLc8vW3"))
             {
                 // Create a client (MARKET) order.
                 var order = new MarketOrder(user)
