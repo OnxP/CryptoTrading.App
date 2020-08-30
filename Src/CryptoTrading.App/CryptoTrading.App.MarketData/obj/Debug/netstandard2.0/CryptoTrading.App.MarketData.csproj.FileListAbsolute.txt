@@ -1,9 +1,0 @@
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.0\CryptoTrading.App.MarketData.deps.json
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.0\CryptoTrading.App.MarketData.dll
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\bin\Debug\netstandard2.0\CryptoTrading.App.MarketData.pdb
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.0\CryptoTrading.App.MarketData.csprojAssemblyReference.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.0\CryptoTrading.App.MarketData.AssemblyInfoInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.0\CryptoTrading.App.MarketData.AssemblyInfo.cs
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.0\CryptoTrading.App.MarketData.csproj.CoreCompileInputs.cache
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.0\CryptoTrading.App.MarketData.dll
-C:\Users\Ankur\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\CryptoTrading.App.MarketData\obj\Debug\netstandard2.0\CryptoTrading.App.MarketData.pdb

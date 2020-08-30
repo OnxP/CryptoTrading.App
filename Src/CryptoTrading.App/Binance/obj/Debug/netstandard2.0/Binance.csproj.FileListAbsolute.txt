@@ -1,9 +1,0 @@
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\bin\Debug\netstandard2.0\Binance.deps.json
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\bin\Debug\netstandard2.0\Binance.dll
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\bin\Debug\netstandard2.0\Binance.pdb
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\obj\Debug\netstandard2.0\Binance.csprojAssemblyReference.cache
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\obj\Debug\netstandard2.0\Binance.AssemblyInfoInputs.cache
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\obj\Debug\netstandard2.0\Binance.AssemblyInfo.cs
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\obj\Debug\netstandard2.0\Binance.csproj.CoreCompileInputs.cache
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\obj\Debug\netstandard2.0\Binance.dll
-C:\Users\ankur\OneDrive\Documents\GitHub\CryptoTrading.App\Src\CryptoTrading.App\Binance\obj\Debug\netstandard2.0\Binance.pdb

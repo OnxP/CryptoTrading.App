@@ -12,7 +12,7 @@ namespace CryptoTrading.App.Algorthm
         public List<ITradingStrategy> tradingStrategies { get; set; }
         public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
         {
-            foreach()
+            //foreach()
         }
 
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
