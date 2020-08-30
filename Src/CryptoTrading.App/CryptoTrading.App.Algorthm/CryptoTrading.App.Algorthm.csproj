@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Binance\Binance.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
     <ProjectReference Include="..\Indicators\Tulip.NETCore.csproj" />
   </ItemGroup>
 
