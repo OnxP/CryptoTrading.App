@@ -8,3 +8,9 @@ _ReSharper.*
 bin
 obj
 packages
+*.cache
+*.v2
+Src/CryptoTrading.App/.vs/CryptoTrading.App/v16/.suo
+*.cache
+*.dll
+*.pdb

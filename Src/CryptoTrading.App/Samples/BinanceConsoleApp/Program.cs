@@ -46,7 +46,7 @@ namespace BinanceConsoleApp
             //await MinimalWithDependencyInjection.ExampleMain(args);
             //await MinimalWithoutDependencyInjection.ExampleMain(args);
             //await OrderBookCacheAccountBalanceExample.AdvancedExampleMain(args);
-            //await ReadMeExample.ExampleMain(args);
+            await ReadMeExample.ExampleMain(args);
 
 
             var cts = new CancellationTokenSource();
