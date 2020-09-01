@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CryptoTrading.App.Core;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Tulip;
@@ -9,5 +10,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
     {
         public Dictionary<string, Indicator> Indicators { get; }
         int OutputLength { get; }
+
+        double Calculate(OrderedFixedLengthList closePrices);
     }
 }

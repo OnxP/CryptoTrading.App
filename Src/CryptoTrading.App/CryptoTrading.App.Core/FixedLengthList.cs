@@ -5,20 +5,36 @@ using System.Text;
 
 namespace CryptoTrading.App.Core
 {
-    public class FixedLengthList : IList<double>
+    public class OrderedFixedLengthList : IList<double>
     {
+        public OrderedFixedLengthList(int numberOfCandleSticksToKeep)
+        {
+            NumberOfCandleSticksToKeep = numberOfCandleSticksToKeep;
+        }
+
         public double this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public int Count { get; set; }
+        public int Count => throw new NotImplementedException();
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly => throw new NotImplementedException();
+
+        public int NumberOfCandleSticksToKeep { get; }
 
         public void Add(double item)
         {
             throw new NotImplementedException();
         }
+        public void Add(decimal item)
+        {
+            Add(Convert.ToDouble(item));
+        }
 
         public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddRange(IEnumerable<decimal> items)
         {
             throw new NotImplementedException();
         }
