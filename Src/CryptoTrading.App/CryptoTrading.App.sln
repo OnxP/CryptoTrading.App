@@ -41,7 +41,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceConsoleApp", "Sample
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Broker", "Broker\Broker.csproj", "{4DF5B4FA-FEF7-41F2-889F-293CA03C1E73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.Algorthm", "CryptoTrading.App.Algorthm\CryptoTrading.App.Algorthm.csproj", "{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Algorthm", "CryptoTrading.App.Algorthm\CryptoTrading.App.Algorthm.csproj", "{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.Process", "CryptoTrading.App.Process\CryptoTrading.App.Process.csproj", "{A8F43646-F731-4696-A131-B8D338093C7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -117,6 +119,10 @@ Global
 		{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8F43646-F731-4696-A131-B8D338093C7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8F43646-F731-4696-A131-B8D338093C7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8F43646-F731-4696-A131-B8D338093C7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8F43646-F731-4696-A131-B8D338093C7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
