@@ -10,7 +10,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
     {
         public Dictionary<string, (Indicator indicator, double[] options)> Indicators { get; }
 
-        public int OutputLength { get; }
+        public abstract int OutputLength { get; }
+        protected abstract double StrategyWeight { get; }
 
         public TradingStrategy()
         {
@@ -45,9 +46,9 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 indicatorOutputs.Add(item.Key, outputs);
             }
 
-            return Calculate(indicatorOutputs);
+            return Calculate(indicatorOutputs, closePrices.Current) * StrategyWeight;
         }
-
-        protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs);
+        //return +1 for buy Trade, -1 for sell, and 0 for Hold.
+        protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, double closePrice);
     }
 }

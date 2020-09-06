@@ -19,6 +19,7 @@ namespace CryptoTrading.App.Core
         public bool IsReadOnly => throw new NotImplementedException();
 
         public int NumberOfCandleSticksToKeep { get; }
+        public double Current { get; set; }
 
         public void Add(double item)
         {
