@@ -98,7 +98,7 @@ namespace CryptoTrading.App.MarketData
                     var from = From;
                     foreach (var to in SplitDates(item.Key.interval, from, DateTime.Now.ToUniversalTime()))
                     {
-                        tasks.Add(StreamData(api, item.Key, From, to));
+                        tasks.Add(StreamData(api, item.Key, from, to));
                         from = to;
                         if(tasks.Count % 50 == 0)
                         {

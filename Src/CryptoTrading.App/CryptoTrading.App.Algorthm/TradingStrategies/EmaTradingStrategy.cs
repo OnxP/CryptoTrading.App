@@ -32,7 +32,11 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var slowEma = indicatorOutputs["SlowEma"][0].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
 
-           
+
+            //Price > than Long EMA
+            //Long EMA is in an uptrend
+            //Fast > Slow EMA
+            if (fastEma.Last() > slowEma.Last() && slowEma.Last() > longEma.Last() && closePrice > longEma.Last()) return 1;
             //check if long is trading sideways, need more entries to determin that!
 
             //check if long is in an uptrend.

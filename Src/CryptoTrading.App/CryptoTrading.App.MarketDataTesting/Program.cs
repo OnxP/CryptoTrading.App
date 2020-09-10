@@ -34,13 +34,13 @@ namespace CryptoTrading.App.MarketDataTesting
             //LiveStream.StreamData();
             //LoadHistoricData(api);
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
-            writer.WriteLine($"Historic, Symbol ,  Open ,Close , Open Time , Close Time".PadRight(119));
+            writer.WriteLine($"Historic,Symbol,Open,High,Low,Close,Open Time ,Close Time");
             HistoricalMarketData marketDate = new HistoricalMarketData();
             marketDate.Configure(null);
             marketDate.From = new DateTime(2020, 08, 24);
             //subscribe to several symbols
 
-            marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Minute, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
@@ -49,7 +49,7 @@ namespace CryptoTrading.App.MarketDataTesting
             //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
 
-            marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Minute, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayCandleStick);
             //marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
             //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
             //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
@@ -70,7 +70,7 @@ namespace CryptoTrading.App.MarketDataTesting
             {
                 var candlestick = obj.Candlestick;
                 Console.WriteLine($"Live,  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
-                writer.WriteLine($"Live,  {candlestick.Symbol} , {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime:dd/MM/yyyy HH:mm:ss} , {candlestick.CloseTime:dd/MM/yyyy HH:mm:ss}".PadRight(119));
+                writer.WriteLine($"Live,{candlestick.Symbol},{candlestick.Open:0.00000000},{candlestick.High:0.00000000},{candlestick.Low:0.00000000},{candlestick.Close:0.00000000},{candlestick.OpenTime:dd/MM/yyyy HH:mm:ss},{candlestick.CloseTime:dd/MM/yyyy HH:mm:ss}");
             }
         }
 
@@ -81,7 +81,7 @@ namespace CryptoTrading.App.MarketDataTesting
                 foreach (var candlestick in obj)
                 {
                     Console.WriteLine($"Historic,  {candlestick.Symbol} - O: {candlestick.Open:0.00000000} | C: {candlestick.Close:0.00000000} - [{candlestick.OpenTime.ToLongTimeString()}] - [{candlestick.CloseTime.ToLongTimeString()}]".PadRight(119));
-                    writer.WriteLine($"Historic,  {candlestick.Symbol} ,  {candlestick.Open:0.00000000} ,{candlestick.Close:0.00000000} , {candlestick.OpenTime:dd/MM/yyyy HH:mm:ss} , {candlestick.CloseTime:dd/MM/yyyy HH:mm:ss}".PadRight(119));
+                    writer.WriteLine($"Historic,{candlestick.Symbol},{candlestick.Open:0.00000000},{candlestick.High:0.00000000},{candlestick.Low:0.00000000},{candlestick.Close:0.00000000},{candlestick.OpenTime:dd/MM/yyyy HH:mm:ss},{candlestick.CloseTime:dd/MM/yyyy HH:mm:ss}");
                 }
             }
         }
