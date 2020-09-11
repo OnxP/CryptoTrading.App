@@ -10,6 +10,8 @@ namespace CryptoTrading.App.Algorthm
 {
     public class Algorthm
     {
+        public delegate int SubmitRequest(ITradeRequest request);
+        public event SubmitRequest EventSubmitRequest;
         public int NumberOfCandleSticksToKeep => tradingStrategies.Max(x=>x.OutputLength);
         public List<ITradingStrategy> tradingStrategies { get; }
         private OrderedFixedLengthList _closePrices;
@@ -39,7 +41,15 @@ namespace CryptoTrading.App.Algorthm
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
             _closePrices.Add(candlestickEventArgs.Candlestick.Close);
+            double result = 0;
+            foreach (var strategy in tradingStrategies)
+            {
+                //some strategied may required more than just the close price, particularly at higher timeframes, don't need dates assuming the ordered list will track that, so it might be worth converting it into a struct.
+                result += strategy.Calculate(_closePrices);
+            }
 
+            var request = ITradeRequest.BuiltRequest();
+            EventSubmitRequest(request);
         }
     }
 }
