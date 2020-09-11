@@ -25,7 +25,39 @@ namespace CryptoTrading.App.MarketDataTesting
         private static readonly object _sync = new object();
         public static void Main(string[] args)
         {
-            var api = new BinanceApi();
+            Configuration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", true, false)
+                    .AddUserSecrets<Program>() // for access to API key and secret.
+                    .Build();
+
+            // Configure services.
+            ServiceProvider = new ServiceCollection()
+                // ReSharper disable once ArgumentsStyleLiteral
+                .AddBinace(useSingleCombinedStream: true) // add default Binance services.
+
+                // Use alternative, low-level, web socket client implementation.
+                //.AddTransient<IWebSocketClient, WebSocket4NetClient>()
+                //.AddTransient<IWebSocketClient, WebSocketSharpClient>()
+
+                .AddOptions()
+                .Configure<BinanceApiOptions>(Configuration.GetSection("ApiOptions"))
+
+                // Configure logging.
+                .AddLogging(builder => builder
+                    .SetMinimumLevel(LogLevel.Trace)
+                    .AddFile(Configuration.GetSection("Logging:File"))
+                    .AddConfiguration(Configuration.GetSection("Logging:Console"))
+                    .AddConsole())
+
+                .BuildServiceProvider();
+
+
+
+
+
+
+            var api = ServiceProvider.GetService<IBinanceApi>();
 
             //// Check connectivity.
             //System.Threading.Tasks.Task task = PingAsync(api);
@@ -33,6 +65,7 @@ namespace CryptoTrading.App.MarketDataTesting
 
             //LiveStream.StreamData();
             //LoadHistoricData(api);
+            var logger = ServiceProvider.
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
             writer.WriteLine($"Historic,Symbol,Open,High,Low,Close,Open Time ,Close Time");
             HistoricalMarketData marketDate = new HistoricalMarketData();

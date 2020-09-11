@@ -10,7 +10,6 @@ namespace CryptoTrading.App.Algorthm
 {
     public class Algorthm
     {
-        //
         public int NumberOfCandleSticksToKeep => tradingStrategies.Max(x=>x.OutputLength);
         public List<ITradingStrategy> tradingStrategies { get; }
         private OrderedFixedLengthList _closePrices;

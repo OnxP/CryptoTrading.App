@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
     {
         public Dictionary<string, (Indicator indicator, double[] options)> Indicators { get; }
 
-        public abstract int OutputLength { get; }
+        public int OutputLength { get; private set; }
         protected abstract double StrategyWeight { get; }
 
         public TradingStrategy()

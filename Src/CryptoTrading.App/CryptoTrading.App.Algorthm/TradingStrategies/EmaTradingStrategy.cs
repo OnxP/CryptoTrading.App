@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
     public class EmaTradingStrategy : TradingStrategy
     {
         protected override double StrategyWeight => 1.0;
-        public override int OutputLength => 1000;
+        //public override int OutputLength => 1000;
 
         protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
         {
