@@ -5,23 +5,23 @@ using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core
 {
-    namespace MessageBroker
+    namespace Message_Broker
     {
-        public class MessageBrokerImpl : IMessageBroker
+        public class MessageBroker : IMessageBroker
         {
-            private static MessageBrokerImpl _instance;
+            private static MessageBroker _instance;
             private readonly Dictionary<Type, List<Delegate>> _subscribers;
-            public static MessageBrokerImpl Instance
+            public static MessageBroker Instance
             {
                 get
                 {
                     if (_instance == null)
-                        _instance = new MessageBrokerImpl();
+                        _instance = new MessageBroker();
                     return _instance;
                 }
             }
 
-            private MessageBrokerImpl()
+            private MessageBroker()
             {
                 _subscribers = new Dictionary<Type, List<Delegate>>();
             }
