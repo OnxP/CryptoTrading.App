@@ -17,7 +17,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace CryptoTrading.App.MarketData
 {
-    public class HistoricalMarketData : IMarketData
+    public class HistoricalMarketData : AbstractMarketData , IMarketData
     {
         public DateTime From { get; set; }
         DateTime To { get; set; }
@@ -25,34 +25,7 @@ namespace CryptoTrading.App.MarketData
         ICandlestickClient _client;
         IBinanceWebSocketStream _webSocket;
 
-        private IDictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>> _historicDataSubscribers = new Dictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>>();
-        private IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> _subscribers = new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>>();
-        //public events 
-
-        public void InitialDataLoadSubscribe(string symbol, CandlestickInterval interval,Action<IEnumerable<Candlestick>> callback)
-        {
-            _historicDataSubscribers.Add((symbol, interval), callback);
-        }
-        public void InitialDataLoadUnSubscribe(string symbol, CandlestickInterval interval)
-        {
-            _historicDataSubscribers.Remove((symbol, interval));
-        }
-
-        public void InitialDataStreamSubscribe(string symbol, CandlestickInterval interval, Action<CandlestickEventArgs> callback)
-        {
-            if(!_subscribers.ContainsKey((symbol,interval)))
-            {
-                _subscribers.Add((symbol, interval), new List<Action<CandlestickEventArgs>>());
-            }
-            _subscribers[(symbol, interval)].Add(callback);
-        }
-
-        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval, Action<CandlestickEventArgs> callback)
-        {
-            _subscribers.Remove((symbol, interval));
-        }
-
-        public void Configure(IRequest request)
+        public override void Configure(IRequest request)
         {
             var configuration = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
@@ -133,7 +106,7 @@ namespace CryptoTrading.App.MarketData
         }
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
-        private static readonly object _sync = new object();
+        
 
         private async System.Threading.Tasks.Task StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
@@ -180,13 +153,6 @@ namespace CryptoTrading.App.MarketData
             };
         }
 
-        private static void HandleError(Exception e)
-        {
-            //lock (_sync)
-            //{
-                Console.WriteLine(e.Message);
-            //}
-        }
 
         private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol,CandlestickInterval interval) symbol, DateTime from, Action<IEnumerable<Candlestick>> callback)
         {
