@@ -4,6 +4,7 @@ using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.TradeRequest;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,19 +12,21 @@ namespace CryptoTrading.App.Algorthm
 {
     public class Algorthm : IAlgorthm
     {
+        public ILogger Logger { get; set; }
         public int NumberOfCandleSticksToKeep => tradingStrategies.Max(x=>x.OutputLength);
         public List<ITradingStrategy> tradingStrategies { get; }
         private OrderedFixedLengthList _closePrices;
-        public Algorthm(List<ITradingStrategy> strategies)
+        public Algorthm(List<ITradingStrategy> strategies, ILogger logger)
         {
             tradingStrategies = strategies;
             _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
+            Logger = logger;
         }
         public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
         {
             //want to reduce dependancy on the candle stick object=> may need to create my own.
             _closePrices.AddRange(candlesticks.Select(x => x.Close));
-
+            Logger.LogInformation($"Added {candlesticks.Count()} historic candlesticks for {candlesticks.First().Symbol}");
             var result = CalculateTradeStrategies();
             //log load algothrm is sucessful.
 
