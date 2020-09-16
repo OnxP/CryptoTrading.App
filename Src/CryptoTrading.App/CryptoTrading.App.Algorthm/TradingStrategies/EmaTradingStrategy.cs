@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
     public class EmaTradingStrategy : TradingStrategy
     {
+        public EmaTradingStrategy(ILogger logger):base(logger)
+        {
+        }
+
         protected override double StrategyWeight => 1.0;
+
+
         //public override int OutputLength => 1000;
 
         protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
@@ -32,6 +39,11 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var slowEma = indicatorOutputs["SlowEma"][0].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
 
+
+            Logger.LogInformation($"Fast Ema: {fastEma.Last()}");
+            Logger.LogInformation($"Slow Ema: {slowEma.Last()}");
+            Logger.LogInformation($"Long Ema: {longEma.Last()}");
+            Logger.LogInformation($"Close Price: {closePrice}");
 
             //Price > than Long EMA
             //Long EMA is in an uptrend

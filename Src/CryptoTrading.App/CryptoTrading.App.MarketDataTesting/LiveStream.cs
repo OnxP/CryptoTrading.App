@@ -1,8 +1,8 @@
 ﻿using Binance;
-using Binance.Application;
 using Binance.Client;
 using Binance.Utility;
 using Binance.WebSocket;
+using CryptoTrading.App.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

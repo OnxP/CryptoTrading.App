@@ -39,7 +39,9 @@ namespace CryptoTrading.App.Algorthm
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
             _closePrices.Add(candlestickEventArgs.Candlestick.Close);
+            Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/mm/dd hh:ss}");
             var result = CalculateTradeStrategies();
+            Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/mm/dd hh:ss}");
             var request = RequestBuilder.BuildTradeRequest(result,candlestickEventArgs.Candlestick.Symbol);
             MessageBroker.Instance.Publish(this,request);
         }
@@ -50,7 +52,9 @@ namespace CryptoTrading.App.Algorthm
             foreach (var strategy in tradingStrategies)
             {
                 //some strategied may required more than just the close price, particularly at higher timeframes, don't need dates assuming the ordered list will track that, so it might be worth converting it into a struct.
+                Logger.LogInformation($"Processing strategy {strategy}");
                 result += strategy.Calculate(_closePrices);
+                Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
             }
             return result;
         }

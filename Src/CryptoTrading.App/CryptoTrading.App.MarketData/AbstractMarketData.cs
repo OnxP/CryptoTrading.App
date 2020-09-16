@@ -13,7 +13,7 @@ namespace CryptoTrading.App.MarketData
 
         protected static readonly object _sync = new object();
 
-        private static void HandleError(Exception e)
+        protected static void HandleError(Exception e)
         {
             lock (_sync)
             {

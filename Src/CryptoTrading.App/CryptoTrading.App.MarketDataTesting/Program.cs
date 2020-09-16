@@ -23,6 +23,7 @@ namespace CryptoTrading.App.MarketDataTesting
     {
         static StreamWriter writer;
         private static readonly object _sync = new object();
+
         public static void Main(string[] args)
         {
             Configuration = new ConfigurationBuilder()

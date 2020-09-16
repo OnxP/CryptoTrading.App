@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +13,20 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         public int OutputLength { get; private set; }
         protected abstract double StrategyWeight { get; }
+        public ILogger Logger { get; }
 
-        public TradingStrategy()
+        protected TradingStrategy(ILogger logger)
         {
+            Logger = logger;
             Indicators = GenerateIndicators();
             int i = 0;
             foreach (var item in Indicators)
             {
-                i = Math.Max(item.Value.indicator.Start(item.Value.options),i);
+                i = Math.Max(item.Value.indicator.Start(item.Value.options), i);
             }
 
             OutputLength = i;
+            logger.LogInformation($"Stragegy Initialisation complete for {this}, output length = {OutputLength}, Strategy Weight = {StrategyWeight}");
         }
 
         protected abstract Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators();

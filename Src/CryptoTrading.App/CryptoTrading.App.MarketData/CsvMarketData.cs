@@ -7,7 +7,7 @@ namespace CryptoTrading.App.MarketData
 {
     public class CsvMarketData : AbstractMarketData , IMarketData
     {
-        public void Configure(IRequest request)
+        public override void Configure(IRequest request)
         {
 
         }

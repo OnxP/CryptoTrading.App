@@ -8,12 +8,12 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using Binance;
 using Binance.Client;
-using Binance.Application;
 using Binance.Utility;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using System.Security.Cryptography.X509Certificates;
+using CryptoTrading.App.Core.Extensions;
 
 namespace CryptoTrading.App.MarketData
 {
