@@ -39,9 +39,9 @@ namespace CryptoTrading.App.Algorthm
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
             _closePrices.Add(candlestickEventArgs.Candlestick.Close);
-            Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/mm/dd hh:ss}");
+            Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             var result = CalculateTradeStrategies();
-            Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/mm/dd hh:ss}");
+            Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             var request = RequestBuilder.BuildTradeRequest(result,candlestickEventArgs.Candlestick.Symbol);
             MessageBroker.Instance.Publish(this,request);
         }

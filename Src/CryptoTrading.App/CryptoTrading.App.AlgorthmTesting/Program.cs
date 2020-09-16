@@ -7,6 +7,7 @@ using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -18,7 +19,9 @@ namespace CryptoTrading.App.AlgorthmTesting
             var services = new ServiceCollection()
                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
-                        .AddFile(filePath, LogLevel.Information))
+                        .AddFile(filePath, LogLevel.Information)
+                        //.AddConsole()
+                        )
                     .BuildServiceProvider();
 
 
@@ -30,7 +33,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             //replay candle sticks
             var data = LoadFile();
 
-            var historicCandleSticks = data.Where(x=>x.Item1 == "Historic").Select(x => x.Item2);
+            var historicCandleSticks = data.Where(x=>x.Item1 == "Historic").Select(x => x.Item2).OrderBy(x => x.CloseTime);
+            
             Algo.ProcessHistoricMarketData(historicCandleSticks);
             var liveData = data.Where(x => x.Item1 == "Live").Select(x => x.Item2);
             foreach (var item in liveData)
@@ -54,7 +58,7 @@ namespace CryptoTrading.App.AlgorthmTesting
         private static IEnumerable<(string, Candlestick)> LoadFile()
         {
             char[] seperators = { ',' };
-            using (StreamReader reader = new StreamReader(@"/MarketDataTest.csv"))
+            using (StreamReader reader = new StreamReader(Directory.GetCurrentDirectory() + @"/MarketDataTest.csv"))
             {
                 string line = reader.ReadLine();//skips the columns
                 while ((line = reader.ReadLine()) != null)
