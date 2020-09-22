@@ -4,13 +4,13 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int MdStart(double[] options) => (int) options[0] - 1;
+        private static int MdStart(double[] options) => (int)options[0] - 1;
 
-        private static int MdStart(decimal[] options) => (int) options[0] - 1;
+        private static int MdStart(decimal[] options) => (int)options[0] - 1;
 
         private static int Md(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {
@@ -55,7 +55,7 @@ namespace Tulip
 
         private static int Md(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {

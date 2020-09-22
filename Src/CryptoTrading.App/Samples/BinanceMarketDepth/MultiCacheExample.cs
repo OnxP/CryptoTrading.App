@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Binance;
+﻿using Binance;
 using Binance.Application;
 using Binance.Cache;
 using Binance.Utility;
@@ -9,6 +6,9 @@ using Binance.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 // ReSharper disable AccessToDisposedClosure
 

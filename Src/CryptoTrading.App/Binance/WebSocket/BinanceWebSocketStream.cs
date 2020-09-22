@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Binance.Client;
+﻿using Binance.Client;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Binance.WebSocket
 {
@@ -30,7 +30,7 @@ namespace Binance.WebSocket
             get => base.Uri;
             set
             {
-                if (value != null &&!value.AbsoluteUri.StartsWith(BaseUri))
+                if (value != null && !value.AbsoluteUri.StartsWith(BaseUri))
                     throw new ArgumentException($"{nameof(BinanceWebSocketStream)}: URI must start with {nameof(BaseUri)} ({BaseUri}).");
 
                 Pause(); // pause streaming.

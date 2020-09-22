@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Binance.Client;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Client;
-using Microsoft.Extensions.Logging;
 
 namespace Binance.Cache
 {

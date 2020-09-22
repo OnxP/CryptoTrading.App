@@ -4,15 +4,15 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int UltOscStart(double[] options) => (int) options[2];
+        private static int UltOscStart(double[] options) => (int)options[2];
 
-        private static int UltOscStart(decimal[] options) => (int) options[2];
+        private static int UltOscStart(decimal[] options) => (int)options[2];
 
         private static int UltOsc(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int mediumPeriod = (int) options[1];
-            int longPeriod = (int) options[2];
+            int shortPeriod = (int)options[0];
+            int mediumPeriod = (int)options[1];
+            int longPeriod = (int)options[2];
 
             if (shortPeriod < 1 || mediumPeriod < shortPeriod || longPeriod < mediumPeriod)
             {
@@ -89,9 +89,9 @@ namespace Tulip
 
         private static int UltOsc(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int mediumPeriod = (int) options[1];
-            int longPeriod = (int) options[2];
+            int shortPeriod = (int)options[0];
+            int mediumPeriod = (int)options[1];
+            int longPeriod = (int)options[2];
 
             if (shortPeriod < 1 || mediumPeriod < shortPeriod || longPeriod < mediumPeriod)
             {

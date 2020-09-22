@@ -17,7 +17,7 @@ namespace Binance.Client
         /// Replaced.
         /// </summary>
         Replaced,
-        
+
         /// <summary>
         /// Rejected.
         /// </summary>

@@ -1,15 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Tulip;
 
 namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
     public class EmaTradingStrategy : TradingStrategy
     {
-        public EmaTradingStrategy(ILogger logger):base(logger)
+        public EmaTradingStrategy(ILogger logger) : base(logger)
         {
         }
 
@@ -27,12 +25,12 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var fastEma = (Tulip.Indicators.ema, new double[] { 13 });
             var slowEma = (Tulip.Indicators.ema, new double[] { 21 });
             var longEma = (Tulip.Indicators.ema, new double[] { 100 });
-            dict.Add("FastEma",fastEma);
+            dict.Add("FastEma", fastEma);
             dict.Add("SlowEma", slowEma);
             dict.Add("LongEma", longEma);
             return dict;
         }
-        
+
         protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, double closePrice)
         {
             var fastEma = indicatorOutputs["FastEma"][0].ToList();

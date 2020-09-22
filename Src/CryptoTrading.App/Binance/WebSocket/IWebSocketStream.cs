@@ -1,5 +1,5 @@
-﻿using System;
-using Binance.Stream;
+﻿using Binance.Stream;
+using System;
 
 namespace Binance.WebSocket
 {

@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Binance.WebSocket;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace Binance.Utility
 {

@@ -25,7 +25,7 @@ namespace Binance
 
         #region Implicit Operators
 
-        public static implicit operator (decimal, decimal, decimal) (InclusiveRange range)
+        public static implicit operator (decimal, decimal, decimal)(InclusiveRange range)
             => (range.Minimum, range.Maximum, range.Increment);
 
         public static implicit operator InclusiveRange((decimal, decimal, decimal) range)

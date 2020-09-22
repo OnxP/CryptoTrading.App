@@ -14,7 +14,7 @@ namespace Binance.Client
         /// <param name="interval"></param>
         /// <returns></returns>
         public static ICandlestickClient Subscribe(this ICandlestickClient client, string symbol, CandlestickInterval interval)
-            => client.Subscribe(symbol, interval,  null);
+            => client.Subscribe(symbol, interval, null);
 
         /// <summary>
         /// 

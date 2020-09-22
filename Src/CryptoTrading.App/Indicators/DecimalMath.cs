@@ -279,7 +279,7 @@ namespace Tulip
             }
 
             //initial approximation
-            decimal current = (decimal) Math.Sqrt((double) x), previous;
+            decimal current = (decimal)Math.Sqrt((double)x), previous;
             do
             {
                 previous = current;

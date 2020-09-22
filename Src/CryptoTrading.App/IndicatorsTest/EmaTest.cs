@@ -1,16 +1,16 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tulip;
 
 namespace Ankur.Trading.Test.IndicatorsTests
 {
     [TestClass]
     public class EmaTest
-    {        
+    {
         private List<double> BuildCandleSticks()
         {
-            var list =  new List<double>
+            var list = new List<double>
             {
                 11,
                 12,
@@ -40,8 +40,8 @@ namespace Ankur.Trading.Test.IndicatorsTests
             double[][] inputs = { close_prices };
             double[][] outputs = { output };
             int success = Indicators.ema.Run(inputs, options, outputs);
-            var value = outputs[0][output.Length-1];
-            Assert.AreEqual(19, Math.Round(value,0));
+            var value = outputs[0][output.Length - 1];
+            Assert.AreEqual(19, Math.Round(value, 0));
         }
 
         [TestMethod]

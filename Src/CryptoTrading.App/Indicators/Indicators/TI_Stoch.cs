@@ -4,15 +4,15 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int StochStart(double[] options) => (int) options[0] + (int) options[1] + (int) options[2] - 3;
+        private static int StochStart(double[] options) => (int)options[0] + (int)options[1] + (int)options[2] - 3;
 
-        private static int StochStart(decimal[] options) => (int) options[0] + (int) options[1] + (int) options[2] - 3;
+        private static int StochStart(decimal[] options) => (int)options[0] + (int)options[1] + (int)options[2] - 3;
 
         private static int Stoch(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            int kPeriod = (int) options[0];
-            int kSlow = (int) options[1];
-            int dPeriod = (int) options[2];
+            int kPeriod = (int)options[0];
+            int kSlow = (int)options[1];
+            int dPeriod = (int)options[2];
 
             if (kPeriod < 1 || kSlow < 1 || dPeriod < 1)
             {
@@ -118,9 +118,9 @@ namespace Tulip
 
         private static int Stoch(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            int kPeriod = (int) options[0];
-            int kSlow = (int) options[1];
-            int dPeriod = (int) options[2];
+            int kPeriod = (int)options[0];
+            int kSlow = (int)options[1];
+            int dPeriod = (int)options[2];
 
             if (kPeriod < 1 || kSlow < 1 || dPeriod < 1)
             {

@@ -7,7 +7,7 @@ namespace CryptoTrading.App.Core
     {
         public static IServiceCollection AddTradingCore(this IServiceCollection services)
         {
-            services.AddSingleton<IMessageBroker,MessageBroker>();
+            services.AddSingleton<IMessageBroker, MessageBroker>();
 
             return services;
         }

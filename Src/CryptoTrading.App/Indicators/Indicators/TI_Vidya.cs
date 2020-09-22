@@ -4,14 +4,14 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int VidyaStart(double[] options) => (int) options[1] - 2;
+        private static int VidyaStart(double[] options) => (int)options[1] - 2;
 
-        private static int VidyaStart(decimal[] options) => (int) options[1] - 2;
+        private static int VidyaStart(decimal[] options) => (int)options[1] - 2;
 
         private static int Vidya(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
             double alpha = options[2];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod || longPeriod < 2 || alpha < 0.0 || alpha > 1.0)
@@ -86,8 +86,8 @@ namespace Tulip
 
         private static int Vidya(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
             decimal alpha = options[2];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod || longPeriod < 2 || alpha < Decimal.Zero || alpha > Decimal.One)

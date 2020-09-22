@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Binance;
+using Binance.Application;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance;
-using Binance.Application;
 
 namespace BinanceConsoleApp.Controllers
 {

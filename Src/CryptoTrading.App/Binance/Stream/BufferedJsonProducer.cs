@@ -1,6 +1,6 @@
-﻿using System.Threading;
-using Binance.Utility;
+﻿using Binance.Utility;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Binance.Stream
 {

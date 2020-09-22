@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Binance.Api;
 using Binance.Cache;
 using Binance.Client;
-using Binance.Stream;
 using Binance.Serialization;
+using Binance.Stream;
 using Binance.Utility;
 using Binance.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Binance.Api;
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace Binance

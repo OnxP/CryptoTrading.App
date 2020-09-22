@@ -10,8 +10,8 @@ namespace Tulip
 
         private static int Kvo(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod)
             {
@@ -74,8 +74,8 @@ namespace Tulip
 
         private static int Kvo(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod)
             {

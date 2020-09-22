@@ -13,7 +13,7 @@ namespace CryptoTrading.App.Algorthm
     public class Algorthm : IAlgorthm
     {
         public ILogger Logger { get; set; }
-        public int NumberOfCandleSticksToKeep => tradingStrategies.Max(x=>x.OutputLength);
+        public int NumberOfCandleSticksToKeep => tradingStrategies.Max(x => x.OutputLength);
         public List<ITradingStrategy> tradingStrategies { get; }
         private OrderedFixedLengthList _closePrices;
         public Algorthm(List<ITradingStrategy> strategies, ILogger logger)
@@ -42,8 +42,8 @@ namespace CryptoTrading.App.Algorthm
             Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             var result = CalculateTradeStrategies();
             Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-            var request = RequestBuilder.BuildTradeRequest(result,candlestickEventArgs.Candlestick.Symbol);
-            MessageBroker.Instance.Publish(this,request);
+            var request = RequestBuilder.BuildTradeRequest(result, candlestickEventArgs.Candlestick.Symbol);
+            MessageBroker.Instance.Publish(this, request);
         }
 
         public double CalculateTradeStrategies()

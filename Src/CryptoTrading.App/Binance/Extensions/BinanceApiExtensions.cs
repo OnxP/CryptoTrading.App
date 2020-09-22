@@ -220,7 +220,7 @@ namespace Binance
         {
             Throw.IfNull(api, nameof(api));
 
-             var cancelOrderIds = new List<string>();
+            var cancelOrderIds = new List<string>();
 
             IEnumerable<Order> orders;
             do
@@ -264,7 +264,7 @@ namespace Binance
             // TODO: Can 'canceled' orders have trades?
             //if (order.Status == OrderStatus.Canceled)
             //    return orderTrades;
-            
+
             // TODO: Can 'expired' orders have trades?
             //if (order.Status == OrderStatus.Expired)
             //    return orderTrades;
@@ -378,7 +378,7 @@ namespace Binance
                 return 1 / price.Value;
             }
 
-            var markets = new [] { "BTC", "ETH", "BNB", "USDT" };
+            var markets = new[] { "BTC", "ETH", "BNB", "USDT" };
 
             foreach (var market in markets)
             {

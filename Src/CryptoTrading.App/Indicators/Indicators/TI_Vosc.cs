@@ -4,14 +4,14 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int VoscStart(double[] options) => (int) options[1] - 1;
+        private static int VoscStart(double[] options) => (int)options[1] - 1;
 
-        private static int VoscStart(decimal[] options) => (int) options[1] - 1;
+        private static int VoscStart(decimal[] options) => (int)options[1] - 1;
 
         private static int Vosc(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod)
             {
@@ -62,8 +62,8 @@ namespace Tulip
 
         private static int Vosc(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod)
             {

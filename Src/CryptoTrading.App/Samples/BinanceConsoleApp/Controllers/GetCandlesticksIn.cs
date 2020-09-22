@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Binance;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance;
 
 namespace BinanceConsoleApp.Controllers
 {
@@ -27,7 +27,7 @@ namespace BinanceConsoleApp.Controllers
 
             var symbol = args[1];
 
-            var interval =args[2].ToCandlestickInterval();
+            var interval = args[2].ToCandlestickInterval();
 
             long.TryParse(args[3], out var startTime);
 

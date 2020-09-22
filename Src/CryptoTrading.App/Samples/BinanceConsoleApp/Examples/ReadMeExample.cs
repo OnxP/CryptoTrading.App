@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Binance;
+﻿using Binance;
 using Binance.Cache;
 using Binance.WebSocket;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace BinanceConsoleApp
@@ -57,7 +57,7 @@ namespace BinanceConsoleApp
             webSocketClient.Subscribe(Symbol.BTC_USDT, evt =>
             {
                 var side = evt.Trade.IsBuyerMaker ? "SELL" : "BUY ";
-                
+
                 // Handle aggregate trade events.
                 Console.WriteLine($"{evt.Trade.Symbol} {side} {evt.Trade.Quantity} @ {evt.Trade.Price}");
             });

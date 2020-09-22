@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Binance.Api;
+using Binance.Serialization;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Serialization;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-using Binance.Api;
 
 // ReSharper disable once CheckNamespace
 namespace Binance
@@ -426,7 +426,7 @@ namespace Binance
                             {
                                 quoteIncrement = priceFilter["tickSize"].Value<decimal>();
                             }
-                            
+
                             decimal multiplierUp = 0, multiplierDown = 0;
                             var percentFilter = filters.FirstOrDefault(f => f["filterType"].Value<string>() == "PERCENT_PRICE");
                             if (percentFilter != null)
@@ -895,7 +895,7 @@ namespace Binance
 
             return 0;
         }
-        
+
         public virtual async Task<string> GetAccountStatusAsync(IBinanceApiUser user, long recvWindow = default, CancellationToken token = default)
         {
             var json = await HttpClient.GetAccountStatusAsync(user, recvWindow, token)

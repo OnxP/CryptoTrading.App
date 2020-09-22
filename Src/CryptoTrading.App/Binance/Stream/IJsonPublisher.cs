@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Binance.Client;
+﻿using Binance.Client;
+using System.Collections.Generic;
 
 namespace Binance.Stream
 {

@@ -4,13 +4,13 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int HmaStart(double[] options) => (int) options[0] + (int) Math.Sqrt((int) options[0]) - 2;
+        private static int HmaStart(double[] options) => (int)options[0] + (int)Math.Sqrt((int)options[0]) - 2;
 
-        private static int HmaStart(decimal[] options) => (int) options[0] + (int) Math.Sqrt((int) options[0]) - 2;
+        private static int HmaStart(decimal[] options) => (int)options[0] + (int)Math.Sqrt((int)options[0]) - 2;
 
         private static int Hma(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {
@@ -45,7 +45,7 @@ namespace Tulip
                 }
             }
 
-            var periodSqrt = (int) Math.Sqrt(period);
+            var periodSqrt = (int)Math.Sqrt(period);
             double weights = period * (period + 1) / 2.0;
             double weights2 = period2 * (period2 + 1) / 2.0;
             double weightsSqrt = periodSqrt * (periodSqrt + 1) / 2.0;
@@ -94,7 +94,7 @@ namespace Tulip
 
         private static int Hma(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {
@@ -129,7 +129,7 @@ namespace Tulip
                 }
             }
 
-            var periodSqrt = (int) Math.Sqrt(period);
+            var periodSqrt = (int)Math.Sqrt(period);
             decimal weights = period * (period + 1) / 2m;
             decimal weights2 = period2 * (period2 + 1) / 2m;
             decimal weightsSqrt = periodSqrt * (periodSqrt + 1) / 2m;

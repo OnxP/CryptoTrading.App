@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Binance;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Binance;
 
 namespace BinanceCodeGenerator
 {
@@ -68,7 +68,7 @@ namespace BinanceCodeGenerator
             index = lines.FindIndex(l => l.Contains("<<insert symbol definitions>>"));
             lines.RemoveAt(index);
 
-            foreach(var symbol in symbols)
+            foreach (var symbol in symbols)
             {
                 var orderTypes = string.Join(",", symbol.OrderTypes.Select(_ => "OrderType." + _));
                 lines.Insert(index++, $"                        new Symbol(SymbolStatus.{symbol.Status}, Asset.{symbol.BaseAsset}, Asset.{symbol.QuoteAsset}, ({Convert.ToString(symbol.Quantity.Minimum, CultureInfo.InvariantCulture)}m, {Convert.ToString(symbol.Quantity.Maximum, CultureInfo.InvariantCulture)}m, {Convert.ToString(symbol.Quantity.Increment, CultureInfo.InvariantCulture)}m), ({Convert.ToString(0, CultureInfo.InvariantCulture)}m, {Convert.ToString(0, CultureInfo.InvariantCulture)}m, {Convert.ToString(symbol.Price.Increment, CultureInfo.InvariantCulture)}m), {Convert.ToString(symbol.NotionalMinimumValue, CultureInfo.InvariantCulture)}m, {symbol.IsIcebergAllowed.ToString().ToLowerInvariant()}, new List<OrderType> {{{orderTypes}}}),");

@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Binance;
+﻿using Binance;
 using Binance.Application;
 using Binance.Cache;
 using Binance.Client;
@@ -11,6 +7,10 @@ using Binance.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 // ReSharper disable AccessToDisposedClosure
 
@@ -146,7 +146,7 @@ namespace BinanceMarketDepth
 
                 // Initialize cache.
                 var cache = services.GetService<IOrderBookCache>();
-                
+
                 // Initialize web socket stream.
                 var webSocket = services.GetService<IBinanceWebSocketStream>();
 
@@ -180,7 +180,7 @@ namespace BinanceMarketDepth
 
                 // Initialize client.
                 var client = services.GetService<IDepthClient>();
-                
+
                 cache.Client = client; // link [new] client to cache.
 
                 // Initialize controller.

@@ -8,8 +8,8 @@ namespace Tulip
 
         private static int Apo(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            var shortPeriod = (int) options[0];
-            var longPeriod = (int) options[1];
+            var shortPeriod = (int)options[0];
+            var longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < 2 || longPeriod < shortPeriod)
             {
@@ -41,8 +41,8 @@ namespace Tulip
 
         private static int Apo(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            var shortPeriod = (int) options[0];
-            var longPeriod = (int) options[1];
+            var shortPeriod = (int)options[0];
+            var longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < 2 || longPeriod < shortPeriod)
             {

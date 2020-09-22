@@ -1,23 +1,22 @@
-﻿using CryptoTrading.App.Core;
-using System;
-using System.Collections.Generic;
-using Binance.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.IO;
-using Binance;
+﻿using Binance;
 using Binance.Client;
 using Binance.Utility;
-using System.Threading.Tasks;
+using Binance.WebSocket;
+using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Security.Cryptography.X509Certificates;
-using CryptoTrading.App.Core.Extensions;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
-    public class HistoricalMarketData : AbstractMarketData , IMarketData
+    public class HistoricalMarketData : AbstractMarketData, IMarketData
     {
         public DateTime From { get; set; }
         DateTime To { get; set; }
@@ -73,7 +72,7 @@ namespace CryptoTrading.App.MarketData
                     {
                         tasks.Add(StreamData(api, item.Key, from, to));
                         from = to;
-                        if(tasks.Count % 50 == 0)
+                        if (tasks.Count % 50 == 0)
                         {
                             Thread.Sleep(60000);
                         }
@@ -84,13 +83,13 @@ namespace CryptoTrading.App.MarketData
                 //sort the list
                 var orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime);
 
-                foreach (var item in orderedList.GroupBy(x=>x.candlestick.CloseTime))
+                foreach (var item in orderedList.GroupBy(x => x.candlestick.CloseTime))
                 {
                     foreach (var candleStick in item)
                     {
-                        foreach(var action in _subscribers[(candleStick.candlestick.Symbol,candleStick.interval)])
+                        foreach (var action in _subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
                         {
-                            action.Invoke(new CandlestickEventArgs(item.Key, candleStick.candlestick,0,0,true));
+                            action.Invoke(new CandlestickEventArgs(item.Key, candleStick.candlestick, 0, 0, true));
                         }
                     }
                 }
@@ -106,7 +105,7 @@ namespace CryptoTrading.App.MarketData
         }
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
-        
+
 
         private async System.Threading.Tasks.Task StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
@@ -154,7 +153,7 @@ namespace CryptoTrading.App.MarketData
         }
 
 
-        private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol,CandlestickInterval interval) symbol, DateTime from, Action<IEnumerable<Candlestick>> callback)
+        private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, Action<IEnumerable<Candlestick>> callback)
         {
             var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime());
@@ -163,7 +162,7 @@ namespace CryptoTrading.App.MarketData
             callback.Invoke(sticks);
         }
 
-        
+
 
         protected IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)
         {
@@ -195,7 +194,7 @@ namespace CryptoTrading.App.MarketData
                 yield break;
             }
             var j = 0;
-            for (int i = 0; i < daysdiff; i+=7)
+            for (int i = 0; i < daysdiff; i += 7)
             {
                 yield return from.AddDays(i * 7);
                 j += 7;
@@ -225,8 +224,8 @@ namespace CryptoTrading.App.MarketData
                 yield return from.AddDays(daysdiff - j);
             }
         }
-    } 
+    }
 }
 
-    
+
 

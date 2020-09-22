@@ -4,13 +4,13 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int FisherStart(double[] options) => (int) options[0] - 1;
+        private static int FisherStart(double[] options) => (int)options[0] - 1;
 
-        private static int FisherStart(decimal[] options) => (int) options[0] - 1;
+        private static int FisherStart(decimal[] options) => (int)options[0] - 1;
 
         private static int Fisher(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {
@@ -110,7 +110,7 @@ namespace Tulip
 
         private static int Fisher(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CryptoTrading.App.Core
 {
@@ -27,11 +26,12 @@ namespace CryptoTrading.App.Core
         public void Add(double item)
         {
             _list.Add(item);
-            
+
             if (_list.Count >= NumberOfCandleSticksToKeep)
             {
                 _list.RemoveAt(0);
-;           }
+                ;
+            }
         }
         public void Add(decimal item) => Add(Convert.ToDouble(item));
 

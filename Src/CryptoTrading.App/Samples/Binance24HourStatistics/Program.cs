@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using Binance;
+﻿using Binance;
 using Binance.Application;
 using Binance.Cache;
 using Binance.Client;
@@ -11,6 +7,10 @@ using Binance.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 // ReSharper disable AccessToDisposedClosure
 
@@ -120,7 +120,7 @@ namespace Binance24HourStatistics
 
                 // Initialize cache.
                 var cache = services.GetService<ISymbolStatisticsCache>();
-                
+
                 // Initialize web socket stream.
                 var webSocket = services.GetService<IBinanceWebSocketStream>();
 

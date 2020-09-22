@@ -67,13 +67,13 @@ namespace Tulip
         private static double BufferGet((int, int, int, double, double[]) buffer, double val)
         {
             var (size, _, index, _, vals) = buffer;
-            return vals[(Index) ((index + size - 1 + val) % size)];
+            return vals[(Index)((index + size - 1 + val) % size)];
         }
 
         private static decimal BufferGet((int, int, int, decimal, decimal[]) buffer, decimal val)
         {
             var (size, _, index, _, vals) = buffer;
-            return vals[(Index) ((index + size - 1 + val) % size)];
+            return vals[(Index)((index + size - 1 + val) % size)];
         }
 
         private static void CalcTrueRange(double[] low, double[] high, double[] close, int i, out double trueRange)
