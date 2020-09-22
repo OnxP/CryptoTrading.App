@@ -1,5 +1,5 @@
-﻿using System;
-using Binance.Client;
+﻿using Binance.Client;
+using System;
 
 namespace Binance.Cache
 {

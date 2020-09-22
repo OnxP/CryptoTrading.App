@@ -1,6 +1,6 @@
 // ReSharper disable InconsistentNaming
-using System;
 using Binance.Cache;
+using System;
 
 namespace Binance
 {

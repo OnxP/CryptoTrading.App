@@ -4,14 +4,14 @@ namespace Tulip
 {
     internal static partial class Tinet
     {
-        private static int AdOscStart(double[] options) => (int) options[1] - 1;
+        private static int AdOscStart(double[] options) => (int)options[1] - 1;
 
-        private static int AdOscStart(decimal[] options) => (int) options[1] - 1;
+        private static int AdOscStart(decimal[] options) => (int)options[1] - 1;
 
         private static int AdOsc(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            var shortPeriod = (int) options[0];
-            var longPeriod = (int) options[1];
+            var shortPeriod = (int)options[0];
+            var longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod)
             {
@@ -66,8 +66,8 @@ namespace Tulip
 
         private static int AdOsc(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            var shortPeriod = (int) options[0];
-            var longPeriod = (int) options[1];
+            var shortPeriod = (int)options[0];
+            var longPeriod = (int)options[1];
 
             if (shortPeriod < 1 || longPeriod < shortPeriod)
             {

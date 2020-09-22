@@ -8,7 +8,7 @@ namespace Tulip
 
         private static int Ema(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {
@@ -38,7 +38,7 @@ namespace Tulip
 
         private static int Ema(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            var period = (int) options[0];
+            var period = (int)options[0];
 
             if (period < 1)
             {

@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tulip;
 
 namespace Ankur.Trading.Test.IndicatorsTests
@@ -80,7 +80,7 @@ namespace Ankur.Trading.Test.IndicatorsTests
         private static void Compare(IReadOnlyList<double> rsiResults, IReadOnlyList<double> results)
         {
             Assert.AreEqual(rsiResults.Count, results.Count);
-            for (var i = 0; i < rsiResults.Count(); i++) Assert.AreEqual(rsiResults[i], Math.Round(results[i],2));
+            for (var i = 0; i < rsiResults.Count(); i++) Assert.AreEqual(rsiResults[i], Math.Round(results[i], 2));
         }
 
         [TestMethod]

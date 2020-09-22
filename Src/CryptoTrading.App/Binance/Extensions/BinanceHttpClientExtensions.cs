@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Binance.Api;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Api;
 
 // ReSharper disable once CheckNamespace
 namespace Binance

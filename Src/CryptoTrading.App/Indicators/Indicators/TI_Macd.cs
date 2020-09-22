@@ -5,22 +5,22 @@ namespace Tulip
         private static int MacdStart(double[] options)
         {
             // NB we return data before signal is strictly valid.
-            int longPeriod = (int) options[1];
+            int longPeriod = (int)options[1];
             return longPeriod - 1;
         }
 
         private static int MacdStart(decimal[] options)
         {
             // NB we return data before signal is strictly valid.
-            int longPeriod = (int) options[1];
+            int longPeriod = (int)options[1];
             return longPeriod - 1;
         }
 
         private static int Macd(int size, double[][] inputs, double[] options, double[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
-            int signalPeriod = (int) options[2];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
+            int signalPeriod = (int)options[2];
 
             if (shortPeriod < 1 || longPeriod < 2 || longPeriod < shortPeriod || signalPeriod < 1)
             {
@@ -77,9 +77,9 @@ namespace Tulip
 
         private static int Macd(int size, decimal[][] inputs, decimal[] options, decimal[][] outputs)
         {
-            int shortPeriod = (int) options[0];
-            int longPeriod = (int) options[1];
-            int signalPeriod = (int) options[2];
+            int shortPeriod = (int)options[0];
+            int longPeriod = (int)options[1];
+            int signalPeriod = (int)options[2];
 
             if (shortPeriod < 1 || longPeriod < 2 || longPeriod < shortPeriod || signalPeriod < 1)
             {

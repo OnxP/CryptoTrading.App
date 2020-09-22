@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Binance.Client
 {
@@ -90,34 +90,34 @@ namespace Binance.Client
                 switch (eventType)
                 {
                     case null: // partial depth stream.
-                    {
-                        var symbol = stream.Split('@')[0].ToUpperInvariant();
+                        {
+                            var symbol = stream.Split('@')[0].ToUpperInvariant();
 
-                        // Simulate event time.
-                        var eventTime = DateTime.UtcNow.ToTimestamp().ToDateTime();
+                            // Simulate event time.
+                            var eventTime = DateTime.UtcNow.ToTimestamp().ToDateTime();
 
-                        var lastUpdateId = jObject["lastUpdateId"].Value<long>();
+                            var lastUpdateId = jObject["lastUpdateId"].Value<long>();
 
-                        var bids = jObject["bids"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
-                        var asks = jObject["asks"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
+                            var bids = jObject["bids"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
+                            var asks = jObject["asks"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
 
-                        eventArgs = new DepthUpdateEventArgs(eventTime, symbol, lastUpdateId, lastUpdateId, bids, asks);
-                        break;
-                    }
+                            eventArgs = new DepthUpdateEventArgs(eventTime, symbol, lastUpdateId, lastUpdateId, bids, asks);
+                            break;
+                        }
                     case "depthUpdate":
-                    {
-                        var symbol = jObject["s"].Value<string>();
-                        var eventTime = jObject["E"].Value<long>().ToDateTime();
+                        {
+                            var symbol = jObject["s"].Value<string>();
+                            var eventTime = jObject["E"].Value<long>().ToDateTime();
 
-                        var firstUpdateId = jObject["U"].Value<long>();
-                        var lastUpdateId = jObject["u"].Value<long>();
+                            var firstUpdateId = jObject["U"].Value<long>();
+                            var lastUpdateId = jObject["u"].Value<long>();
 
-                        var bids = jObject["b"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
-                        var asks = jObject["a"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
+                            var bids = jObject["b"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
+                            var asks = jObject["a"].Select(entry => (entry[0].Value<decimal>(), entry[1].Value<decimal>())).ToArray();
 
-                        eventArgs = new DepthUpdateEventArgs(eventTime, symbol, firstUpdateId, lastUpdateId, bids, asks);
-                        break;
-                    }
+                            eventArgs = new DepthUpdateEventArgs(eventTime, symbol, firstUpdateId, lastUpdateId, bids, asks);
+                            break;
+                        }
                     default:
                         Logger?.LogWarning($"{nameof(DepthClient)}.{nameof(HandleMessage)}: Unexpected event type ({eventType}).");
                         return;

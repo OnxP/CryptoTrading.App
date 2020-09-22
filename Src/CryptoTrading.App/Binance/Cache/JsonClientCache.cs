@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Binance.Client;
+using Binance.Utility;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Client;
-using Binance.Utility;
-using Microsoft.Extensions.Logging;
 
 namespace Binance.Cache
 {
@@ -166,7 +166,7 @@ namespace Binance.Cache
             {
                 eventArgs = await OnActionAsync(@event, token)
                     .ConfigureAwait(false);
-}
+            }
             catch (OperationCanceledException) { /* ignore */ }
             catch (Exception e)
             {

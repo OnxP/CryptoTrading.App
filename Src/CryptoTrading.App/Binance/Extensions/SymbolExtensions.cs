@@ -175,7 +175,7 @@ namespace Binance
             Throw.IfNull(symbol, nameof(symbol));
 
             symbol.QuoteAsset.ValidateAmount(price, nameof(price));
-            symbol.BaseAsset.ValidateAmount(quantity, nameof (quantity));
+            symbol.BaseAsset.ValidateAmount(quantity, nameof(quantity));
 
             symbol.Price.Validate(price, nameof(price));
             symbol.Quantity.Validate(quantity, nameof(quantity));

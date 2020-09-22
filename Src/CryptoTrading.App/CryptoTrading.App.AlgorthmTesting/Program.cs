@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Binance;
+﻿using Binance;
 using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -33,8 +32,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             //replay candle sticks
             var data = LoadFile();
 
-            var historicCandleSticks = data.Where(x=>x.Item1 == "Historic").Select(x => x.Item2).OrderBy(x => x.CloseTime);
-            
+            var historicCandleSticks = data.Where(x => x.Item1 == "Historic").Select(x => x.Item2).OrderBy(x => x.CloseTime);
+
             Algo.ProcessHistoricMarketData(historicCandleSticks);
             var liveData = data.Where(x => x.Item1 == "Live").Select(x => x.Item2);
             foreach (var item in liveData)
@@ -64,9 +63,9 @@ namespace CryptoTrading.App.AlgorthmTesting
                 while ((line = reader.ReadLine()) != null)
                 {
                     var read = line.Split(seperators, StringSplitOptions.None);
-                    var candleStick = new Candlestick(read[1],CandlestickInterval.Minutes_15,
+                    var candleStick = new Candlestick(read[1], CandlestickInterval.Minutes_15,
                         Convert.ToDateTime(read[6]), Convert.ToDecimal(read[2]), Convert.ToDecimal(read[3]),
-                        Convert.ToDecimal(read[4]), Convert.ToDecimal(read[5]), 0, Convert.ToDateTime(read[7]),0,0,0,0);
+                        Convert.ToDecimal(read[4]), Convert.ToDecimal(read[5]), 0, Convert.ToDateTime(read[7]), 0, 0, 0, 0);
                     yield return (read[0], candleStick);
                 }
             }

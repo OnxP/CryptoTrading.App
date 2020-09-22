@@ -1,7 +1,7 @@
-﻿using System;
-using Binance.Application.Logging;
+﻿using Binance.Application.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace Binance.Application

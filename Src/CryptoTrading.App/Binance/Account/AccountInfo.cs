@@ -25,7 +25,7 @@ namespace Binance
         /// Get the account status.
         /// </summary>
         public AccountStatus Status { get; }
-        
+
         /// <summary>
         /// Get the account update time.
         /// </summary>

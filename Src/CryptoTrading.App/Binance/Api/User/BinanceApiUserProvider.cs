@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Options;
-using Binance.Api;
+﻿using Binance.Api;
+using Microsoft.Extensions.Options;
 
 // ReSharper disable once CheckNamespace
 namespace Binance

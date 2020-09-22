@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Binance.Client
 {
@@ -42,7 +42,7 @@ namespace Binance.Client
             return symbol == null ? "!ticker@arr" : $"{symbol.ToLowerInvariant()}@ticker";
         }
 
-        public virtual ISymbolStatisticsClient Subscribe(Action<SymbolStatisticsEventArgs> callback, params string [] symbols)
+        public virtual ISymbolStatisticsClient Subscribe(Action<SymbolStatisticsEventArgs> callback, params string[] symbols)
         {
             if (callback == null && !symbols.Any())
                 throw new ArgumentException($"{nameof(Subscribe)}: At least one symbol is required.", nameof(symbols));
@@ -68,7 +68,7 @@ namespace Binance.Client
             return this;
         }
 
-        public virtual ISymbolStatisticsClient Unsubscribe(Action<SymbolStatisticsEventArgs> callback, params string [] symbols)
+        public virtual ISymbolStatisticsClient Unsubscribe(Action<SymbolStatisticsEventArgs> callback, params string[] symbols)
         {
             if (callback == null && !symbols.Any())
                 throw new ArgumentException($"{nameof(Unsubscribe)}: At least one symbol is required.", nameof(symbols));

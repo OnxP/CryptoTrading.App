@@ -1,7 +1,7 @@
-﻿using System;
-using CryptoTrading.App.Core.Logging;
+﻿using CryptoTrading.App.Core.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace CryptoTrading.App.Core.Extensions

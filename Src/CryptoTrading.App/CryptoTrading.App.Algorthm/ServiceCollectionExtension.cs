@@ -1,11 +1,8 @@
-﻿using Binance;
-using CryptoTrading.App.Algorthm.TradingStrategies;
-using CryptoTrading.App.Core;
+﻿using CryptoTrading.App.Algorthm.TradingStrategies;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CryptoTrading.App.Algorthm
 {

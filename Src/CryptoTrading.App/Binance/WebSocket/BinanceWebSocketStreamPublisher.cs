@@ -1,7 +1,7 @@
-﻿using System.Linq;
-using Binance.Stream;
+﻿using Binance.Stream;
 using Binance.Utility;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Binance.WebSocket
 {

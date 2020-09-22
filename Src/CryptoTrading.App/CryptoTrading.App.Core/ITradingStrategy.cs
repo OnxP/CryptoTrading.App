@@ -1,7 +1,5 @@
 ﻿using CryptoTrading.App.Core;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using Tulip;
 
 namespace CryptoTrading.App.Algorthm.TradingStrategies

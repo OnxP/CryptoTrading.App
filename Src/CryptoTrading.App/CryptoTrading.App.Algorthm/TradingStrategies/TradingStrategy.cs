@@ -23,7 +23,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             foreach (var item in Indicators)
             {
                 var optionLength = item.Value.indicator.Start(item.Value.options);
-                if (optionLength == 0) optionLength = Convert.ToInt32(Math.Round(item.Value.options[0],0));
+                if (optionLength == 0) optionLength = Convert.ToInt32(Math.Round(item.Value.options[0], 0));
                 i = Math.Max(optionLength, i);
             }
 

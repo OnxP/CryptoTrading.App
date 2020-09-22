@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Binance.Client;
+using System;
 using System.Collections.Generic;
-using Binance.Client;
 
 namespace Binance.Cache
 {
