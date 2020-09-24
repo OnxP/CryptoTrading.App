@@ -43,15 +43,22 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             Logger.LogInformation($"Long Ema: {longEma.Last()}");
             Logger.LogInformation($"Close Price: {closePrice}");
 
+            // log values
+
+
+            var condition1 = fastEma.Last() > slowEma.Last();
+            var condition2 = slowEma.Last() > longEma.Last();
+            var condition3 = closePrice > longEma.Last();
+
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (fastEma.Last() > slowEma.Last() && slowEma.Last() > longEma.Last() && closePrice > longEma.Last()) return 1;
+            if ( condition1 && condition2 && condition3) return 1;
             //check if long is trading sideways, need more entries to determin that!
 
             //check if long is in an uptrend.
 
-
+            
 
 
             return 0;
