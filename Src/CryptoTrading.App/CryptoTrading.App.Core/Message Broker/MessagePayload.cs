@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CryptoTrading.App.Core
+namespace CryptoTrading.App.Core.Message_Broker
 {
     public class MessagePayload<T>
     {

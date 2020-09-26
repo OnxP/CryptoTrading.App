@@ -1,4 +1,5 @@
 ﻿using System;
+using CryptoTrading.App.Core.Message_Broker;
 
 namespace CryptoTrading.App.Core
 {
