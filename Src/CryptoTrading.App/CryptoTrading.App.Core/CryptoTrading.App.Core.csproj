@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Binance\Binance.csproj" />
     <ProjectReference Include="..\Indicators\Tulip.NETCore.csproj" />
   </ItemGroup>
 

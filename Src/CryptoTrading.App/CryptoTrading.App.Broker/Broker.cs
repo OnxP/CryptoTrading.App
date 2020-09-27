@@ -11,11 +11,13 @@ namespace CryptoTrading.App.Broker
     public class Broker: IBroker
     {
         private readonly IMarket _market;
+        private readonly IBinanceApiUser _user;
         private readonly ILogger _logger;
         private IPositions _currentPositions;
 
-        public Broker( IMarket market, ILogger logger, IPositions positions )
+        public Broker(IBinanceApiUser user, IMarket market, ILogger logger, IPositions positions )
         {
+            _user = user;
             _market = market;
             _logger = logger;
             _currentPositions = positions;
@@ -62,9 +64,14 @@ namespace CryptoTrading.App.Broker
             }
         }
 
-        private void SetMarketOrder(ITrade trade)
+        private async void SetMarketOrder(ITrade trade)
         {
-            throw new NotImplementedException();
+            var clientOrder = new MarketOrder(_user)
+            {
+                Symbol = trade.Symbol,
+                Side = trade.OrderType,
+                Quantity = trade.Quantity
+            };
         }
 
         public void SetLimitOrder(ITrade trade, decimal currentStopLoss)
