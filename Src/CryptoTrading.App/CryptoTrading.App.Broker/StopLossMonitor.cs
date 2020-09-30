@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
 
@@ -26,20 +27,22 @@ namespace CryptoTrading.App.Broker
         private int _trailingPercentIncrement = 2;
         private int _risk = 10;
         private int _target = 15;
+        private Order _order;
         public StopLossMonitor(IBroker broker)
         {
             _broker = broker;
         }
 
         //Process a candlestick
-        public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
+        public async void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
             var closePrice = candlestickEventArgs.Candlestick.Close;
             if (closePrice >= _targetStopLoss)
             {
                 _currentStopLoss = CalculateNewPrice(closePrice, -1 * _trailingPercentIncrement);
                 _targetStopLoss = CalculateNewPrice(closePrice, _trailingPercentIncrement);
-                _broker.SetNewLimitOrder(_trade, _currentStopLoss);
+                _order = await _broker.SetNewLimitOrder(_trade, _order, _currentStopLoss);
+                
             }
 
             if (closePrice < _currentStopLoss)
@@ -50,12 +53,12 @@ namespace CryptoTrading.App.Broker
             }
         }
 
-        public void ConfigureStopLossMonitor(ITrade trade)
+        public async void ConfigureStopLossMonitor(ITrade trade)
         {
             _trade = trade;
             _currentStopLoss = CalculateNewPrice(_trade.Price, -1 *_risk);
             _targetStopLoss = CalculateNewPrice(_trade.Price, _target);
-            _broker.SetLimitOrder(trade, _currentStopLoss);
+            _order = await _broker.SetLimitOrder(trade, _currentStopLoss);
         }
 
         private decimal CalculateNewPrice(decimal _tradedPrice, int percentOfValue)

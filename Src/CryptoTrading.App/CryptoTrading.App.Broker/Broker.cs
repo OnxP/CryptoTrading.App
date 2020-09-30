@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using Binance;
+using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Message_Broker;
 using Microsoft.Extensions.Logging;
@@ -56,43 +60,45 @@ namespace CryptoTrading.App.Broker
             if (_currentPositions.CheckOpenPosition(request.BuySymbol) &&_currentPositions.CheckBalance(request.SellSymbol, request.SellAmount))
             {
                 //check to see if there is sufficient funds
-                var trade = _currentPositions.CreatePosition(request, new StopLossMonitor(this));
+                var trade = _currentPositions.CreateTrade(request, new StopLossMonitor(this));
                 //set market order
-                SetMarketOrder(trade);
+                var order = _market.SetMarketOrder(trade, _user).Result;
                 //confirm market order has been met
-                
+                LogOrder(order,OrderStatus.Filled);
+                _currentPositions.UpdatePosition(order);
             }
         }
 
-        private async void SetMarketOrder(ITrade trade)
+
+
+        private void LogOrder(Order order, OrderStatus status)
         {
-            var clientOrder = new MarketOrder(_user)
+            //todo log order to the database.
+        }
+
+
+        public async Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss)
+        {
+            var order = await _market.SetLimitOrder(trade, _user, currentStopLoss);
+
+            return order;
+        }
+
+        public async Task<Order> SetNewLimitOrder(ITrade trade, Order order, decimal currentStopLoss)
+        {
+            var result = await _market.CancelOrder(order, _user);
+            var newOrder = await _market.SetLimitOrder(trade, _user, currentStopLoss);
+
+            return newOrder;
+        }
+
+        public async void ClosePosition(ITrade trade)
+        {
+            IEnumerable<Order> orders = await _market.GetAllOpenOrders(_user);
+            foreach (var order in orders)
             {
-                Symbol = trade.Symbol,
-                Side = trade.OrderType,
-                Quantity = trade.Quantity
-            };
-        }
-
-        public void SetLimitOrder(ITrade trade, decimal currentStopLoss)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SetNewLimitOrder(ITrade trade, decimal currentStopLoss)
-        {
-            CancelLimitOrder(trade);
-            SetLimitOrder(trade,currentStopLoss);
-        }
-
-        private void CancelLimitOrder(ITrade trade)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void ClosePosition(ITrade trade)
-        {
-            throw new System.NotImplementedException();
+                await _market.CancelOrder(order,_user);
+            }
         }
     }
 }

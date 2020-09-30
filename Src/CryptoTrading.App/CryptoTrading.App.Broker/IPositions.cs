@@ -1,11 +1,13 @@
-﻿using CryptoTrading.App.Core;
+﻿using Binance;
+using CryptoTrading.App.Core;
 
 namespace CryptoTrading.App.Broker
 {
     public interface IPositions
     {
         bool CheckOpenPosition(string requestBuySymbol);
-        ITrade CreatePosition(ITradeRequest request, StopLossMonitor stopLossMonitor);
+        ITrade CreateTrade(ITradeRequest request, StopLossMonitor stopLossMonitor);
         bool CheckBalance(string sellSymbol, string sellAmount);
+        void UpdatePosition(Order order);
     }
 }
