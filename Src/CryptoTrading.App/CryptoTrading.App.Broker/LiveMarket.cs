@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Binance;
@@ -9,14 +10,17 @@ namespace CryptoTrading.App.Broker
 {
     public class LiveMarket : IMarket
     {
-        private IBinanceApi _api;
-        public LiveMarket(IBinanceApi api)
+        private readonly IBinanceApi _api;
+        private readonly IBinanceApiUser _user;
+        public LiveMarket(IBinanceApi api,IBinanceApiUser user)
         {
             _api = api;
+            _user = user;
         }
-        public object GetAccountBalances()
+        public async Task<IEnumerable<AccountBalance>> GetAccountBalances()
         {
-            throw new NotImplementedException();
+            var accountBalances = await _api.GetAccountInfoAsync(_user);
+            return accountBalances.Balances.Where(x=>x.Free > 0);
         }
 
         public void GetPendingTransactions()
@@ -24,14 +28,14 @@ namespace CryptoTrading.App.Broker
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Order>> GetAllOpenOrders(IBinanceApiUser user)
+        public Task<IEnumerable<Order>> GetAllOpenOrders()
         {
             throw new NotImplementedException();
         }
 
-        public async Task<Order> SetMarketOrder(ITrade trade, IBinanceApiUser user)
+        public async Task<Order> SetMarketOrder(ITrade trade)
         {
-            var clientOrder = new MarketOrder(user)
+            var clientOrder = new MarketOrder(_user)
             {
                 Symbol = trade.Symbol,
                 Side = trade.OrderType,
@@ -43,9 +47,9 @@ namespace CryptoTrading.App.Broker
             return order;
         }
 
-        public async Task<Order> SetLimitOrder(ITrade trade, IBinanceApiUser user, decimal currentStopLoss)
+        public async Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss)
         {
-            var clientOrder = new LimitOrder(user)
+            var clientOrder = new LimitOrder(_user)
             {
                 Symbol = trade.Symbol,
                 Side = trade.OrderType,
@@ -59,17 +63,10 @@ namespace CryptoTrading.App.Broker
             return order;
         }
 
-        public async Task<Order> SetNewLimitOrder(ITrade trade,IBinanceApiUser user, decimal currentStopLoss)
+        public async Task<string> CancelOrder(Order order)
         {
-            var newOrder = await SetLimitOrder(trade, user, currentStopLoss);
-
-            return newOrder;
-        }
-
-        public async Task<string> CancelOrder(Order order,IBinanceApiUser user)
-        {
-            return await _api.CancelOrderAsync(user, order.Symbol, order.ClientOrderId);
-            //LogOrder(order,user, OrderStatus.Canceled);
+            return await _api.CancelOrderAsync(_user, order.Symbol, order.ClientOrderId);
+            //LogOrder(order,_user, OrderStatus.Canceled);
         }
     }
 }

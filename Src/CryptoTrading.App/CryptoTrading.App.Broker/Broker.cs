@@ -15,13 +15,11 @@ namespace CryptoTrading.App.Broker
     public class Broker: IBroker
     {
         private readonly IMarket _market;
-        private readonly IBinanceApiUser _user;
         private readonly ILogger _logger;
         private IPositions _currentPositions;
 
-        public Broker(IBinanceApiUser user, IMarket market, ILogger logger, IPositions positions )
+        public Broker(IMarket market, ILogger logger, IPositions positions )
         {
-            _user = user;
             _market = market;
             _logger = logger;
             _currentPositions = positions;
@@ -62,7 +60,7 @@ namespace CryptoTrading.App.Broker
                 //check to see if there is sufficient funds
                 var trade = _currentPositions.CreateTrade(request, new StopLossMonitor(this));
                 //set market order
-                var order = _market.SetMarketOrder(trade, _user).Result;
+                var order = _market.SetMarketOrder(trade).Result;
                 //confirm market order has been met
                 LogOrder(order,OrderStatus.Filled);
                 _currentPositions.UpdatePosition(order);
@@ -79,25 +77,25 @@ namespace CryptoTrading.App.Broker
 
         public async Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss)
         {
-            var order = await _market.SetLimitOrder(trade, _user, currentStopLoss);
+            var order = await _market.SetLimitOrder(trade, currentStopLoss);
 
             return order;
         }
 
         public async Task<Order> SetNewLimitOrder(ITrade trade, Order order, decimal currentStopLoss)
         {
-            var result = await _market.CancelOrder(order, _user);
-            var newOrder = await _market.SetLimitOrder(trade, _user, currentStopLoss);
+            var result = await _market.CancelOrder(order);
+            var newOrder = await _market.SetLimitOrder(trade, currentStopLoss);
 
             return newOrder;
         }
 
         public async void ClosePosition(ITrade trade)
         {
-            IEnumerable<Order> orders = await _market.GetAllOpenOrders(_user);
+            IEnumerable<Order> orders = await _market.GetAllOpenOrders();
             foreach (var order in orders)
             {
-                await _market.CancelOrder(order,_user);
+                await _market.CancelOrder(order);
             }
         }
     }

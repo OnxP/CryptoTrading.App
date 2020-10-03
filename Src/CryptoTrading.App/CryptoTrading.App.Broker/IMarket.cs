@@ -7,11 +7,11 @@ namespace CryptoTrading.App.Broker
 {
     public interface IMarket
     {
-        object GetAccountBalances();
+        Task<IEnumerable<AccountBalance>> GetAccountBalances();
         void GetPendingTransactions();
-        Task<IEnumerable<Order>> GetAllOpenOrders(IBinanceApiUser user);
-        Task<Order> SetMarketOrder(ITrade trade, IBinanceApiUser user);
-        Task<string> CancelOrder(Order order, IBinanceApiUser user);
-        Task<Order> SetLimitOrder(ITrade trade, IBinanceApiUser user, decimal currentStopLoss);
+        Task<IEnumerable<Order>> GetAllOpenOrders();
+        Task<Order> SetMarketOrder(ITrade trade);
+        Task<string> CancelOrder(Order order);
+        Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss);
     }
 }
