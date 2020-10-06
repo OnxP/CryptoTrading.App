@@ -16,9 +16,9 @@ namespace CryptoTrading.App.Broker
     {
         private readonly IMarket _market;
         private readonly ILogger _logger;
-        private IPositions _currentPositions;
+        private readonly IPositions _currentPositions;
 
-        public Broker(IMarket market, ILogger logger, IPositions positions )
+        public Broker(IMarket market, ILogger logger, IPositions positions, IMarketDataEvents marketDataEvents)
         {
             _market = market;
             _logger = logger;
@@ -31,9 +31,9 @@ namespace CryptoTrading.App.Broker
         {
             //connect to the exchange and download current account balances.
             BulidCurrentPositions(_market.GetAccountBalances());
-            //load any currently pending transactions and decide if to delete them or wait for them to hit..i.e. stoplosses and limit orders
-            _market.GetPendingTransactions();
-            //configure the message bus to read incomming messages/request for trades.
+            //load any currently pending transactions and decide if to delete them or wait for them to hit..i.e. stop losses and limit orders
+            _market.GetAllOpenOrders();
+            //configure the message bus to read incoming messages/request for trades.
             //need to check the current timestamp on the server and the timestamp on the messages. May not need to to this as the messages don't queue
         }
 

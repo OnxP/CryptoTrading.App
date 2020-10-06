@@ -16,6 +16,7 @@ using log4net.Repository.Hierarchy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using IMarketDataEvents = CryptoTrading.App.Core.IMarketDataEvents;
 
 namespace CryptoTrading.App.MarketDataTesting
 {
@@ -69,28 +70,11 @@ namespace CryptoTrading.App.MarketDataTesting
             var logger = ServiceProvider.
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
             writer.WriteLine($"Historic,Symbol,Open,High,Low,Close,Open Time ,Close Time");
-            HistoricalMarketData marketDate = new HistoricalMarketData();
+            IMarketData marketDate = new HistoricalMarketData();
             marketDate.Configure(null);
             marketDate.From = new DateTime(2020, 08, 24);
             //subscribe to several symbols
-
-            marketDate.InitialDataLoadSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-
-            marketDate.InitialDataStreamSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            AddEvents(marketDate);
 
             marketDate.StartStream();
 
@@ -189,6 +173,27 @@ namespace CryptoTrading.App.MarketDataTesting
             {
                 Console.WriteLine("Successful!");
             }
+        }
+
+        private static void AddEvents(IMarketDataEvents marketDate)
+        {
+            marketDate.InitialDataLoadSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
+            //marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
+
+            marketDate.InitialDataStreamSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayCandleStick);
+            //marketDate.InitialDataStreamSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayCandleStick);
         }
 
     }

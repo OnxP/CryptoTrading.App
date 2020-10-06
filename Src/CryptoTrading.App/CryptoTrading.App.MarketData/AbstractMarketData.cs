@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CryptoTrading.App.MarketData
 {
-    public abstract class AbstractMarketData
+    public abstract class AbstractMarketData : IMarketDataEvents
     {
         public abstract void Configure(IRequest request);
 

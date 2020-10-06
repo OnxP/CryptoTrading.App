@@ -23,11 +23,6 @@ namespace CryptoTrading.App.Broker
             return accountBalances.Balances.Where(x=>x.Free > 0);
         }
 
-        public void GetPendingTransactions()
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<IEnumerable<Order>> GetAllOpenOrders()
         {
             throw new NotImplementedException();

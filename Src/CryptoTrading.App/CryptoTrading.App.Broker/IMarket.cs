@@ -8,7 +8,6 @@ namespace CryptoTrading.App.Broker
     public interface IMarket
     {
         Task<IEnumerable<AccountBalance>> GetAccountBalances();
-        void GetPendingTransactions();
         Task<IEnumerable<Order>> GetAllOpenOrders();
         Task<Order> SetMarketOrder(ITrade trade);
         Task<string> CancelOrder(Order order);
