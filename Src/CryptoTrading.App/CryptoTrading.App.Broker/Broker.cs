@@ -24,24 +24,9 @@ namespace CryptoTrading.App.Broker
             _market = market;
             _logger = logger;
             _currentPositions = positions;
-            Configure();
             ConfigureMessageBroker();
         }
 
-        private void Configure()
-        {
-            //connect to the exchange and download current account balances.
-            BulidCurrentPositions(_market.GetAccountBalances());
-            //load any currently pending transactions and decide if to delete them or wait for them to hit..i.e. stop losses and limit orders
-            _market.GetAllOpenOrders();
-            //configure the message bus to read incoming messages/request for trades.
-            //need to check the current timestamp on the server and the timestamp on the messages. May not need to to this as the messages don't queue
-        }
-
-        private void BulidCurrentPositions(object v)
-        {
-            throw new NotImplementedException();
-        }
 
         private void ConfigureMessageBroker()
         {
@@ -67,8 +52,6 @@ namespace CryptoTrading.App.Broker
                 _currentPositions.UpdatePosition(order);
             }
         }
-
-
 
         private void LogOrder(Order order, OrderStatus status)
         {
