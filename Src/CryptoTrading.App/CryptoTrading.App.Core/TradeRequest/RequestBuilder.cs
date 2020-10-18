@@ -1,4 +1,6 @@
-﻿namespace CryptoTrading.App.Core.TradeRequest
+﻿using CryptoTrading.App.Core.Trade;
+
+namespace CryptoTrading.App.Core.TradeRequest
 {
     public static class RequestBuilder
     {
