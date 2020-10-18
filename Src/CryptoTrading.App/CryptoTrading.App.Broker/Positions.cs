@@ -3,6 +3,7 @@ using CryptoTrading.App.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Broker
 {

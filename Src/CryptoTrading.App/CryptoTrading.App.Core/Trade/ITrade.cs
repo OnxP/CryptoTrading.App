@@ -1,6 +1,6 @@
 ﻿using Binance;
 
-namespace CryptoTrading.App.Core
+namespace CryptoTrading.App.Core.Trade
 {
     public interface ITrade
     {

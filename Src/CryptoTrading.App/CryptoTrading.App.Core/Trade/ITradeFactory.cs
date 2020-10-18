@@ -1,4 +1,4 @@
-﻿namespace CryptoTrading.App.Core
+﻿namespace CryptoTrading.App.Core.Trade
 {
     public interface ITradeFactory
     {

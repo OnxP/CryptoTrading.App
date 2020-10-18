@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Broker
 {

@@ -7,6 +7,7 @@ using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Message_Broker;
+using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
