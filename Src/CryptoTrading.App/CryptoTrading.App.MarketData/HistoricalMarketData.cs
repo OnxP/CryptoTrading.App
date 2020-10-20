@@ -54,7 +54,7 @@ namespace CryptoTrading.App.MarketData
             {
                 var api = new BinanceApi();
                 var tasks = new List<Task>();
-                foreach (var item in _historicDataSubscribers)
+                foreach (var item in historicDataSubscribers)
                 {
                     tasks.Add(LoadHistoricData(api, item.Key, From, item.Value));
                 }
@@ -65,7 +65,7 @@ namespace CryptoTrading.App.MarketData
 
 
                 //StreamHistoricData
-                foreach (var item in _subscribers)
+                foreach (var item in subscribers)
                 {
                     var from = From;
                     foreach (var to in SplitDates(item.Key.interval, from, DateTime.Now.ToUniversalTime()))
@@ -87,7 +87,7 @@ namespace CryptoTrading.App.MarketData
                 {
                     foreach (var candleStick in item)
                     {
-                        foreach (var action in _subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
+                        foreach (var action in subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
                         {
                             action.Invoke(new CandlestickEventArgs(item.Key, candleStick.candlestick, 0, 0, true));
                         }
@@ -112,7 +112,7 @@ namespace CryptoTrading.App.MarketData
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 500, from.ToUniversalTime(), to.ToUniversalTime());
             foreach (var candleStick in candleSticks)
             {
-                lock (_sync)
+                lock (Sync)
                 {
                     candleSticksToStream.Add((candleStick, symbol.interval));
                 }

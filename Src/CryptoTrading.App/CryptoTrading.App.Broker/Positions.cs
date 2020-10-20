@@ -9,10 +9,10 @@ namespace CryptoTrading.App.Broker
 {
     public class Positions : IPositions
     {
-        private ITradeFactory _factory;
+        private readonly ITradeFactory _factory;
         private ICalculator _calculator;
 
-        private Dictionary<string, IPosition> _positions;
+        private readonly Dictionary<string, IPosition> _positions;
 
         public Positions(ITradeFactory factory, Dictionary<string, IPosition> positions, ICalculator calculator)
         {

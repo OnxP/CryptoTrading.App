@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Binance\Binance.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Broker\CryptoTrading.App.Broker.csproj" />
   </ItemGroup>
 
 </Project>
