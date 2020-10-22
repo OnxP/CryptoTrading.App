@@ -20,6 +20,7 @@ namespace CryptoTrading.App.Broker
             _positions = positions;
             _calculator = calculator;
         }
+
         public bool CheckBalance(string sellSymbol, string sellAmount)
         {
             if (_positions.ContainsKey(sellSymbol))
@@ -40,7 +41,7 @@ namespace CryptoTrading.App.Broker
             return false;
         }
 
-        public ITrade CreateTrade(ITradeRequest request, StopLossMonitor stopLossMonitor)
+        public ITrade CreateTrade(ITradeRequest request)
         {
             ITrade trade = _factory.CreateTrade(request.BuySymbol, request.SellSymbol);
             
@@ -54,6 +55,16 @@ namespace CryptoTrading.App.Broker
             {
                 _positions[order.Symbol].UpdateOrder(order);
             }
+        }
+
+        public decimal CalculateStoploss(Order order)
+        {
+            if (_positions.ContainsKey(order.Symbol))
+            {
+                return _positions[order.Symbol].CalculateStopLoss(order);
+            }
+
+            return 0;
         }
     }
 }

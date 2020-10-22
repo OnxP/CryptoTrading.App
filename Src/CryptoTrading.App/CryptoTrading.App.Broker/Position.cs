@@ -17,5 +17,10 @@ namespace CryptoTrading.App.Broker
         {
             throw new NotImplementedException();
         }
+
+        public decimal CalculateStopLoss(Order order)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

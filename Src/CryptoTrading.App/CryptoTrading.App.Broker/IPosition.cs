@@ -7,5 +7,6 @@ namespace CryptoTrading.App.Broker
         bool CheckFunds(string sellAmount);
         bool HasOpenPosition { get; set; }
         void UpdateOrder(Order order);
+        decimal CalculateStopLoss(Order order);
     }
 }

@@ -28,7 +28,7 @@ namespace CryptoTrading.App.BrokerTesting
             IPositions positions = new Positions(factory, dictionaryPositions, null);
             //IMarketDataEvents marketDataEvents = new 
 
-            var broker = new Broker.Broker(market, logger,positions,null);
+            var broker = new Broker.CryptoBroker(market, logger,positions);
             //Wire events.
 
             //set up market data feed -- needed for the stoploss monitor( but the broker may be the wrong place for it.)

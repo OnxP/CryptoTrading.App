@@ -7,8 +7,9 @@ namespace CryptoTrading.App.Broker
     public interface IPositions
     {
         bool CheckOpenPosition(string requestBuySymbol);
-        ITrade CreateTrade(ITradeRequest request, StopLossMonitor stopLossMonitor);
+        ITrade CreateTrade(ITradeRequest request);
         bool CheckBalance(string sellSymbol, string sellAmount);
         void UpdatePosition(Order order);
+        decimal CalculateStoploss(Order order);
     }
 }

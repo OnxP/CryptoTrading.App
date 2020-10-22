@@ -13,13 +13,13 @@ using Microsoft.Extensions.Options;
 
 namespace CryptoTrading.App.Broker
 {
-    public class Broker: IBroker
+    public class CryptoBroker: IBroker
     {
         private readonly IMarket _market;
         private readonly ILogger _logger;
         private readonly IPositions _currentPositions;
 
-        public Broker(IMarket market, ILogger logger, IPositions positions, IMarketDataEvents marketDataEvents)
+        public CryptoBroker(IMarket market, ILogger logger, IPositions positions)
         {
             _market = market;
             _logger = logger;
@@ -40,18 +40,24 @@ namespace CryptoTrading.App.Broker
         private void ProcessMessageAction(MessagePayload<ITradeRequest> obj)
         {
             ITradeRequest request = obj.What;
+
             //check if there is an open position and check if we have enough BTC balance
             if (_currentPositions.CheckOpenPosition(request.BuySymbol) &&_currentPositions.CheckBalance(request.SellSymbol, request.SellAmount))
             {
                 //check to see if there is sufficient funds
-                var trade = _currentPositions.CreateTrade(request, new StopLossMonitor(this));
+                var trade = _currentPositions.CreateTrade(request);
                 //set market order
                 var order = _market.SetMarketOrder(trade).Result;
                 //confirm market order has been met
                 LogOrder(order,OrderStatus.Filled);
-                _currentPositions.UpdatePosition(order);
+                var stopLoss = _currentPositions.CalculateStoploss(order);
+
+                var stopLimitOrder = SetLimitOrder(trade, stopLoss).Result;
+                LogOrder(stopLimitOrder, OrderStatus.Filled);
+                _currentPositions.UpdatePosition(stopLimitOrder);
             }
         }
+
 
         private void LogOrder(Order order, OrderStatus status)
         {
