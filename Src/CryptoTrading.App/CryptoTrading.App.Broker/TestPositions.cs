@@ -21,11 +21,11 @@ namespace CryptoTrading.App.Broker
             _calculator = calculator;
         }
 
-        public bool CheckBalance(string sellSymbol, string sellAmount)
+        public bool CheckBalance(string sellSymbol, double sellPercentage)
         {
             if (_positions.ContainsKey(sellSymbol))
             {
-                return _positions[sellSymbol].CheckFunds(sellAmount);
+                return _positions[sellSymbol].CheckFunds(sellPercentage);
             }
 
             return false;

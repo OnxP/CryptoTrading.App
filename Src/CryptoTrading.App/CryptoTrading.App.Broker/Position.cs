@@ -7,7 +7,7 @@ namespace CryptoTrading.App.Broker
 {
     public class Position : IPosition
     {
-        public bool CheckFunds(string sellAmount)
+        public bool CheckFunds(double sellAmount)
         {
             throw new NotImplementedException();
         }

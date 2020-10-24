@@ -9,12 +9,14 @@ using CryptoTrading.App.Core.Logging;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
+using CryptoTrading.App.Core.TradeRequest;
+using Binance.Client;
 
 namespace CryptoTrading.App.BrokerTesting
 {
-    internal class Program
+    class Program
     {
-        private static void Main(string[] args)
+        public static void Main(string[] args)
         {
             //first test is to go off to the server and get the current positions in the account.
             var api = new BinanceApi();
@@ -29,38 +31,11 @@ namespace CryptoTrading.App.BrokerTesting
             //IMarketDataEvents marketDataEvents = new 
 
             var broker = new CryptoBroker(market, logger,positions);
-            //Wire events.
-
-            //set up market data feed -- needed for the stoploss monitor( but the broker may be the wrong place for it.)
-            //how to do this???
-            //seperate load for stoploss MD?? or hook into the live prices
-            /*
-            several options here
-            1. seperate class for stop loss and seperate MD for live prices
-                pros
-                    can test without stoploss
-                    during live trading the stop loss monitor will run on live prices without interupting the algo and due to segeration can keep running as a seperate service incase updates to the algo are required,
-
-                cons
-                    requires seperate csv or db loads for the live prices or minute candlesticks
-                    2 classes that consumes/requet market data
-
-            2.  
-                
-
-
-            */
             //set up message broker and submit trade request
-            IMessageBroker messageBroker = MessageBroker.Instance;
+            double result = 0;
+            var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC");
+            MessageBroker.Instance.Publish(new object(), request);
 
-
-        }
-
-        private static async System.Threading.Tasks.Task LoadAccountData(BinanceApi api, IBinanceApiUser user)
-        {
-            var account = await api.GetAccountInfoAsync(user);
-
-            Console.WriteLine();
         }
     }
 

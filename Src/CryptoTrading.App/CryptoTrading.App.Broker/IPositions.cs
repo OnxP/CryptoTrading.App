@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Broker
     {
         bool CheckOpenPosition(string requestBuySymbol);
         ITrade CreateTrade(ITradeRequest request);
-        bool CheckBalance(string sellSymbol, string sellAmount);
+        bool CheckBalance(string sellSymbol, double sellAmount);
         void UpdatePosition(Order order);
         decimal CalculateStoploss(Order order);
     }
