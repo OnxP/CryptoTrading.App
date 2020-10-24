@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using Binance;
@@ -26,7 +27,7 @@ namespace CryptoTrading.App.Broker
 
         public Task<string> CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            return Task.Run(() => { return ""; });
         }
 
         public Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss)
