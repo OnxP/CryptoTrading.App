@@ -44,7 +44,9 @@ namespace CryptoTrading.App.Broker
         public ITrade CreateTrade(ITradeRequest request)
         {
             ITrade trade = _factory.CreateTrade(request.BuySymbol, request.SellSymbol);
-            
+            //quantity
+            trade.Quantity = _calculator.CalculateQuantity();
+            //price?
 
             return trade;
         }

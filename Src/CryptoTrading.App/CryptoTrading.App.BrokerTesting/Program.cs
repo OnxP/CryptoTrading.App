@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using CryptoTrading.App.Core.TradeRequest;
 using Binance.Client;
 using System.Threading;
+using Trade = CryptoTrading.App.Core.Trade.Trade;
 
 namespace CryptoTrading.App.BrokerTesting
 {
@@ -47,8 +48,10 @@ namespace CryptoTrading.App.BrokerTesting
     {
         public ITrade CreateTrade(string requestBuySymbol, string requestSellSymbol)
         {
-            var trade = new BuyTrade();
-
+            var trade = new Trade();
+            trade.OrderType = OrderSide.Buy;
+            trade.Symbol = requestBuySymbol + requestSellSymbol;
+            return trade;
         }
     }
 }
