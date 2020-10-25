@@ -11,6 +11,7 @@ using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using CryptoTrading.App.Core.TradeRequest;
 using Binance.Client;
+using System.Threading;
 
 namespace CryptoTrading.App.BrokerTesting
 {
@@ -27,15 +28,18 @@ namespace CryptoTrading.App.BrokerTesting
             ILogger logger = new FileLogger(@"C:\temp\BrokerTest.csv", LogLevel.Information);
             ITradeFactory factory = new TestTradeFactory();
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
+            dictionaryPositions.Add("XRP", new Position("XRP",0m));
+            dictionaryPositions.Add("BTC", new Position("BTC",10)); 
             IPositions positions = new TestPositions(factory, dictionaryPositions, null);
             //IMarketDataEvents marketDataEvents = new 
 
             var broker = new CryptoBroker(market, logger,positions);
             //set up message broker and submit trade request
-            double result = 0;
+            double result = 10;
             var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC");
             MessageBroker.Instance.Publish(new object(), request);
 
+            Thread.Sleep(100000);
         }
     }
 
@@ -43,7 +47,8 @@ namespace CryptoTrading.App.BrokerTesting
     {
         public ITrade CreateTrade(string requestBuySymbol, string requestSellSymbol)
         {
-            throw new NotImplementedException();
+            var trade = new BuyTrade();
+
         }
     }
 }

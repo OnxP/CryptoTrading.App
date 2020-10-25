@@ -42,7 +42,7 @@ namespace CryptoTrading.App.Broker
             ITradeRequest request = obj.What;
 
             //check if there is an open position and check if we have enough BTC balance
-            if (_currentPositions.CheckOpenPosition(request.BuySymbol) &&_currentPositions.CheckBalance(request.SellSymbol, request.SellPercentage))
+            if (!_currentPositions.CheckOpenPosition(request.BuySymbol) && _currentPositions.CheckBalance(request.SellSymbol, request.SellPercentage))
             {
                 //check to see if there is sufficient funds
                 var trade = _currentPositions.CreateTrade(request);
@@ -54,7 +54,7 @@ namespace CryptoTrading.App.Broker
 
                 var stopLimitOrder = SetLimitOrder(trade, stopLoss).Result;
                 LogOrder(stopLimitOrder, OrderStatus.Filled);
-                _currentPositions.UpdatePosition(stopLimitOrder);
+                _currentPositions.AddOrder(stopLimitOrder);
             }
         }
 

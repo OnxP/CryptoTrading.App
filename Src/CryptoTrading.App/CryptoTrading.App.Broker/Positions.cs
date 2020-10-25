@@ -49,7 +49,7 @@ namespace CryptoTrading.App.Broker
             return trade;
         }
 
-        public void UpdatePosition(Order order)
+        public void AddOrder(Order order)
         {
             if (_positions.ContainsKey(order.Symbol))
             {
