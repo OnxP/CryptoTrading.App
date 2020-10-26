@@ -43,9 +43,9 @@ namespace CryptoTrading.App.Broker
 
         public ITrade CreateTrade(ITradeRequest request)
         {
-            ITrade trade = _factory.CreateTrade(request.BuySymbol, request.SellSymbol);
-            
-
+            var buyPosition = _positions[request.BuySymbol];
+            var sellPosition = _positions[request.SellSymbol];
+            ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, request);
             return trade;
         }
 

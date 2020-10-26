@@ -53,5 +53,14 @@ namespace CryptoTrading.App.BrokerTesting
             trade.Symbol = requestBuySymbol + requestSellSymbol;
             return trade;
         }
+
+        public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, ITradeRequest request)
+        {
+            var trade = new Trade();
+            trade.OrderType = OrderSide.Buy;
+            trade.Symbol = buyPosition.Symbol + sellPosition.Symbol;
+            trade.Price = request.Price;
+            return trade;
+        }
     }
 }
