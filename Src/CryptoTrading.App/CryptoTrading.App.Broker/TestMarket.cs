@@ -10,6 +10,7 @@ namespace CryptoTrading.App.Broker
 {
     public class TestMarket :IMarket
     {
+        List<ITrade> trades = new List<ITrade>();
         public Task<IEnumerable<AccountBalance>> GetAccountBalances()
         {
             throw new NotImplementedException();
@@ -22,7 +23,26 @@ namespace CryptoTrading.App.Broker
 
         public Task<Order> SetMarketOrder(ITrade trade)
         {
-            throw new NotImplementedException();
+            trades.Add(trade);
+            var order = new Order(new BinanceApiUser("Test"),
+                             trade.Symbol,
+                             0,
+                             "",
+                             trade.Price,
+                             trade.Quantity,
+                             trade.Quantity,
+                             0,
+                             OrderStatus.Filled,
+                             TimeInForce.IOC,
+                             OrderType.Market,
+                             OrderSide.Buy,
+                             0,
+                             0,
+                             DateTime.Now,
+                             DateTime.Now,
+                             true);
+            Task<Order> task = new Task<Order>(()=> { return order; });
+            return task;
         }
 
         public Task<string> CancelOrder(Order order)

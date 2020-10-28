@@ -31,13 +31,14 @@ namespace CryptoTrading.App.BrokerTesting
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
             dictionaryPositions.Add("XRP", new Position("XRP",0m));
             dictionaryPositions.Add("BTC", new Position("BTC",10)); 
+            dictionaryPositions.Add("BNB", new Position("BNB",10));
             IPositions positions = new TestPositions(factory, dictionaryPositions, null);
             //IMarketDataEvents marketDataEvents = new 
 
             var broker = new CryptoBroker(market, logger,positions);
             //set up message broker and submit trade request
             double result = 10;
-            var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC");
+            var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC", 0.5m);
             MessageBroker.Instance.Publish(new object(), request);
 
             Thread.Sleep(100000);
@@ -65,7 +66,17 @@ namespace CryptoTrading.App.BrokerTesting
 
         public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
         {
-            throw new NotImplementedException();
+            var trade = new Trade();
+            trade.OrderType = OrderSide.Buy;
+            trade.Symbol = buyPosition.Symbol + sellPosition.Symbol;
+            trade.Quantity = CalculateQuantity(sellPosition.FreeAmount, (decimal)request.SellPercentage, request.Price);
+            trade.Price = request.Price;
+            return trade;
+        }
+
+        private decimal CalculateQuantity(decimal freeAmount, decimal sellPercentage, decimal price)
+        {
+            return (freeAmount * sellPercentage) / price;
         }
     }
 }

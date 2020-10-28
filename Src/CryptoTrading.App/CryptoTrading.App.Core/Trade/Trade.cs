@@ -11,5 +11,6 @@ namespace CryptoTrading.App.Core.Trade
         public string Symbol { get; set; }
         public OrderSide OrderType { get; set; }
         public decimal Quantity { get; set; }
+        public decimal Fee => Price * Quantity;
     }
 }

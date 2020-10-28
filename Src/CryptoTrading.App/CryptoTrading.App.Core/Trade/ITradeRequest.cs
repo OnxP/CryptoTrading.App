@@ -6,5 +6,6 @@
         string SellSymbol { get; set; }
         double SellPercentage { get; set; }
         string SellAmount { get; set; }
+        decimal Price { get; }
     }
 }
