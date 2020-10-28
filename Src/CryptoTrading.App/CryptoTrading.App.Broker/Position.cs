@@ -25,6 +25,8 @@ namespace CryptoTrading.App.Broker
         }
 
         public bool HasOpenPosition { get; set; }
+
+
         public void UpdateOrder(Order order)
         {
             _orders.Add(order);

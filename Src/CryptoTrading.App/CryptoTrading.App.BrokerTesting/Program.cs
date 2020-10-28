@@ -62,5 +62,10 @@ namespace CryptoTrading.App.BrokerTesting
             trade.Price = request.Price;
             return trade;
         }
+
+        public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
