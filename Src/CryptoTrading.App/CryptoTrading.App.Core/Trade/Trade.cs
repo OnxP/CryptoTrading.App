@@ -7,6 +7,8 @@ namespace CryptoTrading.App.Core.Trade
 {
     public class Trade : ITrade
     {
+        public List<Transaction> filledTransactions;
+        public List<Transaction> OpenTransactions;
         public decimal Price { get; set; }
         public string Symbol { get; set; }
         public OrderSide OrderType { get; set; }
