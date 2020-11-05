@@ -1,11 +1,14 @@
-﻿namespace CryptoTrading.App.Core.Trade
+﻿using System;
+
+namespace CryptoTrading.App.Core.Trade
 {
     public interface ITradeRequest
     {
-        string BuySymbol { get; set; }
-        string SellSymbol { get; set; }
+        string BaseSymbol { get; set; }
+        string QuoteSymbol { get; set; }
         double SellPercentage { get; set; }
         string SellAmount { get; set; }
         decimal Price { get; }
+        DateTime? RequestDateTime { get; set; }
     }
 }

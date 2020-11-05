@@ -1,18 +1,20 @@
 ﻿using Binance;
 using CryptoTrading.App.Core.Trade;
+using System;
 
 namespace CryptoTrading.App.Core.TradeRequest
 {
     public static class RequestBuilder
     {
-        public static ITradeRequest BuildTradeRequest(double result, string ticker, decimal close)
+        public static ITradeRequest BuildTradeRequest(double result, string ticker, decimal close, DateTime dateTime)
         {
             var tradeRequest = new BuyTradeRequest();
             Symbol symbol = Symbol.Cache.Get(ticker);
-            tradeRequest.BuySymbol = symbol.BaseAsset;
-            tradeRequest.SellSymbol = symbol.QuoteAsset;
+            tradeRequest.BaseSymbol = symbol.BaseAsset;
+            tradeRequest.QuoteSymbol = symbol.QuoteAsset;
             tradeRequest.Price = close;
             tradeRequest.SellPercentage = result;
+            tradeRequest.RequestDateTime = dateTime;
             return tradeRequest;
         }
     }

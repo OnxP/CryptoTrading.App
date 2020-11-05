@@ -43,9 +43,10 @@ namespace CryptoTrading.App.Broker
 
         public ITrade CreateTrade(ITradeRequest request)
         {
-            var buyPosition = _positions[request.BuySymbol];
-            var sellPosition = _positions[request.SellSymbol];
-            ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, request);
+            var buyPosition = _positions[request.BaseSymbol];
+            var sellPosition = _positions[request.QuoteSymbol];
+            var feePosition = _positions["BNBBTC"];
+            ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition, request);
             return trade;
         }
 

@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Broker
 {
@@ -10,5 +11,6 @@ namespace CryptoTrading.App.Broker
         bool HasOpenPosition { get; set; }
         void UpdateOrder(Order order);
         decimal CalculateStopLoss(Order order);
+        TransactionLeg CreateTransaction(decimal quantity);
     }
 }

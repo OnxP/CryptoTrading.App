@@ -1,13 +1,15 @@
 ﻿using CryptoTrading.App.Core.Trade;
+using System;
 
 namespace CryptoTrading.App.Core.TradeRequest
 {
     public class BuyTradeRequest : ITradeRequest
     {
-        public string BuySymbol { get; set; }
-        public string SellSymbol { get; set; }
+        public string BaseSymbol { get; set; }
+        public string QuoteSymbol { get; set; }
         public string SellAmount { get; set; }
         public double SellPercentage { get; set; }
         public decimal Price { get; internal set; }
+        public DateTime? RequestDateTime { get; set; }
     }
 }

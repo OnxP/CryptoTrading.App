@@ -4,9 +4,9 @@ namespace CryptoTrading.App.Core.Trade
 {
     public interface ITrade
     {
-        decimal Price { get; set; }
-        string Symbol { get; set; }
-        OrderSide OrderType { get; set; }
-        decimal Quantity { get; set; }
+        decimal Price { get; }
+        string Symbol { get; }
+        OrderSide OrderType { get; }
+        decimal Quantity { get; }
     }
 }

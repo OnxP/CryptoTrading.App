@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Binance;
+using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Broker
 {
@@ -36,6 +37,17 @@ namespace CryptoTrading.App.Broker
         public decimal CalculateStopLoss(Order order)
         {
             return order.Price * 0.9m;
+        }
+
+        public TransactionLeg CreateTransaction(decimal quantity)
+        {
+            FreeAmount += quantity;
+            var t = new TransactionLeg
+            {
+                Symbol = Symbol,
+                Quantity = quantity
+            };
+            return t;
         }
     }
 }

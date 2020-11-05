@@ -37,8 +37,8 @@ namespace CryptoTrading.App.BrokerTesting
 
             var broker = new CryptoBroker(market, logger,positions);
             //set up message broker and submit trade request
-            double result = 10;
-            var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC", 0.5m);
+            double result = 0.5;
+            var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC", 0.5m, DateTime.Now);
             MessageBroker.Instance.Publish(new object(), request);
 
             Thread.Sleep(100000);
@@ -47,34 +47,13 @@ namespace CryptoTrading.App.BrokerTesting
 
     internal class TestTradeFactory : ITradeFactory
     {
-        public ITrade CreateTrade(string requestBuySymbol, string requestSellSymbol)
-        {
-            var trade = new Trade();
-            trade.OrderType = OrderSide.Buy;
-            trade.Symbol = requestBuySymbol + requestSellSymbol;
-            return trade;
-        }
-
-        public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, ITradeRequest request)
-        {
-            var trade = new Trade();
-            trade.OrderType = OrderSide.Buy;
-            trade.Symbol = buyPosition.Symbol + sellPosition.Symbol;
-            trade.Price = request.Price;
-            return trade;
-        }
-
         public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
         {
             var trade = new Trade();
-            trade.OrderType = OrderSide.Buy;
-            trade.Symbol = buyPosition.Symbol + sellPosition.Symbol;
-            trade.Quantity = CalculateQuantity(sellPosition.FreeAmount, (decimal)request.SellPercentage, request.Price);
-            trade.Price = request.Price;
-
-            trade.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-
-
+            trade.Open = true;
+            var quoteQuantity = sellPosition.FreeAmount * (decimal)request.SellPercentage;
+            var quantity = quoteQuantity / request.Price;
+            trade.CreateTransaction(buyPosition.CreateTransaction(quantity), sellPosition.CreateTransaction(-quoteQuantity), feePosition.CreateTransaction(quoteQuantity / 0.002m), request.Price, request.RequestDateTime);
             return trade;
             //should add a transaction for each ccy, seperate one for the fee.
             //since the same trade is used for the stop loss we can combine the transactions.
