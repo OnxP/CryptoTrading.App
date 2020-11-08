@@ -1,4 +1,4 @@
-﻿using System;
+﻿using CryptoTrading.App.Broker;
 
 namespace CryptoTrading.App.TradeMonitor
 {

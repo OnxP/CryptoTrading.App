@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.MarketData
 {

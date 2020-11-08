@@ -9,8 +9,6 @@ namespace CryptoTrading.App.Core
 {
     public interface IBroker
     {
-        Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss);
-        Task<Order> SetNewLimitOrder(ITrade trade,Order order, decimal currentStopLoss);
         void ClosePosition(ITrade trade);
     }
 }

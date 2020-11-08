@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Broker
 {
@@ -29,7 +30,7 @@ namespace CryptoTrading.App.Broker
             throw new NotImplementedException();
         }
 
-        public async Task<Order> SetMarketOrder(ITrade trade)
+        public async Task<Order> SetMarketOrder(IMarketRequest trade)
         {
             var clientOrder = new MarketOrder(_user)
             {
@@ -43,13 +44,13 @@ namespace CryptoTrading.App.Broker
             return order;
         }
 
-        public async Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss)
+        public async Task<Order> SetLimitOrder(IStopLimitRequest trade)
         {
             var clientOrder = new LimitOrder(_user)
             {
                 Symbol = trade.Symbol,
                 Side = trade.OrderType,
-                Price = currentStopLoss,
+                Price = trade.StopPrice,
                 Quantity = trade.Quantity
             };
 
@@ -59,7 +60,7 @@ namespace CryptoTrading.App.Broker
             return order;
         }
 
-        public async Task<string> CancelOrder(Order order)
+        public async Task<string> CancelOrder(ICancelRequest order)
         {
             return await _api.CancelOrderAsync(_user, order.Symbol, order.ClientOrderId);
             //LogOrder(order,_user, OrderStatus.Canceled);

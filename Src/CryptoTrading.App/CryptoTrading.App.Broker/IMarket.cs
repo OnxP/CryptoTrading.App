@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Broker
 {
@@ -10,8 +11,8 @@ namespace CryptoTrading.App.Broker
     {
         Task<IEnumerable<AccountBalance>> GetAccountBalances();
         Task<IEnumerable<Order>> GetAllOpenOrders();
-        Task<Order> SetMarketOrder(ITrade trade);
-        Task<string> CancelOrder(Order order);
-        Task<Order> SetLimitOrder(ITrade trade, decimal currentStopLoss);
+        Task<Order> SetMarketOrder(IMarketRequest request);
+        Task<string> CancelOrder(ICancelRequest request);
+        Task<Order> SetLimitOrder(IStopLimitRequest request);
     }
 }
