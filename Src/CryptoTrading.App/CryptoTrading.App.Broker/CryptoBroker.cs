@@ -32,12 +32,40 @@ namespace CryptoTrading.App.Broker
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Action<MessagePayload<ITradeRequest>> processMessage = ProcessMessageAction;
+            Action<MessagePayload<IMarketRequest>> processMessage = ProcessMessageAction;
+            Action<MessagePayload<ICancelRequest>> processMessage = ProcessMessageAction;
+            Action<MessagePayload<IStopLimitRequest>> processMessage = ProcessMessageAction;
 
             messageBroker.Subscribe(processMessage);
         }
 
-        private void ProcessMessageAction(MessagePayload<ITradeRequest> obj)
+        private void ProcessMessageAction(MessagePayload<IMarketRequest> obj)
+        {
+            ITradeRequest request = obj.What;
+
+            //check if there is an open position and check if we have enough BTC balance
+            if (!_currentPositions.CheckOpenPosition(request.BaseSymbol) && _currentPositions.CheckBalance(request.QuoteSymbol, request.SellPercentage))
+            {
+                //check to see if there is sufficient funds
+                var trade = _currentPositions.CreateTrade(request);
+                //set market order
+                var order = _market.SetMarketOrder(trade).Result;
+                trade.CurrentTransaction.AddOrder(order);
+                //confirm market order has been met
+                LogOrder(order,OrderStatus.Filled);
+
+                MessageBroker.Instance.Publish("Broker", trade);
+
+
+                //var stopLoss = _currentPositions.CalculateStoploss(order);
+
+                //var stopLimitOrder = SetLimitOrder(trade, stopLoss).Result;
+                //LogOrder(stopLimitOrder, OrderStatus.Filled);
+                //_currentPositions.AddOrder(stopLimitOrder);
+            }
+        }
+
+        private void ProcessMessageAction(MessagePayload<ICancelRequest> obj)
         {
             ITradeRequest request = obj.What;
 
@@ -49,15 +77,28 @@ namespace CryptoTrading.App.Broker
                 //set market order
                 var order = _market.SetMarketOrder(trade).Result;
                 //confirm market order has been met
-                LogOrder(order,OrderStatus.Filled);
-                var stopLoss = _currentPositions.CalculateStoploss(order);
+                LogOrder(order, OrderStatus.Filled);
 
-                var stopLimitOrder = SetLimitOrder(trade, stopLoss).Result;
-                LogOrder(stopLimitOrder, OrderStatus.Filled);
-                _currentPositions.AddOrder(stopLimitOrder);
+                MessageBroker.Instance.Publish("Broker", trade);
             }
         }
+        private void ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
+        {
+            ITradeRequest request = obj.What;
 
+            //check if there is an open position and check if we have enough BTC balance
+            if (!_currentPositions.CheckOpenPosition(request.BaseSymbol) && _currentPositions.CheckBalance(request.QuoteSymbol, request.SellPercentage))
+            {
+                //check to see if there is sufficient funds
+                var trade = _currentPositions.CreateTrade(request);
+                //set market order
+                var order = _market.SetMarketOrder(trade).Result;
+                //confirm market order has been met
+                LogOrder(order, OrderStatus.Filled);
+
+                MessageBroker.Instance.Publish("Broker", trade);
+            }
+        }
 
         private void LogOrder(Order order, OrderStatus status)
         {

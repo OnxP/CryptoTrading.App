@@ -53,7 +53,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.BrokerTes
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "CryptoTrading.App.Database", "CryptoTrading.App.Database\CryptoTrading.App.Database.sqlproj", "{A85A4040-54CD-4BFF-A201-629A9F4DB4A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.BackTesting", "ConsoleApp1\CryptoTrading.App.BackTesting.csproj", "{5AAAABFE-8492-4FF4-AFA3-8E1F80393528}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.BackTesting", "ConsoleApp1\CryptoTrading.App.BackTesting.csproj", "{5AAAABFE-8492-4FF4-AFA3-8E1F80393528}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.TradeMonitor", "CryptoTrading.App.TradeMonitor\CryptoTrading.App.TradeMonitor.csproj", "{D76855C6-77CE-4D07-8C28-BB6101B6D785}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -151,6 +153,10 @@ Global
 		{5AAAABFE-8492-4FF4-AFA3-8E1F80393528}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AAAABFE-8492-4FF4-AFA3-8E1F80393528}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AAAABFE-8492-4FF4-AFA3-8E1F80393528}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D76855C6-77CE-4D07-8C28-BB6101B6D785}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D76855C6-77CE-4D07-8C28-BB6101B6D785}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D76855C6-77CE-4D07-8C28-BB6101B6D785}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D76855C6-77CE-4D07-8C28-BB6101B6D785}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
