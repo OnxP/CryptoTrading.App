@@ -18,13 +18,11 @@ namespace CryptoTrading.App.Broker
     {
         private readonly IMarket _market;
         private readonly ILogger _logger;
-        private readonly IPositions _currentPositions;
 
-        public CryptoBroker(IMarket market, ILogger logger, IPositions positions)
+        public CryptoBroker(IMarket market, ILogger logger)
         {
             _market = market;
             _logger = logger;
-            _currentPositions = positions;
             ConfigureMessageBroker();
         }
 
@@ -77,7 +75,7 @@ namespace CryptoTrading.App.Broker
             //todo log order to the database.
         }
 
-        public async Task<Order> SetLimitOrder(IStopLimitRequest request, decimal currentStopLoss)
+        public async Task<Order> SetLimitOrder(IStopLimitRequest request)
         {
             var order = await _market.SetLimitOrder(request);
 

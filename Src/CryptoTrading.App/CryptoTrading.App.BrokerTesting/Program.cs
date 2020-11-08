@@ -35,7 +35,7 @@ namespace CryptoTrading.App.BrokerTesting
             IPositions positions = new TestPositions(factory, dictionaryPositions, null);
             //IMarketDataEvents marketDataEvents = new 
 
-            var broker = new CryptoBroker(market, logger,positions);
+            var broker = new CryptoBroker(market, logger);
             //set up message broker and submit trade request
             double result = 0.5;
             var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC", 0.5m, DateTime.Now);
