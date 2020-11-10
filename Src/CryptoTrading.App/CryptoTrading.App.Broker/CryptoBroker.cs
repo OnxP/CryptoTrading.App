@@ -75,14 +75,6 @@ namespace CryptoTrading.App.Broker
             //todo log order to the database.
         }
 
-        public async Task<Order> SetLimitOrder(IStopLimitRequest request)
-        {
-            var order = await _market.SetLimitOrder(request);
-
-            return order;
-        }
-
-
         public async void ClosePosition(ITrade trade)
         {
             //IEnumerable<Order> orders = await _market.GetAllOpenOrders();
