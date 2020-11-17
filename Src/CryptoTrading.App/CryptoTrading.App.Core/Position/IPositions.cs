@@ -11,5 +11,6 @@ namespace CryptoTrading.App.Broker
         bool CheckBalance(string sellSymbol, double sellAmount);
         void AddOrder(Order order);
         decimal CalculateStoploss(Order order);
+        bool CheckRequest(ITradeRequest what);
     }
 }

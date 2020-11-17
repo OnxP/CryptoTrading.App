@@ -7,8 +7,8 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public interface IMarketRequest : IRequest
     {
-        OrderSide? OrderType { get; set; }
-        decimal Quantity { get; set; }
-        decimal Price { get; set; }
+        OrderSide? OrderType { get; }
+        decimal Quantity { get; }
+        decimal Price { get; }
     }
 }

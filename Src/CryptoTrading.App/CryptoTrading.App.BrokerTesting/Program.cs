@@ -49,11 +49,8 @@ namespace CryptoTrading.App.BrokerTesting
     {
         public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
         {
-            var trade = new Trade();
+            var trade = new Trade(buyPosition, sellPosition, feePosition, request);
             trade.Open = true;
-            var quoteQuantity = sellPosition.FreeAmount * (decimal)request.SellPercentage;
-            var quantity = quoteQuantity / request.Price;
-            trade.CreateTransaction(buyPosition.CreateTransaction(quantity), sellPosition.CreateTransaction(-quoteQuantity), feePosition.CreateTransaction(quoteQuantity / 0.002m), request.Price, request.RequestDateTime);
             return trade;
             //should add a transaction for each ccy, seperate one for the fee.
             //since the same trade is used for the stop loss we can combine the transactions.

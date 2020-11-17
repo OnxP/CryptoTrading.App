@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Core.Trade
 {
@@ -8,5 +9,7 @@ namespace CryptoTrading.App.Core.Trade
         string Symbol { get; }
         OrderSide OrderType { get; }
         decimal Quantity { get; }
+        Transaction CurrentTransaction { get; }
+        bool Open { get; set; }
     }
 }

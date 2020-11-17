@@ -7,7 +7,7 @@ namespace CryptoTrading.App.Core.Trade
         string BaseSymbol { get; set; }
         string QuoteSymbol { get; set; }
         double SellPercentage { get; set; }
-        string SellAmount { get; set; }
+        decimal SellAmount { get; set; }
         decimal Price { get; }
         DateTime? RequestDateTime { get; set; }
     }

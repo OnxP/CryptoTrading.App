@@ -7,7 +7,7 @@ namespace CryptoTrading.App.Core.TradeRequest
     {
         public string BaseSymbol { get; set; }
         public string QuoteSymbol { get; set; }
-        public string SellAmount { get; set; }
+        public decimal SellAmount { get; set; }
         public double SellPercentage { get; set; }
 
         public decimal Price { get; set; }

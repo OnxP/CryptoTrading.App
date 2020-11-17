@@ -67,5 +67,10 @@ namespace CryptoTrading.App.Broker
 
             return 0;
         }
+
+        public bool CheckRequest(ITradeRequest what)
+        {
+            return CheckOpenPosition(what.BaseSymbol) && CheckBalance(what.QuoteSymbol,what.SellPercentage);
+        }
     }
 }

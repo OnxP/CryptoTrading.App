@@ -5,6 +5,8 @@ using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace CryptoTrading.App.TradeMonitor
@@ -12,6 +14,10 @@ namespace CryptoTrading.App.TradeMonitor
     public class TradeMonitor : ITradeMonitor
     {
         public IPositions Positions { get; set; }
+
+        public List<ITrade> Trades { get; set; }
+
+        public IEnumerable<ITrade> LiveTrades => Trades.Where(x=>x.Open);
 
         public TradeMonitor(IPositions positions)
         {
@@ -36,7 +42,10 @@ namespace CryptoTrading.App.TradeMonitor
         {
             if (obj.Who is IRequest request) return;
             Order order = obj.What;
-
+            //find current transaction and update.
+            //if closed then do nothing
+            //if open then pass to stoploss monitor.
+            //if not filled then decide what todo???
         }
 
         private void ProcessMessageAction(MessagePayload<string> obj)
@@ -45,11 +54,21 @@ namespace CryptoTrading.App.TradeMonitor
             {
                 string order = obj.What;
                 //set market order
+                //find current transaction and cancel it.
             }
         }
 
         private void ProcessMessageAction(MessagePayload<ITradeRequest> obj)
         {
+            if(Positions.CheckRequest(obj.What))
+            {
+                var trade = Positions.CreateTrade(obj.What);
+                Trades.Add(trade);
+                IMarketRequest request = new MarketRequest(trade.CurrentTransaction);
+
+                MessageBroker.Instance.Publish(trade, request);
+            }
+
             
         }
     }
