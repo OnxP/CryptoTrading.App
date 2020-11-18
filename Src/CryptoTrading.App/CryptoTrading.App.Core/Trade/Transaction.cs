@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Binance;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,6 +13,7 @@ namespace CryptoTrading.App.Core.Trade
         public TransactionLeg Base { get; set; }
         public TransactionLeg Fee { get; set; }
         public DateTime TransactionDate { get; set; }
+        public Order Order { get; set; }
     }
 
     public class TransactionLeg
