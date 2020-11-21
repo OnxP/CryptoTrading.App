@@ -1,8 +1,8 @@
 ﻿using Binance;
 
-namespace CryptoTrading.App.TradeMonitor
+namespace CryptoTrading.App.Monitor
 {
-    public interface ITradeMonitor
+    public interface ITransactionMonitor
     {
         bool Live { get; }
         string Symbol { get; }
