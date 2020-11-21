@@ -2,7 +2,7 @@
 
 namespace CryptoTrading.App.Monitor
 {
-    public interface ITransactionMonitor
+    public interface ITradeMonitor
     {
         bool Live { get; }
         string Symbol { get; }
