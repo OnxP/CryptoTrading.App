@@ -11,5 +11,10 @@ namespace CryptoTrading.App.Core.Trade
         decimal Quantity { get; }
         Transaction CurrentTransaction { get; }
         bool Open { get; set; }
+
+        void CancelCurrentTransaction();
+        void UpdateCurrentTransaction(Order order);
+        Transaction CreateStopLimitTransaction(decimal currentStopLimit);
+        void CreateStopLimitTransaction(object stopLimitValue);
     }
 }

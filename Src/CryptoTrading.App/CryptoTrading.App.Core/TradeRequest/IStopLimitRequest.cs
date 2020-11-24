@@ -7,8 +7,8 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public interface IStopLimitRequest : IRequest
     {
-        OrderSide? OrderType { get; set; }
-        decimal StopPrice { get; set; }
-        decimal Quantity { get; set; }
+        OrderSide? OrderType { get; }
+        decimal StopPrice { get; }
+        decimal Quantity { get; }
     }
 }

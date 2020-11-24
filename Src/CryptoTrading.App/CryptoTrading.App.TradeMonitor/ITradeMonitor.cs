@@ -7,7 +7,8 @@ namespace CryptoTrading.App.Monitor
         bool Live { get; }
         string Symbol { get; }
 
-        void Update(Order order);
-        void Cancel(string order);
+        void UpdateInitialTransaction(Order order);
+        void CancelLimitOrder(string order);
+        void StartStopLossMonitor(Order order);
     }
 }

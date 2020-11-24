@@ -1,4 +1,7 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.Message_Broker;
+using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Core.TradeRequest;
 using CryptoTrading.App.Monitor;
 using System;
 using System.Collections.Generic;
@@ -6,20 +9,55 @@ using System.Text;
 
 namespace CryptoTrading.App.TradeMonitor
 {
+    //Monitors a Trade, and manages transations.
+    //Each transaction is linked to an order.
+    //The trade is considered to be live if there are open transactions
     class TradeMonitor : ITradeMonitor
     {
-        public bool Live => throw new NotImplementedException();
+        public ITrade Trade { get; set; }
+        public decimal CurrentStopLimit { get; set; }
+        public StopLossMonitor marketMonitor { get; set; }
+        public IStopLimitTracker Tracker {get;set;}
 
-        public string Symbol => throw new NotImplementedException();
-
-        public void Cancel(string order)
+        private void CreateNewStopLimitOrder()
         {
-            throw new NotImplementedException();
+            Trade.CreateStopLimitTransaction(Tracker.StopLimitValue);
+
+            if (Trade.CurrentTransaction != null)
+            {
+                IMarketRequest request = new StopLimitRequest(Trade.CurrentTransaction);
+                MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
+            }
         }
 
-        public void Update(Order order)
+        public bool Live => Trade.Open;
+
+        public string Symbol => Trade.Symbol;
+
+        public void CancelLimitOrder(string order)
         {
-            throw new NotImplementedException();
+            Trade.CancelCurrentTransaction();
+            UpdateStopLimit();
+        }
+
+        public void UpdateInitialTransaction(Order order)
+        {
+            Trade.UpdateCurrentTransaction(order);
+            if (order.Status == OrderStatus.Filled) 
+            { 
+                Tracker.Configure(order); 
+            }
+        }
+
+        private void UpdateStopLimit()
+        {
+            Tracker.MoveStopLimit();
+            CreateNewStopLimitOrder();
+        }
+
+        public void StartStopLossMonitor(Order order)
+        {
+            Trade.UpdateCurrentTransaction(order);
         }
     }
 }

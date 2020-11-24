@@ -44,23 +44,41 @@ namespace CryptoTrading.App.TradeMonitor
 
         private void ProcessMessageAction(MessagePayload<Order> obj)
         {
-            if (obj.Who is Transaction transaction)
+            if (obj.Who is ITransaction transaction)
             {
                 Order order = obj.What;
                 //assume that order has been filled.
                 var trade = OrderMonitors.First(x => x.Symbol == order.Symbol);
-                trade.Update(order);
+                switch (transaction.Type)
+                {
+
+                    case TransactionType.StopLimitTransaction:
+                        trade.StartStopLossMonitor(order);
+                        break;
+                    case TransactionType.Transaction:
+                    case TransactionType.MarketTransaction:
+                        trade.UpdateInitialTransaction(order);
+                        break;
+                }
             }
         }
 
         private void ProcessMessageAction(MessagePayload<string> obj)
         {
-            if (obj.Who is Transaction transaction)
+            if (obj.Who is ITransaction transaction)
             {
                 string order = obj.What;
                 //assume that order has been filled.
                 var trade = OrderMonitors.First(x => x.Symbol == transaction.Pair);
-                trade.Cancel(order);
+                switch (transaction.Type)
+                {
+                    case TransactionType.StopLimitTransaction:
+                        trade.CancelLimitOrder(order);
+                        break;
+                    case TransactionType.Transaction:
+                    case TransactionType.MarketTransaction:
+                        break;
+                }
                 //set market order
                 //find current transaction and cancel it.
             }
@@ -72,9 +90,8 @@ namespace CryptoTrading.App.TradeMonitor
             {
                 var trade = Positions.CreateTrade(obj.What);
                 Trades.Add(trade);
-                IMarketRequest request = new MarketRequest(trade.CurrentTransaction);
-
-                MessageBroker.Instance.Publish(trade.CurrentTransaction, request);
+                var tradeMonitor = new TradeMonitor(trade);
+                OrderMonitors.Add(tradeMonitor);
             }
         }
     }

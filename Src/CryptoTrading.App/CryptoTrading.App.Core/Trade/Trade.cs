@@ -29,6 +29,11 @@ namespace CryptoTrading.App.Core.Trade
         public IPosition SellPosition { get; }
         public IPosition FeePosition { get; }
 
+        public void CancelCurrentTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
         public Transaction CreateNewTransaction(ITradeRequest request)
         {
             var quoteQuantity = request.SellAmount == 0 ? SellPosition.FreeAmount * (decimal)request.SellPercentage : request.SellAmount;
@@ -36,6 +41,16 @@ namespace CryptoTrading.App.Core.Trade
             var transaction = CreateTransaction(BuyPosition.CreateTransaction(quantity), SellPosition.CreateTransaction(-quoteQuantity), FeePosition.CreateTransaction(quoteQuantity / 0.002m), request.Price, request.RequestDateTime);
             Transactions.Add(transaction);
             return transaction;
+        }
+
+        public Transaction CreateStopLimitTransaction(decimal currentStopLimit)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CreateStopLimitTransaction(object stopLimitValue)
+        {
+            throw new NotImplementedException();
         }
 
         public Transaction CreateTransaction(TransactionLeg baseLeg, TransactionLeg quoteLeg, TransactionLeg feeLeg, decimal price, DateTime? transactionDT)
@@ -47,6 +62,16 @@ namespace CryptoTrading.App.Core.Trade
             t.Price = price;
             t.TransactionDate = transactionDT ?? DateTime.Now;
             return t;
+        }
+
+        public void UpdateCurrentTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateCurrentTransaction(Order order)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -76,7 +76,7 @@ namespace CryptoTrading.App.Broker
             //todo log order to the database.
         }
 
-        public async void ClosePosition(ITrade trade)
+        public void ClosePosition(ITrade trade)
         {
             //IEnumerable<Order> orders = await _market.GetAllOpenOrders();
             //foreach (var order in orders)
