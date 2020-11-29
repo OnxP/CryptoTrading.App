@@ -5,9 +5,10 @@ using System.Text;
 
 namespace CryptoTrading.App.Monitor
 {
-    interface IStopLimitTracker
+    public interface IStopLimitTracker
     {
-        decimal StopLimitValue { get; set; }
+        decimal StopLimitPrice { get; }
+        decimal TargetPrice { get; }
         void Configure(Order order);
         void MoveStopLimit();
     }

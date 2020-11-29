@@ -31,7 +31,7 @@ namespace CryptoTrading.App.Core.Trade
 
         public void CancelCurrentTransaction()
         {
-            throw new NotImplementedException();
+            CurrentTransaction.Cancel();
         }
 
         public Transaction CreateNewTransaction(ITradeRequest request)
@@ -48,11 +48,6 @@ namespace CryptoTrading.App.Core.Trade
             throw new NotImplementedException();
         }
 
-        public void CreateStopLimitTransaction(object stopLimitValue)
-        {
-            throw new NotImplementedException();
-        }
-
         public Transaction CreateTransaction(TransactionLeg baseLeg, TransactionLeg quoteLeg, TransactionLeg feeLeg, decimal price, DateTime? transactionDT)
         {
             var t = new Transaction();
@@ -64,14 +59,12 @@ namespace CryptoTrading.App.Core.Trade
             return t;
         }
 
-        public void UpdateCurrentTransaction()
-        {
-            throw new NotImplementedException();
-        }
-
         public void UpdateCurrentTransaction(Order order)
         {
-            throw new NotImplementedException();
+            if (CurrentTransaction != null)
+            {
+                CurrentTransaction.Order = order;
+            }
         }
     }
 }

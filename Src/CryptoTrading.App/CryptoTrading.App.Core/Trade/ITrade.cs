@@ -15,6 +15,5 @@ namespace CryptoTrading.App.Core.Trade
         void CancelCurrentTransaction();
         void UpdateCurrentTransaction(Order order);
         Transaction CreateStopLimitTransaction(decimal currentStopLimit);
-        void CreateStopLimitTransaction(object stopLimitValue);
     }
 }

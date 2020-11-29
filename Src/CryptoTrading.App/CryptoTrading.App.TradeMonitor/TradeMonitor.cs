@@ -14,6 +14,11 @@ namespace CryptoTrading.App.TradeMonitor
     //The trade is considered to be live if there are open transactions
     class TradeMonitor : ITradeMonitor
     {
+        public TradeMonitor(ITrade trade)
+        {
+            Trade = trade;
+        }
+
         public ITrade Trade { get; set; }
         public decimal CurrentStopLimit { get; set; }
         public StopLossMonitor marketMonitor { get; set; }
@@ -21,13 +26,10 @@ namespace CryptoTrading.App.TradeMonitor
 
         private void CreateNewStopLimitOrder()
         {
-            Trade.CreateStopLimitTransaction(Tracker.StopLimitValue);
+            Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
 
-            if (Trade.CurrentTransaction != null)
-            {
-                IMarketRequest request = new StopLimitRequest(Trade.CurrentTransaction);
-                MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
-            }
+            IMarketRequest request = new StopLimitRequest(Trade.CurrentTransaction);
+            MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
         }
 
         public bool Live => Trade.Open;
@@ -58,6 +60,7 @@ namespace CryptoTrading.App.TradeMonitor
         public void StartStopLossMonitor(Order order)
         {
             Trade.UpdateCurrentTransaction(order);
+            //Start the stop limit monitor.
         }
     }
 }

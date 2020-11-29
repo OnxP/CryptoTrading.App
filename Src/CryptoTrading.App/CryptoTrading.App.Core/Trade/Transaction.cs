@@ -16,6 +16,10 @@ namespace CryptoTrading.App.Core.Trade
         public DateTime TransactionDate { get; set; }
         public virtual Order Order { get; set; }
 
+        internal void Cancel()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class TransactionLeg
