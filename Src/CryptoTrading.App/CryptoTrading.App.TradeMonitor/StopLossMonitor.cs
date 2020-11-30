@@ -25,9 +25,23 @@ namespace CryptoTrading.App.Monitor
         private int _risk = 10;
         private int _target = 15;
         private Order _order;
+        private System.Action<CandlestickEventArgs> action;
+
+        public string Symbol { get; }
+
         public StopLossMonitor(IBroker broker)
         {
             _broker = broker;
+        }
+
+        public StopLossMonitor(string symbol)
+        {
+            Symbol = symbol;
+        }
+
+        internal bool CheckOrder(string clientOrderId)
+        {
+            throw new System.NotImplementedException();
         }
 
         //Process a candlestick
@@ -50,6 +64,16 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
+        internal void Dispose()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal void StopStream()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public async void ConfigureStopLossMonitor(ITrade trade)
         {
             _trade = trade;
@@ -61,6 +85,16 @@ namespace CryptoTrading.App.Monitor
         private decimal CalculateNewPrice(decimal _tradedPrice, int percentOfValue)
         {
             return _tradedPrice * (1 + percentOfValue / 100);
+        }
+
+        internal void StartStream()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal void Subscribe(System.Action<CandlestickEventArgs> processCandleStick)
+        {
+            action = processCandleStick;
         }
     }
 

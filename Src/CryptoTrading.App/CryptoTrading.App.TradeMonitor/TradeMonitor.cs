@@ -1,4 +1,5 @@
 ﻿using Binance;
+using Binance.Client;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
@@ -17,12 +18,42 @@ namespace CryptoTrading.App.TradeMonitor
         public TradeMonitor(ITrade trade)
         {
             Trade = trade;
+            marketMonitor = new StopLossMonitor(trade.Symbol);
+            marketMonitor.Subscribe(ProcessCandleStick);
         }
 
         public ITrade Trade { get; set; }
         public decimal CurrentStopLimit { get; set; }
         public StopLossMonitor marketMonitor { get; set; }
         public IStopLimitTracker Tracker {get;set;}
+
+        public void ProcessCandleStick(CandlestickEventArgs candleStick)
+        {
+            var closePrice = candleStick.Candlestick.Close;
+
+            if(closePrice >= Tracker.TargetPrice)
+            {
+                UpdateStopLimit();
+            }
+            if(closePrice <= Tracker.StopLimitPrice)
+            {
+                //check for fill order
+                var filled = marketMonitor.CheckOrder(Trade.CurrentTransaction.Order.ClientOrderId);
+                if (filled)
+                {
+                    Trade.Open = false;
+                    //stop monitor??
+                    marketMonitor.StopStream();
+                    Dispose();
+                }
+            }
+        }
+
+        private void Dispose()
+        {
+            marketMonitor.Dispose();
+            Tracker.Dispose();
+        }
 
         private void CreateNewStopLimitOrder()
         {
@@ -61,6 +92,7 @@ namespace CryptoTrading.App.TradeMonitor
         {
             Trade.UpdateCurrentTransaction(order);
             //Start the stop limit monitor.
+            marketMonitor.StartStream();
         }
     }
 }
