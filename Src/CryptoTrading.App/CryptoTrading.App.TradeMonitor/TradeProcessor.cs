@@ -1,10 +1,10 @@
 ﻿using Binance;
 using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
-using CryptoTrading.App.Monitor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +12,10 @@ using System.Runtime.CompilerServices;
 
 namespace CryptoTrading.App.TradeMonitor
 {
-    public class TradeProcessor 
+    public class TradeProcessor
     {
         public IPositions Positions { get; set; }
+        private MarketMonitorFactory TradeFactory {get;set;}
 
         public List<ITrade> Trades { get; set; }
         public List<ITradeMonitor> OrderMonitors { get; set; }
@@ -23,9 +24,10 @@ namespace CryptoTrading.App.TradeMonitor
 
         public IEnumerable<ITradeMonitor> CurrentMonitors => OrderMonitors.Where(x => x.Live);
 
-        public TradeProcessor(IPositions positions)
+        public TradeProcessor(IPositions positions, MarketMonitorFactory factory)
         {
             Positions = positions;
+            TradeFactory = factory;
             ConfigureMessageBroker();
         }
         private void ConfigureMessageBroker()
@@ -90,7 +92,7 @@ namespace CryptoTrading.App.TradeMonitor
             {
                 var trade = Positions.CreateTrade(obj.What);
                 Trades.Add(trade);
-                var tradeMonitor = new TradeMonitor(trade);
+                var tradeMonitor = TradeFactory.CreateMonitor(trade);
                 OrderMonitors.Add(tradeMonitor);
             }
         }

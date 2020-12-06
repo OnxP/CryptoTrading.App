@@ -1,6 +1,6 @@
 ﻿using Binance;
 
-namespace CryptoTrading.App.Monitor
+namespace CryptoTrading.App.Core.MarketMonitorFactory
 {
     public interface ITradeMonitor
     {

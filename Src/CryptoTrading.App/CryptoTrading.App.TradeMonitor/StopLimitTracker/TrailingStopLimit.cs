@@ -22,9 +22,15 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
             TargetPrice = _currentPrice * (1+_increment);
         }
 
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
         public void MoveStopLimit()
         {
-            StopLimitPrice = StopLimitPrice * (1+_increment);
-            TargetPrice = TargetPrice * (1+_increment);
+            StopLimitPrice = StopLimitPrice * (1 + _increment);
+            TargetPrice = TargetPrice * (1 + _increment);
+        }
     }
 }
