@@ -18,5 +18,12 @@ namespace CryptoTrading.App.MarketData
 
             return services;
         }
+
+        public static IServiceCollection AddHistoricMarketData(this IServiceCollection services)
+        {
+            services.AddTransient<IMarketData, HistoricalMarketData>();
+            
+            return services;
+        }
     }
 }

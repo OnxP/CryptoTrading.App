@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Binance.Client;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,5 +11,6 @@ namespace CryptoTrading.App.Core
         void StopStream();
         void Dispose();
         void StartStream();
+        void Subscribe(Action<CandlestickEventArgs> processCandleStick);
     }
 }

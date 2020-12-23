@@ -27,14 +27,14 @@ namespace CryptoTrading.App.MarketDataTesting
 
         public static void Main(string[] args)
         {
-            Configuration = new ConfigurationBuilder()
+            var Configuration = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json", true, false)
                     .AddUserSecrets<Program>() // for access to API key and secret.
                     .Build();
 
             // Configure services.
-            ServiceProvider = new ServiceCollection()
+            var ServiceProvider = new ServiceCollection()
                 // ReSharper disable once ArgumentsStyleLiteral
                 .AddBinace(useSingleCombinedStream: true) // add default Binance services.
 

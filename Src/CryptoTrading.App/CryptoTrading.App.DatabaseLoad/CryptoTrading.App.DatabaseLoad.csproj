@@ -3,46 +3,30 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <UserSecretsId>c2c880e1-171b-48a9-92e2-a6eba7ba11fe</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Program.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="log4net.config" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Program.cs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.9" />
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0-preview.7.20364.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0-preview.7.20364.11" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0-preview.7.20364.11" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Binance\Binance.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.MarketData\CryptoTrading.App.MarketData.csproj" />
     <ProjectReference Include="..\Samples\Binance.Application\Binance.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="log4net.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="App.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
