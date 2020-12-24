@@ -2,17 +2,14 @@
 using System.IO;
 using Binance;
 using Binance.Application;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Binance.Application;
-using Binance.Application.Logging;
 using Microsoft.Extensions.Logging;
-using IMarketDataEvents = CryptoTrading.App.Core.IMarketDataEvents;
 using System.Collections.Generic;
 using Binance.Client;
-using System.Data.Entity;
 
 namespace CryptoTrading.App.DatabaseLoad
 {
@@ -38,7 +35,7 @@ namespace CryptoTrading.App.DatabaseLoad
             context.Database.ExecuteSqlCommand("TRUNCATE TABLE myCandlesticks");
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
-            marketDate.From = new DateTime(2020, 12, 22);
+            marketDate.From = new DateTime(2020, 11, 22);
             List<Symbol> symbols = new List<Symbol>() 
             { 
                 Symbol.ETH_BTC,
@@ -80,12 +77,12 @@ namespace CryptoTrading.App.DatabaseLoad
                 }
             }
         }
-        public static MyContext context = new MyContext();
+        public static CryptoDBContext context = new CryptoDBContext();
         private static void SaveCandleStick(CandlestickEventArgs obj)
         {
             lock (_object)
             {
-                context.CandleSticks.Add(new MyCandleStick(obj.Candlestick));
+                context.CandleSticks.Add(new CandleStickDb(obj.Candlestick));
                 context.SaveChanges();
             }
         }
@@ -96,99 +93,10 @@ namespace CryptoTrading.App.DatabaseLoad
             {
                 foreach (var candlestick in obj)
                 {
-                    context.CandleSticks.Add(new MyCandleStick(candlestick));
+                    context.CandleSticks.Add(new CandleStickDb(candlestick));
                     context.SaveChanges();
                 }
             }
-        }
-
-        public class MyContext : DbContext
-        {
-            public MyContext() : base(@"Data Source=AnkurPC\AnkurPC;Initial Catalog=CryptoDb;Integrated Security=True") {}
-            public virtual DbSet<MyCandleStick> CandleSticks { get; set; }
-        }
-
-        public class MyCandleStick
-        {
-            public MyCandleStick(Candlestick candlestick)
-            {
-                Symbol = candlestick.Symbol;
-                Interval = candlestick.Interval;
-                OpenTime = candlestick.OpenTime;
-                Open = Convert.ToDouble(candlestick.Open);
-                High = Convert.ToDouble(candlestick.High);
-                Low = Convert.ToDouble(candlestick.Low);
-                Close = Convert.ToDouble(candlestick.Close);
-                Volume = candlestick.Volume;
-                CloseTime = candlestick.CloseTime;
-                QuoteAssetVolume = candlestick.QuoteAssetVolume;
-                NumberOfTrades = candlestick.NumberOfTrades;
-                TakerBuyBaseAssetVolume = candlestick.TakerBuyBaseAssetVolume;
-                TakerBuyQuoteAssetVolume = candlestick.TakerBuyQuoteAssetVolume;
-        }
-
-            public int ID { get; set; }
-            public string Symbol { get; set; }
-
-            /// <summary>
-            /// Get the interval.
-            /// </summary>
-            public CandlestickInterval Interval { get; set; }
-
-            /// <summary>
-            /// Get the open time.
-            /// </summary>
-            public DateTime OpenTime { get; set; }
-
-            /// <summary>
-            /// Get the open price in quote asset units.
-            /// </summary>
-            public double Open { get; set; }
-
-            /// <summary>
-            /// Get the high price in quote asset units.
-            /// </summary>
-            public double High { get; set; }
-
-            /// <summary>
-            /// Get the low price in quote asset units.
-            /// </summary>
-            public double Low { get; set; }
-
-            /// <summary>
-            /// Get the close price in quote asset units.
-            /// </summary>
-            public double Close { get; set; }
-
-            /// <summary>
-            /// Get the volume in base asset units.
-            /// </summary>
-            public decimal Volume { get; set; }
-
-            /// <summary>
-            /// Get the close time.
-            /// </summary>
-            public DateTime CloseTime { get; set; }
-
-            /// <summary>
-            /// Get the volume in quote asset units.
-            /// </summary>
-            public decimal QuoteAssetVolume { get; set; }
-
-            /// <summary>
-            /// Get the number of trades.
-            /// </summary>
-            public long NumberOfTrades { get; set; }
-
-            /// <summary>
-            /// Get the taker buy base asset volume.
-            /// </summary>
-            public decimal TakerBuyBaseAssetVolume { get; set; }
-
-            /// <summary>
-            /// Get the taker buy quote asset volume.
-            /// </summary>
-            public decimal TakerBuyQuoteAssetVolume { get; set; }
         }
     }
 }

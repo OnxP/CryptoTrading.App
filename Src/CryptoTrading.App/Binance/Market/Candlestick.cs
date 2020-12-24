@@ -7,7 +7,7 @@ namespace Binance
     /// Candlestick/K-Line which is uniquely identified by the symbol,
     /// interval, and open time.
     /// </summary>
-    public class Candlestick : IEquatable<Candlestick>, IChronological
+    public sealed class Candlestick : IEquatable<Candlestick>, IChronological
     {
         #region Public Properties
 

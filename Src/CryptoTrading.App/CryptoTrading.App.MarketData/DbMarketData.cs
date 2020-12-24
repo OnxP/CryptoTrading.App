@@ -1,16 +1,19 @@
 ﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
 
 namespace CryptoTrading.App.MarketData
 {
-    public class CsvMarketData : AbstractMarketData, IMarketData
+    public class DbMarketData : AbstractMarketData, IMarketData
     {
-        public DateTime From { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public DateTime From { get; set; }
+
+        CryptoDBContext context;
 
         public override void Configure(IRequest request)
         {
-
+            context = new CryptoDBContext();
         }
 
         public void StartStream()

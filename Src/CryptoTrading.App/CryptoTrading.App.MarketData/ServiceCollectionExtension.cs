@@ -25,5 +25,11 @@ namespace CryptoTrading.App.MarketData
             
             return services;
         }
+        public static IServiceCollection AddDbMarketData(this IServiceCollection services)
+        {
+            services.AddTransient<IMarketData, DbMarketData>();
+
+            return services;
+        }
     }
 }
