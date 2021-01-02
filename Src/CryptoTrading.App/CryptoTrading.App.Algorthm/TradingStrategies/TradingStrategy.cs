@@ -13,9 +13,9 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         public int OutputLength { get; private set; }
         protected abstract double StrategyWeight { get; }
-        public ILogger Logger { get; }
+        public ILogger<TradingStrategy> Logger { get; }
 
-        protected TradingStrategy(ILogger logger)
+        protected TradingStrategy(ILogger<TradingStrategy> logger)
         {
             Logger = logger;
             Indicators = GenerateIndicators();

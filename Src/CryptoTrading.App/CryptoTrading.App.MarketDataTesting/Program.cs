@@ -53,12 +53,6 @@ namespace CryptoTrading.App.MarketDataTesting
                     .AddConsole())
 
                 .BuildServiceProvider();
-
-
-
-
-
-
             var api = ServiceProvider.GetService<IBinanceApi>();
 
             //// Check connectivity.

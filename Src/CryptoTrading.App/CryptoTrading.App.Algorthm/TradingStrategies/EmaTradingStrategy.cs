@@ -7,7 +7,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
     public class EmaTradingStrategy : TradingStrategy
     {
-        public EmaTradingStrategy(ILogger logger) : base(logger)
+        public EmaTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

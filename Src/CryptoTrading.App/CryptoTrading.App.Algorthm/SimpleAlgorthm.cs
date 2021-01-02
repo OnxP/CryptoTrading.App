@@ -10,18 +10,28 @@ using System.Linq;
 
 namespace CryptoTrading.App.Algorthm
 {
-    public class Algorthm : IAlgorthm
+    public class SimpleAlgorthm : IAlgorthm
     {
-        public ILogger Logger { get; set; }
-        public int NumberOfCandleSticksToKeep => tradingStrategies.Max(x => x.OutputLength);
-        public List<ITradingStrategy> tradingStrategies { get; }
+        public ILogger<SimpleAlgorthm> Logger { get; set; }
+        public int NumberOfCandleSticksToKeep => tradingStrategies.OutputLength;
         private OrderedFixedLengthList _closePrices;
-        public Algorthm(List<ITradingStrategy> strategies, ILogger logger)
+        public ITradingStrategy tradingStrategies;
+        public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger)
         {
             tradingStrategies = strategies;
             _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
             Logger = logger;
         }
+        //public SimpleAlgorthm(IEnumerable<ITradingStrategy> strategies)
+        //{
+        //    tradingStrategies = strategies.ToList();
+        //    _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
+        //}
+
+        //public SimpleAlgorthm()
+        //{
+        //    _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
+        //}
         public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
         {
             //want to reduce dependancy on the candle stick object=> may need to create my own.
@@ -49,13 +59,11 @@ namespace CryptoTrading.App.Algorthm
         public double CalculateTradeStrategies()
         {
             double result = 0;
-            foreach (var strategy in tradingStrategies)
-            {
+
                 //some strategied may required more than just the close price, particularly at higher timeframes, don't need dates assuming the ordered list will track that, so it might be worth converting it into a struct.
-                Logger.LogInformation($"Processing strategy {strategy}");
-                result += strategy.Calculate(_closePrices);
-                Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
-            }
+                //Logger.LogInformation($"Processing strategy {strategy}");
+                result = tradingStrategies.Calculate(_closePrices);
+                //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
             return result;
         }
     }

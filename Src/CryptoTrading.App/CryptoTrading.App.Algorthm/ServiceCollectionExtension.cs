@@ -1,5 +1,6 @@
 ﻿using CryptoTrading.App.Algorthm.TradingStrategies;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,8 @@ namespace CryptoTrading.App.Algorthm
         {
             services.AddTransient<ITradingStrategy, EmaTradingStrategy>();
 
-            services.AddComposite<IAlgorthm, Algorthm>();
+            services.AddTransient<IAlgorthm, SimpleAlgorthm>();
+            services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
 
             return services;
         }
@@ -27,7 +29,7 @@ namespace CryptoTrading.App.Algorthm
 
             var objectFactory = ActivatorUtilities.CreateFactory(
               typeof(TConcrete),
-              new[] { typeof(IEnumerable<TInterface>) });
+              new[] { typeof(IEnumerable<TInterface>)});
 
             services.Add(ServiceDescriptor.Describe(
               typeof(TInterface),
