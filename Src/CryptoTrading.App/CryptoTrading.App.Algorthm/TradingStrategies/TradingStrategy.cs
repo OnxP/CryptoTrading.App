@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Tulip;
 
 namespace CryptoTrading.App.Algorthm.TradingStrategies
@@ -14,6 +15,19 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         public int OutputLength { get; private set; }
         protected abstract double StrategyWeight { get; }
         public ILogger<TradingStrategy> Logger { get; }
+
+        public StringBuilder builder = new StringBuilder();
+        public void Log(string v)
+        {
+            builder.Append(v).Append(",\t");
+        }
+        protected void LogResult(int v)
+        {
+            Log($"Result: {v}");
+            builder.Append($"Weight: {StrategyWeight}");
+            Logger.LogInformation(builder.ToString());
+            builder.Clear();
+        }
 
         protected TradingStrategy(ILogger<TradingStrategy> logger)
         {

@@ -10,5 +10,6 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         int OutputLength { get; }
 
         double Calculate(OrderedFixedLengthList closePrices);
+        void Log(string v);
     }
 }

@@ -49,13 +49,13 @@ namespace CryptoTrading.App.AlgorthmTesting
             List<Symbol> symbols = new List<Symbol>()
             {
                 Symbol.ETH_BTC,
-                Symbol.BTC_USDT,
-                Symbol.LTC_BTC,
-                Symbol.BNB_BTC,
-                Symbol.EOS_BTC,
-                Symbol.SYS_BTC,
-                Symbol.TRX_BTC,
-                Symbol.XRP_BTC
+                //Symbol.BTC_USDT,
+                //Symbol.LTC_BTC,
+                //Symbol.BNB_BTC,
+                //Symbol.EOS_BTC,
+                //Symbol.SYS_BTC,
+                //Symbol.TRX_BTC,
+                //Symbol.XRP_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

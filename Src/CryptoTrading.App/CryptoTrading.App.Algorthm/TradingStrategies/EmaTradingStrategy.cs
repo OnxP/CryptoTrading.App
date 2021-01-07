@@ -38,10 +38,10 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var longEma = indicatorOutputs["LongEma"][0].ToList();
 
 
-            Logger.LogInformation($"Fast Ema: {fastEma.Last()}");
-            Logger.LogInformation($"Slow Ema: {slowEma.Last()}");
-            Logger.LogInformation($"Long Ema: {longEma.Last()}");
-            Logger.LogInformation($"Close Price: {closePrice}");
+            Log($"Fast Ema: {fastEma.Last()}");
+            Log($"Slow Ema: {slowEma.Last()}");
+            Log($"Long Ema: {longEma.Last()}");
+            Log($"Close Price: {closePrice}");
 
             // log values
 
@@ -53,15 +53,18 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if ( condition1 && condition2 && condition3) return 1;
+            if (condition1 && condition2 && condition3)
+            {
+                LogResult(1);
+                return 1;
+            }
             //check if long is trading sideways, need more entries to determin that!
 
             //check if long is in an uptrend.
-
-            
-
-
+            LogResult(0);
             return 0;
         }
+
+        
     }
 }

@@ -21,5 +21,10 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         {
             return tradingStrategies.Sum(x => x.Calculate(closePrices));
         }
+
+        public void Log(string v)
+        {
+            tradingStrategies.ForEach(x => x.Log(v));
+        }
     }
 }

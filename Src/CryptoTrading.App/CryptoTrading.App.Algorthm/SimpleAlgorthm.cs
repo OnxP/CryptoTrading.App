@@ -5,6 +5,7 @@ using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,22 +23,13 @@ namespace CryptoTrading.App.Algorthm
             _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
             Logger = logger;
         }
-        //public SimpleAlgorthm(IEnumerable<ITradingStrategy> strategies)
-        //{
-        //    tradingStrategies = strategies.ToList();
-        //    _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
-        //}
 
-        //public SimpleAlgorthm()
-        //{
-        //    _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
-        //}
         public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
         {
             //want to reduce dependancy on the candle stick object=> may need to create my own.
             _closePrices.AddRange(candlesticks.Select(x => x.Close));
             Logger.LogInformation($"Added {candlesticks.Count()} historic candlesticks for {candlesticks.First().Symbol}");
-            var result = CalculateTradeStrategies();
+            var result = CalculateTradeStrategies(candlesticks.First().Symbol, candlesticks.First().Interval.AsString(), candlesticks.Last().CloseTime);
             //log load algothrm is sucessful.
 
             //pass the results to the broker, the result indicated the percentage, 
@@ -50,19 +42,24 @@ namespace CryptoTrading.App.Algorthm
         {
             _closePrices.Add(candlestickEventArgs.Candlestick.Close);
             Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-            var result = CalculateTradeStrategies();
+            var result = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
             Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             var request = RequestBuilder.BuildTradeRequest(result, candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Close, candlestickEventArgs.Candlestick.CloseTime);
             MessageBroker.Instance.Publish(this, request);
         }
 
-        public double CalculateTradeStrategies()
+        public double CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)
         {
             double result = 0;
 
-                //some strategied may required more than just the close price, particularly at higher timeframes, don't need dates assuming the ordered list will track that, so it might be worth converting it into a struct.
-                //Logger.LogInformation($"Processing strategy {strategy}");
-                result = tradingStrategies.Calculate(_closePrices);
+            //some strategied may required more than just the close price, particularly at higher timeframes, don't need dates assuming the ordered list will track that, so it might be worth converting it into a struct.
+            //Logger.LogInformation($"Processing strategy {strategy}");
+            tradingStrategies.Log($"Excel");
+            tradingStrategies.Log($"Symbol: {symbol}");
+            tradingStrategies.Log($"Interval: {interval}");
+            tradingStrategies.Log($"CloseTime: {closeTime}");
+
+            result = tradingStrategies.Calculate(_closePrices);
                 //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
             return result;
         }
