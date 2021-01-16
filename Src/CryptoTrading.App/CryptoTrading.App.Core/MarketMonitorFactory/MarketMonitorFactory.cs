@@ -1,19 +1,23 @@
 ﻿using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace CryptoTrading.App.Core.MarketMonitorFactory
 {
-    public class MarketMonitorFactory
+    public class MarketMonitorFactory : IMarketMonitorFactory
     {
-        public MarketMonitorFactory()
+        IServiceProvider _services;
+        public MarketMonitorFactory(IServiceProvider provider)
         {
-
+            _services = provider;
         }
         public ITradeMonitor CreateMonitor(ITrade trade)
         {
-            throw new NotImplementedException();
+            ITradeMonitor monitor = _services.GetService<ITradeMonitor>();
+            monitor.AddTrade(trade);
+            return monitor;
         }
     }
 }

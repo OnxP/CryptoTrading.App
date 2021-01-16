@@ -2,7 +2,7 @@
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
 
-namespace CryptoTrading.App.Broker
+namespace CryptoTrading.App.Core.Position
 {
     public interface IPositions
     {

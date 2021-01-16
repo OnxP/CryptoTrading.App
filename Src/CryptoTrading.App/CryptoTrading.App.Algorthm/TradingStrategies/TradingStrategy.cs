@@ -58,9 +58,11 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 //Find output size and allocate output space.
                 int output_length = close_prices.Length - item.Value.indicator.Start(item.Value.options);
                 double[] output = new double[output_length];
+                double[] output1 = new double[output_length];
+                double[] output2 = new double[output_length];
 
                 double[][] inputs = { close_prices };
-                double[][] outputs = { output };
+                double[][] outputs = { output,output1,output2 };
                 int success = item.Value.indicator.Run(inputs, item.Value.options, outputs);
                 // log.
                 indicatorOutputs.Add(item.Key, outputs);

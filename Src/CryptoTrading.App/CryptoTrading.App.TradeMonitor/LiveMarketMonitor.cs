@@ -19,7 +19,7 @@ namespace CryptoTrading.App.Monitor
     {
         private System.Action<CandlestickEventArgs> action;
 
-        public string Symbol { get; }
+        public string Symbol { get; set; }
 
         private IBinanceApi _api;
         private IBinanceApiUser _user;

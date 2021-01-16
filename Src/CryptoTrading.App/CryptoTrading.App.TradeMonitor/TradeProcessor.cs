@@ -1,8 +1,8 @@
 ﻿using Binance;
-using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
+using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
@@ -10,13 +10,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace CryptoTrading.App.TradeMonitor
+namespace CryptoTrading.App.Monitor
 {
-    public class TradeProcessor
+    public class TradeProcessor : ITradeProcessor
     {
         public IPositions Positions { get; set; }
-        private MarketMonitorFactory TradeFactory {get;set;}
+        private IMarketMonitorFactory TradeFactory {get;set;}
 
+        private object _lock = new object();
         public List<ITrade> Trades { get; set; }
         public List<ITradeMonitor> OrderMonitors { get; set; }
 
@@ -24,10 +25,12 @@ namespace CryptoTrading.App.TradeMonitor
 
         public IEnumerable<ITradeMonitor> CurrentMonitors => OrderMonitors.Where(x => x.Live);
 
-        public TradeProcessor(IPositions positions, MarketMonitorFactory factory)
+        public TradeProcessor(IPositions positions, IMarketMonitorFactory factory)
         {
             Positions = positions;
             TradeFactory = factory;
+            Trades = new List<ITrade>();
+            OrderMonitors = new List<ITradeMonitor>();
             ConfigureMessageBroker();
         }
         private void ConfigureMessageBroker()
@@ -88,12 +91,15 @@ namespace CryptoTrading.App.TradeMonitor
 
         private void ProcessMessageAction(MessagePayload<ITradeRequest> obj)
         {
-            if(Positions.CheckRequest(obj.What))
+            lock (_lock)
             {
-                var trade = Positions.CreateTrade(obj.What);
-                Trades.Add(trade);
-                var tradeMonitor = TradeFactory.CreateMonitor(trade);
-                OrderMonitors.Add(tradeMonitor);
+                if (Positions.CheckRequest(obj.What))
+                {
+                    var trade = Positions.CreateTrade(obj.What);
+                    Trades.Add(trade);
+                    var tradeMonitor = TradeFactory.CreateMonitor(trade);
+                    OrderMonitors.Add(tradeMonitor);
+                }
             }
         }
     }

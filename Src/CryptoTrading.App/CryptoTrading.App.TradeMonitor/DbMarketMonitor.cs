@@ -15,16 +15,12 @@ namespace CryptoTrading.App.Monitor
     //Initial - Configure Stoploss Monitor from Open trade. and set a stop limit order.
     //Continuous - Monitor price and once it hits a threshold reset stoploss to limit order X% below threshold then adjust threshold
 
-    public class TestMarketMonitor : IMarketMonitor
+    public class DbMarketMonitor : IMarketMonitor
     {
         private System.Action<CandlestickEventArgs> action;
 
-        public string Symbol { get; }
+        public string Symbol { get; set; }
 
-        public TestMarketMonitor(string symbol)
-        {
-            Symbol = symbol;
-        }
 
         public bool CheckOrder(string clientOrderId)
         {

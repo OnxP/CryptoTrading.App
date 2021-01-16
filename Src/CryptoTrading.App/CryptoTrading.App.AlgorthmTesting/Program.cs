@@ -1,7 +1,7 @@
 ﻿using Binance;
 using CryptoTrading.App.Algorthm;
-using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core.Extensions;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using CryptoTrading.App.Monitor;
+using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -17,6 +18,11 @@ namespace CryptoTrading.App.AlgorthmTesting
     {
         static void Main(string[] args)
         {
+            Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
+            dictionaryPositions.Add("ETH", new Position("ETH", 0m));
+            dictionaryPositions.Add("BTC", new Position("BTC", 10));
+            dictionaryPositions.Add("BNB", new Position("BNB", 10));
+
             var filePath = @"C:\Temp\AlgoLoggingTest.txt";
             var services = new ServiceCollection()
                     .AddLogging(builder => builder // configure logging.
@@ -26,11 +32,18 @@ namespace CryptoTrading.App.AlgorthmTesting
                         )
                     .AddAlgorthm()
                     .AddDbMarketData()
+                    .AddTestBroker()
+                    .AddTradeMonitor(RunTypeEnum.BackTesting, dictionaryPositions)
                     .BuildServiceProvider();
 
+            //Service1
             var marketData = services.GetService<IMarketData>();
             WireMarketDataEvents(marketData,services);
-            //replay candle sticks
+            //Service2
+            var broker = services.GetService<IBroker>();
+            //Service3
+
+            var tradeMonitor = services.GetService<ITradeProcessor>();
 
             marketData.StartStream();
             //var liveData = data.Where(x => x.Item1 == "Live").Select(x => x.Item2);
@@ -49,13 +62,6 @@ namespace CryptoTrading.App.AlgorthmTesting
             List<Symbol> symbols = new List<Symbol>()
             {
                 Symbol.ETH_BTC,
-                //Symbol.BTC_USDT,
-                //Symbol.LTC_BTC,
-                //Symbol.BNB_BTC,
-                //Symbol.EOS_BTC,
-                //Symbol.SYS_BTC,
-                //Symbol.TRX_BTC,
-                //Symbol.XRP_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

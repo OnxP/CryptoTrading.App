@@ -1,7 +1,7 @@
 ﻿using Binance;
 using CryptoTrading.App.Core.Trade;
 
-namespace CryptoTrading.App.Broker
+namespace CryptoTrading.App.Core.Position
 {
     public interface IPosition
     {

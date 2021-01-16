@@ -16,11 +16,9 @@ namespace CryptoTrading.App.Monitor
     //The trade is considered to be live if there are open transactions
     class TradeMonitor : ITradeMonitor
     {
-        public TradeMonitor(ITrade trade, IMarketMonitor monitor)
+        public TradeMonitor(IMarketMonitor monitor)
         {
-            Trade = trade;
             marketMonitor = monitor;
-            marketMonitor.Subscribe(ProcessCandleStick);
         }
 
         public ITrade Trade { get; set; }
@@ -94,6 +92,13 @@ namespace CryptoTrading.App.Monitor
             Trade.UpdateCurrentTransaction(order);
             //Start the stop limit monitor.
             marketMonitor.StartStream();
+        }
+
+        public void AddTrade(ITrade trade)
+        {
+            Trade = trade;
+            marketMonitor.Symbol = trade.Symbol;
+            marketMonitor.Subscribe(ProcessCandleStick);
         }
     }
 }

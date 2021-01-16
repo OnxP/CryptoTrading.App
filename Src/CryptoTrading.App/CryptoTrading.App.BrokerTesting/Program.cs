@@ -13,6 +13,8 @@ using CryptoTrading.App.Core.TradeRequest;
 using Binance.Client;
 using System.Threading;
 using Trade = CryptoTrading.App.Core.Trade.Trade;
+using CryptoTrading.App.Core.Position;
+using CryptoTrading.App.Monitor;
 
 namespace CryptoTrading.App.BrokerTesting
 {
@@ -26,16 +28,16 @@ namespace CryptoTrading.App.BrokerTesting
 
             //bindings for the test broker (algo testing)
             IMarket  market = new TestMarket();
-            ILogger logger = new FileLogger(@"C:\temp\BrokerTest.csv", LogLevel.Information);
+            //ILogger<CryptoBroker> logger = new FileLogger(@"C:\temp\BrokerTest.csv", LogLevel.Information) as ILogger<CryptoBroker>;
             ITradeFactory factory = new TestTradeFactory();
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
             dictionaryPositions.Add("XRP", new Position("XRP",0m));
             dictionaryPositions.Add("BTC", new Position("BTC",10)); 
             dictionaryPositions.Add("BNB", new Position("BNB",10));
-            IPositions positions = new TestPositions(factory, dictionaryPositions, null);
+            IPositions positions = new TestPositions(factory, dictionaryPositions);
             //IMarketDataEvents marketDataEvents = new 
 
-            var broker = new CryptoBroker(market, logger);
+            //var broker = new CryptoBroker(market, logger);
             //set up message broker and submit trade request
             double result = 0.5;
             var request = RequestBuilder.BuildTradeRequest(result, "XRPBTC", 0.5m, DateTime.Now);

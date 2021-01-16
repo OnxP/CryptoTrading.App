@@ -17,9 +17,9 @@ namespace CryptoTrading.App.Broker
     public class CryptoBroker: IBroker
     {
         private readonly IMarket _market;
-        private readonly ILogger _logger;
+        private readonly ILogger<CryptoBroker> _logger;
 
-        public CryptoBroker(IMarket market, ILogger logger)
+        public CryptoBroker(IMarket market, ILogger<CryptoBroker> logger)
         {
             _market = market;
             _logger = logger;

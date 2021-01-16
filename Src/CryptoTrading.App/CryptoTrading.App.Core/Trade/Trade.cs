@@ -1,5 +1,5 @@
 ﻿using Binance;
-using CryptoTrading.App.Broker;
+using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,7 @@ namespace CryptoTrading.App.Core.Trade
             BuyPosition = buyPosition;
             SellPosition = sellPosition;
             FeePosition = feePosition;
+            Transactions = new List<Transaction>();
             CreateNewTransaction(request);
         }
 

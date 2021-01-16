@@ -11,8 +11,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CryptoTrading.App.Algorthm\CryptoTrading.App.Algorthm.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Broker\CryptoTrading.App.Broker.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.MarketData\CryptoTrading.App.MarketData.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.TradeMonitor\CryptoTrading.App.Monitor.csproj" />
   </ItemGroup>
 
   <ItemGroup>

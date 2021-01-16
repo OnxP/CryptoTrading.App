@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Binance;
+using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 
-namespace CryptoTrading.App.Broker
+namespace CryptoTrading.App.Monitor
 {
     public class Position : IPosition
     {
@@ -19,7 +18,7 @@ namespace CryptoTrading.App.Broker
             if (freeAmount == 0) HasOpenPosition = false;
         }
 
-        public decimal FreeAmount {get;set;}
+        public decimal FreeAmount { get; set; }
         public bool CheckFunds(double sellAmount)
         {
             return (decimal)sellAmount <= FreeAmount;

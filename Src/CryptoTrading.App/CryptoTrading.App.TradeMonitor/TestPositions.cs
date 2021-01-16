@@ -1,24 +1,22 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Core.Position;
 
-namespace CryptoTrading.App.Broker
+namespace CryptoTrading.App.Monitor
 {
-    public class Positions : IPositions
+    public class TestPositions : IPositions
     {
         private readonly ITradeFactory _factory;
-        private ICalculator _calculator;
 
         private readonly Dictionary<string, IPosition> _positions;
 
-        public Positions(ITradeFactory factory, Dictionary<string, IPosition> positions, ICalculator calculator)
+        public TestPositions(ITradeFactory factory, Dictionary<string, IPosition> positionsProvider)//, ICalculator calculator)
         {
             _factory = factory;
-            _positions = positions;
-            _calculator = calculator;
+            _positions = positionsProvider;
+            //_calculator = calculator;
         }
 
         public bool CheckBalance(string sellSymbol, double sellPercentage)
@@ -45,7 +43,7 @@ namespace CryptoTrading.App.Broker
         {
             var buyPosition = _positions[request.BaseSymbol];
             var sellPosition = _positions[request.QuoteSymbol];
-            var feePosition = _positions["BNBBTC"];
+            var feePosition = _positions["BNB"];
             ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition, request);
             return trade;
         }
@@ -70,7 +68,7 @@ namespace CryptoTrading.App.Broker
 
         public bool CheckRequest(ITradeRequest what)
         {
-            return CheckOpenPosition(what.BaseSymbol) && CheckBalance(what.QuoteSymbol, what.SellPercentage);
+            return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what.QuoteSymbol, what.SellPercentage);
         }
     }
 }

@@ -6,6 +6,7 @@ using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
@@ -92,6 +93,7 @@ OFFSET 100 ROWS";
                     foreach (var action in subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
                     {
                         action.Invoke(new CandlestickEventArgs(item.Key, candleStick.candlestick, 0, 0, true));
+                        Thread.Sleep(1000);
                     }
                 }
             }

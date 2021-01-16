@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Broker;
+﻿using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.Core.Trade
 {
