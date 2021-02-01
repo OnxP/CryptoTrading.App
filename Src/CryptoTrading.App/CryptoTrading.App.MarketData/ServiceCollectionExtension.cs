@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.MarketData
@@ -28,7 +29,7 @@ namespace CryptoTrading.App.MarketData
         public static IServiceCollection AddDbMarketData(this IServiceCollection services)
         {
             services.AddTransient<IMarketData, DbMarketData>();
-
+            services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
             return services;
         }
     }

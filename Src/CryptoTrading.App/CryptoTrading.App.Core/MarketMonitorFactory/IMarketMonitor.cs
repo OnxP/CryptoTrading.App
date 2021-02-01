@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core
     public interface IMarketMonitor
     {
         string Symbol { get; set; }
+        bool Started { get; }
         bool CheckOrder(string clientOrderId);
         void StopStream();
         void Dispose();

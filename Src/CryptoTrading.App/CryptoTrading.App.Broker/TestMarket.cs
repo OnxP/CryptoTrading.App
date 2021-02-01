@@ -43,6 +43,7 @@ namespace CryptoTrading.App.Broker
                              DateTime.Now,
                              true);
             Task<Order> task = new Task<Order>(()=> { return order; });
+            task.Start();
             return task;
         }
 

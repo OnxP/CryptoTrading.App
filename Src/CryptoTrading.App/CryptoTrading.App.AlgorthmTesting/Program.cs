@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using CryptoTrading.App.Monitor;
 using CryptoTrading.App.Core.Position;
+using System.Threading;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -46,6 +47,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             var tradeMonitor = services.GetService<ITradeProcessor>();
 
             marketData.StartStream();
+            Thread.Sleep(100000);
+
             //var liveData = data.Where(x => x.Item1 == "Live").Select(x => x.Item2);
             //foreach (var item in liveData)
             //{
@@ -58,7 +61,7 @@ namespace CryptoTrading.App.AlgorthmTesting
         private static void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
             marketData.Configure(null);
-            marketData.From = new DateTime(2020, 11, 22);
+            marketData.From = new DateTime(2020, 11, 23,01,00,00);
             List<Symbol> symbols = new List<Symbol>()
             {
                 Symbol.ETH_BTC,

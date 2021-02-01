@@ -42,12 +42,12 @@ namespace CryptoTrading.App.Broker
 
         }
 
-        private void ProcessMessageAction(MessagePayload<IMarketRequest> obj)
+        private async void ProcessMessageAction(MessagePayload<IMarketRequest> obj)
         {
             IMarketRequest request = obj.What;
             
             //set market order
-            var order = _market.SetMarketOrder(request).Result;
+            var order = await _market.SetMarketOrder(request);
             //confirm market order has been met
             LogOrder(order,OrderStatus.Filled);
             MessageBroker.Instance.Publish(obj.Who, order);
@@ -68,7 +68,7 @@ namespace CryptoTrading.App.Broker
             var order = _market.SetLimitOrder(request).Result;
             //confirm market order has been met
             LogOrder(order, OrderStatus.New);
-            MessageBroker.Instance.Publish(obj.Who, order);
+            //MessageBroker.Instance.Publish(obj.Who, order);
         }
 
         private void LogOrder(Order order, OrderStatus status)

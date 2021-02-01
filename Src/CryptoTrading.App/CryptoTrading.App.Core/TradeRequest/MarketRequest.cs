@@ -8,9 +8,9 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public class MarketRequest : IMarketRequest
     {
-        private Transaction currentTransaction;
+        private ITransaction currentTransaction;
 
-        public MarketRequest(Transaction currentTransaction)
+        public MarketRequest(ITransaction currentTransaction)
         {
             this.currentTransaction = currentTransaction;
         }

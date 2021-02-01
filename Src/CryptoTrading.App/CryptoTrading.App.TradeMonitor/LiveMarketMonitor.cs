@@ -21,6 +21,8 @@ namespace CryptoTrading.App.Monitor
 
         public string Symbol { get; set; }
 
+        public bool Started => true;
+
         private IBinanceApi _api;
         private IBinanceApiUser _user;
         public LiveMarketMonitor(string symbol, IBinanceApi api, IBinanceApiUser user)

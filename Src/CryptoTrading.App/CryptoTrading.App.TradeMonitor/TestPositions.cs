@@ -48,24 +48,6 @@ namespace CryptoTrading.App.Monitor
             return trade;
         }
 
-        public void AddOrder(Order order)
-        {
-            if (_positions.ContainsKey(order.Symbol))
-            {
-                _positions[order.Symbol].UpdateOrder(order);
-            }
-        }
-
-        public decimal CalculateStoploss(Order order)
-        {
-            if (_positions.ContainsKey(order.Symbol))
-            {
-                return _positions[order.Symbol].CalculateStopLoss(order);
-            }
-
-            return 0;
-        }
-
         public bool CheckRequest(ITradeRequest what)
         {
             return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what.QuoteSymbol, what.SellPercentage);

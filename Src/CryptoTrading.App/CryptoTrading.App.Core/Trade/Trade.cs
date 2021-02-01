@@ -1,10 +1,8 @@
 ﻿using Binance;
 using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CryptoTrading.App.Core.Trade
 {
@@ -15,12 +13,11 @@ namespace CryptoTrading.App.Core.Trade
             BuyPosition = buyPosition;
             SellPosition = sellPosition;
             FeePosition = feePosition;
-            Transactions = new List<Transaction>();
+            Transactions = new List<ITransaction>();
             CreateNewTransaction(request);
         }
-
-        public Transaction CurrentTransaction => Transactions.Last();
-        public List<Transaction> Transactions { get; set; }
+        public ITransaction CurrentTransaction => Transactions.Last();
+        public List<ITransaction> Transactions { get; set; }
         public decimal Price => CurrentTransaction.Price;
         public string Symbol => CurrentTransaction.Pair;
         public OrderSide OrderType => Math.Sign(CurrentTransaction.Base.Quantity) > 0 ? OrderSide.Buy : OrderSide.Sell;
@@ -29,29 +26,27 @@ namespace CryptoTrading.App.Core.Trade
         public IPosition BuyPosition { get; }
         public IPosition SellPosition { get; }
         public IPosition FeePosition { get; }
-
         public void CancelCurrentTransaction()
         {
             CurrentTransaction.Cancel();
         }
-
-        public Transaction CreateNewTransaction(ITradeRequest request)
+        public ITransaction CreateNewTransaction(ITradeRequest request)
         {
             var quoteQuantity = request.SellAmount == 0 ? SellPosition.FreeAmount * (decimal)request.SellPercentage : request.SellAmount;
             var quantity = quoteQuantity / request.Price;
-            var transaction = CreateTransaction(BuyPosition.CreateTransaction(quantity), SellPosition.CreateTransaction(-quoteQuantity), FeePosition.CreateTransaction(quoteQuantity / 0.002m), request.Price, request.RequestDateTime);
+            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreateTransaction(quantity), SellPosition.CreateTransaction(-quoteQuantity), FeePosition.CreateTransaction(-quantity / 0.002m), request.Price, request.RequestDateTime);
             Transactions.Add(transaction);
             return transaction;
         }
-
-        public Transaction CreateStopLimitTransaction(decimal currentStopLimit)
+        public ITransaction CreateStopLimitTransaction(decimal currentStopLimit)
         {
-            throw new NotImplementedException();
+            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreateTransaction(-Transactions.First().Base.Quantity), SellPosition.CreateTransaction(-Transactions.First().Quote.Quantity), FeePosition.CreateTransaction(-Transactions.First().Fee.Quantity), currentStopLimit, null);
+            Transactions.Add(transaction);
+            return transaction;
         }
-
-        public Transaction CreateTransaction(TransactionLeg baseLeg, TransactionLeg quoteLeg, TransactionLeg feeLeg, decimal price, DateTime? transactionDT)
+        public ITransaction CreateTransaction<T>(TransactionLeg baseLeg, TransactionLeg quoteLeg, TransactionLeg feeLeg, decimal price, DateTime? transactionDT) where T : Transaction
         {
-            var t = new Transaction();
+            T t = (T)Activator.CreateInstance(typeof(T));
             t.Base = baseLeg;
             t.Quote = quoteLeg;
             t.Fee = feeLeg;
@@ -59,12 +54,11 @@ namespace CryptoTrading.App.Core.Trade
             t.TransactionDate = transactionDT ?? DateTime.Now;
             return t;
         }
-
         public void UpdateCurrentTransaction(Order order)
         {
             if (CurrentTransaction != null)
             {
-                CurrentTransaction.Order = order;
+                CurrentTransaction.UpdateOrder(order);
             }
         }
     }

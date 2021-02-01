@@ -61,6 +61,7 @@ namespace CryptoTrading.App.Monitor
                         trade.StartStopLossMonitor(order);
                         break;
                     case TransactionType.Transaction:
+                        break;
                     case TransactionType.MarketTransaction:
                         trade.UpdateInitialTransaction(order);
                         break;
@@ -99,6 +100,9 @@ namespace CryptoTrading.App.Monitor
                     Trades.Add(trade);
                     var tradeMonitor = TradeFactory.CreateMonitor(trade);
                     OrderMonitors.Add(tradeMonitor);
+                    //create Market Order
+                    var marketOrder = new MarketRequest(trade.CurrentTransaction);
+                    MessageBroker.Instance.Publish<IMarketRequest>(trade.CurrentTransaction, marketOrder);
                 }
             }
         }

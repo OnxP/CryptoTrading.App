@@ -7,10 +7,9 @@ namespace CryptoTrading.App.Core.Position
     {
         string Symbol { get; }
         decimal FreeAmount { get; }
+        decimal NonFreeAmount { get; }
         bool CheckFunds(double sellAmount);
-        bool HasOpenPosition { get; set; }
-        void UpdateOrder(Order order);
-        decimal CalculateStopLoss(Order order);
+        bool HasOpenPosition { get;}
         TransactionLeg CreateTransaction(decimal quantity);
     }
 }
