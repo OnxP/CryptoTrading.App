@@ -17,7 +17,7 @@ namespace CryptoTrading.App.Monitor
         public IPositions Positions { get; set; }
         private IMarketMonitorFactory TradeFactory {get;set;}
 
-        private object _lock = new object();
+        private static readonly object _lock = new object();
         public List<ITrade> Trades { get; set; }
         public List<ITradeMonitor> OrderMonitors { get; set; }
 
@@ -58,7 +58,7 @@ namespace CryptoTrading.App.Monitor
                 {
 
                     case TransactionType.StopLimitTransaction:
-                        trade.StartStopLossMonitor(order);
+                        trade.UpdateStopLimitOrder(order);
                         break;
                     case TransactionType.Transaction:
                         break;
@@ -105,6 +105,12 @@ namespace CryptoTrading.App.Monitor
                     MessageBroker.Instance.Publish<IMarketRequest>(trade.CurrentTransaction, marketOrder);
                 }
             }
+        }
+
+        public void CompleteAllTransactions()
+        {
+            Trades.Where(x=>x.CurrentTransaction.Status==TransactionStatus.Pending).ToList().ForEach(x=>x.CompleteTrade());
+            //convert all positions to BTC.
         }
     }
 }

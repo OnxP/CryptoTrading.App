@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
 
         void UpdateInitialTransaction(Order order);
         void CancelLimitOrder(string order);
-        void StartStopLossMonitor(Order order);
+        void UpdateStopLimitOrder(Order order);
         void AddTrade(ITrade trade);
     }
 }

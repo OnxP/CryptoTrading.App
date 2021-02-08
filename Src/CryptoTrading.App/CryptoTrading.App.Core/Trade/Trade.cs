@@ -26,21 +26,35 @@ namespace CryptoTrading.App.Core.Trade
         public IPosition BuyPosition { get; }
         public IPosition SellPosition { get; }
         public IPosition FeePosition { get; }
+        public decimal CurrentPrice { get ; set; }
+
         public void CancelCurrentTransaction()
         {
             CurrentTransaction.Cancel();
         }
+
+        public void CompleteTrade()
+        {
+            CurrentTransaction.Cancel();
+            var closeTransaction = CreateStopLimitTransaction(CurrentPrice);
+            closeTransaction.Complete();
+        }
+
         public ITransaction CreateNewTransaction(ITradeRequest request)
         {
             var quoteQuantity = request.SellAmount == 0 ? SellPosition.FreeAmount * (decimal)request.SellPercentage : request.SellAmount;
             var quantity = quoteQuantity / request.Price;
-            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreateTransaction(quantity), SellPosition.CreateTransaction(-quoteQuantity), FeePosition.CreateTransaction(-quantity / 0.002m), request.Price, request.RequestDateTime);
+
+            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(quantity), SellPosition.CreateTransaction(-quoteQuantity), FeePosition.CreateTransaction(-quoteQuantity / 22.0m), request.Price, request.RequestDateTime);
             Transactions.Add(transaction);
             return transaction;
         }
         public ITransaction CreateStopLimitTransaction(decimal currentStopLimit)
         {
-            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreateTransaction(-Transactions.First().Base.Quantity), SellPosition.CreateTransaction(-Transactions.First().Quote.Quantity), FeePosition.CreateTransaction(-Transactions.First().Fee.Quantity), currentStopLimit, null);
+            var buyQuantity = -Transactions.First().Base.Quantity;
+            var sellQuantity = -Transactions.First().Base.Quantity * currentStopLimit;
+            var feeQuantity = Transactions.First().Fee.Quantity;
+            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreateTransaction(buyQuantity), SellPosition.CreatePendingTransaction(sellQuantity), FeePosition.CreateTransaction(feeQuantity), currentStopLimit, null);
             Transactions.Add(transaction);
             return transaction;
         }

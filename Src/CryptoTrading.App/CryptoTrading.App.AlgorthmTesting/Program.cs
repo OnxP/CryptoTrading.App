@@ -21,8 +21,14 @@ namespace CryptoTrading.App.AlgorthmTesting
         {
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
             dictionaryPositions.Add("ETH", new Position("ETH", 0m));
-            dictionaryPositions.Add("BTC", new Position("BTC", 10));
-            dictionaryPositions.Add("BNB", new Position("BNB", 10));
+            dictionaryPositions.Add("LTC", new Position("LTC", 0m));
+            dictionaryPositions.Add("TRX", new Position("TRX", 0m));
+            dictionaryPositions.Add("XRP", new Position("XRP", 0m));
+            dictionaryPositions.Add("EOS", new Position("EOS", 0m));
+            dictionaryPositions.Add("USDT", new Position("USDT", 0m));
+            dictionaryPositions.Add("SYS", new Position("SYS", 0m));
+            dictionaryPositions.Add("BTC", new Position("BTC", 1));
+            dictionaryPositions.Add("BNB", new Position("BNB", 5));
 
             var filePath = @"C:\Temp\AlgoLoggingTest.txt";
             var services = new ServiceCollection()
@@ -47,7 +53,10 @@ namespace CryptoTrading.App.AlgorthmTesting
             var tradeMonitor = services.GetService<ITradeProcessor>();
 
             marketData.StartStream();
+            tradeMonitor.CompleteAllTransactions();
+
             Thread.Sleep(100000);
+
 
             //var liveData = data.Where(x => x.Item1 == "Live").Select(x => x.Item2);
             //foreach (var item in liveData)
@@ -61,10 +70,17 @@ namespace CryptoTrading.App.AlgorthmTesting
         private static void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
             marketData.Configure(null);
-            marketData.From = new DateTime(2020, 11, 23,01,00,00);
+            marketData.From = new DateTime(2020, 11, 22,00,00,00);
             List<Symbol> symbols = new List<Symbol>()
             {
-                Symbol.ETH_BTC,
+                Symbol.SYS_BTC,
+                Symbol.EOS_BTC,
+                Symbol.BTC_USDT,
+                Symbol.BNB_BTC,
+                Symbol.LTC_BTC,
+                Symbol.XRP_BTC,
+                Symbol.TRX_BTC,
+                Symbol.ETH_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

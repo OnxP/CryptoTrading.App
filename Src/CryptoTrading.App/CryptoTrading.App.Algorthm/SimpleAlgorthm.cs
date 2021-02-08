@@ -45,7 +45,7 @@ namespace CryptoTrading.App.Algorthm
             var result = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
             Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             if (result <= 0) return;
-            var request = RequestBuilder.BuildTradeRequest(result, candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Close, candlestickEventArgs.Candlestick.CloseTime);
+            var request = RequestBuilder.BuildTradeRequest(result/4, candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Close, candlestickEventArgs.Candlestick.CloseTime);
             MessageBroker.Instance.Publish(this, request);
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Binance;
 using CryptoTrading.App.Core.Position;
@@ -14,32 +15,38 @@ namespace CryptoTrading.App.Monitor
         public Position(string symbol, decimal freeAmount)
         {
             _legs = new List<TransactionLeg>();
-            _legs.Add(new TransactionLeg() { Symbol = symbol, Quantity = freeAmount});
+            if(freeAmount > 0)_legs.Add(new TransactionLeg() { Symbol = symbol, Quantity = freeAmount, Status = TransactionLegStatus.Completed });
             Symbol = symbol;
         }
 
-        public decimal FreeAmount => _legs.Where(x => x.Status == TransactionStatus.Completed).Sum(x => x.Quantity);
-        public decimal NonFreeAmount => _legs.Where(x => x.Status == TransactionStatus.Pending).Sum(x => x.Quantity);
+        public decimal FreeAmount => _legs.Where(x => x.Status == TransactionLegStatus.Completed).Sum(x => x.Quantity);
+        public decimal NonFreeAmount => _legs.Where(x => x.Status == TransactionLegStatus.Pending).Sum(x => x.Quantity);
 
         public bool CheckFunds(double sellAmount)
         {
-            return (decimal)sellAmount <= FreeAmount;
+            return (decimal)Math.Abs(sellAmount) <= FreeAmount && FreeAmount > 0;
         }
 
         public bool HasOpenPosition => NonFreeAmount != 0;
 
-        public decimal CalculateStopLoss(Order order)
-        { 
-            return order.Price * 0.9m;
+        public TransactionLeg CreatePendingTransaction(decimal quantity)
+        {
+            var t = new TransactionLeg
+            {
+                Symbol = Symbol,
+                Quantity = quantity,
+                Status = TransactionLegStatus.Pending
+            };
+            _legs.Add(t);
+            return t;
         }
-
         public TransactionLeg CreateTransaction(decimal quantity)
         {
             var t = new TransactionLeg
             {
                 Symbol = Symbol,
                 Quantity = quantity,
-                Status = TransactionStatus.Pending
+                Status = TransactionLegStatus.Completed
             };
             _legs.Add(t);
             return t;

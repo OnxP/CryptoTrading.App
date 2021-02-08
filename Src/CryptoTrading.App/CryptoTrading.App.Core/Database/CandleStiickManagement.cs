@@ -12,6 +12,7 @@ namespace CryptoTrading.App.Core.Database
 
         Action _MarketDataStream { get; set; }
         List<Action> _StopLimitMonitor { get; set; } = new List<Action>();
+        List<Action> _nextTickActions { get; set; } = new List<Action>();
 
         Dictionary<int, DateTime> timeKeeper = new Dictionary<int, DateTime>();
         int _index = 0;
@@ -26,15 +27,6 @@ namespace CryptoTrading.App.Core.Database
         {
             _index++;
             //return CurrentTick;
-        }
-        public void AddMarketData(IMarketData dbMarketMonitor)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void AddMonitor(IMarketMonitor dbMarketMonitor)
-        {
-            throw new NotImplementedException();
         }
         public void BuildTimeKeeper (DateTime From, DateTime Finish)
         {
@@ -58,7 +50,7 @@ namespace CryptoTrading.App.Core.Database
         }
         public void RemoveStopLimitStream(Action invokeCandleStick)
         {
-            _StopLimitMonitor.Remove(invokeCandleStick);
+            _nextTickActions.Add(new Action(()=> _StopLimitMonitor.Remove(invokeCandleStick)));
         }
 
         public void StartTimeKeeper()
@@ -68,7 +60,13 @@ namespace CryptoTrading.App.Core.Database
                 _MarketDataStream.Invoke();
                 _StopLimitMonitor.ForEach(x => x.Invoke());
                 GetNextTick();
-                if (_StopLimitMonitor.Count != 0) Thread.Sleep(500);
+                if (_nextTickActions.Count > 0)
+                { 
+                    _nextTickActions.ForEach(x => x.Invoke());
+                    _nextTickActions.Clear();
+                }
+                if (_StopLimitMonitor.Count != 0) 
+                    Thread.Sleep(100);
             } while (_index < timeKeeper.Count);
         }
     }

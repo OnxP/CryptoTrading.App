@@ -52,9 +52,29 @@ namespace CryptoTrading.App.Broker
             return Task.Run(() => { return ""; });
         }
 
-        public Task<Order> SetLimitOrder(IStopLimitRequest request)
+        public Task<Order> SetLimitOrder(IStopLimitRequest trade)
         {
-            throw new NotImplementedException();
+            trades.Add(trade);
+            var order = new Order(new BinanceApiUser("Test"),
+                             trade.Symbol,
+                             0,
+                             "",
+                             trade.StopPrice,
+                             trade.Quantity,
+                             trade.Quantity,
+                             0,
+                             OrderStatus.New,
+                             TimeInForce.IOC,
+                             OrderType.StopLossLimit,
+                             OrderSide.Sell,
+                             trade.StopPrice,
+                             0,
+                             DateTime.Now,
+                             DateTime.Now,
+                             true);
+            Task<Order> task = new Task<Order>(() => { return order; });
+            task.Start();
+            return task;
         }
     }
 }

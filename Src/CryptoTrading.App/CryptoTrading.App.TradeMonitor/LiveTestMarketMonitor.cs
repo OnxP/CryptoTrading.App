@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Monitor
         {
         }
 
-        public override bool CheckOrder(string clientOrderId)
+        public override bool CheckOrder(Order order)
         {
             return true;
         } 

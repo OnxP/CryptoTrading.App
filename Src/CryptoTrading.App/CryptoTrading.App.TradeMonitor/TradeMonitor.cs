@@ -30,7 +30,7 @@ namespace CryptoTrading.App.Monitor
         public void ProcessCandleStick(CandlestickEventArgs candleStick)
         {
             var closePrice = candleStick.Candlestick.Close;
-
+            Trade.CurrentPrice = closePrice;
             if (closePrice >= Tracker.TargetPrice)
             {
                 UpdateStopLimit();
@@ -38,7 +38,7 @@ namespace CryptoTrading.App.Monitor
             if (closePrice <= Tracker.StopLimitPrice)
             {
                 //check for fill order
-                var filled = marketMonitor.CheckOrder(Trade.CurrentTransaction.Order.ClientOrderId);
+                var filled = marketMonitor.CheckOrder(Trade.CurrentTransaction.Order);
                 if (filled)
                 {
                     Trade.Open = false;
@@ -59,13 +59,14 @@ namespace CryptoTrading.App.Monitor
         {
             Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
 
-            IMarketRequest request = new StopLimitRequest(Trade.CurrentTransaction);
+            IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
+            request.StopPrice = Tracker.StopLimitPrice;
             MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
         }
 
         private void CancelLimitOrder()
         {
-            Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
+            //Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
 
             ICancelRequest request = new CancelRequest(Trade.CurrentTransaction.Order.Id, Trade.Symbol);
             MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
@@ -77,7 +78,7 @@ namespace CryptoTrading.App.Monitor
 
         public void CancelLimitOrder(string order)
         {
-            Trade.CancelCurrentTransaction();
+            Trade.CancelCurrentTransaction();//cancel order not updated properly.
             CreateNewStopLimitOrder();
         }
 
@@ -89,6 +90,7 @@ namespace CryptoTrading.App.Monitor
                 Tracker.Configure(order);
             }
             CreateNewStopLimitOrder();
+            if (!marketMonitor.Started) marketMonitor.StartStream();
         }
 
         private void UpdateStopLimit()
@@ -98,11 +100,9 @@ namespace CryptoTrading.App.Monitor
             //CreateNewStopLimitOrder();
         }
 
-        public void StartStopLossMonitor(Order order)
+        public void UpdateStopLimitOrder(Order order)
         {
-            Trade.UpdateCurrentTransaction(order);
-            //Start the stop limit monitor.
-            if(!marketMonitor.Started) marketMonitor.StartStream();
+            Trade.UpdateCurrentTransaction(order);//order not updated properly.
         }
 
         public void AddTrade(ITrade trade)

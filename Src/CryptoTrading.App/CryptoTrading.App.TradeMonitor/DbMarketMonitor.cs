@@ -55,13 +55,15 @@ namespace CryptoTrading.App.Monitor
   WHERE OpenTime >= @p0 AND Symbol=@p1 AND Interval=@p2
   ORDER BY OpenTime";
 
-        public bool CheckOrder(string clientOrderId)
+        public bool CheckOrder(Order order)
         {
             return true;
         }
 
         public void Dispose()
         {
+            action = null;
+            return;
         }
 
         public void StopStream()
@@ -73,12 +75,12 @@ namespace CryptoTrading.App.Monitor
         public void StartStream()
         {
             Started = true;
-            var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, _mangement.CurrentTick, Symbol, Interval).ToListAsync().Result;
+            var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, _mangement.CurrentTick, Symbol, 3).ToListAsync().Result;
             candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), Interval)));           
 
             orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime);
 
-            _mangement.AddMarketStream(InvokeCandleStick);
+            _mangement.AddStopLimitStream(InvokeCandleStick);
         }
 
         IEnumerable<IGrouping<DateTime, (Candlestick candlestick, CandlestickInterval interval)>> orderedList;

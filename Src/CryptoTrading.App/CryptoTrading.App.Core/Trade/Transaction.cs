@@ -7,8 +7,9 @@ namespace CryptoTrading.App.Core.Trade
 {
     public class Transaction : ITransaction
     {
+        public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
         public virtual TransactionType Type { get; set; } = TransactionType.Transaction;
-        public string Pair => Quote.Symbol + Base.Symbol;
+        public string Pair => Base.Symbol + Quote.Symbol;
         public decimal Price { get; set; }
         public TransactionLeg Quote { get; set; }
         public TransactionLeg Base { get; set; }
@@ -16,7 +17,7 @@ namespace CryptoTrading.App.Core.Trade
         public DateTime TransactionDate { get; set; }
         public Order Order { get; private set; }
 
-        internal void SetTransactionStatus(TransactionStatus status)
+        internal void SetTransactionStatus(TransactionLegStatus status)
         {
             Quote.Status = status;
             Base.Status = status;
@@ -34,13 +35,15 @@ namespace CryptoTrading.App.Core.Trade
                     throw new NotImplementedException();
                 case OrderStatus.Filled:
                     UpdateTransactions(order);
-                    SetTransactionStatus(TransactionStatus.Completed);
+                    SetTransactionStatus(TransactionLegStatus.Completed);
+                    Status = TransactionStatus.Completed;
                     break;
                 case OrderStatus.Canceled:
                 case OrderStatus.PendingCancel:
                 case OrderStatus.Rejected:
                 case OrderStatus.Expired:
-                    SetTransactionStatus(TransactionStatus.Cancelled);
+                    SetTransactionStatus(TransactionLegStatus.Cancelled);
+                    Status = TransactionStatus.Cancelled;
                     break;
             }
         }
@@ -49,18 +52,27 @@ namespace CryptoTrading.App.Core.Trade
         {
             if(order.Side == OrderSide.Buy)
             {
-                Quote.Quantity = order.ExecutedQuantity;
+                Base.Quantity = order.ExecutedQuantity;
+                Quote.Quantity = -order.ExecutedQuantity * order.Price;
             }
             if (order.Side == OrderSide.Sell)
             {
-                Quote.Quantity = -order.ExecutedQuantity;
+                Base.Quantity = -order.ExecutedQuantity;
+                Quote.Quantity = order.ExecutedQuantity * order.Price;
             }
 
         }
 
         public void Cancel()
         {
-            SetTransactionStatus(TransactionStatus.Cancelled);
+            SetTransactionStatus(TransactionLegStatus.Cancelled);
+            Status = TransactionStatus.Cancelled;
+        }
+
+        public void Complete()
+        {
+            SetTransactionStatus(TransactionLegStatus.Completed);
+            Status = TransactionStatus.Completed;
         }
     }
 
@@ -68,8 +80,9 @@ namespace CryptoTrading.App.Core.Trade
     {
         public string Symbol { get; set; }
         public decimal Quantity { get; set; }
-        public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
+        public TransactionLegStatus Status { get; set; } = TransactionLegStatus.Pending;
     }
 
+    public enum TransactionLegStatus {Pending, Completed, Cancelled };
     public enum TransactionStatus {Pending, Completed, Cancelled };
 }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CryptoTrading.App.Core.TradeRequest
 {
-    public class StopLimitRequest : IMarketRequest
+    public class StopLimitRequest : IStopLimitRequest
     {
         private ITransaction currentTransaction;
 
@@ -19,6 +19,8 @@ namespace CryptoTrading.App.Core.TradeRequest
         public decimal Quantity => Math.Abs(currentTransaction.Base.Quantity);
         public decimal Price => currentTransaction.Price;
         public string Symbol => currentTransaction.Pair;
+
+        public decimal StopPrice {get;set;}
 
         //public decimal StopPrice { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }

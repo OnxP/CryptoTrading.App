@@ -61,14 +61,14 @@ namespace CryptoTrading.App.Broker
             //confirm market order has been met
             MessageBroker.Instance.Publish(obj.Who, order);
         }
-        private void ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
+        private async void ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
         {
             IStopLimitRequest request = obj.What;
             //set market order
-            var order = _market.SetLimitOrder(request).Result;
+            var order = await _market.SetLimitOrder(request);
             //confirm market order has been met
             LogOrder(order, OrderStatus.New);
-            //MessageBroker.Instance.Publish(obj.Who, order);
+            MessageBroker.Instance.Publish(obj.Who, order);
         }
 
         private void LogOrder(Order order, OrderStatus status)

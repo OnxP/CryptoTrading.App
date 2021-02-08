@@ -24,7 +24,7 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public void MoveStopLimit()

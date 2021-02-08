@@ -14,7 +14,10 @@ namespace CryptoTrading.App.Core.Trade
         public TransactionLeg Base { get; }
         public TransactionLeg Fee { get; }
         public Order Order { get; }
+        TransactionStatus Status { get; set; }
+
         void UpdateOrder(Order order);
         void Cancel();
+        void Complete();
     }
 }
