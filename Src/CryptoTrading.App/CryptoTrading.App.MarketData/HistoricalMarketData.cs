@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -69,31 +70,22 @@ namespace CryptoTrading.App.MarketData
                 foreach (var item in subscribers)
                 {
                     var from = From;
-                    foreach (var to in SplitDates(item.Key.interval, from, DateTime.Now.ToUniversalTime()))
+                    var list = SplitDates(item.Key.interval, from, DateTime.Now.ToUniversalTime());
+                    foreach (var to in list)
                     {
-                        tasks.Add(StreamData(api, item.Key, from, to));
+                        Stopwatch time = new Stopwatch();
+                        time.Start();
+                        StreamData(api, item.Key, from, to);
                         from = to;
-                        if (tasks.Count % 50 == 0)
-                        {
-                            Thread.Sleep(60000);
-                        }
+                        while (time.ElapsedMilliseconds <= 1000)
+                        { }
                     }
                 }
-                Task.WaitAll(tasks.ToArray());
+                //Task.WaitAll(tasks.ToArray());
 
                 //sort the list
-                var orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime);
-
-                foreach (var item in orderedList.GroupBy(x => x.candlestick.CloseTime))
-                {
-                    foreach (var candleStick in item)
-                    {
-                        foreach (var action in subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
-                        {
-                            action.Invoke(new CandlestickEventArgs(item.Key, candleStick.candlestick, 0, 0, true));
-                        }
-                    }
-                }
+                
+                
 
             }
             catch (Exception e)
@@ -107,16 +99,11 @@ namespace CryptoTrading.App.MarketData
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
 
-        private async System.Threading.Tasks.Task StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private void StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 500, from.ToUniversalTime(), to.ToUniversalTime());
-            foreach (var candleStick in candleSticks)
-            {
-                lock (Sync)
-                {
-                    candleSticksToStream.Add((candleStick, symbol.interval));
-                }
-            }
+            var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1200, from.ToUniversalTime(), to.ToUniversalTime()).Result;
+            var action = historicDataSubscribers.First().Value;
+            action.Invoke(candleSticks);
         }
 
         void liveStream()
@@ -164,21 +151,52 @@ namespace CryptoTrading.App.MarketData
         {
             switch (interval)
             {
+                case CandlestickInterval.Minute:
+                    return GenerateTimeList(1, from, to);
                 case CandlestickInterval.Minutes_3:
+                    return GenerateTimeList(3, from, to);
                 case CandlestickInterval.Minutes_5:
+                    return GenerateTimeList(5, from, to);
                 case CandlestickInterval.Minutes_15:
+                    return GenerateTimeList(15, from, to);
                 case CandlestickInterval.Minutes_30:
-                    return SplitByDay(from, to);
+                    return GenerateTimeList(30, from, to);
                 case CandlestickInterval.Hour:
+                    return GenerateTimeList(1 * 60, from, to);
                 case CandlestickInterval.Hours_2:
+                    return GenerateTimeList(2 * 60, from, to);
                 case CandlestickInterval.Hours_4:
+                    return GenerateTimeList(4 * 60, from, to);
                 case CandlestickInterval.Hours_6:
+                    return GenerateTimeList(6 * 60, from, to);
                 case CandlestickInterval.Hours_8:
+                    return GenerateTimeList(8 * 60, from, to);
                 case CandlestickInterval.Hours_12:
-                    return SplitByWeek(from, to);
+                    return GenerateTimeList(12 * 60, from, to);
                 default:
-                    return new List<DateTime> { to };
+                    return new List<DateTime>() { to } ;
             }
+        }
+
+        private IEnumerable<DateTime> GenerateTimeList(int v, DateTime from, DateTime to)
+        {
+            var list = new List<DateTime>();
+            var dt = from;
+            list.Add(from);
+            while (dt < to)
+            {
+                dt = dt.AddMinutes(v * 1000);
+                if (dt < to)
+                {
+                    list.Add(dt);
+                }
+                else
+                {
+                    list.Add(to);
+                    break;
+                }
+            }
+            return list;
         }
 
         protected IEnumerable<DateTime> SplitByWeek(DateTime from, DateTime to)

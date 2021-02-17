@@ -32,9 +32,10 @@ namespace CryptoTrading.App.Monitor
             Symbol = symbol;
         }
 
-        public virtual bool CheckOrder(Order order)
+        public virtual bool CheckOrder(ITransaction transaction)
         {
-            var newOrder = _api.GetOrderAsync(_user,Symbol,order.ClientOrderId).Result;
+            var newOrder=_api.GetOrderAsync(_user,Symbol,transaction.Order.ClientOrderId).Result;
+            transaction.UpdateOrder(newOrder);
             return newOrder.Status == OrderStatus.Filled;
         }
 

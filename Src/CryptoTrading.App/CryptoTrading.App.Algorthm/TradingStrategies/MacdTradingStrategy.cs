@@ -38,19 +38,22 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var hist = indicatorOutputs["MACD"][2].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
 
+            longEma.Reverse();
+
             Log($"MACD - Line: {macd.Last()}");
             Log($"MACD - Signal Line: {signal.Last()}");
-            Log($"Long Ema: {longEma.Last()}");
+            Log($"Long Ema: {longEma.First()}");
             Log($"Close Price: {closePrice}");
 
             // log values
             
             var condition1 = macd.Last() > signal.Last();
-            var condition2 = longEma.Last() > 0; //this checks for an up trend however doesn't check for sideways trend.
+            var condition2 = longEma.First() < closePrice; //this checks for an up trend however doesn't check for sideways trend.
+            var condition3 = longEma.First() > longEma.Skip(1).First(); //this checks for an up trend however doesn't check for sideways trend.
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition2)
+            if (condition1 && condition2 && condition3)
             {
                 LogResult(1);
                 return 1;

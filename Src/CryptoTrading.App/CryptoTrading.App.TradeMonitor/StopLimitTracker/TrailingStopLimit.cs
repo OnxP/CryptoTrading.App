@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
     class TrailingStopLimit : IStopLimitTracker
     {
         private const decimal _risk = 0.02m;
-        private const decimal _increment = 0.02m;
+        private const decimal _increment = 0.01m;
         private decimal _currentPrice;
         public decimal StopLimitPrice { get; private set; }
 

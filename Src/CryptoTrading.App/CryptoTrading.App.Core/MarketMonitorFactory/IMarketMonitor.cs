@@ -1,8 +1,6 @@
-﻿using Binance;
-using Binance.Client;
+﻿using Binance.Client;
+using CryptoTrading.App.Core.Trade;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CryptoTrading.App.Core
 {
@@ -10,7 +8,7 @@ namespace CryptoTrading.App.Core
     {
         string Symbol { get; set; }
         bool Started { get; }
-        bool CheckOrder(Order order);
+        bool CheckOrder(ITransaction order);
         void StopStream();
         void Dispose();
         void StartStream();

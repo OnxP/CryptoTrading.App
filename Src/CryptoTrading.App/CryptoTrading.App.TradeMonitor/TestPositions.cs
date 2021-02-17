@@ -42,9 +42,11 @@ namespace CryptoTrading.App.Monitor
         public ITrade CreateTrade(ITradeRequest request)
         {
             var buyPosition = _positions[request.BaseSymbol];
+            buyPosition.IsLocked = true;
             var sellPosition = _positions[request.QuoteSymbol];
             var feePosition = _positions["BNB"];
             ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition, request);
+            buyPosition.IsLocked = false;
             return trade;
         }
 

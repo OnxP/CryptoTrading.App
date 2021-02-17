@@ -45,16 +45,20 @@ namespace CryptoTrading.App.Core.Trade
             var quoteQuantity = request.SellAmount == 0 ? SellPosition.FreeAmount * (decimal)request.SellPercentage : request.SellAmount;
             var quantity = quoteQuantity / request.Price;
 
-            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(quantity), SellPosition.CreateTransaction(-quoteQuantity), FeePosition.CreateTransaction(-quoteQuantity / 22.0m), request.Price, request.RequestDateTime);
+            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(quantity), 
+                SellPosition.CreatePendingTransaction(-quoteQuantity), 
+                FeePosition.CreatePendingTransaction(-quoteQuantity / 22.0m), request.Price, request.RequestDateTime);
             Transactions.Add(transaction);
             return transaction;
         }
         public ITransaction CreateStopLimitTransaction(decimal currentStopLimit)
         {
             var buyQuantity = -Transactions.First().Base.Quantity;
-            var sellQuantity = -Transactions.First().Base.Quantity * currentStopLimit;
+            var sellQuantity = Transactions.First().Base.Quantity * currentStopLimit;
             var feeQuantity = Transactions.First().Fee.Quantity;
-            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreateTransaction(buyQuantity), SellPosition.CreatePendingTransaction(sellQuantity), FeePosition.CreateTransaction(feeQuantity), currentStopLimit, null);
+            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity), 
+                SellPosition.CreatePendingTransaction(sellQuantity), 
+                FeePosition.CreatePendingTransaction(feeQuantity), currentStopLimit, null);
             Transactions.Add(transaction);
             return transaction;
         }

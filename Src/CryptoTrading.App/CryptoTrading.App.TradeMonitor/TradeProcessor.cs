@@ -94,7 +94,11 @@ namespace CryptoTrading.App.Monitor
         {
             lock (_lock)
             {
-                if (Positions.CheckRequest(obj.What))
+                if(CheckCurrentOrderMonitors(obj.What.BaseSymbol + obj.What.QuoteSymbol))
+                {
+                    //do you want to scale in again
+                }
+                else if (Positions.CheckRequest(obj.What))
                 {
                     var trade = Positions.CreateTrade(obj.What);
                     Trades.Add(trade);
@@ -105,6 +109,17 @@ namespace CryptoTrading.App.Monitor
                     MessageBroker.Instance.Publish<IMarketRequest>(trade.CurrentTransaction, marketOrder);
                 }
             }
+        }
+
+        private bool CheckCurrentOrderMonitors(string symbol)
+        {
+            if (OrderMonitors.Count() != 0) return false;
+            if (OrderMonitors.LastOrDefault(x => x.Symbol == symbol) != null)
+            {
+                return OrderMonitors.LastOrDefault(x => x.Symbol == symbol).Live;
+            }
+
+            return false;
         }
 
         public void CompleteAllTransactions()

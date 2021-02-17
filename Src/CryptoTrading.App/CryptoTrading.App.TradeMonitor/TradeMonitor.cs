@@ -38,13 +38,16 @@ namespace CryptoTrading.App.Monitor
             if (closePrice <= Tracker.StopLimitPrice)
             {
                 //check for fill order
-                var filled = marketMonitor.CheckOrder(Trade.CurrentTransaction.Order);
-                if (filled)
+                if (marketMonitor.CheckOrder(Trade.CurrentTransaction))
                 {
                     Trade.Open = false;
                     //stop monitor??
                     marketMonitor.StopStream();
                     Dispose();
+                }
+                else
+                {
+                    //partial fill of the order. should just continue...
                 }
             }
         }

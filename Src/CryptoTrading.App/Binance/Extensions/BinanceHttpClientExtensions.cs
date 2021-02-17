@@ -278,7 +278,7 @@ namespace Binance
         /// <param name="endTime"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static async Task<string> GetCandlesticksAsync(this IBinanceHttpClient client, string symbol, CandlestickInterval interval, int limit = default, DateTime startTime = default, DateTime endTime = default, CancellationToken token = default)
+        public static async Task<string> GetCandlesticksAsync(this IBinanceHttpClient client, string symbol, CandlestickInterval interval, int limit = 1500, DateTime startTime = default, DateTime endTime = default, CancellationToken token = default)
         {
             Throw.IfNull(client, nameof(client));
             Throw.IfNullOrWhiteSpace(symbol, nameof(symbol));

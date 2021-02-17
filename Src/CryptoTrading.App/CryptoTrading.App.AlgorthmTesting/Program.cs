@@ -17,18 +17,28 @@ namespace CryptoTrading.App.AlgorthmTesting
 {
     class Program
     {
+        static void AddPosition(string symbol, Dictionary<string, IPosition> positions, decimal amount = 0.0m)
+        {
+            positions.Add(symbol, new Position(symbol, amount));
+
+        }
         static void Main(string[] args)
         {
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
-            dictionaryPositions.Add("ETH", new Position("ETH", 0m));
-            dictionaryPositions.Add("LTC", new Position("LTC", 0m));
-            dictionaryPositions.Add("TRX", new Position("TRX", 0m));
-            dictionaryPositions.Add("XRP", new Position("XRP", 0m));
-            dictionaryPositions.Add("EOS", new Position("EOS", 0m));
-            dictionaryPositions.Add("USDT", new Position("USDT", 0m));
-            dictionaryPositions.Add("SYS", new Position("SYS", 0m));
-            dictionaryPositions.Add("BTC", new Position("BTC", 1));
-            dictionaryPositions.Add("BNB", new Position("BNB", 5));
+            AddPosition("ETH", dictionaryPositions);
+            AddPosition("LTC", dictionaryPositions);
+            AddPosition("EOS", dictionaryPositions);
+            AddPosition("SYS", dictionaryPositions);
+            AddPosition("TRX", dictionaryPositions);
+            AddPosition("XRP", dictionaryPositions);
+            AddPosition("ADA", dictionaryPositions);
+            AddPosition("DOGE", dictionaryPositions);
+            AddPosition("LINK", dictionaryPositions);
+            AddPosition("QTUM", dictionaryPositions);
+            AddPosition("XLM", dictionaryPositions);
+            AddPosition("ONT", dictionaryPositions);
+            AddPosition("BTC", dictionaryPositions,1);
+            AddPosition("BNB", dictionaryPositions,5);
 
             var filePath = @"C:\Temp\AlgoLoggingTest.txt";
             var services = new ServiceCollection()
@@ -70,17 +80,23 @@ namespace CryptoTrading.App.AlgorthmTesting
         private static void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
             marketData.Configure(null);
-            marketData.From = new DateTime(2020, 11, 22,00,00,00);
+            marketData.From = new DateTime(2020, 12, 26,00,00,00);
             List<Symbol> symbols = new List<Symbol>()
             {
-                Symbol.SYS_BTC,
-                Symbol.EOS_BTC,
-                Symbol.BTC_USDT,
-                Symbol.BNB_BTC,
-                Symbol.LTC_BTC,
-                Symbol.XRP_BTC,
-                Symbol.TRX_BTC,
-                Symbol.ETH_BTC
+                Symbol.ETH_BTC,
+                //Symbol.BTC_USDT,
+                //Symbol.LTC_BTC,
+                //Symbol.BNB_BTC,
+                //Symbol.EOS_BTC,
+                //Symbol.SYS_BTC,
+                //Symbol.TRX_BTC,
+                //Symbol.XRP_BTC ,
+                //Symbol.ADA_BTC,
+                //Symbol.DOGE_BTC,
+                //Symbol.LINK_BTC,
+                //Symbol.QTUM_BTC,
+                //Symbol.XLM_BTC,
+                //Symbol.ONT_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

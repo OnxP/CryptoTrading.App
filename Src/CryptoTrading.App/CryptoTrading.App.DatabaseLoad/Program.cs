@@ -32,10 +32,10 @@ namespace CryptoTrading.App.DatabaseLoad
                     .AddFile(Configuration.GetSection("Logging:File")))
 
                 .BuildServiceProvider();
-            context.Database.ExecuteSqlCommand("TRUNCATE TABLE myCandlesticks");
+            context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
-            marketDate.From = new DateTime(2020, 11, 22);
+            marketDate.From = new DateTime(2020, 12, 25);
             List<Symbol> symbols = new List<Symbol>() 
             { 
                 Symbol.ETH_BTC,
@@ -45,7 +45,14 @@ namespace CryptoTrading.App.DatabaseLoad
                 Symbol.EOS_BTC,
                 Symbol.SYS_BTC,
                 Symbol.TRX_BTC,
-                Symbol.XRP_BTC 
+                Symbol.XRP_BTC ,
+                Symbol.ADA_BTC,
+                Symbol.DOGE_BTC,
+                Symbol.LINK_BTC,
+                Symbol.QTUM_BTC,
+                Symbol.XLM_BTC,
+                Symbol.ONT_BTC
+
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
@@ -73,29 +80,49 @@ namespace CryptoTrading.App.DatabaseLoad
                 foreach (var interval in intervals)
                 {
                     marketDate.InitialDataLoadSubscribe(symbol, interval, SaveHistoricCandleStick);
-                    marketDate.InitialDataStreamSubscribe(symbol, interval, SaveCandleStick);
+                    marketDate.InitialDataStreamSubscribe(symbol, interval, AddCandleStick);
                 }
             }
         }
         public static CryptoDBContext context = new CryptoDBContext();
-        private static void SaveCandleStick(CandlestickEventArgs obj)
+        private static void AddCandleStick(CandlestickEventArgs obj)
         {
             lock (_object)
             {
                 context.CandleSticks.Add(new CandleStickDb(obj.Candlestick));
-                context.SaveChanges();
+                Check();
             }
         }
+        public static int i = 0;
+        private static void Check()
+        {
+            if(i == 1000)
+            {
+                context.BulkSaveChangesAsync();
+                i = 0;
+            }
+            else
+            {
+                i++;
+            }
+        }
+
         static object _object = new object();
         private static void SaveHistoricCandleStick(IEnumerable<Candlestick> obj)
         {
             lock (_object)
             {
+
+                var list = new List<CandleStickDb>();
+
                 foreach (var candlestick in obj)
                 {
-                    context.CandleSticks.Add(new CandleStickDb(candlestick));
-                    context.SaveChanges();
+                    
+                    list.Add(new CandleStickDb(candlestick));
+                    //Check();
                 }
+
+                context.BulkInsert(list);
             }
         }
     }

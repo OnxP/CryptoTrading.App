@@ -51,12 +51,13 @@ namespace CryptoTrading.App.Monitor
       ,[NumberOfTrades]
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]
-  FROM [dbo].[MyCandleSticks]
+  FROM [dbo].[CandleStickDbs]
   WHERE OpenTime >= @p0 AND Symbol=@p1 AND Interval=@p2
   ORDER BY OpenTime";
 
-        public bool CheckOrder(Order order)
+        public bool CheckOrder(ITransaction transaction)
         {
+            transaction.Complete();
             return true;
         }
 
@@ -75,7 +76,8 @@ namespace CryptoTrading.App.Monitor
         public void StartStream()
         {
             Started = true;
-            var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, _mangement.CurrentTick, Symbol, 3).ToListAsync().Result;
+            var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, _mangement.CurrentTick, Symbol, 0).ToListAsync().Result;
+            if (candleSticks.Count == 0) throw new Exception("Bad Data.");
             candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), Interval)));           
 
             orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime);
