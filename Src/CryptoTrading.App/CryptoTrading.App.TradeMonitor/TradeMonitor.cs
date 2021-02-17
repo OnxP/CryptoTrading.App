@@ -27,10 +27,13 @@ namespace CryptoTrading.App.Monitor
         public IMarketMonitor marketMonitor { get; set; }
         public IStopLimitTracker Tracker { get; set; }
 
+        public DateTime currentCloseTime { get; set; }
+
         public void ProcessCandleStick(CandlestickEventArgs candleStick)
         {
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
+            currentCloseTime = candleStick.Candlestick.CloseTime;
             if (closePrice >= Tracker.TargetPrice)
             {
                 UpdateStopLimit();
@@ -60,7 +63,7 @@ namespace CryptoTrading.App.Monitor
 
         private void CreateNewStopLimitOrder()
         {
-            Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
+            Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice,currentCloseTime);
 
             IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
             request.StopPrice = Tracker.StopLimitPrice;

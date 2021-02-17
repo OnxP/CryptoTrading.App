@@ -52,13 +52,15 @@ namespace CryptoTrading.App.Core.Database
         {
             _nextTickActions.Add(new Action(()=> _StopLimitMonitor.Remove(invokeCandleStick)));
         }
+        public static bool PauseFlow { get; set; } = false;
 
         public void StartTimeKeeper()
         {
             do
             {
-                _MarketDataStream.Invoke();
                 _StopLimitMonitor.ForEach(x => x.Invoke());
+                _MarketDataStream.Invoke();
+
                 GetNextTick();
                 if (_nextTickActions.Count > 0)
                 { 

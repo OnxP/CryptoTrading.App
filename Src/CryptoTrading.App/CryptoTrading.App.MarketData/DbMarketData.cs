@@ -112,6 +112,12 @@ OFFSET 100 ROWS";
                     action.Invoke(new CandlestickEventArgs(candleSticks.Key, candleStick.candlestick, 0, 0, true));
                 }
             }
+
+            Thread.Sleep(100);
+            while (DbCandleStickManagement.PauseFlow)
+            {
+
+            }
         }
 
         public List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();

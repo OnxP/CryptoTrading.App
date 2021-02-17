@@ -1,5 +1,5 @@
 ﻿using Binance;
-using CryptoTrading.App.Core.TradeRequest;
+using System;
 
 namespace CryptoTrading.App.Core.Trade
 {
@@ -15,7 +15,7 @@ namespace CryptoTrading.App.Core.Trade
 
         void CancelCurrentTransaction();
         void UpdateCurrentTransaction(Order order);
-        ITransaction CreateStopLimitTransaction(decimal currentStopLimit);
+        ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null);
         void CompleteTrade();
     }
 }

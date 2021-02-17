@@ -51,14 +51,14 @@ namespace CryptoTrading.App.Core.Trade
             Transactions.Add(transaction);
             return transaction;
         }
-        public ITransaction CreateStopLimitTransaction(decimal currentStopLimit)
+        public ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null)
         {
             var buyQuantity = -Transactions.First().Base.Quantity;
             var sellQuantity = Transactions.First().Base.Quantity * currentStopLimit;
             var feeQuantity = Transactions.First().Fee.Quantity;
             var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity), 
                 SellPosition.CreatePendingTransaction(sellQuantity), 
-                FeePosition.CreatePendingTransaction(feeQuantity), currentStopLimit, null);
+                FeePosition.CreatePendingTransaction(feeQuantity), currentStopLimit, closeTime);
             Transactions.Add(transaction);
             return transaction;
         }

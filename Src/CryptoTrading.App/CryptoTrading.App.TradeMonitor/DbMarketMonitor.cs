@@ -83,6 +83,7 @@ namespace CryptoTrading.App.Monitor
             orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime);
 
             _mangement.AddStopLimitStream(InvokeCandleStick);
+            DbCandleStickManagement.PauseFlow = false;
         }
 
         IEnumerable<IGrouping<DateTime, (Candlestick candlestick, CandlestickInterval interval)>> orderedList;

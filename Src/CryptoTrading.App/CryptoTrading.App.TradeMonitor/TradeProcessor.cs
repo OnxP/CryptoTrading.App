@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
@@ -100,6 +101,8 @@ namespace CryptoTrading.App.Monitor
                 }
                 else if (Positions.CheckRequest(obj.What))
                 {
+                    DbCandleStickManagement.PauseFlow = true;
+                    //need to pause the data stream.
                     var trade = Positions.CreateTrade(obj.What);
                     Trades.Add(trade);
                     var tradeMonitor = TradeFactory.CreateMonitor(trade);
