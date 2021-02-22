@@ -59,6 +59,7 @@ namespace CryptoTrading.App.Monitor
         {
             marketMonitor.Dispose();
             Tracker.Dispose();
+            marketMonitor = null;
         }
 
         private void CreateNewStopLimitOrder()

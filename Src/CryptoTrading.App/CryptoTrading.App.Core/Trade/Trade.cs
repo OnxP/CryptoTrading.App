@@ -28,6 +28,25 @@ namespace CryptoTrading.App.Core.Trade
         public IPosition FeePosition { get; }
         public decimal CurrentPrice { get ; set; }
 
+        public decimal Profit
+        {
+            get
+            {
+                var first = Transactions.First().Quote;//is negative
+                var current = CurrentTransaction.Quote;
+
+                var percentDiff = ((current.Quantity - Math.Abs(first.Quantity)) / Math.Abs(first.Quantity)) * 100;
+
+                return Math.Round(percentDiff,2);
+            }
+        }
+
+        public decimal StartPrice => Transactions.First().Price;
+
+        public DateTime StartDate => Transactions.First().TransactionDate;
+
+        public DateTime CloseDate => CurrentTransaction.TransactionDate;
+
         public void CancelCurrentTransaction()
         {
             CurrentTransaction.Cancel();

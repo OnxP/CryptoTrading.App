@@ -54,7 +54,7 @@ namespace CryptoTrading.App.Monitor
             {
                 Order order = obj.What;
                 //assume that order has been filled.
-                var trade = OrderMonitors.First(x => x.Symbol == order.Symbol);
+                var trade = CurrentMonitors.First(x => x.Symbol == order.Symbol);
                 switch (transaction.Type)
                 {
 
@@ -76,7 +76,7 @@ namespace CryptoTrading.App.Monitor
             {
                 string order = obj.What;
                 //assume that order has been filled.
-                var trade = OrderMonitors.First(x => x.Symbol == transaction.Pair);
+                var trade = CurrentMonitors.First(x => x.Symbol == transaction.Pair);
                 switch (transaction.Type)
                 {
                     case TransactionType.StopLimitTransaction:
@@ -116,10 +116,10 @@ namespace CryptoTrading.App.Monitor
 
         private bool CheckCurrentOrderMonitors(string symbol)
         {
-            if (OrderMonitors.Count() != 0) return false;
-            if (OrderMonitors.LastOrDefault(x => x.Symbol == symbol) != null)
+            if (CurrentMonitors.Count() != 0) return false;
+            if (CurrentMonitors.LastOrDefault(x => x.Symbol == symbol) != null)
             {
-                return OrderMonitors.LastOrDefault(x => x.Symbol == symbol).Live;
+                return CurrentMonitors.LastOrDefault(x => x.Symbol == symbol).Live;
             }
 
             return false;

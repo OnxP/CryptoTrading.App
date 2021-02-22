@@ -12,6 +12,9 @@ using System.IO;
 using CryptoTrading.App.Monitor;
 using CryptoTrading.App.Core.Position;
 using System.Threading;
+using CryptoTrading.App.Core.Trade;
+using System.Text;
+using System.Linq;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -65,16 +68,40 @@ namespace CryptoTrading.App.AlgorthmTesting
             marketData.StartStream();
             tradeMonitor.CompleteAllTransactions();
 
-            Thread.Sleep(100000);
+            //need to add summary of trades and PnL
 
+            Console.WriteLine(PrintTrades(tradeMonitor.Trades));
+            Console.WriteLine(Environment.NewLine);
+            Console.WriteLine(PrintSummary(tradeMonitor.Trades));
 
-            //var liveData = data.Where(x => x.Item1 == "Live").Select(x => x.Item2);
-            //foreach (var item in liveData)
-            //{
-            //    Algo.ProcessLiveCandleStick(new Binance.Client.CandlestickEventArgs(DateTime.Now, item, 0, 0, true));
-            //}
-            //use the message broker to see the messages and output them to a file.
+            File.WriteAllLines(@"C:\temp\TradeResults.txt", new List<string>() { PrintTrades(tradeMonitor.Trades),Environment.NewLine, PrintSummary(tradeMonitor.Trades) });
+        }
 
+        private static string PrintSummary(List<ITrade> trades)
+        {
+            var count = trades.Count();
+            var sb = new StringBuilder();
+            sb.Append($"Total Number of Trades: [{count}]");
+            sb.Append(Environment.NewLine);
+            sb.Append($"Winning Trades: [{trades.Count(x=>x.Profit>0)}] - {((double) trades.Count(x => x.Profit > 0) / count) * 100}%");
+            sb.Append(Environment.NewLine);
+            sb.Append($"Losing Trades: [{trades.Count(x => x.Profit < 0)}] - {((double) trades.Count(x => x.Profit < 0) / count) * 100}%");
+            sb.Append(Environment.NewLine);
+            sb.Append($"Total Profit: [{trades.Sum(x => x.Profit)}]%");
+            sb.Append(Environment.NewLine);
+
+            return sb.ToString();
+        }
+
+        private static string PrintTrades(List<ITrade> trades)
+        {
+            return trades.ToStringTable(x=>x.Symbol, 
+                x => x.StartPrice, //.FirstTransaction.Price.ToString("0.#########"), 
+                x => x.Price,//.CurrentTransaction.Price.ToString("0.#########"), 
+                x => x.Quantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 
+                x => x.StartDate, //FirstTransaction.TransactionDate.ToString(), 
+                x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(), 
+                x => x.Profit);
         }
 
         private static void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)

@@ -10,8 +10,13 @@ namespace CryptoTrading.App.Core.Trade
         OrderSide OrderType { get; }
         decimal Quantity { get; }
         ITransaction CurrentTransaction { get; }
+        
         bool Open { get; set; }
         decimal CurrentPrice { get; set; }
+        decimal Profit { get; }
+        decimal StartPrice { get; }
+        DateTime StartDate { get; }
+        DateTime CloseDate { get; }
 
         void CancelCurrentTransaction();
         void UpdateCurrentTransaction(Order order);

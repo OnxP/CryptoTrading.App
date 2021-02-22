@@ -26,6 +26,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             double signal = 9;
             var macd = (Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
             var ema = (Tulip.Indicators.ema, new double[] { 100 });
+            var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
+            dict.Add("Rsi", rsi);
             dict.Add("MACD", macd);
             dict.Add("LongEma", ema);
             return dict;
@@ -37,6 +39,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var signal = indicatorOutputs["MACD"][1].ToList();
             var hist = indicatorOutputs["MACD"][2].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
+            var rsi = indicatorOutputs["Rsi"][0].ToList();
+
 
             longEma.Reverse();
 
@@ -50,6 +54,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var condition1 = macd.Last() > signal.Last();
             var condition2 = longEma.First() < closePrice; //this checks for an up trend however doesn't check for sideways trend.
             var condition3 = longEma.First() > longEma.Skip(1).First(); //this checks for an up trend however doesn't check for sideways trend.
+            //var condition4 = macd.Last() < 0;
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
