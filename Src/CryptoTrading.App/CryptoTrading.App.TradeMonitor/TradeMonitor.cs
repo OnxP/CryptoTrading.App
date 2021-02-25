@@ -43,6 +43,7 @@ namespace CryptoTrading.App.Monitor
                 //check for fill order
                 if (marketMonitor.CheckOrder(Trade.CurrentTransaction))
                 {
+                    Trade.CurrentTransaction.TransactionDate = currentCloseTime;
                     Trade.Open = false;
                     //stop monitor??
                     marketMonitor.StopStream();

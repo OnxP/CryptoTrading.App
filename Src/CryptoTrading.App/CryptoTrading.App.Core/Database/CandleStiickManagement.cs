@@ -10,9 +10,28 @@ namespace CryptoTrading.App.Core.Database
         DateTime Start { get; set; }
         DateTime Finish { get; set; }
 
+        private static readonly object _lock = new object();
         Action _MarketDataStream { get; set; }
         List<Action> _StopLimitMonitor { get; set; } = new List<Action>();
-        List<Action> _nextTickActions { get; set; } = new List<Action>();
+        List<Action> NextTickActions
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _nextTickActions;
+                }
+            }
+            set
+            {
+                lock (_lock)
+                {
+                    _nextTickActions = value;
+                }
+            }
+        }
+
+        List<Action> _nextTickActions = new List<Action>();
 
         Dictionary<int, DateTime> timeKeeper = new Dictionary<int, DateTime>();
         int _index = 0;
@@ -46,7 +65,7 @@ namespace CryptoTrading.App.Core.Database
 
         public void AddStopLimitStream(Action invokeCandleStick)
         {
-            _StopLimitMonitor.Add(invokeCandleStick);
+            _nextTickActions.Add(new Action(() => _StopLimitMonitor.Add(invokeCandleStick)));
         }
         public void RemoveStopLimitStream(Action invokeCandleStick)
         {
@@ -58,17 +77,17 @@ namespace CryptoTrading.App.Core.Database
         {
             do
             {
-                _StopLimitMonitor.ForEach(x => x.Invoke());
                 _MarketDataStream.Invoke();
+                _StopLimitMonitor.ForEach(x => x.Invoke());
 
                 GetNextTick();
-                if (_nextTickActions.Count > 0)
-                { 
-                    _nextTickActions.ForEach(x => x.Invoke());
-                    _nextTickActions.Clear();
+                if (NextTickActions.Count > 0)
+                {
+                    NextTickActions.ForEach(x => x.Invoke());
+                    NextTickActions.Clear();
                 }
-                if (_StopLimitMonitor.Count != 0) 
-                    Thread.Sleep(100);
+                if (_StopLimitMonitor.Count == 0) 
+                    Thread.Sleep(10);
             } while (_index < timeKeeper.Count);
         }
     }

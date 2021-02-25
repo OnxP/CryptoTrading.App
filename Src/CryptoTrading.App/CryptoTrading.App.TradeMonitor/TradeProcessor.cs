@@ -75,6 +75,7 @@ namespace CryptoTrading.App.Monitor
             if (obj.Who is ITransaction transaction)
             {
                 string order = obj.What;
+                if (transaction.Status == TransactionStatus.Completed) return;
                 //assume that order has been filled.
                 var trade = CurrentMonitors.First(x => x.Symbol == transaction.Pair);
                 switch (transaction.Type)

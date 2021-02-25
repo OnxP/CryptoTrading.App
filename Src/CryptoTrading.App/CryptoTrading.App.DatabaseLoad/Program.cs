@@ -35,7 +35,7 @@ namespace CryptoTrading.App.DatabaseLoad
             context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
-            marketDate.From = new DateTime(2020, 12, 25);
+            marketDate.From = new DateTime(2020, 12, 29);//25-12-20
             List<Symbol> symbols = new List<Symbol>() 
             { 
                 Symbol.ETH_BTC,
