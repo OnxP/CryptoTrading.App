@@ -7,23 +7,25 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
 {
     class FixedProfitStopLimit : IStopLimitTracker
     {
-        public decimal StopLimitPrice { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public decimal StopLimitPrice { get; set; }
 
-        public decimal TargetPrice => throw new NotImplementedException();
+        public decimal TargetPrice { get; set; }
 
         public void Configure(Order order)
         {
-            throw new NotImplementedException();
+            var price = order.Price;
+
+            StopLimitPrice = price * 0.99m;
+            TargetPrice = price * 1.02m;
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public void MoveStopLimit()
         {
-            throw new NotImplementedException();
+            StopLimitPrice = TargetPrice;
         }
     }
 }

@@ -31,7 +31,6 @@ namespace CryptoTrading.App.Monitor
             services.AddSingleton<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
             services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
             services.AddSingleton<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
-            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
 
 
 

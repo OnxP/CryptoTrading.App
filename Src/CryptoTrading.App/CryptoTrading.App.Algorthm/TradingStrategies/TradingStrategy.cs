@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Core;
+﻿using Binance;
+using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -47,13 +48,14 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         protected abstract Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators();
 
-        public double Calculate(OrderedFixedLengthList closePrices)
+        public double Calculate(OrderedFixedLengthList<Candlestick> closePrices)
         {
             Dictionary<string, double[][]> indicatorOutputs = new Dictionary<string, double[][]>();
             //load indicators
             foreach (var item in Indicators)
             {
-                double[] close_prices = closePrices.ToArray();
+                double[] close_prices = closePrices.Select(x=> (double)x.Close).ToArray();
+                double[] volume = closePrices.Select(x => (double)x.Volume).ToArray(); 
 
                 //Find output size and allocate output space.
                 int output_length = close_prices.Length - item.Value.indicator.Start(item.Value.options);
@@ -61,7 +63,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 double[] output1 = new double[output_length];
                 double[] output2 = new double[output_length];
 
-                double[][] inputs = { close_prices };
+                double[][] inputs = { close_prices, volume };
                 double[][] outputs = { output,output1,output2 };
                 int success = item.Value.indicator.Run(inputs, item.Value.options, outputs);
                 // log.
@@ -71,6 +73,6 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return Calculate(indicatorOutputs, closePrices.Current) * StrategyWeight;
         }
         //return +1 for buy Trade, -1 for sell, and 0 for Hold.
-        protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, double closePrice);
+        protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice);
     }
 }

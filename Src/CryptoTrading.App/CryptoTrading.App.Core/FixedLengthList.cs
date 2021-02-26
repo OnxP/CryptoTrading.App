@@ -5,39 +5,38 @@ using System.Linq;
 
 namespace CryptoTrading.App.Core
 {
-    public class OrderedFixedLengthList : IList<double>
+    public class OrderedFixedLengthList<T> : IList<T>
     {
-        private List<double> _list;
+        private List<T> _list;
         public OrderedFixedLengthList(int numberOfCandleSticksToKeep)
         {
             NumberOfCandleSticksToKeep = numberOfCandleSticksToKeep;
-            _list = new List<double>();
+            _list = new List<T>();
         }
 
-        public double this[int index] { get => _list[index]; set => _list[index] = value; }
+        public T this[int index] { get => _list[index]; set => _list[index] = value; }
 
         public int Count => _list.Count;
 
         public bool IsReadOnly => false;
 
         public int NumberOfCandleSticksToKeep { get; }
-        public double Current { get => _list.Last(); }
+        public T Current { get => _list.Last(); }
 
-        public void Add(double item)
+        public void Add(T item)
         {
             _list.Add(item);
 
             if (_list.Count >= NumberOfCandleSticksToKeep)
             {
                 _list.RemoveAt(0);
-                ;
             }
         }
-        public void Add(decimal item) => Add(Convert.ToDouble(item));
+        //public void Add(decimal item) => Add(Convert.ToDouble(item));
 
         public void Clear() => _list.Clear();
 
-        public void AddRange(IEnumerable<decimal> items)
+        public void AddRange(IEnumerable<T> items)
         {
             foreach (var item in items)
             {
@@ -45,15 +44,15 @@ namespace CryptoTrading.App.Core
             }
         }
 
-        public bool Contains(double item) => _list.Contains(item);
+        public bool Contains(T item) => _list.Contains(item);
 
-        public void CopyTo(double[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
+        public void CopyTo(T[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
 
-        public IEnumerator<double> GetEnumerator() => _list.GetEnumerator();
+        public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
 
-        public int IndexOf(double item) => _list.IndexOf(item);
+        public int IndexOf(T item) => _list.IndexOf(item);
 
-        public void Insert(int index, double item)
+        public void Insert(int index, T item)
         {
             if (_list.Count == NumberOfCandleSticksToKeep)
             {
@@ -62,7 +61,7 @@ namespace CryptoTrading.App.Core
             }
         }
 
-        public bool Remove(double item) => _list.Remove(item);
+        public bool Remove(T item) => _list.Remove(item);
 
         public void RemoveAt(int index) => _list.RemoveAt(index);
 

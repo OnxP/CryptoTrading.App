@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Binance;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using Tulip;
@@ -31,7 +32,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, double closePrice)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice)
         {
             var lower = indicatorOutputs["BBands"][0].ToList();
             var middle = indicatorOutputs["BBands"][1].ToList();
@@ -43,12 +44,12 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var kLine = new List<double>();
 
             for(int i = 0; i<=sRsi.Count()-3;i++)
-                kLine.Add(sRsi.Skip(i).Take(3).Sum());
+                kLine.Add(sRsi.Skip(i).Take(3).Average());
 
             var dLine = new List<double>();
 
             for (int i = 0; i <= kLine.Count() - 3; i++)
-                dLine.Add(kLine.Skip(i).Take(3).Sum());
+                dLine.Add(kLine.Skip(i).Take(3).Average());
 
             longEma.Reverse();
 
@@ -64,7 +65,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
             // log values
             
-            var condition1 = closePrice <= lower.Last();
+            var condition1 = (double)closePrice.Close <= lower.Last();
             var condition2 = rsi.Last() < 30;
             var condition3 = kLine.Last() >= dLine.Last();
             var condition4 = sRsi.Last() < 20;

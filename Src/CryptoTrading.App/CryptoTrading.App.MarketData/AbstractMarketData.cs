@@ -1,5 +1,6 @@
 ﻿using Binance;
 using Binance.Client;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
@@ -21,8 +22,10 @@ namespace CryptoTrading.App.MarketData
         }
 
 
-        protected IDictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>> historicDataSubscribers = new Dictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>>();
-        protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> subscribers = new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>>();
+        protected IDictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>> historicDataSubscribers = 
+            new Dictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>>();
+        protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> subscribers = 
+            new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>>();
         //public events 
 
         public void InitialDataLoadSubscribe(string symbol, CandlestickInterval interval, Action<IEnumerable<Candlestick>> callback)

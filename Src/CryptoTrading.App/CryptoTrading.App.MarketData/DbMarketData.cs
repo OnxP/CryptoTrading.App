@@ -89,7 +89,7 @@ OFFSET 100 ROWS";
             {
                 int interval = (int)item.Key.interval;
                 var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, From, item.Key.symbol, interval).ToListAsync().Result;
-                candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x),item.Key.interval)));
+                candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), item.Key.interval)));
             }
 
             orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime);
@@ -132,6 +132,7 @@ OFFSET 100 ROWS";
         {
             int interval = (int)symbol.interval;
             var candleSticks = context.CandleSticks.SqlQuery(SQL_HISTORIC_QUERY, from, symbol.symbol, interval).ToListAsync().Result;
+
             //need to drop first candle
             //candleSticks.Reverse();
             List<Candlestick> sticks = new List<Candlestick>();

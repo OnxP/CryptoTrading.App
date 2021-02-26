@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Binance;
 using Binance.Client;
+using CryptoTrading.App.Core.Database;
 
 namespace CryptoTrading.App.MarketData
 {

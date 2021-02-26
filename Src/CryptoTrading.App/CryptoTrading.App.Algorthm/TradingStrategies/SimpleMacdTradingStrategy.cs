@@ -6,9 +6,9 @@ using Tulip;
 
 namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
-    public class MacdTradingStrategy : TradingStrategy
+    public class SimpleMacdTradingStrategy : TradingStrategy
     {
-        public MacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public SimpleMacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
@@ -27,12 +27,10 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             double signal = 9;
             var macd = (Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
             var ema = (Tulip.Indicators.ema, new double[] { 200 });
-            var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
-            var sRsi = (Tulip.Indicators.stochrsi, new double[] { 14 });
-            dict.Add("Rsi", rsi);
-            dict.Add("SRsi", sRsi);
+            var vwap = (Tulip.Indicators.vwap, new double[] { 0 });
             dict.Add("MACD", macd);
             dict.Add("LongEma", ema);
+            dict.Add("VWap", vwap);
             return dict;
         }
 
@@ -42,13 +40,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var signal = indicatorOutputs["MACD"][1].ToList();
             var hist = indicatorOutputs["MACD"][2].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
-            var rsi = indicatorOutputs["Rsi"][0].ToList();
-            var sRsi = indicatorOutputs["SRsi"][0].ToList();
-
-            var dLine = new List<double>();
-
-            for (int i = 0; i <= sRsi.Count() - 3; i++)
-                dLine.Add(sRsi.Skip(i).Take(3).Average());
+            var vWap = indicatorOutputs["VWap"][0].ToList();
 
             longEma.Reverse();
             macd.Reverse();
@@ -61,16 +53,14 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             // log values
             
             var condition1 = macd.First() >= signal.Last();
-            var condition2 = longEma.First() < (double)closePrice.Close; //this checks for an up trend however doesn't check for sideways trend.
-            var condition3 = longEma.First() > longEma.Skip(1).First(); //this checks for an up trend however doesn't check for sideways trend.
+            var condition2 = vWap.First() < (double)closePrice.Close; //this checks for an up trend however doesn't check for sideways trend.
+            //var condition3 = vWap.First() > longEma.Skip(1).First(); //this checks for an up trend however doesn't check for sideways trend.
             var condition4 = macd.First() > macd.Skip(1).First();
-            var condition5 = sRsi.Last() >= dLine.Last();
-            var condition6 = rsi.Last() <= 60;
-            var condition7 = sRsi.Last() <= 60;
+            var condition5 = macd.First() < 0;
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition4 && condition5 && condition6 && condition7)
+            if (condition1 && condition4 && condition5 && condition2)
             {
                 LogResult(1);
                 return 1;

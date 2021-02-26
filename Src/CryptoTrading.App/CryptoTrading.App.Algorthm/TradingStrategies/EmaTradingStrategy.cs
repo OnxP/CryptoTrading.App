@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Binance;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using Tulip;
@@ -31,7 +32,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, double closePrice)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice)
         {
             var fastEma = indicatorOutputs["FastEma"][0].ToList();
             var slowEma = indicatorOutputs["SlowEma"][0].ToList();
@@ -48,7 +49,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
             var condition1 = fastEma.Last() > slowEma.Last();
             var condition2 = slowEma.Last() > longEma.Last();
-            var condition3 = closePrice > longEma.Last();
+            var condition3 = (double)closePrice.Close > longEma.Last();
 
             //Price > than Long EMA
             //Long EMA is in an uptrend

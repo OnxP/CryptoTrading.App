@@ -1,4 +1,6 @@
-﻿using CryptoTrading.App.Core;
+﻿using Binance;
+using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +19,9 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         }
         public int OutputLength => tradingStrategies.Max(x => x.OutputLength);
 
-        public double Calculate(OrderedFixedLengthList closePrices)
+        public double Calculate(OrderedFixedLengthList<Candlestick> candleSticks)
         {
-            return tradingStrategies.Sum(x => x.Calculate(closePrices));
+            return tradingStrategies.Sum(x => x.Calculate(candleSticks));
         }
 
         public void Log(string v)

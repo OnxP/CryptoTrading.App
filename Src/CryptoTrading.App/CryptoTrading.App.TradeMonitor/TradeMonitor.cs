@@ -34,10 +34,7 @@ namespace CryptoTrading.App.Monitor
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
             currentCloseTime = candleStick.Candlestick.CloseTime;
-            if (closePrice >= Tracker.TargetPrice)
-            {
-                UpdateStopLimit();
-            }
+            
             if (closePrice <= Tracker.StopLimitPrice)
             {
                 //check for fill order
@@ -53,6 +50,11 @@ namespace CryptoTrading.App.Monitor
                 {
                     //partial fill of the order. should just continue...
                 }
+            }
+
+            if (closePrice >= Tracker.TargetPrice)
+            {
+                UpdateStopLimit();
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using Binance;
 using Binance.Client;
+using CryptoTrading.App.Core.Database;
 using System.Collections.Generic;
 
 namespace CryptoTrading.App.Algorthm

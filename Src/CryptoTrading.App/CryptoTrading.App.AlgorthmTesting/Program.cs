@@ -107,12 +107,12 @@ namespace CryptoTrading.App.AlgorthmTesting
         private static void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
             marketData.Configure(null);
-            marketData.From = new DateTime(2020, 12, 26,00,00,00);
+            marketData.From = new DateTime(2021, 01, 14,00,00,00);
             List<Symbol> symbols = new List<Symbol>()
             {
-                //Symbol.ETH_BTC,
+                Symbol.ETH_BTC,
                 //Symbol.BTC_USDT,
-                Symbol.LTC_BTC,
+                //Symbol.LTC_BTC,
                 //Symbol.BNB_BTC,
                 //Symbol.EOS_BTC,
                 //Symbol.SYS_BTC,
@@ -123,7 +123,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                 //Symbol.LINK_BTC,
                 //Symbol.QTUM_BTC,
                 //Symbol.XLM_BTC,
-                Symbol.ONT_BTC
+                //Symbol.ONT_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

@@ -2,6 +2,7 @@
 using Binance.Client;
 using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
@@ -15,19 +16,19 @@ namespace CryptoTrading.App.Algorthm
     {
         public ILogger<SimpleAlgorthm> Logger { get; set; }
         public int NumberOfCandleSticksToKeep => tradingStrategies.OutputLength;
-        private OrderedFixedLengthList _closePrices;
+        private OrderedFixedLengthList<Candlestick> _candleSticks;
         public ITradingStrategy tradingStrategies;
         public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger)
         { 
             tradingStrategies = strategies;
-            _closePrices = new OrderedFixedLengthList(NumberOfCandleSticksToKeep);
+            _candleSticks = new OrderedFixedLengthList<Candlestick>(NumberOfCandleSticksToKeep);
             Logger = logger;
         }
 
         public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
         {
             //want to reduce dependancy on the candle stick object=> may need to create my own.
-            _closePrices.AddRange(candlesticks.Select(x => x.Close));
+            _candleSticks.AddRange(candlesticks);
             Logger.LogInformation($"Added {candlesticks.Count()} historic candlesticks for {candlesticks.First().Symbol}");
             var result = CalculateTradeStrategies(candlesticks.First().Symbol, candlesticks.First().Interval.AsString(), candlesticks.Last().CloseTime);
             //log load algothrm is sucessful.
@@ -40,7 +41,7 @@ namespace CryptoTrading.App.Algorthm
 
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
-            _closePrices.Add(candlestickEventArgs.Candlestick.Close);
+            _candleSticks.Add(candlestickEventArgs.Candlestick);
             Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             var result = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
             Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
@@ -60,7 +61,7 @@ namespace CryptoTrading.App.Algorthm
             tradingStrategies.Log($"Interval: {interval}");
             tradingStrategies.Log($"CloseTime: {closeTime}");
 
-            result = tradingStrategies.Calculate(_closePrices);
+            result = tradingStrategies.Calculate(_candleSticks);
                 //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
             return result;
         }
