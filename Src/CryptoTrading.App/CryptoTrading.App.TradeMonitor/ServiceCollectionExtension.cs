@@ -16,7 +16,7 @@ namespace CryptoTrading.App.Monitor
                 case RunTypeEnum.BackTesting:
                     services.AddTransient<IMarketMonitor, DbMarketMonitor>();
                     break;
-                case RunTypeEnum.LiveTesting:
+                case RunTypeEnum.LiveTesting:                   
                     services.AddTransient<IMarketMonitor, LiveTestMarketMonitor>();
                     break;
                 case RunTypeEnum.Live:
@@ -29,7 +29,7 @@ namespace CryptoTrading.App.Monitor
             services.AddSingleton<ITradeFactory, TestTradeFactory>();
             services.AddTransient<ITradeMonitor, TradeMonitor>();
             services.AddSingleton<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
-            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
+            services.AddTransient<IStopLimitTracker, FixedTrailingStopLimit>();
             services.AddSingleton<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
 
 

@@ -34,8 +34,10 @@ namespace CryptoTrading.App.Monitor
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
             currentCloseTime = candleStick.Candlestick.CloseTime;
-            
-            if (closePrice <= Tracker.StopLimitPrice)
+            Tracker.CurrentPrice = closePrice;
+
+
+            if (candleStick.Candlestick.Low <= Tracker.StopLimitPrice)
             {
                 //check for fill order
                 if (marketMonitor.CheckOrder(Trade.CurrentTransaction))
@@ -50,6 +52,7 @@ namespace CryptoTrading.App.Monitor
                 {
                     //partial fill of the order. should just continue...
                 }
+                
             }
 
             if (closePrice >= Tracker.TargetPrice)
@@ -68,7 +71,7 @@ namespace CryptoTrading.App.Monitor
         private void CreateNewStopLimitOrder()
         {
             Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice,currentCloseTime);
-
+            
             IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
             request.StopPrice = Tracker.StopLimitPrice;
             MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);

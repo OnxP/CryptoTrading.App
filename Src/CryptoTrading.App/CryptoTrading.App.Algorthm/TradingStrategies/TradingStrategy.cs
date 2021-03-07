@@ -42,7 +42,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 i = Math.Max(optionLength, i);
             }
 
-            OutputLength = i;
+            OutputLength = i * 2;
             logger.LogInformation($"Stragegy Initialisation complete for {this}, output length = {OutputLength}, Strategy Weight = {StrategyWeight}");
         }
 
@@ -56,6 +56,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             {
                 double[] close_prices = closePrices.Select(x=> (double)x.Close).ToArray();
                 double[] volume = closePrices.Select(x => (double)x.Volume).ToArray(); 
+                double[] high = closePrices.Select(x => (double)x.High).ToArray(); 
+                double[] low = closePrices.Select(x => (double)x.Low).ToArray();
 
                 //Find output size and allocate output space.
                 int output_length = close_prices.Length - item.Value.indicator.Start(item.Value.options);
@@ -63,7 +65,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 double[] output1 = new double[output_length];
                 double[] output2 = new double[output_length];
 
-                double[][] inputs = { close_prices, volume };
+                double[][] inputs = { close_prices, volume, high,low };
                 double[][] outputs = { output,output1,output2 };
                 int success = item.Value.indicator.Run(inputs, item.Value.options, outputs);
                 // log.

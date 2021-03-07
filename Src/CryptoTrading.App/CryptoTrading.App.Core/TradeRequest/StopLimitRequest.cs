@@ -12,6 +12,7 @@ namespace CryptoTrading.App.Core.TradeRequest
 
         public StopLimitRequest(ITransaction currentTransaction)
         {
+            if (currentTransaction == null) throw new Exception();
             this.currentTransaction = currentTransaction;
         }
 

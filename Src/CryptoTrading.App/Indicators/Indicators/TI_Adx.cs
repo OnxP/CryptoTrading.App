@@ -22,9 +22,9 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] high = inputs[0];
-            double[] low = inputs[1];
-            double[] close = inputs[2];
+            double[] high = inputs[2];
+            double[] low = inputs[3];
+            double[] close = inputs[0];
             double[] output = outputs[0];
 
             double atr = default;

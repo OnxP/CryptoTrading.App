@@ -12,5 +12,6 @@ namespace CryptoTrading.App.Monitor
         void Configure(Order order);
         void MoveStopLimit();
         void Dispose();
+        decimal CurrentPrice { get; set; }
     }
 }

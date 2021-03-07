@@ -28,6 +28,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var macd = (Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
             var ema = (Tulip.Indicators.ema, new double[] { 200 });
             var vwap = (Tulip.Indicators.vwap, new double[] { 0 });
+
             dict.Add("MACD", macd);
             dict.Add("LongEma", ema);
             dict.Add("VWap", vwap);
@@ -44,23 +45,25 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
             longEma.Reverse();
             macd.Reverse();
+            signal.Reverse();
 
             Log($"MACD - Line: {macd.First()}");
-            Log($"MACD - Signal Line: {signal.Last()}");
+            Log($"MACD - Signal Line: {signal.First()}");
             Log($"Long Ema: {longEma.First()}");
             Log($"Close Price: {closePrice}");
 
             // log values
             
-            var condition1 = macd.First() >= signal.Last();
+            var condition1 = macd.First() >= signal.First();
+            var condition3= macd.Skip(1).First() <= signal.Skip(1).First();
             var condition2 = vWap.First() < (double)closePrice.Close; //this checks for an up trend however doesn't check for sideways trend.
             //var condition3 = vWap.First() > longEma.Skip(1).First(); //this checks for an up trend however doesn't check for sideways trend.
-            var condition4 = macd.First() > macd.Skip(1).First();
-            var condition5 = macd.First() < 0;
+            //var condition4 = macd.First() > macd.Skip(1).First();
+            //var condition5 = macd.First() < 0;
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition4 && condition5 && condition2)
+            if (condition1 && condition2 && condition3)
             {
                 LogResult(1);
                 return 1;

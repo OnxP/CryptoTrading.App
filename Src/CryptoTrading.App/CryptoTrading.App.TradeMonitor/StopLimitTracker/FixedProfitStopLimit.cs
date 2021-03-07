@@ -10,6 +10,7 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
         public decimal StopLimitPrice { get; set; }
 
         public decimal TargetPrice { get; set; }
+        public decimal CurrentPrice { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void Configure(Order order)
         {

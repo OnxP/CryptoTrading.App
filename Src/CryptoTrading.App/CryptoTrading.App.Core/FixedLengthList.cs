@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Core
         private List<T> _list;
         public OrderedFixedLengthList(int numberOfCandleSticksToKeep)
         {
-            NumberOfCandleSticksToKeep = numberOfCandleSticksToKeep;
+            NumberOfCandleSticksToKeep = numberOfCandleSticksToKeep+1;
             _list = new List<T>();
         }
 

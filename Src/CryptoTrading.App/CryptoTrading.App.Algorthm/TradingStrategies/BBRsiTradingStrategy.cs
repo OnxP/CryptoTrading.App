@@ -68,11 +68,11 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var condition1 = (double)closePrice.Close <= lower.Last();
             var condition2 = rsi.Last() < 30;
             var condition3 = kLine.Last() >= dLine.Last();
-            var condition4 = sRsi.Last() < 20;
+            //var condition4 = sRsi.Last() < 20;
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition2 && condition3 && condition4)
+            if (condition1 && condition2 && condition3)
             {
                 LogResult(1);
                 return 1;
