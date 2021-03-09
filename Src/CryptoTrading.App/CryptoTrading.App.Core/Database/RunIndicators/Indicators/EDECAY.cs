@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class EDecayIndicator : RunIndicatorBase<IndicatorContext<EDecay>, EDecay>
     {
+        public override Indicator Indicator => Tulip.Indicators.edecay;
 
         public EDecayIndicator(params decimal[] option) : base(option)
         {

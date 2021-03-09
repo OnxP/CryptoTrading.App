@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class NviIndicator : RunIndicatorBase<IndicatorContext<Nvi>, Nvi>
     {
+        public override Indicator Indicator => Tulip.Indicators.nvi;
 
         public NviIndicator(params decimal[] option) : base(option)
         {

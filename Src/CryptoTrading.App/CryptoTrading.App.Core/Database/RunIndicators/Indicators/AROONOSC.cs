@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class AroonOscIndicator : RunIndicatorBase<IndicatorContext<AroonOsc>, AroonOsc>
     {
+        public override Indicator Indicator => Tulip.Indicators.aroonosc;
 
         public AroonOscIndicator(params decimal[] option) : base(option)
         {

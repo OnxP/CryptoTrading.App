@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class WmaIndicator : RunIndicatorBase<IndicatorContext<Wma>, Wma>
     {
+        public override Indicator Indicator => Tulip.Indicators.wma;
 
         public WmaIndicator(params decimal[] option) : base(option)
         {

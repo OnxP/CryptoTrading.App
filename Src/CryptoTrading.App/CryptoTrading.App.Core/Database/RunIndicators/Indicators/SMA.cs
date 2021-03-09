@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core.Database.Indicators;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -9,6 +10,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class SmaIndicator : RunIndicatorBase<IndicatorContext<Sma>, Sma>
     {
+        public override Indicator Indicator => Tulip.Indicators.sma;
 
         public SmaIndicator(params decimal[] option) : base(option)
         {

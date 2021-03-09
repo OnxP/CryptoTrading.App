@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -9,6 +9,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class EmaIndicator : RunIndicatorBase<IndicatorContext<Ema>, Ema>
     {
+        public override Indicator Indicator => Tulip.Indicators.ema;
 
         public EmaIndicator(params decimal[] option) : base(option)
         {

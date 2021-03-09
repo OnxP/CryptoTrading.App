@@ -24,18 +24,20 @@ namespace CryptoTrading.App.Core.Database.Indicators
 
         public DbContext Context => context;
 
+        public abstract Indicator Indicator { get; }
+
         protected abstract C AddToDb(int candlestickId, params decimal[] outputs);
 
         public void Execute(List<CandleStickDb> candleStick)
         {
-            var indicator = Tulip.Indicators.adx;
+            //var indicator = Tulip.Indicators.adx;
             decimal[] close_prices = candleStick.Select(x => (decimal)x.Close).ToArray();
             decimal[] volume = candleStick.Select(x => (decimal)x.Volume).ToArray();
             decimal[] high = candleStick.Select(x => (decimal)x.High).ToArray();
             decimal[] low = candleStick.Select(x => (decimal)x.Low).ToArray();
 
             //Find output size and allocate output space.
-            int output_length = close_prices.Length - indicator.Start(options);
+            int output_length = close_prices.Length - Indicator.Start(options);
 
             decimal[] output = new decimal[output_length];
             decimal[] output1 = new decimal[output_length];
@@ -43,7 +45,7 @@ namespace CryptoTrading.App.Core.Database.Indicators
 
             decimal[][] inputs = { close_prices, volume, high, low };
             decimal[][] outputs = { output, output1, output2 };
-            int success = indicator.Run(inputs, options, outputs);
+            int success = Indicator.Run(inputs, options, outputs);
 
             candleStick.Reverse();
             int j = 0;

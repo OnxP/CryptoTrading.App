@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core.Database.Indicators;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -12,6 +13,8 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
         public TEMPLATEIndicator(params decimal[] option) : base(option)
         {
         }
+
+        public override Indicator Indicator => throw new System.NotImplementedException();
 
         protected override TEMPLATE AddToDb(int candlestickId, params decimal[] outputs)
         {

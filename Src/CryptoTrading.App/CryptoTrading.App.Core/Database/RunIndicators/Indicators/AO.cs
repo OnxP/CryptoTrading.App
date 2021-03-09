@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class AoIndicator : RunIndicatorBase<IndicatorContext<Ao>, Ao>
     {
+        public override Indicator Indicator => Tulip.Indicators.ao;
 
         public AoIndicator(params decimal[] option) : base(option)
         {

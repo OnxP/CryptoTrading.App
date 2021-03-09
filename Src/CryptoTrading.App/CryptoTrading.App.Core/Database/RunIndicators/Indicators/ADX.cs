@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -12,6 +13,8 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
         public AdxIndicator(params decimal[] option) : base(option)
         {
         }
+
+        public override Indicator Indicator => Tulip.Indicators.adx;
 
         protected override Adx AddToDb(int candlestickId, params decimal[] outputs)
         {

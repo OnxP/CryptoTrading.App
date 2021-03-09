@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;
+﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
@@ -10,6 +10,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
     }
     public class MacdIndicator : RunIndicatorBase<IndicatorContext<Macd>, Macd>
     {
+        public override Indicator Indicator => Tulip.Indicators.macd    ;
 
         public MacdIndicator(params decimal[] option) : base(option)
         {
