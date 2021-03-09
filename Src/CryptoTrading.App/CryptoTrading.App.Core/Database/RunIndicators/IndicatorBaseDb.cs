@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CryptoTrading.App.Core.Database.Indicators
 {
-    class TickerBaseDb
+    public class IndicatorBaseDb
     {
         public int ID { get; set; }
         public int CandleStickId { get; set; }

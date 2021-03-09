@@ -20,8 +20,8 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] high = inputs[0];
-            double[] low = inputs[1];
+            double[] high = inputs[2];
+            double[] low = inputs[3];
             double[] aDown = outputs[0];
             double[] aUp = outputs[1];
 
@@ -105,8 +105,8 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            decimal[] high = inputs[0];
-            decimal[] low = inputs[1];
+            decimal[] high = inputs[2];
+            decimal[] low = inputs[3];
             decimal[] aDown = outputs[0];
             decimal[] aUp = outputs[1];
 

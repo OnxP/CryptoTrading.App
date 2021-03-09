@@ -20,8 +20,8 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] high = inputs[0];
-            double[] low = inputs[1];
+            double[] high = inputs[2];
+            double[] low = inputs[3];
             double[] output = outputs[0];
 
             double per = 2.0 / (period + 1);
@@ -59,8 +59,8 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            decimal[] high = inputs[0];
-            decimal[] low = inputs[1];
+            decimal[] high = inputs[2];
+            decimal[] low = inputs[3];
             decimal[] output = outputs[0];
 
             decimal per = 2m / (period + 1);

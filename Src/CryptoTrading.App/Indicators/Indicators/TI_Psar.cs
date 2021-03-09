@@ -23,8 +23,8 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] high = inputs[0];
-            double[] low = inputs[1];
+            double[] high = inputs[2];
+            double[] low = inputs[3];
             double[] output = outputs[0];
 
             // Try to choose if we start as short or long. There is really no right answer here.
@@ -119,8 +119,8 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            decimal[] high = inputs[0];
-            decimal[] low = inputs[1];
+            decimal[] high = inputs[2];
+            decimal[] low = inputs[3];
             decimal[] output = outputs[0];
 
             // Try to choose if we start as short or long. There is really no right answer here.

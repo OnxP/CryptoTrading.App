@@ -24,9 +24,9 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] high = inputs[0];
-            double[] low = inputs[1];
-            double[] close = inputs[2];
+            double[] high = inputs[2];
+            double[] low = inputs[3];
+            double[] close = inputs[0];
             double[] stoch = outputs[0];
             double[] stochMa = outputs[1];
 
@@ -132,9 +132,9 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            decimal[] high = inputs[0];
-            decimal[] low = inputs[1];
-            decimal[] close = inputs[2];
+            decimal[] high = inputs[2];
+            decimal[] low = inputs[3];
+            decimal[] close = inputs[0];
             decimal[] stoch = outputs[0];
             decimal[] stochMa = outputs[1];
 
