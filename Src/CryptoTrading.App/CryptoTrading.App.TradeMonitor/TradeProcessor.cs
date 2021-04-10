@@ -24,7 +24,16 @@ namespace CryptoTrading.App.Monitor
 
         public IEnumerable<ITrade> LiveTrades => Trades.Where(x => x.Open);
 
-        public IEnumerable<ITradeMonitor> CurrentMonitors => OrderMonitors.Where(x => x.Live);
+        public IEnumerable<ITradeMonitor> CurrentMonitors
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return OrderMonitors.Where(x => x.Live).ToList();
+                }
+            }
+        }
 
         public TradeProcessor(IPositions positions, IMarketMonitorFactory factory)
         {

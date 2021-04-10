@@ -7,15 +7,15 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
 {
     class TrailingStopLimit : IStopLimitTracker
     {
-        private decimal _risk = 0.0198m;
-        private decimal _increment = 0.025m;
+        private decimal _risk = 0.0158m;
+        private decimal _increment = 0.015m;
         private int i = 1;
         private decimal _currentPrice;
         private decimal _boughtPrice;
         public decimal StopLimitPrice { get; private set; }
 
         public decimal TargetPrice { get; private set; }
-        public decimal CurrentPrice { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public decimal CurrentPrice { get => _currentPrice; set => _currentPrice = value; }
 
         public void Configure(Order order)
         {
@@ -45,7 +45,7 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
         {
                 TargetPrice += _boughtPrice * (_increment);
                 StopLimitPrice += _boughtPrice * (_increment);
-                if (i == 3) StopLimitPrice = TargetPrice * (1 - _increment);
+                if (i == 1) StopLimitPrice = TargetPrice * (1 - _increment);
                 i++;
             
         }

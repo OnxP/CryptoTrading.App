@@ -1,10 +1,12 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Rsi : IndicatorBaseDb
     {
-        public decimal RsiValue { get; set; }
+        public double RsiValue { get; set; }
     }
     public class RsiIndicator : RunIndicatorBase<IndicatorContext<Rsi>, Rsi>
     {
@@ -16,7 +18,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Rsi AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Rsi() { CandleStickId = candlestickId, RsiValue = outputs[0] };
+            return new Rsi() { CandleStickId = candlestickId, RsiValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

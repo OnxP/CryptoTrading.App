@@ -1,10 +1,13 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Vwap : IndicatorBaseDb
     {
-        public decimal VwapValue { get; set; }
+        public double Period { get; set; }
+        public double VwapValue { get; set; }
     }
     public class VwapIndicator : RunIndicatorBase<IndicatorContext<Vwap>, Vwap>
     {
@@ -16,7 +19,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Vwap AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Vwap() { CandleStickId = candlestickId, VwapValue = outputs[0] };
+            return new Vwap() { CandleStickId = candlestickId,Period = Convert.ToDouble(options[0]), VwapValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

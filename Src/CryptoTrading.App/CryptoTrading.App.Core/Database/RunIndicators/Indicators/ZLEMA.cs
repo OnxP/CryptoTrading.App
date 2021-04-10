@@ -1,10 +1,14 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class ZlEma : IndicatorBaseDb
     {
-        public decimal ZlEmaValue { get; set; }
+        public double Period { get; set; }
+
+        public double ZlEmaValue { get; set; }
     }
     public class ZlEmaIndicator : RunIndicatorBase<IndicatorContext<ZlEma>, ZlEma>
     {
@@ -16,7 +20,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override ZlEma AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new ZlEma() { CandleStickId = candlestickId, ZlEmaValue = outputs[0] };
+            return new ZlEma() { CandleStickId = candlestickId, ZlEmaValue = Convert.ToDouble(outputs[0]), Period = Convert.ToDouble(options[0]) };
         }
         protected override void SaveContext()
         {

@@ -23,7 +23,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
             var bbands = (Tulip.Indicators.bbands, new double[] { 20,2 });
             var ema = (Tulip.Indicators.ema, new double[] { 100 });
-            var srsi = (Tulip.Indicators.stochrsi, new double[] { 14 });
+            var srsi = (Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
             var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
             dict.Add("sRsi", srsi);
             dict.Add("Rsi", rsi);
@@ -39,17 +39,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var upper = indicatorOutputs["BBands"][2].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
             var rsi = indicatorOutputs["Rsi"][0].ToList();
-            var sRsi = indicatorOutputs["sRsi"][0].ToList();
-
-            var kLine = new List<double>();
-
-            for(int i = 0; i<=sRsi.Count()-3;i++)
-                kLine.Add(sRsi.Skip(i).Take(3).Average());
-
-            var dLine = new List<double>();
-
-            for (int i = 0; i <= kLine.Count() - 3; i++)
-                dLine.Add(kLine.Skip(i).Take(3).Average());
+            var kLine = indicatorOutputs["sRsi"][0].ToList();
+            var dLine = indicatorOutputs["sRsi"][1].ToList();
 
             longEma.Reverse();
 
@@ -58,21 +49,21 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             Log($"BBands - Upper: {upper.Last()}");
             Log($"Long Ema: {longEma.First()}");
             Log($"Rsi: {rsi.Last()}");
-            Log($"SRSI: {sRsi.Last()}");
             Log($"SRSI - K: {kLine.Last()}");
             Log($"SRSI - D: {dLine.Last()}");
             Log($"Close Price: {closePrice}");
 
             // log values
             
-            var condition1 = (double)closePrice.Close <= lower.Last();
-            var condition2 = rsi.Last() < 30;
-            var condition3 = kLine.Last() >= dLine.Last();
-            //var condition4 = sRsi.Last() < 20;
+            var condition1 = ((double)closePrice.Low - lower.Last()) / lower.Last() < 0.001;
+            var condition3 = ((double)closePrice.Close - middle.Last()) / middle.Last() < 0.001;
+            var condition2 = rsi.Last() > 60;
+            var condition4 = kLine.Last() >= dLine.Last();
+            //var condition4 = kLine.Last() <= 20;
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition2 && condition3)
+            if (condition1 && condition2 && condition3 && condition4)
             {
                 LogResult(1);
                 return 1;

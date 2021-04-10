@@ -81,8 +81,15 @@ namespace Tulip
                 sum -= input[i - period] * volume[i - period];
                 vSum += volume[i];
                 vSum -= volume[i - period];
+                if (vSum == 0.0m)
+                {
+                    output[outputIndex++] = 0;
 
-                output[outputIndex++] = sum / vSum;
+                }
+                else
+                {
+                    output[outputIndex++] = sum / vSum;
+                }
             }
 
             return TI_OKAY;

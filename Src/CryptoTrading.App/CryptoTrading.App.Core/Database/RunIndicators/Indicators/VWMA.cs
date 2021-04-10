@@ -1,10 +1,12 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Vwma : IndicatorBaseDb
     {
-        public decimal VwmaValue { get; set; }
+        public double VwmaValue { get; set; }
     }
     public class VwmaIndicator : RunIndicatorBase<IndicatorContext<Vwma>, Vwma>
     {
@@ -16,7 +18,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Vwma AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Vwma() { CandleStickId = candlestickId, VwmaValue = outputs[0] };
+            return new Vwma() { CandleStickId = candlestickId, VwmaValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

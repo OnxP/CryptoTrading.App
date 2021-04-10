@@ -1,10 +1,12 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Cvi : IndicatorBaseDb
     {
-        public decimal CviValue { get; set; }
+        public double CviValue { get; set; }
     }
     public class CviIndicator : RunIndicatorBase<IndicatorContext<Cvi>, Cvi>
     {
@@ -16,7 +18,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Cvi AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Cvi() { CandleStickId = candlestickId, CviValue = outputs[0] };
+            return new Cvi() { CandleStickId = candlestickId, CviValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

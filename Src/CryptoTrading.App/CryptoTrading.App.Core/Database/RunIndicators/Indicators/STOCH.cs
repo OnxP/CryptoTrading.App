@@ -1,11 +1,13 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Stoch : IndicatorBaseDb
     {
-        public decimal StochK { get; set; }
-        public decimal StochD { get; set; }
+        public double StochK { get; set; }
+        public double StochD { get; set; }
     }
     public class StochIndicator : RunIndicatorBase<IndicatorContext<Stoch>, Stoch>
     {
@@ -17,7 +19,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Stoch AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Stoch() { CandleStickId = candlestickId, StochK = outputs[0], StochD = outputs[1] };
+            return new Stoch() { CandleStickId = candlestickId, StochK = Convert.ToDouble(outputs[0]), StochD = Convert.ToDouble(outputs[1])};
         }
         protected override void SaveContext()
         {

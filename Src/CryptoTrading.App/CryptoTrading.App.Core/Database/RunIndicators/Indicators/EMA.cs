@@ -1,11 +1,13 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Ema : IndicatorBaseDb
     {
-        public decimal Period { get; set; }
-        public decimal EmaValue { get; set; }
+        public double Period { get; set; }
+        public double EmaValue { get; set; }
     }
     public class EmaIndicator : RunIndicatorBase<IndicatorContext<Ema>, Ema>
     {
@@ -17,7 +19,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Ema AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Ema() { CandleStickId = candlestickId, Period = options[0], EmaValue = outputs[0] };
+            return new Ema() { CandleStickId = candlestickId, Period = Convert.ToDouble(options[0]), EmaValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

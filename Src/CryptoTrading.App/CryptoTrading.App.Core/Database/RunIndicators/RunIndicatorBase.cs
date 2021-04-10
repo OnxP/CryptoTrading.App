@@ -32,12 +32,13 @@ namespace CryptoTrading.App.Core.Database.Indicators
         {
             //var indicator = Tulip.Indicators.adx;
             decimal[] close_prices = candleStick.Select(x => (decimal)x.Close).ToArray();
-            decimal[] volume = candleStick.Select(x => (decimal)x.Volume).ToArray();
+            decimal[] volume = candleStick.Select(x => x.Volume).ToArray();
             decimal[] high = candleStick.Select(x => (decimal)x.High).ToArray();
             decimal[] low = candleStick.Select(x => (decimal)x.Low).ToArray();
 
             //Find output size and allocate output space.
             int output_length = close_prices.Length - Indicator.Start(options);
+            if (output_length <= 0) return;
 
             decimal[] output = new decimal[output_length];
             decimal[] output1 = new decimal[output_length];
@@ -47,11 +48,11 @@ namespace CryptoTrading.App.Core.Database.Indicators
             decimal[][] outputs = { output, output1, output2 };
             int success = Indicator.Run(inputs, options, outputs);
 
-            candleStick.Reverse();
-            int j = 0;
+            //candleStick.Reverse();
+            int j = candleStick.Count-1;
             for (int i = outputs[0].Length - 1; i >= 0; i--)
             {
-                list.Add(AddToDb(candleStick.Skip(j++).Select(x => x.ID).First(),outputs[0][i], outputs[1][i], outputs[2][i]));
+                list.Add(AddToDb(candleStick.Skip(j--).Select(x => x.ID).First(),outputs[0][i], outputs[1][i], outputs[2][i]));
             }
 
             SaveContext();

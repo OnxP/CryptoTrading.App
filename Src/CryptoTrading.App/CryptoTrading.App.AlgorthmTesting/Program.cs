@@ -110,7 +110,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             marketData.From = new DateTime(2021, 01, 14,00,00,00);
             List<Symbol> symbols = new List<Symbol>()
             {
-                //Symbol.ETH_BTC,
+                Symbol.ETH_BTC,
                 //Symbol.BTC_USDT,
                 //Symbol.LTC_BTC,
                 //Symbol.BNB_BTC,
@@ -122,7 +122,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                 ////Symbol.DOGE_BTC,
                 //Symbol.LINK_BTC,
                 //Symbol.QTUM_BTC,
-                Symbol.XLM_BTC,
+                //Symbol.XLM_BTC,
                 //Symbol.ONT_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()

@@ -1,11 +1,12 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
 using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Adx : IndicatorBaseDb
     {
-        public decimal AdxValue { get; set; }
+        public double AdxValue { get; set; }
     }
     public class AdxIndicator : RunIndicatorBase<IndicatorContext<Adx>, Adx>
     {
@@ -18,7 +19,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Adx AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Adx() { CandleStickId = candlestickId, AdxValue = outputs[0] };
+            return new Adx() { CandleStickId = candlestickId, AdxValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

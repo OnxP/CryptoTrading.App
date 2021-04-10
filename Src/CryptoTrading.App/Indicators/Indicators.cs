@@ -23,6 +23,7 @@ namespace Tulip
             { nameof(atr), new Indicator("Atr", "Average True Range", "high|low|close", "period", nameof(atr)) },
             { nameof(avgprice), new Indicator("AvgPrice", "Average Price", "open|high|low|close", String.Empty, nameof(avgprice)) },
             { nameof(bbands), new Indicator("Bbands", "Bollinger Bands", "real", "period|stddev", "bbands_lower|bbands_middle|bbands_upper") },
+            { nameof(dc), new Indicator("Dc", "Donchain Channel", "high|low|close", "period", "lower_line|intermidiate_line|top_line") },
             { nameof(bop), new Indicator("Bop", "Balance of Power", "open|high|low|close", String.Empty, nameof(bop)) },
             { nameof(cci), new Indicator("Cci", "Commodity Channel Index", "high|low|close", "period", nameof(cci)) },
             { nameof(ceil), new Indicator("Ceil", "Vector Ceiling", "real", String.Empty, nameof(ceil)) },
@@ -56,6 +57,7 @@ namespace Tulip
             { nameof(ln), new Indicator("Ln", "Vector Natural Log", "real", String.Empty, nameof(ln)) },
             { nameof(log10), new Indicator("Log10", "Vector Base-10 Log", "real", String.Empty, nameof(log10)) },
             { nameof(macd), new Indicator("Macd", "Moving Average Convergence/Divergence", "real", "short period|long period|signal period", "macd|macd_signal|macd_histogram") },
+            { nameof(wacd), new Indicator("Wacd", "Weighted Average Convergence/Divergence", "real", "short period|long period|signal period", "wacd|wacd_signal|wacd_histogram") },
             { nameof(marketfi), new Indicator("MarketFi", "Market Facilitation Index", "high|low|volume", String.Empty, nameof(marketfi)) },
             { nameof(mass), new Indicator("Mass", "Mass Index", "high|low", "period", nameof(mass)) },
             { nameof(max), new Indicator("Max", "Maximum In Period", "real", "period", nameof(max)) },
@@ -85,6 +87,7 @@ namespace Tulip
             { nameof(stderr), new Indicator("StdErr", "Standard Error Over Period", "real", "period", nameof(stderr)) },
             { nameof(stoch), new Indicator("Stoch", "Stochastic Oscillator", "high|low|close", "%k period|%k slowing period|%d period", "stoch_k|stoch_d") },
             { nameof(stochrsi), new Indicator("StochRsi", "Stochastic RSI", "real", "period", nameof(stochrsi)) },
+            { nameof(stochrsi2), new Indicator("StochRsi2", "Stochastic RSI2", "real", "%rsi Period|%k period|%k slowing period|%d period",  "stoch_k|stoch_d") },
             { nameof(sub), new Indicator("Sub", "Vector Subtraction", "real|real", String.Empty, nameof(sub)) },
             { nameof(sum), new Indicator("Sum", "Sum Over Period", "real", "period", nameof(sum)) },
             { nameof(tan), new Indicator("Tan", "Vector Tangent", "real", String.Empty, nameof(tan)) },
@@ -145,6 +148,7 @@ namespace Tulip
         public static Indicator avgprice = IndicatorsDefinition[nameof(avgprice)];
 
         public static Indicator bbands = IndicatorsDefinition[nameof(bbands)];
+        public static Indicator dc = IndicatorsDefinition[nameof(dc)];
 
         public static Indicator bop = IndicatorsDefinition[nameof(bop)];
 
@@ -212,6 +216,8 @@ namespace Tulip
 
         public static Indicator macd = IndicatorsDefinition[nameof(macd)];
 
+        public static Indicator wacd = IndicatorsDefinition[nameof(wacd)];
+
         public static Indicator marketfi = IndicatorsDefinition[nameof(marketfi)];
 
         public static Indicator mass = IndicatorsDefinition[nameof(mass)];
@@ -269,6 +275,7 @@ namespace Tulip
         public static Indicator stoch = IndicatorsDefinition[nameof(stoch)];
 
         public static Indicator stochrsi = IndicatorsDefinition[nameof(stochrsi)];
+        public static Indicator stochrsi2 = IndicatorsDefinition[nameof(stochrsi2)];
 
         public static Indicator sub = IndicatorsDefinition[nameof(sub)];
 

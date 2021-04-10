@@ -1,10 +1,12 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class AroonOsc : IndicatorBaseDb
     {
-        public decimal AroonOscValue { get; set; }
+        public double AroonOscValue { get; set; }
     }
     public class AroonOscIndicator : RunIndicatorBase<IndicatorContext<AroonOsc>, AroonOsc>
     {
@@ -16,7 +18,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override AroonOsc AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new AroonOsc() { CandleStickId = candlestickId, AroonOscValue = outputs[0] };
+            return new AroonOsc() { CandleStickId = candlestickId, AroonOscValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

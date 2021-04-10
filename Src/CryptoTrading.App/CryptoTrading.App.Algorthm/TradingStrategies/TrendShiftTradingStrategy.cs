@@ -69,13 +69,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             //Up Trend Conditions
 
             var condition1 = macd.Last() >= signal.Last();
-            var condition3 = rsi.Last() < 70;
-            var condition2 = kLine.Last() < 0.8;
+            var condition3 = rsi.Last() > 60;
+            //var condition2 = kLine.Last() < 0.8;
             var condition4 = kLine.Last() > dLine.Last();
-            var condition5 = adx.First() < 20;
+            var condition5 = adx.First() > 20;
             var condition6 = adx.First() > adx.Skip(1).First();
             var condition7 = adx.Skip(1).First() > adx.Skip(2).First();
-            if (condition1 && condition2 && condition3 && condition4 )
+            if (condition1 && condition3 && condition4 )
             {
                 if (condition5 && condition6 && condition7)
                 {
@@ -83,7 +83,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                     return 1;
                 }
 
-                if(closePrice.Close > (decimal)vwap.Last() && adx.First() < 40)
+                if(closePrice.Close > (decimal)vwap.Last() && adx.First() > 20)
                 {
                     LogResult(1);
                     return 1;

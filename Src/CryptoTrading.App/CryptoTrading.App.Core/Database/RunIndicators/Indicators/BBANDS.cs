@@ -1,12 +1,14 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Bbands : IndicatorBaseDb
     {
-        public decimal Lower { get; set; }
-        public decimal Middle { get; set; }
-        public decimal Upper { get; set; }
+        public double Lower { get; set; }
+        public double Middle { get; set; }
+        public double Upper { get; set; }
     }
     public class BbandsIndicator : RunIndicatorBase<IndicatorContext<Bbands>, Bbands>
     {
@@ -18,7 +20,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Bbands AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Bbands() { CandleStickId = candlestickId, Lower = outputs[0], Middle = outputs[1], Upper = outputs[2] };
+            return new Bbands() { CandleStickId = candlestickId, Lower = Convert.ToDouble(outputs[0]), Middle = Convert.ToDouble(outputs[1]), Upper = Convert.ToDouble(outputs[2]) };
         }
         protected override void SaveContext()
         {

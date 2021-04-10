@@ -1,11 +1,13 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Aroon : IndicatorBaseDb
     {
-        public decimal Up { get; set; }
-        public decimal Down { get; set; }
+        public double Up { get; set; }
+        public double Down { get; set; }
     }
     public class AroonIndicator : RunIndicatorBase<IndicatorContext<Aroon>, Aroon>
     {
@@ -16,8 +18,8 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
         }
 
         protected override Aroon AddToDb(int candlestickId, params decimal[] outputs)
-        {
-            return new Aroon() { CandleStickId = candlestickId, Up = outputs[0], Down = outputs[1] };
+        {//need to re run this indicator for queries to work.
+            return new Aroon() { CandleStickId = candlestickId, Down = Convert.ToDouble(outputs[0]), Up = Convert.ToDouble(outputs[1]) };
         }
         protected override void SaveContext()
         {

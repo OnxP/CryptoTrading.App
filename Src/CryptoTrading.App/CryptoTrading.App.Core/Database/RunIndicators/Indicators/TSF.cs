@@ -1,10 +1,12 @@
-﻿using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+﻿using CryptoTrading.App.Core.Database.Indicators;
+using System;
+using Tulip;
 
 namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 {
     public class Tsf : IndicatorBaseDb
     {
-        public decimal TsfValue { get; set; }
+        public double TsfValue { get; set; }
     }
     public class TsfIndicator : RunIndicatorBase<IndicatorContext<Tsf>, Tsf>
     {
@@ -16,7 +18,7 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
 
         protected override Tsf AddToDb(int candlestickId, params decimal[] outputs)
         {
-            return new Tsf() { CandleStickId = candlestickId, TsfValue = outputs[0] };
+            return new Tsf() { CandleStickId = candlestickId, TsfValue = Convert.ToDouble(outputs[0]) };
         }
         protected override void SaveContext()
         {

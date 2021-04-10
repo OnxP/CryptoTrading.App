@@ -17,7 +17,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    <PackageReference Include="Z.EntityFramework.Extensions" Version="5.1.19" />
+    <PackageReference Include="Z.EntityFramework.Extensions" Version="5.1.30" />
   </ItemGroup>
 
   <ItemGroup>
