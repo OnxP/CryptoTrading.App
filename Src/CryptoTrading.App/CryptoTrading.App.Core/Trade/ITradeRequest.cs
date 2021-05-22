@@ -10,5 +10,6 @@ namespace CryptoTrading.App.Core.Trade
         decimal SellAmount { get; set; }
         decimal Price { get; }
         DateTime? RequestDateTime { get; set; }
+        IStopLimitTracker StopLimitTracker { get; set; }
     }
 }

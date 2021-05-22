@@ -37,8 +37,8 @@ namespace Tulip
             double upperVal = default;
             for (var i = period; i < size; ++i)
             {
-                upperVal = high.Skip(i - period).Max();
-                lowerVal = low.Skip(i - period).Min();
+                upperVal = high.Skip(i - period).Take(period).Max();
+                lowerVal = low.Skip(i - period).Take(period).Min();
 
                 upper[upperIndex++] = upperVal;
                 lower[lowerIndex++] = lowerVal;
@@ -77,8 +77,8 @@ namespace Tulip
             decimal upperVal = default;
             for (var i = period; i < size; ++i)
             {
-                upperVal = high.Skip(i - period).Max();
-                lowerVal = low.Skip(i - period).Min();
+                upperVal = high.Skip(i - period).Take(period).Max();
+                lowerVal = low.Skip(i - period).Take(period).Min();
 
                 upper[upperIndex++] = upperVal;
                 lower[lowerIndex++] = lowerVal;

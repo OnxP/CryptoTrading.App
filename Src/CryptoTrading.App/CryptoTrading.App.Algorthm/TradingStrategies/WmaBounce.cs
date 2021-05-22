@@ -6,9 +6,9 @@ using Tulip;
 
 namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
-    public class MacdTradingStrategy : TradingStrategy
+    public class WmaBounce : TradingStrategy
     {
-        public MacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public WmaBounce(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
@@ -80,12 +80,12 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             mediumWma.Reverse();
             longWma.Reverse();
 
-            var condition10 = EmaBounce(shortWma, closePrice) || EmaBounce(mediumWma, closePrice) || EmaBounce(longWma,closePrice);
+            var condition10 = EmaBounce(shortWma, closePrice) && EmaBounce(mediumWma, closePrice) && EmaBounce(longWma,closePrice) && closePrice.Open < closePrice.Close;
 
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-             if (condition1 && condition2 && condition3 && (condition4 || condition5) && condition10)
+             if (condition10)
             {
                 LogResult(1);
                 return 1;
@@ -108,10 +108,11 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             {
                 return false;
             }
+            var close = (double)closePrice.Close > wma.First();
             var bounce = (double)closePrice.Low < wma.First() && (double)closePrice.Close > wma.First();
-            var previousPassThrough = (double)lastClose.Close < wma.Skip(1).First() && (double)lastClose.Open > wma.Skip(1).First();
+            var previousPassThrough = (double)lastClose.Close < wma.Skip(1).First() && (double)lastClose.High > wma.Skip(1).First();
             lastClose = closePrice;
-            return bounce && previousPassThrough;
+            return bounce && !previousPassThrough && close;
         }
         public Candlestick lastClose;
     }

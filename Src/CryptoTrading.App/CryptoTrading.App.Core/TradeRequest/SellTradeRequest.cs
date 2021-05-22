@@ -12,5 +12,6 @@ namespace CryptoTrading.App.Core.TradeRequest
 
         public decimal Price { get; set; }
         public DateTime? RequestDateTime { get; set; }
+        public IStopLimitTracker StopLimitTracker { get; set; }
     }
 }

@@ -25,7 +25,7 @@ namespace CryptoTrading.App.MarketData
 
         CryptoDBContext context;
 
-        private string SQL_HISTORIC_QUERY = @"SELECT Top 100 [ID]
+        private string SQL_HISTORIC_QUERY = @"SELECT Top 200 [ID]
       ,[Symbol]
       ,[Interval]
       ,[OpenTime]

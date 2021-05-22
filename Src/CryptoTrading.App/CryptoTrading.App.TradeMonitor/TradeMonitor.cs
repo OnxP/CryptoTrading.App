@@ -16,16 +16,15 @@ namespace CryptoTrading.App.Monitor
     //The trade is considered to be live if there are open transactions
     class TradeMonitor : ITradeMonitor
     {
-        public TradeMonitor(IMarketMonitor monitor, IStopLimitTracker tracker)
+        public TradeMonitor(IMarketMonitor monitor)
         {
-            Tracker = tracker;
             marketMonitor = monitor;
         }
 
         public ITrade Trade { get; set; }
         public decimal CurrentStopLimit { get; set; }
         public IMarketMonitor marketMonitor { get; set; }
-        public IStopLimitTracker Tracker { get; set; }
+        public IStopLimitTracker Tracker => Trade.StopLimitTracker;
 
         public DateTime currentCloseTime { get; set; }
 

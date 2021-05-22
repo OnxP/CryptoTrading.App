@@ -1,9 +1,10 @@
 ﻿using Binance;
+using CryptoTrading.App.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CryptoTrading.App.Monitor.StopLimitTracker
+namespace CryptoTrading.App.Algorthm.StopLimits
 {
     class FixedProfitStopLimit : IStopLimitTracker
     {

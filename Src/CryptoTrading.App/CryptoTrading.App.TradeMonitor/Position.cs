@@ -27,7 +27,7 @@ namespace CryptoTrading.App.Monitor
             {
                 lock (_lock)
                 {
-                    return _legs.Where(x => x.Status == TransactionLegStatus.Completed).Sum(x => x.Quantity);
+                    return _legs.Where(x => x.Status == TransactionLegStatus.Completed || (x.Status == TransactionLegStatus.Pending && x.Quantity<0)).Sum(x => x.Quantity);
                 }
             }
         }

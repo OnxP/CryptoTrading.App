@@ -2,7 +2,6 @@
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Monitor.StopLimitTracker;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Monitor
@@ -29,11 +28,7 @@ namespace CryptoTrading.App.Monitor
             services.AddSingleton<ITradeFactory, TestTradeFactory>();
             services.AddTransient<ITradeMonitor, TradeMonitor>();
             services.AddSingleton<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
-            services.AddTransient<IStopLimitTracker, FixedTrailingStopLimit>();
             services.AddSingleton<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
-
-
-
             return services;
         }
     }

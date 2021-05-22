@@ -14,6 +14,7 @@ namespace CryptoTrading.App.Core.Trade
             SellPosition = sellPosition;
             FeePosition = feePosition;
             Transactions = new List<ITransaction>();
+            StopLimitTracker = request.StopLimitTracker;
             CreateNewTransaction(request);
         }
         public ITransaction CurrentTransaction => Transactions.Last();
@@ -46,6 +47,8 @@ namespace CryptoTrading.App.Core.Trade
         public DateTime StartDate => Transactions.First().TransactionDate;
 
         public DateTime CloseDate => CurrentTransaction.TransactionDate;
+
+        public IStopLimitTracker StopLimitTracker { get; set; }
 
         public void CancelCurrentTransaction()
         {

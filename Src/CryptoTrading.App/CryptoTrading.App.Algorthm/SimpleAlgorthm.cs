@@ -4,6 +4,7 @@ using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Message_Broker;
+using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,10 +19,12 @@ namespace CryptoTrading.App.Algorthm
         public int NumberOfCandleSticksToKeep => tradingStrategies.OutputLength;
         private OrderedFixedLengthList<Candlestick> _candleSticks;
         public ITradingStrategy tradingStrategies;
-        public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger)
+        public IStopLimitTracker StopLimitTrackers { get; set; } 
+        public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger, IStopLimitTracker stopLimitTrackers)
         { 
             tradingStrategies = strategies;
             _candleSticks = new OrderedFixedLengthList<Candlestick>(NumberOfCandleSticksToKeep);
+            StopLimitTrackers = stopLimitTrackers;
             Logger = logger;
         }
 
@@ -43,14 +46,13 @@ namespace CryptoTrading.App.Algorthm
         {
             _candleSticks.Add(candlestickEventArgs.Candlestick);
             Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-            var result = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
+            var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
             Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-            if (result <= 0) return;
-            var request = RequestBuilder.BuildTradeRequest(result/4, candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Close, candlestickEventArgs.Candlestick.CloseTime);
+            if (request.SellPercentage <= 0) return;
             MessageBroker.Instance.Publish(this, request);
         }
 
-        public double CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)
+        public ITradeRequest CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)
         {
             double result = 0;
 
@@ -62,8 +64,10 @@ namespace CryptoTrading.App.Algorthm
             tradingStrategies.Log($"CloseTime: {closeTime}");
 
             result = tradingStrategies.Calculate(_candleSticks);
-                //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
-            return result;
+            //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
+            var request = RequestBuilder.BuildTradeRequest(result, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers);
+
+            return request;
         }
     }
 }

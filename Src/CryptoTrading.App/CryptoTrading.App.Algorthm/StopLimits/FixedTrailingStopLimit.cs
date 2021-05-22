@@ -1,9 +1,10 @@
 ﻿using Binance;
+using CryptoTrading.App.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CryptoTrading.App.Monitor.StopLimitTracker
+namespace CryptoTrading.App.Algorthm.StopLimits
 {
     class FixedTrailingStopLimit : IStopLimitTracker
     {
@@ -26,7 +27,7 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
             TargetPrice = _boughtPrice * _fixed;
 
             //when the price is small, where a single sitoshi becomes more that 1% the risk and increments need to be adjusted.
-            while (Math.Round(_boughtPrice, 9) == Math.Round(TargetPrice,9))
+            while (Math.Round(_boughtPrice, 9) == Math.Round(TargetPrice, 9))
             {
                 _fixed += _increment;
                 _risk += _increment;
@@ -43,18 +44,18 @@ namespace CryptoTrading.App.Monitor.StopLimitTracker
 
         public void MoveStopLimit()
         {
-                
+
             if (i == 1)
             {
-                StopLimitPrice = CurrentPrice - (CurrentPrice * _increment);
-                TargetPrice += CurrentPrice * (_increment);
+                StopLimitPrice = CurrentPrice - _boughtPrice * _increment;
+                TargetPrice += CurrentPrice * _increment;
             }
             else
             {
-                TargetPrice += _boughtPrice * (_increment);
-                StopLimitPrice += _boughtPrice * (_increment);
+                TargetPrice += _boughtPrice * _increment;
+                StopLimitPrice += _boughtPrice * _increment;
             }
-            i++;            
+            i++;
         }
     }
 }

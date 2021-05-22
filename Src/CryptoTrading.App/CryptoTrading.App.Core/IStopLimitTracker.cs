@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CryptoTrading.App.Monitor
+namespace CryptoTrading.App.Core
 {
     public interface IStopLimitTracker
     {

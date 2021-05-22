@@ -111,23 +111,23 @@ namespace CryptoTrading.App.AlgorthmTesting
             List<Symbol> symbols = new List<Symbol>()
             {
                 Symbol.ETH_BTC,
-                //Symbol.BTC_USDT,
-                //Symbol.LTC_BTC,
-                //Symbol.BNB_BTC,
-                //Symbol.EOS_BTC,
-                //Symbol.SYS_BTC,
-                ////Symbol.TRX_BTC,
-                //Symbol.XRP_BTC ,
-                //Symbol.ADA_BTC,
-                ////Symbol.DOGE_BTC,
-                //Symbol.LINK_BTC,
-                //Symbol.QTUM_BTC,
-                //Symbol.XLM_BTC,
-                //Symbol.ONT_BTC
+                Symbol.BTC_USDT,
+                Symbol.LTC_BTC,
+                Symbol.BNB_BTC,
+                Symbol.EOS_BTC,
+                Symbol.SYS_BTC,
+                //Symbol.TRX_BTC,
+                Symbol.XRP_BTC ,
+                Symbol.ADA_BTC,
+                //Symbol.DOGE_BTC,
+                Symbol.LINK_BTC,
+                Symbol.QTUM_BTC,
+                Symbol.XLM_BTC,
+                Symbol.ONT_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
-                CandlestickInterval.Minutes_15
+                CandlestickInterval.Minutes_30
             };
             AddEvents(marketData as AbstractMarketData, symbols, intervals, services);
         }

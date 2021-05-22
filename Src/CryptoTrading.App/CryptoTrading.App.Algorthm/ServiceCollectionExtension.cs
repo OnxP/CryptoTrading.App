@@ -1,4 +1,6 @@
-﻿using CryptoTrading.App.Algorthm.TradingStrategies;
+﻿using CryptoTrading.App.Algorthm.StopLimits;
+using CryptoTrading.App.Algorthm.TradingStrategies;
+using CryptoTrading.App.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,10 +13,11 @@ namespace CryptoTrading.App.Algorthm
     {
         public static IServiceCollection AddAlgorthm(this IServiceCollection services)
         {
-            services.AddTransient<ITradingStrategy, MacdTradingStrategy>();
+            services.AddTransient<ITradingStrategy, MovingAverangeTradingStrategy>();
 
             services.AddTransient<IAlgorthm, SimpleAlgorthm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
+            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
 
             return services;
         }

@@ -18,7 +18,7 @@ namespace CryptoTrading.App.Monitor
         public IPositions Positions { get; set; }
         private IMarketMonitorFactory TradeFactory {get;set;}
 
-        private static readonly object _lock = new object();
+        private readonly object _lock = new object();
         public List<ITrade> Trades { get; set; }
         public List<ITradeMonitor> OrderMonitors { get; set; }
 
