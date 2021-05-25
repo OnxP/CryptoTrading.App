@@ -8,11 +8,18 @@ namespace CryptoTrading.App.Algorthm.StopLimits
 {
     class TrailingStopLimit : IStopLimitTracker
     {
-        private decimal _risk = 2.48m / 100m;
+        private decimal _risk = 3.48m / 100m;
         private decimal _increment = 1.52m / 100m;
         private int i = 1;
         private decimal _currentPrice;
         private decimal _boughtPrice;
+
+        public TrailingStopLimit(decimal risk, decimal increment)
+        {
+            _risk = risk;
+            _increment = increment;
+        }
+
         public decimal StopLimitPrice { get; private set; }
 
         public decimal TargetPrice { get; private set; }

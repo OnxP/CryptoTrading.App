@@ -21,7 +21,7 @@ namespace CryptoTrading.App.MarketData
     public class HistoricalMarketData : AbstractMarketData, IMarketData
     {
         public DateTime From { get; set; }
-        DateTime To { get; set; }
+        public DateTime To { get; set; }
 
         ICandlestickClient _client;
         IBinanceWebSocketStream _webSocket;

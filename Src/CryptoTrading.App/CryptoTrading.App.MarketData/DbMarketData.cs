@@ -25,7 +25,7 @@ namespace CryptoTrading.App.MarketData
 
         CryptoDBContext context;
 
-        private string SQL_HISTORIC_QUERY = @"SELECT Top 200 [ID]
+        private string SQL_HISTORIC_QUERY = @"SELECT DISTINCT Top 300 [ID]
       ,[Symbol]
       ,[Interval]
       ,[OpenTime]
@@ -40,26 +40,25 @@ namespace CryptoTrading.App.MarketData
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime >= @p0 AND Symbol=@p1 AND Interval=@p2
+  WHERE OpenTime < @p0 AND Symbol=@p2 AND Interval=@p3
+  ORDER BY OpenTime desc";
+        private string SQL_STREAM_QUERY = @"SELECT DISTINCT [ID]
+      ,[Symbol]
+      ,[Interval]
+      ,[OpenTime]
+      ,[Open]
+      ,[High]
+      ,[Low]
+      ,[Close]
+      ,[Volume]
+      ,[CloseTime]
+      ,[QuoteAssetVolume]
+      ,[NumberOfTrades]
+      ,[TakerBuyBaseAssetVolume]
+      ,[TakerBuyQuoteAssetVolume]
+  FROM [dbo].[CandleStickDbs]
+  WHERE OpenTime >= @p0 openTime <= @p1 AND Symbol=@p1 AND Interval=@p2
   ORDER BY OpenTime";
-        private string SQL_STREAM_QUERY = @"SELECT [ID]
-      ,[Symbol]
-      ,[Interval]
-      ,[OpenTime]
-      ,[Open]
-      ,[High]
-      ,[Low]
-      ,[Close]
-      ,[Volume]
-      ,[CloseTime]
-      ,[QuoteAssetVolume]
-      ,[NumberOfTrades]
-      ,[TakerBuyBaseAssetVolume]
-      ,[TakerBuyQuoteAssetVolume]
-  FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime >= @p0 AND Symbol=@p1 AND Interval=@p2
-  ORDER BY OpenTime
-OFFSET 100 ROWS";
 
         public override void Configure(IRequest request)
         {
@@ -88,7 +87,7 @@ OFFSET 100 ROWS";
             foreach (var item in subscribers)
             {
                 int interval = (int)item.Key.interval;
-                var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, From, item.Key.symbol, interval).ToListAsync().Result;
+                var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, From, To, item.Key.symbol, interval).ToListAsync().Result;
                 candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), item.Key.interval)));
             }
 

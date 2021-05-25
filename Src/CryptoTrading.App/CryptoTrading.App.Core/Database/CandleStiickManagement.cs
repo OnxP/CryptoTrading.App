@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -39,6 +40,11 @@ namespace CryptoTrading.App.Core.Database
         public DateTime CurrentTick
         {
             get { return timeKeeper[_index];} 
+        }
+
+        public DateTime FinalTick
+        {
+            get { return timeKeeper.Last().Value; }
         }
 
 

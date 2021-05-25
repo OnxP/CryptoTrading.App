@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tulip;
 
 namespace CryptoTrading.App.Algorthm
 {
@@ -21,6 +22,19 @@ namespace CryptoTrading.App.Algorthm
 
             return services;
         }
+
+        public static IServiceCollection AddAlgorthm(this IServiceCollection services, Indicator stratgy, double NoOfTrades, decimal Risk, decimal Increment)
+        {
+            services.AddTransient<ITradingStrategy, MovingAverangeTradingStrategy>(provider => 
+            new MovingAverangeTradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), stratgy, NoOfTrades));
+
+            services.AddTransient<IAlgorthm, SimpleAlgorthm>();
+            services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
+            services.AddTransient<IStopLimitTracker, TrailingStopLimit>(provider=> new TrailingStopLimit(Risk,Increment));
+
+            return services;
+        }
+
 
         public static void AddComposite<TInterface, TConcrete>(this IServiceCollection services)
   where TInterface : class

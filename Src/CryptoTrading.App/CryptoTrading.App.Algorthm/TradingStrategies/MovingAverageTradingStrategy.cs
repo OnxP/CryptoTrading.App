@@ -12,17 +12,24 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         {
         }
 
-        protected override double StrategyWeight => 0.250;
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, Indicator stratgy, double NoOfTrades):this(logger)
+        {
+            indicator = stratgy;
+            noOfTrades = NoOfTrades;
+        }
 
+        protected override double StrategyWeight => 1.0d/ noOfTrades;
+        private double noOfTrades = 1d;
 
+        private Indicator indicator = Tulip.Indicators.kama;
         //public override int OutputLength => 1000;
 
         protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
         {
             var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
-            dict.Add("25", (Tulip.Indicators.dema, new double[] { 25 }));
-            dict.Add("50", (Tulip.Indicators.dema, new double[] { 50 }));
-            dict.Add("100", (Tulip.Indicators.dema, new double[] { 100 }));
+            dict.Add("25", (indicator, new double[] { 25 }));
+            dict.Add("50", (indicator, new double[] { 50 }));
+            dict.Add("100", (indicator, new double[] { 100 }));
             //dict.Add("200", (Tulip.Indicators.ema, new double[] { 200 }));
             return dict;
         }
@@ -42,7 +49,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             if (condition1 && condition2)
             {
                 LogResult(1);
-                //return StrategyWeight;
+                return StrategyWeight;
             }
             //check if long is trading sideways, need more entries to determin that!
 
