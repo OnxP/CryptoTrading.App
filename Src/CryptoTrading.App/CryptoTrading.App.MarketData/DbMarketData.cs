@@ -40,7 +40,7 @@ namespace CryptoTrading.App.MarketData
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime < @p0 AND Symbol=@p2 AND Interval=@p3
+  WHERE OpenTime < @p0 AND Symbol=@p1 AND Interval=@p2
   ORDER BY OpenTime desc";
         private string SQL_STREAM_QUERY = @"SELECT DISTINCT [ID]
       ,[Symbol]
@@ -57,7 +57,7 @@ namespace CryptoTrading.App.MarketData
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime >= @p0 openTime <= @p1 AND Symbol=@p1 AND Interval=@p2
+  WHERE OpenTime >= @p0 AND openTime <= @p1 AND Symbol=@p2 AND Interval=@p3
   ORDER BY OpenTime";
 
         public override void Configure(IRequest request)
@@ -127,16 +127,19 @@ namespace CryptoTrading.App.MarketData
                 LoadHistoricData( item.Key, From, item.Value);
             }
         }
-        private void LoadHistoricData((string symbol, CandlestickInterval interval) symbol, DateTime from, Action<IEnumerable<Candlestick>> callback)
+        private void LoadHistoricData((string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             int interval = (int)symbol.interval;
             var candleSticks = context.CandleSticks.SqlQuery(SQL_HISTORIC_QUERY, from, symbol.symbol, interval).ToListAsync().Result;
-
+            var cs = candleSticks.OrderBy(x => x.OpenTime).ToList();
             //need to drop first candle
             //candleSticks.Reverse();
             List<Candlestick> sticks = new List<Candlestick>();
-            candleSticks.ForEach(x => sticks.Add(CandleStickDb.ConvertObject(x)));
-            callback.Invoke(sticks);
+            cs.ForEach(x => sticks.Add(CandleStickDb.ConvertObject(x)));
+            foreach (var action in callback)
+            {
+                action.Invoke(sticks);
+            }
         }
     }
 }

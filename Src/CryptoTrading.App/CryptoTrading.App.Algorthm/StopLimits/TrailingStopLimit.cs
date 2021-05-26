@@ -16,8 +16,8 @@ namespace CryptoTrading.App.Algorthm.StopLimits
 
         public TrailingStopLimit(decimal risk, decimal increment)
         {
-            _risk = risk;
-            _increment = increment;
+            _risk = risk / 100m;
+            _increment = increment / 100m;
         }
 
         public decimal StopLimitPrice { get; private set; }

@@ -73,7 +73,7 @@ namespace CryptoTrading.App.Monitor
             
             IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
             request.StopPrice = Tracker.StopLimitPrice;
-            MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
+            MessageBroker.Instance.Publish(KeyValue,Trade.CurrentTransaction, request);
         }
 
         private void CancelLimitOrder()
@@ -81,12 +81,14 @@ namespace CryptoTrading.App.Monitor
             //Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
 
             ICancelRequest request = new CancelRequest(Trade.CurrentTransaction.Order.Id, Trade.Symbol);
-            MessageBroker.Instance.Publish(Trade.CurrentTransaction, request);
+            MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, request);
         }
 
         public bool Live => Trade.Open;
 
         public string Symbol => Trade.Symbol;
+
+        public string KeyValue { get; set; }
 
         public void CancelLimitOrder(string order)
         {

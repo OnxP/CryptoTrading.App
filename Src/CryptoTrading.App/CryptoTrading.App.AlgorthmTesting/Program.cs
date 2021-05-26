@@ -32,6 +32,15 @@ namespace CryptoTrading.App.AlgorthmTesting
             var risks = new List<decimal>() {4.0m,3.5m,3.0m,2.5m,2.0m };
             var increments = new List<decimal>() {2.0m,1.5m,1.0m };
             var tasks = new List<Task>();
+
+            var services = new ServiceCollection()
+                    .AddDbMarketData()
+                    .AddTradingCore()
+                    .BuildServiceProvider();
+
+            var marketData = services.GetService<IMarketData>();
+
+
             foreach (var strat in strats)
             {
                 foreach (var noOfTrade in noOfTrades)
@@ -40,35 +49,32 @@ namespace CryptoTrading.App.AlgorthmTesting
                     {
                         foreach (var increment in increments)
                         {
-                            var task = CreateTask(strat, noOfTrade, risk, increment);
-                            tasks.Add(task);
+                            tasks.Add(CreateTask(strat, noOfTrade, risk, increment,marketData, services));
+                            
                         }
                     }
                 }
             }
-
-            for (int i = 0; i < tasks.Count(); i=+15)
+            marketData.StartStream();
+            foreach (var task in tasks)
             {
-                var tasksToExecute = tasks.Skip(i).Take(15);
-                foreach (Task taskToExecute in tasks)
-                {
-                    taskToExecute.Start();
-                }
-                Task.WaitAll(tasksToExecute.ToArray());
+                task.Start();
             }
 
+            Task.WaitAll(tasks.ToArray());
             Console.WriteLine("Complete");
         }
 
-        private static Task CreateTask(Indicator strat, double noOfTrade, decimal risk, decimal increment)
+        private static Task CreateTask(Indicator strat, double noOfTrade, decimal risk, decimal increment,IMarketData marketData, ServiceProvider services)
         {
             var run = new RunContext();
             run.stratgy = strat;
             run.NoOfTrades = noOfTrade;
             run.Risk = risk;
             run.Increment = increment;
-
-            return new Task(run.RunApp);
+            run.marketData = marketData;
+            run.RunApp(services);
+            return new Task(run.CompleteApp);
         }
     }
 }

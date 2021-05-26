@@ -22,15 +22,19 @@ namespace CryptoTrading.App.MarketData
         }
 
 
-        protected IDictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>> historicDataSubscribers = 
-            new Dictionary<(string symbol, CandlestickInterval interval), Action<IEnumerable<Candlestick>>>();
+        protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>> historicDataSubscribers = 
+            new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>>();
         protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> subscribers = 
             new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>>();
         //public events 
 
         public void InitialDataLoadSubscribe(string symbol, CandlestickInterval interval, Action<IEnumerable<Candlestick>> callback)
         {
-            historicDataSubscribers.Add((symbol, interval), callback);
+            if (!historicDataSubscribers.ContainsKey((symbol, interval)))
+            {
+                historicDataSubscribers.Add((symbol, interval), new List<Action<IEnumerable<Candlestick>>>());
+            }
+            historicDataSubscribers[(symbol, interval)].Add(callback);
         }
         public void InitialDataLoadUnSubscribe(string symbol, CandlestickInterval interval)
         {

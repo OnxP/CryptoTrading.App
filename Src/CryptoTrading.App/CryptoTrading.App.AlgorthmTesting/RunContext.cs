@@ -34,7 +34,12 @@ namespace CryptoTrading.App.AlgorthmTesting
         public double NoOfTrades { get; set; }
         public decimal Risk { get; set; }
         public decimal Increment { get; set; }
-        public void RunApp()
+        public IMarketData marketData { get; set; }
+        public ITradeProcessor tradeMonitor { get; set; }
+        public string Key => stratgy.FullName + NoOfTrades + Risk + Increment;
+
+        private IServiceScope _scope;
+        public void RunApp(ServiceProvider masterServices)
         {
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
             AddPosition("ETH", dictionaryPositions);
@@ -59,24 +64,28 @@ namespace CryptoTrading.App.AlgorthmTesting
                         .AddFile(filePath, LogLevel.Information)
                         //.AddConsole()
                         )
+                    .AddKey(Key)
                     .AddAlgorthm(stratgy, NoOfTrades, Risk, Increment)
-                    .AddDbMarketData()
                     .AddTestBroker()
-                    .AddTradeMonitor(RunTypeEnum.BackTesting, dictionaryPositions)
+                    .AddTradeMonitor(RunTypeEnum.BackTesting, dictionaryPositions, masterServices)
                     .BuildServiceProvider();
-
-            //Service1
-            var marketData = services.GetService<IMarketData>();
+            var serviceScopeFactory = services.GetRequiredService<IServiceScopeFactory>();
+            _scope = serviceScopeFactory.CreateScope();
+            
+                //Service1
             WireMarketDataEvents(marketData, services);
             //Service2
-            var broker = services.GetService<IBroker>();
+            var broker = _scope.ServiceProvider.GetService<IBroker>();
             //Service3
 
-            var tradeMonitor = services.GetService<ITradeProcessor>();
+            tradeMonitor = _scope.ServiceProvider.GetService<ITradeProcessor>();
+            
+        }
 
-            marketData.StartStream();
+        public void CompleteApp()
+        {
             tradeMonitor.CompleteAllTransactions();
-
+            _scope.Dispose();
             //need to add summary of trades and PnL
 
             Console.WriteLine(PrintTrades(tradeMonitor.Trades));
@@ -91,7 +100,6 @@ namespace CryptoTrading.App.AlgorthmTesting
                 tradeMonitor.Trades.ForEach(x => context.Trades.Add(new TradesDb(x, stratgy, NoOfTrades, Risk, Increment)));
                 context.SaveChanges();
             }
-
         }
 
         private string PrintSummary(List<ITrade> trades)

@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
@@ -8,12 +9,12 @@ namespace CryptoTrading.App.Monitor
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddTradeMonitor(this IServiceCollection services, RunTypeEnum runType, System.Collections.Generic.Dictionary<string, IPosition> dictionaryPositions)
+        public static IServiceCollection AddTradeMonitor(this IServiceCollection services, RunTypeEnum runType, System.Collections.Generic.Dictionary<string, IPosition> dictionaryPositions, ServiceProvider masterServices)
         {
             switch (runType)
             {
                 case RunTypeEnum.BackTesting:
-                    services.AddTransient<IMarketMonitor, DbMarketMonitor>();
+                    services.AddTransient<IMarketMonitor, DbMarketMonitor>(x=>new DbMarketMonitor(masterServices.GetService< ICandleStickManagement>()));
                     break;
                 case RunTypeEnum.LiveTesting:                   
                     services.AddTransient<IMarketMonitor, LiveTestMarketMonitor>();
@@ -24,11 +25,11 @@ namespace CryptoTrading.App.Monitor
                 default:
                     break;
             }
-            services.AddSingleton<ITradeProcessor, TradeProcessor>();
-            services.AddSingleton<ITradeFactory, TestTradeFactory>();
+            services.AddScoped<ITradeProcessor, TradeProcessor>();
+            services.AddScoped<ITradeFactory, TestTradeFactory>();
             services.AddTransient<ITradeMonitor, TradeMonitor>();
-            services.AddSingleton<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
-            services.AddSingleton<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
+            services.AddScoped<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
+            services.AddScoped<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
             return services;
         }
     }

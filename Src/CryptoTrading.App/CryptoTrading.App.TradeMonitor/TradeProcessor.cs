@@ -1,6 +1,7 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
@@ -23,7 +24,7 @@ namespace CryptoTrading.App.Monitor
         public List<ITradeMonitor> OrderMonitors { get; set; }
 
         public IEnumerable<ITrade> LiveTrades => Trades.Where(x => x.Open);
-
+        public string KeyValue { get; set; }
         public IEnumerable<ITradeMonitor> CurrentMonitors
         {
             get
@@ -41,20 +42,26 @@ namespace CryptoTrading.App.Monitor
             TradeFactory = factory;
             Trades = new List<ITrade>();
             OrderMonitors = new List<ITradeMonitor>();
+        }
+
+        public TradeProcessor(IPositions positions, IMarketMonitorFactory factory, IKey key): this(positions,factory)
+        {
+            KeyValue = key.KeyValue;
             ConfigureMessageBroker();
+
         }
         private void ConfigureMessageBroker()
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
             Action<MessagePayload<Order>> NewTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(NewTradeMesssage);
+            messageBroker.Subscribe(KeyValue,NewTradeMesssage);
 
             Action<MessagePayload<string>> CancelTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(CancelTradeMessage);
+            messageBroker.Subscribe(KeyValue,CancelTradeMessage);
 
             Action<MessagePayload<ITradeRequest>> TradeRequestMessage = ProcessMessageAction;
-            messageBroker.Subscribe(TradeRequestMessage);
+            messageBroker.Subscribe(KeyValue, TradeRequestMessage);
         }
 
         private void ProcessMessageAction(MessagePayload<Order> obj)
@@ -116,10 +123,11 @@ namespace CryptoTrading.App.Monitor
                     var trade = Positions.CreateTrade(obj.What);
                     Trades.Add(trade);
                     var tradeMonitor = TradeFactory.CreateMonitor(trade);
+                    tradeMonitor.KeyValue = KeyValue;
                     OrderMonitors.Add(tradeMonitor);
                     //create Market Order
                     var marketOrder = new MarketRequest(trade.CurrentTransaction);
-                    MessageBroker.Instance.Publish<IMarketRequest>(trade.CurrentTransaction, marketOrder);
+                    MessageBroker.Instance.Publish<IMarketRequest>(KeyValue,trade.CurrentTransaction, marketOrder);
                 }
             }
         }

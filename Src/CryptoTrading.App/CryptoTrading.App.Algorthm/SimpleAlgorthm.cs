@@ -3,6 +3,7 @@ using Binance.Client;
 using CryptoTrading.App.Algorthm.TradingStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
@@ -20,12 +21,17 @@ namespace CryptoTrading.App.Algorthm
         private OrderedFixedLengthList<Candlestick> _candleSticks;
         public ITradingStrategy tradingStrategies;
         public IStopLimitTracker StopLimitTrackers { get; set; } 
+        public string KeyValue { get; set; }
         public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger, IStopLimitTracker stopLimitTrackers)
         { 
             tradingStrategies = strategies;
             _candleSticks = new OrderedFixedLengthList<Candlestick>(NumberOfCandleSticksToKeep);
             StopLimitTrackers = stopLimitTrackers;
             Logger = logger;
+        }
+        public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger, IStopLimitTracker stopLimitTrackers, IKey key):this(strategies,logger,stopLimitTrackers)
+        {
+            KeyValue = key.KeyValue;
         }
 
         public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
@@ -49,7 +55,7 @@ namespace CryptoTrading.App.Algorthm
             var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
             Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
             if (request.SellPercentage <= 0) return;
-            MessageBroker.Instance.Publish(this, request);
+            MessageBroker.Instance.Publish(KeyValue, this, request);
         }
 
         public ITradeRequest CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)

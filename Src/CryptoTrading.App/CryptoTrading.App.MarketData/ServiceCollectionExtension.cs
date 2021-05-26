@@ -30,6 +30,7 @@ namespace CryptoTrading.App.MarketData
         {
             services.AddTransient<IMarketData, DbMarketData>();
             services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
+
             return services;
         }
     }

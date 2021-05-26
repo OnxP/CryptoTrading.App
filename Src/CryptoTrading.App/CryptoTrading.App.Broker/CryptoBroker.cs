@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
@@ -18,12 +19,18 @@ namespace CryptoTrading.App.Broker
     {
         private readonly IMarket _market;
         private readonly ILogger<CryptoBroker> _logger;
-
+        private string KeyValue { get; set; }
         public CryptoBroker(IMarket market, ILogger<CryptoBroker> logger)
         {
             _market = market;
             _logger = logger;
+        }
+
+        public CryptoBroker(IMarket market, ILogger<CryptoBroker> logger, IKey key) : this(market,logger)
+        {
+            KeyValue = key.KeyValue;
             ConfigureMessageBroker();
+
         }
 
 
@@ -32,13 +39,13 @@ namespace CryptoTrading.App.Broker
             IMessageBroker messageBroker = MessageBroker.Instance;
 
             Action<MessagePayload<IMarketRequest>> NewTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(NewTradeMesssage);
+            messageBroker.Subscribe(KeyValue, NewTradeMesssage);
 
             Action<MessagePayload<ICancelRequest>> CancelTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(CancelTradeMessage);
+            messageBroker.Subscribe(KeyValue, CancelTradeMessage);
 
             Action<MessagePayload<IStopLimitRequest>> StoplimitTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(StoplimitTradeMessage);
+            messageBroker.Subscribe(KeyValue, StoplimitTradeMessage);
 
         }
 
@@ -50,7 +57,7 @@ namespace CryptoTrading.App.Broker
             var order = await _market.SetMarketOrder(request);
             //confirm market order has been met
             LogOrder(order,OrderStatus.Filled);
-            MessageBroker.Instance.Publish(obj.Who, order);
+            MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
         }
 
         private void ProcessMessageAction(MessagePayload<ICancelRequest> obj)
@@ -59,7 +66,7 @@ namespace CryptoTrading.App.Broker
             //set market order
             var order = _market.CancelOrder(request).Result;
             //confirm market order has been met
-            MessageBroker.Instance.Publish(obj.Who, order);
+            MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
         }
         private async void ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
         {
@@ -68,7 +75,7 @@ namespace CryptoTrading.App.Broker
             var order = await _market.SetLimitOrder(request);
             //confirm market order has been met
             LogOrder(order, OrderStatus.New);
-            MessageBroker.Instance.Publish(obj.Who, order);
+            MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
         }
 
         private void LogOrder(Order order, OrderStatus status)

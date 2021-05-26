@@ -39,7 +39,16 @@ namespace CryptoTrading.App.Core.Database
 
         public DateTime CurrentTick
         {
-            get { return timeKeeper[_index];} 
+            get { 
+                if (_index < timeKeeper.Count())
+                {
+                    return timeKeeper[_index];
+                }
+                else
+                {
+                    return FinalTick;
+                }
+            } 
         }
 
         public DateTime FinalTick

@@ -101,9 +101,8 @@ namespace CryptoTrading.App.MarketData
 
         private void StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-            var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1200, from.ToUniversalTime(), to.ToUniversalTime()).Result;
-            var action = historicDataSubscribers.First().Value;
-            action.Invoke(candleSticks);
+            var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1200, from.ToUniversalTime(), to.ToUniversalTime()).Result.ToList();
+            candleSticks.ForEach(x => candleSticksToStream.Add((x, symbol.interval)));
         }
 
         void liveStream()
@@ -138,13 +137,17 @@ namespace CryptoTrading.App.MarketData
                 _ => dateTime,
             };
         }
-        private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, Action<IEnumerable<Candlestick>> callback)
+        private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime());
             //need to drop first candle
             var sticks = candleSticks.Reverse().Skip(1);
-            callback.Invoke(sticks);
+            foreach (var action in callback)
+            {
+                action.Invoke(sticks);
+            }
+
         }
 
         protected IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)

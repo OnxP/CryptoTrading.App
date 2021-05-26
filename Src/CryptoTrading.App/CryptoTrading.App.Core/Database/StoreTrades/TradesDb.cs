@@ -12,29 +12,29 @@ namespace CryptoTrading.App.Core.Database.StoreTrades
         public int ID { get; set; }
         public string Strategy { get; set; }
         public double NoOfTrades { get; set; }
-        public decimal Risk { get; set; }
-        public decimal Increment { get; set; }
+        public double Risk { get; set; }
+        public double Increment { get; set; }
 
         public TradesDb(ITrade trade, Indicator strat, double trades, decimal risk, decimal increment)
         {
             Strategy = strat.FullName;
             NoOfTrades = trades;
-            Risk = risk;
-            Increment = increment;
+            Risk = Convert.ToDouble(risk);
+            Increment = Convert.ToDouble(increment);
 
-            Price = trade.Price;
+            Price = Convert.ToDouble(trade.Price);
             Symbol = trade.Symbol;
-            Quantity = trade.Quantity;
-            Profit = trade.Profit;
-            StartPrice = trade.StartPrice;
+            Quantity = Convert.ToDouble(trade.Quantity);
+            Profit = Convert.ToDouble(trade.Profit);
+            StartPrice = Convert.ToDouble(trade.StartPrice);
             StartDate = trade.StartDate;
             CloseDate = trade.CloseDate;
         }
-        public decimal Price { get; set; }
+        public double Price { get; set; }
         public string Symbol { get; set; }
-        public decimal Quantity { get; set; }
-        public decimal Profit { get; set; }
-        public decimal StartPrice { get; set; }
+        public double Quantity { get; set; }
+        public double Profit { get; set; }
+        public double StartPrice { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime CloseDate { get; set; }
     }
