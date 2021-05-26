@@ -57,7 +57,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             AddPosition("BTC", dictionaryPositions, 1);
             AddPosition("BNB", dictionaryPositions, 5);
 
-            var filePath = $@"C:\Temp\MovingAverageTests\AlgoLoggingTest_{stratgy}_{NoOfTrades}_{Risk}_{Increment}.txt";
+            var filePath = $@"C:\Temp\MovingAverageTests\AlgoLoggingTest_{stratgy.FullName}_{NoOfTrades}_{Risk}_{Increment}.txt";
             var services = new ServiceCollection()
                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
@@ -131,9 +131,6 @@ namespace CryptoTrading.App.AlgorthmTesting
 
         private void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
-            marketData.Configure(null);
-            marketData.From = new DateTime(2021, 01, 14, 00, 00, 00);
-            marketData.To = new DateTime(2021, 02, 17, 00, 00, 00);
             List<Symbol> symbols = new List<Symbol>()
             {
                 Symbol.ETH_BTC,

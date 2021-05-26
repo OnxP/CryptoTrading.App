@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -92,8 +93,14 @@ namespace CryptoTrading.App.Core.Database
         {
             do
             {
-                _MarketDataStream.Invoke();
-                _StopLimitMonitor.ForEach(x => x.Invoke());
+                var tasks = new List<Task>();
+                _StopLimitMonitor.ForEach(x => tasks.Add(new Task(x)));
+                tasks.ForEach(x => x.Start());
+                Task.WaitAll(tasks.ToArray());
+
+                var task = new Task(_MarketDataStream);
+                task.Start();
+                task.Wait();
 
                 GetNextTick();
                 if (NextTickActions.Count > 0)

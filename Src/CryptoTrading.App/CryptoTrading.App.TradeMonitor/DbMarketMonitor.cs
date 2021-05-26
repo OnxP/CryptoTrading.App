@@ -23,15 +23,14 @@ namespace CryptoTrading.App.Monitor
     public class DbMarketMonitor : IMarketMonitor
     {
         ICandleStickManagement _mangement;
-        public DbMarketMonitor(ICandleStickManagement management)
+        public DbMarketMonitor(ICandleStickManagement management, IDbData data)
         {
             _mangement = management;
-            context = new CryptoDBContext();
+            _data = data;
             //_mangement.AddMonitor(this);
         }
         private System.Action<CandlestickEventArgs> action;
 
-        CryptoDBContext context;
         public string Symbol { get; set; }
         public CandlestickInterval Interval { get; set; }
 
@@ -71,25 +70,20 @@ namespace CryptoTrading.App.Monitor
         {
             _mangement.RemoveStopLimitStream(InvokeCandleStick);
         }
-        public List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
-
+        IDbData _data;
         public void StartStream()
         {
             Started = true;
-            var candleSticks = context.CandleSticks.SqlQuery(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, Symbol, 0).ToListAsync().Result;
-            if (candleSticks.Count == 0) throw new Exception("Bad Data.");
-            candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), Interval)));           
-
-            orderedList = candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime);
-
+            //DbData _data = DbData.GetInstance;
+            _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, Symbol, 0);
             _mangement.AddStopLimitStream(InvokeCandleStick);
             DbCandleStickManagement.PauseFlow = false;
         }
 
-        IEnumerable<IGrouping<DateTime, (Candlestick candlestick, CandlestickInterval interval)>> orderedList;
         public void InvokeCandleStick()
         {
-            var candleSticks = orderedList.FirstOrDefault(x => x.Key == _mangement.CurrentTick);
+
+            var candleSticks = _data.GetData(Symbol,_mangement.CurrentTick);
             if (candleSticks == null) return;
             foreach (var candleStick in candleSticks)
             {

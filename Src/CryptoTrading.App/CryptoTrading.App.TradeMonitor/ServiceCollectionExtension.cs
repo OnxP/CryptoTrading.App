@@ -14,7 +14,7 @@ namespace CryptoTrading.App.Monitor
             switch (runType)
             {
                 case RunTypeEnum.BackTesting:
-                    services.AddTransient<IMarketMonitor, DbMarketMonitor>(x=>new DbMarketMonitor(masterServices.GetService< ICandleStickManagement>()));
+                    services.AddTransient<IMarketMonitor, DbMarketMonitor>(x=>new DbMarketMonitor(masterServices.GetService<ICandleStickManagement>(), masterServices.GetService<IDbData>()));
                     break;
                 case RunTypeEnum.LiveTesting:                   
                     services.AddTransient<IMarketMonitor, LiveTestMarketMonitor>();

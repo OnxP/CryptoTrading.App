@@ -19,6 +19,7 @@ using Tulip;
 using CryptoTrading.App.Core.Database.Indicators;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using System.Threading.Tasks;
+using CryptoTrading.App.Core.Database;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -39,7 +40,10 @@ namespace CryptoTrading.App.AlgorthmTesting
                     .BuildServiceProvider();
 
             var marketData = services.GetService<IMarketData>();
-
+            var dbData = services.GetService<IDbData>();
+            marketData.Configure(null);
+            marketData.From = new DateTime(2021, 01, 14, 00, 00, 00);
+            marketData.To = new DateTime(2021, 02, 17, 00, 00, 00);
 
             foreach (var strat in strats)
             {

@@ -102,20 +102,24 @@ namespace CryptoTrading.App.MarketData
         IEnumerable<IGrouping<DateTime, (Candlestick candlestick, CandlestickInterval interval)>> orderedList;
         public void InvokeCandleStick()
         {
+            var tasks = new List<Task>();
+            
             var candleSticks = orderedList.FirstOrDefault(x => x.Key == _mangement.CurrentTick);
             if (candleSticks == null) return;
             foreach (var candleStick in candleSticks)
             {
                 foreach (var action in subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
                 {
-                    action.Invoke(new CandlestickEventArgs(candleSticks.Key, candleStick.candlestick, 0, 0, true));
+                    tasks.Add(new Task(()=>action.Invoke(new CandlestickEventArgs(candleSticks.Key, candleStick.candlestick, 0, 0, true))));
                 }
             }
-
+            tasks.ForEach(x => x.Start());
+            Task.WaitAll(tasks.ToArray());
+            //runs the algo but the request to the process monitor takes some time to execute due to the checks that it does.
             Thread.Sleep(100);
             while (DbCandleStickManagement.PauseFlow)
             {
-
+                //pause the flow for execution, specific to db use only.
             }
         }
 
