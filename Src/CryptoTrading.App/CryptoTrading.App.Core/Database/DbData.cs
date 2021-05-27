@@ -47,11 +47,16 @@ namespace CryptoTrading.App.Core.Database
             }
         }
 
-        public IGrouping<DateTime, (Candlestick candlestick, int interval)> GetData(string symbol, DateTime currentTick)
+        public Dictionary<string,Candlestick> GetData(DateTime currentTick)
         {
             lock (_lock)
             {
-                return _data[symbol].FirstOrDefault(x => x.Key == currentTick);
+                Dictionary<string,Candlestick> list = new Dictionary<string,Candlestick>();
+                foreach (var kvp in _data)
+                {
+                    list.Add(kvp.Key, kvp.Value.FirstOrDefault(x => x.Key == currentTick)?.FirstOrDefault().candlestick);
+                }
+                return list;
             }
         }
     }

@@ -67,7 +67,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                     .AddKey(Key)
                     .AddAlgorthm(stratgy, NoOfTrades, Risk, Increment)
                     .AddTestBroker()
-                    .AddTradeMonitor(RunTypeEnum.BackTesting, dictionaryPositions, masterServices)
+                    .AddTradeMonitor(dictionaryPositions, masterServices)
                     .BuildServiceProvider();
             var serviceScopeFactory = services.GetRequiredService<IServiceScopeFactory>();
             _scope = serviceScopeFactory.CreateScope();

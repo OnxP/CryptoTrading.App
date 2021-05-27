@@ -6,12 +6,9 @@ namespace CryptoTrading.App.Core
 {
     public interface IMarketMonitor
     {
-        string Symbol { get; set; }
-        bool Started { get; }
         bool CheckOrder(ITransaction order);
-        void StopStream();
-        void Dispose();
-        void StartStream();
-        void Subscribe(Action<CandlestickEventArgs> processCandleStick);
+        void Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick);
+        bool IsSubscribed(string symbol, string keyValue);
+        void UnSubscribe(string symbol, string keyValue);
     }
 }

@@ -113,7 +113,7 @@ namespace CryptoTrading.App.MarketData
                     tasks.Add(new Task(()=>action.Invoke(new CandlestickEventArgs(candleSticks.Key, candleStick.candlestick, 0, 0, true))));
                 }
             }
-            tasks.ForEach(x => x.Start());
+            tasks.AsParallel().ForAll(x => x.Start());
             Task.WaitAll(tasks.ToArray());
             //runs the algo but the request to the process monitor takes some time to execute due to the checks that it does.
             Thread.Sleep(100);

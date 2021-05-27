@@ -33,5 +33,25 @@ namespace CryptoTrading.App.MarketData
 
             return services;
         }
+
+        public static IServiceCollection AddDbMarketMonitor(this IServiceCollection services, RunTypeEnum runType)
+        {
+            switch (runType)
+            {
+                case RunTypeEnum.BackTesting:
+                    services.AddSingleton<IMarketMonitor, DbMarketMonitor>();
+                    break;
+                case RunTypeEnum.LiveTesting:
+                    //services.AddTransient<IMarketMonitor, LiveTestMarketMonitor>();
+                    break;
+                case RunTypeEnum.Live:
+                    //services.AddTransient<IMarketMonitor, LiveMarketMonitor>();
+                    break;
+                default:
+                    break;
+            }
+
+            return services;
+        }
     }
 }

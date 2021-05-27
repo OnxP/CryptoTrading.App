@@ -43,8 +43,8 @@ namespace CryptoTrading.App.Monitor
                 {
                     Trade.CurrentTransaction.TransactionDate = currentCloseTime;
                     Trade.Open = false;
-                    //stop monitor??
-                    marketMonitor.StopStream();
+                    //unsubscribe to monitor
+                    marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Dispose();
                 }
                 else
@@ -62,7 +62,6 @@ namespace CryptoTrading.App.Monitor
 
         private void Dispose()
         {
-            marketMonitor.Dispose();
             Tracker.Dispose();
             marketMonitor = null;
         }
@@ -104,7 +103,7 @@ namespace CryptoTrading.App.Monitor
                 Tracker.Configure(order);
             }
             CreateNewStopLimitOrder();
-            if (!marketMonitor.Started) marketMonitor.StartStream();
+            if (!marketMonitor.IsSubscribed(order.Symbol, KeyValue)) marketMonitor.Subscribe(order.Symbol,KeyValue, ProcessCandleStick);
         }
 
         private void UpdateStopLimit()
@@ -122,8 +121,6 @@ namespace CryptoTrading.App.Monitor
         public void AddTrade(ITrade trade)
         {
             Trade = trade;
-            marketMonitor.Symbol = trade.Symbol;
-            marketMonitor.Subscribe(ProcessCandleStick);
         }
     }
 }

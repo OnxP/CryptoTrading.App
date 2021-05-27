@@ -11,29 +11,8 @@ namespace CryptoTrading.App.Core.Database
     {
         DateTime Start { get; set; }
         DateTime Finish { get; set; }
-
-        private static readonly object _lock = new object();
         Action _MarketDataStream { get; set; }
-        List<Action> _StopLimitMonitor { get; set; } = new List<Action>();
-        List<Action> NextTickActions
-        {
-            get
-            {
-                lock (_lock)
-                {
-                    return _nextTickActions;
-                }
-            }
-            set
-            {
-                lock (_lock)
-                {
-                    _nextTickActions = value;
-                }
-            }
-        }
-
-        List<Action> _nextTickActions = new List<Action>();
+        Action _StopLimitMonitor { get; set; }
 
         Dictionary<int, DateTime> timeKeeper = new Dictionary<int, DateTime>();
         int _index = 0;
@@ -78,38 +57,36 @@ namespace CryptoTrading.App.Core.Database
         {
             _MarketDataStream = invokeCandleStick;
         }
-
         public void AddStopLimitStream(Action invokeCandleStick)
         {
-            _nextTickActions.Add(new Action(() => _StopLimitMonitor.Add(invokeCandleStick)));
+            _StopLimitMonitor = invokeCandleStick;
         }
-        public void RemoveStopLimitStream(Action invokeCandleStick)
+        public void RemoveStopLimitStream()
         {
-            _nextTickActions.Add(new Action(()=> _StopLimitMonitor.Remove(invokeCandleStick)));
+            _StopLimitMonitor = null;
         }
+
         public static bool PauseFlow { get; set; } = false;
 
         public void StartTimeKeeper()
         {
             do
             {
-                var tasks = new List<Task>();
-                _StopLimitMonitor.ForEach(x => tasks.Add(new Task(x)));
-                tasks.ForEach(x => x.Start());
-                Task.WaitAll(tasks.ToArray());
-
                 var task = new Task(_MarketDataStream);
                 task.Start();
                 task.Wait();
 
-                GetNextTick();
-                if (NextTickActions.Count > 0)
+                if (_StopLimitMonitor != null)
                 {
-                    NextTickActions.ForEach(x => x.Invoke());
-                    NextTickActions.Clear();
+                    var monitorTask = new Task(_StopLimitMonitor);
+                    monitorTask.Start();
+                    monitorTask.Wait();
                 }
-                if (_StopLimitMonitor.Count == 0) 
+
+                GetNextTick();
+                if (_StopLimitMonitor==null) 
                     Thread.Sleep(10);
+
             } while (_index < timeKeeper.Count);
         }
     }

@@ -50,12 +50,19 @@ namespace CryptoTrading.App.Algorthm
 
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
-            _candleSticks.Add(candlestickEventArgs.Candlestick);
-            Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-            var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
-            Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-            if (request.SellPercentage <= 0) return;
-            MessageBroker.Instance.Publish(KeyValue, this, request);
+            try
+            {
+                _candleSticks.Add(candlestickEventArgs.Candlestick);
+                Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
+                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
+                Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
+                if (request.SellPercentage <= 0) return;
+                MessageBroker.Instance.Publish(KeyValue, this, request);
+            }
+            catch(Exception e)
+            {
+                Logger.LogError(0,e,"Algo Error Occured");
+            }
         }
 
         public ITradeRequest CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)

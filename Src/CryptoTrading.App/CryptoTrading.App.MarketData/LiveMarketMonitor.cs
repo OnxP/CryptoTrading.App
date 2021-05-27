@@ -2,6 +2,7 @@
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
+using System;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -58,6 +59,36 @@ namespace CryptoTrading.App.Monitor
         public void Subscribe(System.Action<CandlestickEventArgs> processCandleStick)
         {
             action = processCandleStick;
+        }
+
+        public void Subscribe(string symbol, Action<CandlestickEventArgs> processCandleStick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsSubscribed(string symbol, Action<CandlestickEventArgs> processCandleStick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UnSubscribe(string symbol, Action<CandlestickEventArgs> processCandleStick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsSubscribed(string symbol, string keyValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UnSubscribe(string symbol, string keyValue)
+        {
+            throw new NotImplementedException();
         }
     }
 

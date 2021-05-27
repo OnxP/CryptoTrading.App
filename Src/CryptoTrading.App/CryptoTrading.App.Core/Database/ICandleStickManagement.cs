@@ -9,8 +9,8 @@ namespace CryptoTrading.App.Core.Database
 
         void BuildTimeKeeper(DateTime from, DateTime dateTime);
         void AddMarketStream(Action invokeCandleStick);
-        void AddStopLimitStream(Action invokeCandleStick);
-        void RemoveStopLimitStream(Action invokeCandleStick);
         void StartTimeKeeper();
+        void AddStopLimitStream(Action invokeCandleStick);
+        void RemoveStopLimitStream();
     }
 }

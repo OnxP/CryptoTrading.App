@@ -36,29 +36,30 @@ namespace CryptoTrading.App.AlgorthmTesting
 
             var services = new ServiceCollection()
                     .AddDbMarketData()
+                    .AddDbMarketMonitor(RunTypeEnum.BackTesting)
                     .AddTradingCore()
                     .BuildServiceProvider();
 
             var marketData = services.GetService<IMarketData>();
-            var dbData = services.GetService<IDbData>();
+            var marketMonitor = services.GetService<IMarketMonitor>();
             marketData.Configure(null);
             marketData.From = new DateTime(2021, 01, 14, 00, 00, 00);
             marketData.To = new DateTime(2021, 02, 17, 00, 00, 00);
 
-            foreach (var strat in strats)
-            {
+            //foreach (var strat in strats)
+            //{
                 foreach (var noOfTrade in noOfTrades)
                 {
                     foreach (var risk in risks)
                     {
                         foreach (var increment in increments)
                         {
-                            tasks.Add(CreateTask(strat, noOfTrade, risk, increment,marketData, services));
+                            tasks.Add(CreateTask(Indicators.hma, noOfTrade, risk, increment,marketData, services));
                             
                         }
                     }
                 }
-            }
+            //}
             marketData.StartStream();
             foreach (var task in tasks)
             {
