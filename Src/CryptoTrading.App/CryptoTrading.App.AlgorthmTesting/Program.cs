@@ -28,7 +28,6 @@ namespace CryptoTrading.App.AlgorthmTesting
         
         static void Main(string[] args)
         {
-            var strats = new List<Indicator>() { Indicators.ema, Indicators.hma, Indicators.wma, Indicators.zlema, Indicators.kama, Indicators.trima, Indicators.dema };
             var noOfTrades = new List<double>() { 3,4,5};
             var risks = new List<decimal>() {4.0m,3.5m,3.0m,2.5m,2.0m };
             var increments = new List<decimal>() {2.0m,1.5m,1.0m };
@@ -54,7 +53,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                     {
                         foreach (var increment in increments)
                         {
-                            tasks.Add(CreateTask(Indicators.hma, noOfTrade, risk, increment,marketData, services));
+                            tasks.Add(CreateTask(Indicators.macd, noOfTrade, risk, increment,marketData, services));
                             
                         }
                     }

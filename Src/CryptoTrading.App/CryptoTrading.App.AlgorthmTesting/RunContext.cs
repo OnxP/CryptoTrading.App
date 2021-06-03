@@ -65,7 +65,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                         //.AddConsole()
                         )
                     .AddKey(Key)
-                    .AddAlgorthm(stratgy, NoOfTrades, Risk, Increment)
+                    .AddAlgorthm(NoOfTrades, Risk, Increment)
                     .AddTestBroker()
                     .AddTradeMonitor(dictionaryPositions, masterServices)
                     .BuildServiceProvider();

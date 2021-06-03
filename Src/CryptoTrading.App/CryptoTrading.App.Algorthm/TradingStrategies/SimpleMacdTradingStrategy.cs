@@ -11,9 +11,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         public SimpleMacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
+        public SimpleMacdTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        {
+            noOfTrades = NoOfTrades;
+        }
 
-        protected override double StrategyWeight => 1.0;
-
+        protected override double StrategyWeight => 0.25;
+        private double noOfTrades = 1d;
 
         //public override int OutputLength => 1000;
 
@@ -41,7 +45,6 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var signal = indicatorOutputs["MACD"][1].ToList();
             var hist = indicatorOutputs["MACD"][2].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
-            var vWap = indicatorOutputs["VWap"][0].ToList();
 
             longEma.Reverse();
             macd.Reverse();
@@ -56,7 +59,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             
             var condition1 = macd.First() >= signal.First();
             var condition3= macd.Skip(1).First() <= signal.Skip(1).First();
-            var condition2 = vWap.First() < (double)closePrice.Close; //this checks for an up trend however doesn't check for sideways trend.
+            var condition2 = longEma.First() < (double)closePrice.Close; //this checks for an up trend however doesn't check for sideways trend.
             //var condition3 = vWap.First() > longEma.Skip(1).First(); //this checks for an up trend however doesn't check for sideways trend.
             //var condition4 = macd.First() > macd.Skip(1).First();
             //var condition5 = macd.First() < 0;
