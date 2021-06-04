@@ -1,30 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Binance;
-using Binance.Application;
-using Binance.Application.Logging;
 using Binance.Client;
-using Binance.Utility;
-using Binance.WebSocket;
+using CryptoTrading.App.Core;
 using CryptoTrading.App.MarketData;
-using log4net;
-using log4net.Repository.Hierarchy;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using IMarketDataEvents = CryptoTrading.App.Core.IMarketDataEvents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using IMarketDataEvents = CryptoTrading.App.Core.IMarketDataEvents;
+using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.MarketDataTesting
 {
     class Program
     {
-        static StreamWriter writer;
-        private static readonly object _sync = new object();
-
         public static void Main(string[] args)
         {
             var Configuration = new ConfigurationBuilder()
@@ -36,7 +28,7 @@ namespace CryptoTrading.App.MarketDataTesting
             // Configure services.
             var ServiceProvider = new ServiceCollection()
                 // ReSharper disable once ArgumentsStyleLiteral
-                .AddBinace(useSingleCombinedStream: true) // add default Binance services.
+                .AddBinance(useSingleCombinedStream: true) // add default Binance services.
 
                 // Use alternative, low-level, web socket client implementation.
                 //.AddTransient<IWebSocketClient, WebSocket4NetClient>()
@@ -45,12 +37,6 @@ namespace CryptoTrading.App.MarketDataTesting
                 .AddOptions()
                 .Configure<BinanceApiOptions>(Configuration.GetSection("ApiOptions"))
 
-                // Configure logging.
-                .AddLogging(builder => builder
-                    .SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(Configuration.GetSection("Logging:File"))
-                    .AddConfiguration(Configuration.GetSection("Logging:Console"))
-                    .AddConsole())
 
                 .BuildServiceProvider();
             var api = ServiceProvider.GetService<IBinanceApi>();
@@ -61,20 +47,22 @@ namespace CryptoTrading.App.MarketDataTesting
 
             //LiveStream.StreamData();
             //LoadHistoricData(api);
-            var logger = ServiceProvider.
+            //var logger = ServiceProvider.
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
             writer.WriteLine($"Historic,Symbol,Open,High,Low,Close,Open Time ,Close Time");
             IMarketData marketDate = new HistoricalMarketData();
             marketDate.Configure(null);
             marketDate.From = new DateTime(2020, 08, 24);
             //subscribe to several symbols
-            AddEvents(marketDate);
+            AddEvents(marketDate as IMarketDataEvents);
 
             marketDate.StartStream();
 
             writer.Flush();
             writer.Close();
         }
+        static StreamWriter writer;
+        private static readonly object _sync = new object();
 
         private static void DisplayCandleStick(CandlestickEventArgs obj)
         {
