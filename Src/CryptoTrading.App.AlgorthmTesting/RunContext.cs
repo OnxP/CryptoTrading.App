@@ -64,6 +64,11 @@ namespace CryptoTrading.App.AlgorthmTesting
 
             //var filePath = $@"C:\Temp\{stratgy.FullName}\AlgoLoggingTest_{NoOfTrades}_{Risk}_{Increment}.txt";
             var services = new ServiceCollection()
+                                    .AddLogging(builder => builder // configure logging.
+                        .SetMinimumLevel(LogLevel.Trace)
+                        //.AddFile(filePath, LogLevel.Information)
+                        .AddConsole()
+                        )
                     .AddKey(Key)
                     .AddAlgorthm(NoOfTrades, Risk, Increment)
                     .AddTestBroker()
