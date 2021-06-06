@@ -76,8 +76,6 @@ namespace CryptoTrading.App.MarketData
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine();
-                Console.WriteLine("  ...press any key to close window.");
-                Console.ReadKey(true);
             }
         }
 
