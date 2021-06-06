@@ -57,18 +57,13 @@ namespace CryptoTrading.App.AlgorthmTesting
             AddPosition("BTC", dictionaryPositions, 1);
             AddPosition("BNB", dictionaryPositions, 5);
 
-            if (!Directory.Exists($@"C:\Temp\{ stratgy.FullName }"))
-            {
-                Directory.CreateDirectory($@"C:\Temp\{ stratgy.FullName }");
-            }
+            //if (!Directory.Exists($@"C:\Temp\{ stratgy.FullName }"))
+            //{
+            //    Directory.CreateDirectory($@"C:\Temp\{ stratgy.FullName }");
+            //}
 
-            var filePath = $@"C:\Temp\{stratgy.FullName}\AlgoLoggingTest_{NoOfTrades}_{Risk}_{Increment}.txt";
+            //var filePath = $@"C:\Temp\{stratgy.FullName}\AlgoLoggingTest_{NoOfTrades}_{Risk}_{Increment}.txt";
             var services = new ServiceCollection()
-                    .AddLogging(builder => builder // configure logging.
-                        .SetMinimumLevel(LogLevel.Trace)
-                        .AddFile(filePath, LogLevel.Information)
-                        //.AddConsole()
-                        )
                     .AddKey(Key)
                     .AddAlgorthm(NoOfTrades, Risk, Increment)
                     .AddTestBroker()
@@ -97,7 +92,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine(PrintSummary(tradeMonitor.Trades));
             
-            File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{NoOfTrades}_{Risk}_{Increment}.txt", new List<string>() { PrintTrades(tradeMonitor.Trades), Environment.NewLine, PrintSummary(tradeMonitor.Trades) });
+            //File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{NoOfTrades}_{Risk}_{Increment}.txt", new List<string>() { PrintTrades(tradeMonitor.Trades), Environment.NewLine, PrintSummary(tradeMonitor.Trades) });
             //Load to Database
 
             using (var context = new TradeContext())
