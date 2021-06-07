@@ -12,7 +12,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         {
         }
 
-        protected override double StrategyWeight => 1.0;
+        public BBRsiTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        {
+            noOfTrades = NoOfTrades;
+        }
+
+        protected override double StrategyWeight => 1.0 / noOfTrades;
+        private double noOfTrades = 1d;
 
 
         //public override int OutputLength => 1000;
@@ -65,7 +71,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             if (condition1 && condition2 && condition3 && condition4)
             {
                 LogResult(1);
-                return 1;
+                return StrategyWeight;
             }
             //check if long is trading sideways, need more entries to determin that!
 

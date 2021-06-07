@@ -16,7 +16,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             noOfTrades = NoOfTrades;
         }
 
-        protected override double StrategyWeight => 0.25;
+        protected override double StrategyWeight => 1.0 / noOfTrades;
         private double noOfTrades = 1d;
 
         //public override int OutputLength => 1000;
@@ -68,8 +68,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             //Fast > Slow EMA
             if (condition1 && condition2 && condition3)
             {
-                LogResult(1);
-                return 1;
+                LogResult(StrategyWeight);
+                return StrategyWeight;
             }
             //check if long is trading sideways, need more entries to determin that!
 
