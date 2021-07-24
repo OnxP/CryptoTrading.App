@@ -30,7 +30,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             dict.Add("25", (indicator, new double[] { 25 }));
             dict.Add("50", (indicator, new double[] { 50 }));
             dict.Add("100", (indicator, new double[] { 100 }));
-            //dict.Add("200", (Tulip.Indicators.ema, new double[] { 200 }));
+            dict.Add("Srsi", (Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 }));
             return dict;
         }
 
@@ -39,14 +39,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var MA25 = indicatorOutputs["25"][0].ToList();
             var MA50 = indicatorOutputs["50"][0].ToList();
             var MA100= indicatorOutputs["100"][0].ToList();
-            //var MA200 = indicatorOutputs["200"][0].ToList();
+            var sRsi = indicatorOutputs["Srsi"][0].ToList();
 
             // log values
-
-            var condition1 = MA50.Last() >= MA100.Last();
-            var condition2 = MA100.Last() >= (double)closePrice.Close;
             
-            if (condition1 && condition2)
+            var condition1 = MA50.Last() >= MA100.Last();
+            var condition2 = MA100.Last() <= (double)closePrice.Close;
+            //var condition3 = MA25.Last() >= MA50.Last();
+            var condition4 = sRsi.Last() <= 50;
+            if (condition1 && condition2 && condition4)
             {
                 LogResult(1);
                 return StrategyWeight;

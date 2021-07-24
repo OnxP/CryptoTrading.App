@@ -10,9 +10,11 @@ namespace CryptoTrading.App.Core
     {
         public class MessageBroker : IMessageBroker
         {
+
             private static MessageBroker _instance;
             private readonly Dictionary<Type, List<Delegate>> _subscribers;
             private readonly Dictionary<(string,Type), List<Delegate>> _keySubscribers;
+            public bool Parellel { get; set; } = false;
             public static MessageBroker Instance
             {
                 get
@@ -29,6 +31,18 @@ namespace CryptoTrading.App.Core
                 _keySubscribers = new Dictionary<(string,Type), List<Delegate>>();
             }
 
+            private void RunTask<T>(Action<MessagePayload<T>> handler, MessagePayload<T> payload)
+            {
+                if(Parellel)
+                {
+                    Task.Factory.StartNew(() => handler?.Invoke(payload));
+                }
+                else
+                {
+                    handler?.Invoke(payload);
+                }
+            }
+
             public void Publish<T>(object source, T message)
             {
                 if (message == null || source == null)
@@ -43,9 +57,9 @@ namespace CryptoTrading.App.Core
                 foreach (var handler in delegates.Select
                 (item => item as Action<MessagePayload<T>>))
                 {
-                    Task.Factory.StartNew(() => handler?.Invoke(payload));
+                    RunTask(handler,payload);
                 }
-            }
+            }          
 
             public void Subscribe<T>(Action<MessagePayload<T>> subscription)
             {
@@ -82,7 +96,7 @@ namespace CryptoTrading.App.Core
                 foreach (var handler in delegates.Select
                 (item => item as Action<MessagePayload<T>>))
                 {
-                    Task.Factory.StartNew(() => handler?.Invoke(payload));
+                    RunTask(handler, payload);
                 }
             }
 

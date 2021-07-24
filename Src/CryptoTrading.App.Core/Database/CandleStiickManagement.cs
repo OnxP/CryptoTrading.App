@@ -84,8 +84,8 @@ namespace CryptoTrading.App.Core.Database
                 }
 
                 GetNextTick();
-                if (_StopLimitMonitor==null) 
-                    Thread.Sleep(10);
+                //if (_StopLimitMonitor==null) 
+                //    Thread.Sleep(10);
 
             } while (_index < timeKeeper.Count);
         }

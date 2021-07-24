@@ -77,8 +77,8 @@ namespace CryptoTrading.App.MarketData
                         time.Start();
                         StreamData(api, item.Key, from, to);
                         from = to;
-                        while (time.ElapsedMilliseconds <= 1000)
-                        { }
+                        //while (time.ElapsedMilliseconds <= 1000)
+                        //{ }
                     }
                 }
                 //Task.WaitAll(tasks.ToArray());
@@ -102,7 +102,8 @@ namespace CryptoTrading.App.MarketData
         private void StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
             var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1200, from.ToUniversalTime(), to.ToUniversalTime()).Result.ToList();
-            candleSticks.ForEach(x => candleSticksToStream.Add((x, symbol.interval)));
+            var action = historicDataSubscribers.First().Value.First();
+            action.Invoke(candleSticks);
         }
 
         void liveStream()

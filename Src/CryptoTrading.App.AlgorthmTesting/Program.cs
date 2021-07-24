@@ -28,9 +28,9 @@ namespace CryptoTrading.App.AlgorthmTesting
         
         static void Main(string[] args)
         {
-            var noOfTrades = new List<double>() { 3,4,5};
-            var risks = new List<decimal>() {4.0m,3.5m,3.0m,2.5m,2.0m };
-            var increments = new List<decimal>() {2.0m,1.5m,1.0m };
+            var noOfTrades = new List<double>() { 5};
+            var risks = new List<decimal>() {3.5m,1.5m };
+            var increments = new List<decimal>() {1.5m,2.5m };
             var tasks = new List<Task>();
 
             var services = new ServiceCollection()
@@ -42,8 +42,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             var marketData = services.GetService<IMarketData>();
             var marketMonitor = services.GetService<IMarketMonitor>();
             marketData.Configure(null);
-            marketData.From = new DateTime(2021, 01, 14, 00, 00, 00);
-            marketData.To = new DateTime(2021, 02, 17, 00, 00, 00);
+            marketData.From = new DateTime(2021, 05, 01, 00, 00, 00);
+            marketData.To = new DateTime(2021, 06, 01, 00, 00, 00);
 
             //foreach (var strat in strats)
             //{
@@ -53,7 +53,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                     {
                         foreach (var increment in increments)
                         {
-                            tasks.Add(CreateTask(Indicators.macd, noOfTrade, risk, increment,marketData, services));
+                            tasks.Add(CreateTask(Indicators.ema, noOfTrade, risk, increment,marketData, services));
                             
                         }
                     }

@@ -57,16 +57,16 @@ namespace CryptoTrading.App.AlgorthmTesting
             AddPosition("BTC", dictionaryPositions, 1);
             AddPosition("BNB", dictionaryPositions, 5);
 
-            //if (!Directory.Exists($@"C:\Temp\{ stratgy.FullName }"))
-            //{
-            //    Directory.CreateDirectory($@"C:\Temp\{ stratgy.FullName }");
-            //}
+            if (!Directory.Exists($@"C:\Temp\{ stratgy.FullName }"))
+            {
+                Directory.CreateDirectory($@"C:\Temp\{ stratgy.FullName }");
+            }
 
-            //var filePath = $@"C:\Temp\{stratgy.FullName}\AlgoLoggingTest_{NoOfTrades}_{Risk}_{Increment}.txt";
+            var filePath = $@"C:\Temp\{stratgy.FullName}\AlgoLoggingTest_{NoOfTrades}_{Risk}_{Increment}.txt";
             var services = new ServiceCollection()
                                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
-                        //.AddFile(filePath, LogLevel.Information)
+                        .AddFile(filePath, LogLevel.Information)
                         .AddConsole()
                         )
                     .AddKey(Key)
@@ -97,7 +97,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine(PrintSummary(tradeMonitor.Trades));
             
-            //File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{NoOfTrades}_{Risk}_{Increment}.txt", new List<string>() { PrintTrades(tradeMonitor.Trades), Environment.NewLine, PrintSummary(tradeMonitor.Trades) });
+            File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{NoOfTrades}_{Risk}_{Increment}.txt", new List<string>() { PrintTrades(tradeMonitor.Trades), Environment.NewLine, PrintSummary(tradeMonitor.Trades) });
             //Load to Database
 
             using (var context = new TradeContext())
@@ -138,24 +138,24 @@ namespace CryptoTrading.App.AlgorthmTesting
         {
             List<Symbol> symbols = new List<Symbol>()
             {
-                Symbol.ETH_BTC,
-                Symbol.BTC_USDT,
-                Symbol.LTC_BTC,
-                Symbol.BNB_BTC,
-                Symbol.EOS_BTC,
+                //Symbol.ETH_BTC,
+                //Symbol.BTC_USDT,
+                //Symbol.LTC_BTC,
+                //Symbol.BNB_BTC,
+                //Symbol.EOS_BTC,
                 Symbol.SYS_BTC,
                 //Symbol.TRX_BTC,
-                Symbol.XRP_BTC ,
-                Symbol.ADA_BTC,
-                //Symbol.DOGE_BTC,
-                Symbol.LINK_BTC,
-                Symbol.QTUM_BTC,
-                Symbol.XLM_BTC,
-                Symbol.ONT_BTC
+                //Symbol.XRP_BTC ,
+                //Symbol.ADA_BTC,
+                ////Symbol.DOGE_BTC,
+                //Symbol.LINK_BTC,
+                //Symbol.QTUM_BTC,
+                //Symbol.XLM_BTC,
+                //Symbol.ONT_BTC
             };
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
-                CandlestickInterval.Minutes_30
+                CandlestickInterval.Minutes_15
             };
             AddEvents(marketData as AbstractMarketData, symbols, intervals, services);
         }

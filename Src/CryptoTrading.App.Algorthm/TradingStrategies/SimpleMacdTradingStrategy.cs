@@ -68,7 +68,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             //Fast > Slow EMA
             if (condition1 && condition2 && condition3)
             {
-                LogResult(StrategyWeight);
+                LogResult(1);
                 return StrategyWeight;
             }
             //check if long is trading sideways, need more entries to determin that!
