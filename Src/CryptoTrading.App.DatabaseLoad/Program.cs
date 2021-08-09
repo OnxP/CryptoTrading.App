@@ -32,37 +32,15 @@ namespace CryptoTrading.App.DatabaseLoad
                     .AddFile(Configuration.GetSection("Logging:File")))
 
                 .BuildServiceProvider();
-            context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
+            //context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
             marketDate.From = new DateTime(2020, 12, 01);//25-12-20
-            List<Symbol> symbols = new List<Symbol>() 
-            { 
-                Symbol.ETH_BTC,
-                Symbol.BTC_USDT,
-                Symbol.LTC_BTC,
-                Symbol.BNB_BTC,
-                Symbol.EOS_BTC,
-                Symbol.SYS_BTC,
-                Symbol.TRX_BTC,
-                Symbol.XRP_BTC ,
-                Symbol.ADA_BTC,
-                Symbol.DOGE_BTC,
-                Symbol.LINK_BTC,
-                Symbol.QTUM_BTC,
-                Symbol.XLM_BTC,
-                Symbol.ONT_BTC
-
-            };
+            var symbols = Symbol.BtcPairs;
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
               CandlestickInterval.Minute
             , CandlestickInterval.Minutes_15
-            , CandlestickInterval.Minutes_30
-            , CandlestickInterval.Minutes_5
-            , CandlestickInterval.Hour
-            , CandlestickInterval.Hours_4
-            , CandlestickInterval.Day
             };
         
             //subscribe to several symbols

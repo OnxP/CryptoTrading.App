@@ -63,8 +63,8 @@ namespace CryptoTraading.App.RunIndicators
             //list.Add(new CviIndicator(20));
             //list.Add(new PsarIndicator(0.02m,0.2m));
             //list.Add(new StddevIndicator(5));
-            //list.Add(new VwapIndicator(3));
-            //list.Add(new VwapIndicator(7));
+            //list.Add(new Vsapindicator(3));
+            //list.Add(new Vsapindicator(7));
             //list.Add(new VwmaIndicator(20));
             //list.Add(new WadIndicator(1));
 

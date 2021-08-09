@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CryptoTrading.App.Algorthm.TradingStrategies;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +11,12 @@ namespace CryptoTrading.App.Core.Database
 {
     public class DbCandleStickManagement : ICandleStickManagement
     {
+        public DbCandleStickManagement(ILogger<ICandleStickManagement> logger)
+        {
+            Logger = logger;
+        }
+
+        public ILogger<ICandleStickManagement> Logger { get; }
         DateTime Start { get; set; }
         DateTime Finish { get; set; }
         Action _MarketDataStream { get; set; }
@@ -72,16 +80,20 @@ namespace CryptoTrading.App.Core.Database
         {
             do
             {
-                var task = new Task(_MarketDataStream);
-                task.Start();
-                task.Wait();
+                Logger.LogDebug($"Processing tick :{CurrentTick}");
+                _MarketDataStream.Invoke();
+                //var task = new Task(_MarketDataStream);
+                //task.Start();
+                //task.Wait();
 
                 if (_StopLimitMonitor != null)
                 {
-                    var monitorTask = new Task(_StopLimitMonitor);
-                    monitorTask.Start();
-                    monitorTask.Wait();
+                    _StopLimitMonitor.Invoke();
+                    //var monitorTask = new Task(_StopLimitMonitor);
+                    //monitorTask.Start();
+                    //monitorTask.Wait();
                 }
+                Logger.LogDebug($"Finished Processing tick :{CurrentTick}");
 
                 GetNextTick();
                 //if (_StopLimitMonitor==null) 

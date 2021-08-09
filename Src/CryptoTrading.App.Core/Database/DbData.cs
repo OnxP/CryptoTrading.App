@@ -18,8 +18,10 @@ namespace CryptoTrading.App.Core.Database
             }
         }
         private readonly object _lock = new object();
-        public Dictionary<string, IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>>> _data = 
-            new Dictionary<string, IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>>>();
+        //public Dictionary<string, IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>>> _data = 
+        //    new Dictionary<string, IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>>>();
+
+        public Dictionary<DateTime, Dictionary<string, Candlestick>> data = new Dictionary<DateTime, Dictionary<string, Candlestick>>();
 
         IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>> orderedList;
 
@@ -28,7 +30,7 @@ namespace CryptoTrading.App.Core.Database
             lock (_lock)
             {
                 //IEnumerable<CandleStickDb> orderedList;
-                if (_data.ContainsKey(symbol))
+                if (data.ContainsKey(currentTick) && data[currentTick].ContainsKey(symbol))
                 {
                     return;
                 }
@@ -41,7 +43,20 @@ namespace CryptoTrading.App.Core.Database
                         if (candleSticks.Count() == 0) throw new Exception("Bad Data.");
                         candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), interval)));
 
-                        _data.Add(symbol, candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime));
+                        foreach (var candlestick in candleSticksToStream)
+                        {
+                            if(data.ContainsKey(candlestick.candlestick.CloseTime))
+                            {
+                                if (data[candlestick.candlestick.CloseTime].ContainsKey(symbol)) continue;
+
+                                data[candlestick.candlestick.CloseTime].Add(symbol, candlestick.candlestick);
+                            }
+                            else
+                            {
+                                data.Add(candlestick.candlestick.CloseTime, new Dictionary<string, Candlestick>() { { symbol, candlestick.candlestick } });
+                            }
+                        }
+                        //_data.Add(symbol, candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime));
                     }
                 }
             }
@@ -51,12 +66,23 @@ namespace CryptoTrading.App.Core.Database
         {
             lock (_lock)
             {
-                Dictionary<string,Candlestick> list = new Dictionary<string,Candlestick>();
-                foreach (var kvp in _data)
+                Dictionary<string, Candlestick> list;
+                if (data.TryGetValue(currentTick, out list))
                 {
-                    list.Add(kvp.Key, kvp.Value.FirstOrDefault(x => x.Key == currentTick)?.FirstOrDefault().candlestick);
+                    return list;
                 }
-                return list;
+                else
+                {
+                    return new Dictionary<string, Candlestick>();
+                }
+
+                //Dictionary<string,Candlestick> list = new Dictionary<string,Candlestick>();
+                //foreach (var kvp in _data)
+                //{
+                //    //this is taking it time. slowing down the app. too much data to filter thorugh maybe use a dict list by close time
+                //    list.Add(kvp.Key, kvp.Value.FirstOrDefault(x => x.Key == currentTick)?.FirstOrDefault().candlestick);
+                //}
+                //return list;
             }
         }
     }

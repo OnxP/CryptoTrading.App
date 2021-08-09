@@ -71,10 +71,16 @@ namespace CryptoTrading.App.MarketData
             var candleSticks = _data.GetData(_mangement.CurrentTick);
             if (candleSticks.Where(x=>x.Value != null).Count() == 0) return;
 
-            foreach (var stick in candleSticks.Where(x => x.Value != null))
+            foreach (var kvp in candleSticks)
             {
-                if(actions.ContainsKey(stick.Key))
-                    actions[stick.Key].AsParallel().ForAll(x => x.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, stick.Value, 0, 0, true)));
+                if(actions.ContainsKey(kvp.Key))
+                {
+                    foreach (var action in actions[kvp.Key])
+                    {
+                        action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0, true));
+                    }
+                }
+                    //actions[kvp.Key].All(x => x.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0, true)));
             }
         }
 

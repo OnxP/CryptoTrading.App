@@ -9,11 +9,11 @@ namespace CryptoTrading.App.Core.Database.RunIndicators.Indicators
         public double Period { get; set; }
         public double VwapValue { get; set; }
     }
-    public class VwapIndicator : RunIndicatorBase<IndicatorContext<Vwap>, Vwap>
+    public class Vsapindicator : RunIndicatorBase<IndicatorContext<Vwap>, Vwap>
     {
         public override Indicator Indicator => Tulip.Indicators.vwap;
 
-        public VwapIndicator(params decimal[] option) : base(option)
+        public Vsapindicator(params decimal[] option) : base(option)
         {
         }
 

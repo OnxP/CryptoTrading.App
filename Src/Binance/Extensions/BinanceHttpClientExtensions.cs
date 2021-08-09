@@ -90,7 +90,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            return await client.GetAsync("/wapi/v3/systemStatus.html", token)
+            return await client.GetAsync("/sapi/v3/systemStatus.html", token)
                 .ConfigureAwait(false);
         }
 
@@ -940,7 +940,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/withdraw.html")
+            var request = new BinanceHttpRequest("/sapi/v3/withdraw.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -991,7 +991,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/depositHistory.html")
+            var request = new BinanceHttpRequest("/sapi/v3/depositHistory.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1054,7 +1054,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/withdrawHistory.html")
+            var request = new BinanceHttpRequest("/sapi/v3/withdrawHistory.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1111,7 +1111,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/depositAddress.html")
+            var request = new BinanceHttpRequest("/sapi/v3/depositAddress.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1148,7 +1148,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/withdrawFee.html")
+            var request = new BinanceHttpRequest("/sapi/v3/withdrawFee.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1183,7 +1183,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/accountStatus.html")
+            var request = new BinanceHttpRequest("/sapi/v3/accountStatus.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1208,7 +1208,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/userAssetDribbletLog.html")
+            var request = new BinanceHttpRequest("/sapi/v3/userAssetDribbletLog.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1233,7 +1233,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/tradeFee.html")
+            var request = new BinanceHttpRequest("/sapi/v3/tradeFee.html")
             {
                 ApiKey = user.ApiKey
             };
@@ -1261,7 +1261,7 @@ namespace Binance
                     .ConfigureAwait(false);
             }
 
-            var request = new BinanceHttpRequest("/wapi/v3/assetDetail.html")
+            var request = new BinanceHttpRequest("/sapi/v3/assetDetail.html")
             {
                 ApiKey = user.ApiKey
             };

@@ -20,6 +20,8 @@ using CryptoTrading.App.Core.Database.Indicators;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core.Database;
+using System.Data.Common;
+using System.Data.Entity;
 
 namespace CryptoTrading.App.AlgorthmTesting
 {
@@ -28,15 +30,21 @@ namespace CryptoTrading.App.AlgorthmTesting
         
         static void Main(string[] args)
         {
-            var noOfTrades = new List<double>() { 5};
-            var risks = new List<decimal>() {3.5m,1.5m };
-            var increments = new List<decimal>() {1.5m,2.5m };
+            DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
+            Database.SetInitializer<CryptoDBContext>(null);
+            var noOfTrades = new List<double>() { 4};
+            var risks = new List<decimal>() {3.5m };
+            var increments = new List<decimal>() {1.52m};
             var tasks = new List<Task>();
 
             var services = new ServiceCollection()
                     .AddDbMarketData()
                     .AddDbMarketMonitor(RunTypeEnum.BackTesting)
                     .AddTradingCore()
+                    .AddLogging(builder => builder // configure logging.
+                        .SetMinimumLevel(LogLevel.Trace)
+                        .AddConsole()
+                        )
                     .BuildServiceProvider();
 
             var marketData = services.GetService<IMarketData>();

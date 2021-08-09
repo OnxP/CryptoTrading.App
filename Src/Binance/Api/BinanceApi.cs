@@ -729,7 +729,7 @@ namespace Binance
             // ReSharper disable once InvertIf
             if (!success)
             {
-                throw NewBinanceWApiException(nameof(WithdrawAsync), json, withdrawRequest.Asset);
+                throw NewBinancesapiException(nameof(WithdrawAsync), json, withdrawRequest.Asset);
             }
 
             return withdrawRequest.Id;
@@ -775,7 +775,7 @@ namespace Binance
             // ReSharper disable once InvertIf
             if (!success)
             {
-                throw NewBinanceWApiException(nameof(GetDepositsAsync), json, asset);
+                throw NewBinancesapiException(nameof(GetDepositsAsync), json, asset);
             }
 
             return deposits;
@@ -822,7 +822,7 @@ namespace Binance
             // ReSharper disable once InvertIf
             if (!success)
             {
-                throw NewBinanceWApiException(nameof(GetWithdrawalsAsync), json, asset);
+                throw NewBinancesapiException(nameof(GetWithdrawalsAsync), json, asset);
             }
 
             return withdrawals;
@@ -858,7 +858,7 @@ namespace Binance
             // ReSharper disable once InvertIf
             if (!success)
             {
-                throw NewBinanceWApiException(nameof(GetDepositAddressAsync), json, asset);
+                throw NewBinancesapiException(nameof(GetDepositAddressAsync), json, asset);
             }
 
             return depositAddress;
@@ -890,7 +890,7 @@ namespace Binance
             // ReSharper disable once InvertIf
             if (!success)
             {
-                throw NewBinanceWApiException(nameof(GetWithdrawFeeAsync), json, asset);
+                throw NewBinancesapiException(nameof(GetWithdrawFeeAsync), json, asset);
             }
 
             return 0;
@@ -973,12 +973,12 @@ namespace Binance
         }
 
         /// <summary>
-        /// Throw WAPI exception.
+        /// Throw sapi exception.
         /// </summary>
         /// <param name="methodName"></param>
         /// <param name="json"></param>
         /// <param name="asset"></param>
-        private BinanceApiException NewBinanceWApiException(string methodName, string json, string asset)
+        private BinanceApiException NewBinancesapiException(string methodName, string json, string asset)
         {
             asset = asset.FormatSymbol();
 

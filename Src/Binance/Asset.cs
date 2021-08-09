@@ -1,6 +1,6 @@
 // ReSharper disable InconsistentNaming
-using Binance.Cache;
 using System;
+using Binance.Cache;
 
 namespace Binance
 {
@@ -15,191 +15,440 @@ namespace Binance
         /// <summary>
         /// When the assets were last updated.
         /// </summary>
-        public static readonly long LastUpdateAt = 1568989078690;
+        public static readonly long LastUpdateAt = 1627808129332;
 
+        public static Asset INCH => Cache.Get("1INCH");
+        public static Asset INCHDOWN => Cache.Get("1INCHDOWN");
+        public static Asset INCHUP => Cache.Get("1INCHUP");
+        public static Asset AAVE => Cache.Get("AAVE");
+        public static Asset AAVEDOWN => Cache.Get("AAVEDOWN");
+        public static Asset AAVEUP => Cache.Get("AAVEUP");
+        public static Asset ACM => Cache.Get("ACM");
         public static Asset ADA => Cache.Get("ADA");
+        public static Asset ADADOWN => Cache.Get("ADADOWN");
+        public static Asset ADAUP => Cache.Get("ADAUP");
         public static Asset ADX => Cache.Get("ADX");
         public static Asset AE => Cache.Get("AE");
+        public static Asset AERGO => Cache.Get("AERGO");
         public static Asset AGI => Cache.Get("AGI");
+        public static Asset AGIX => Cache.Get("AGIX");
         public static Asset AION => Cache.Get("AION");
+        public static Asset AKRO => Cache.Get("AKRO");
         public static Asset ALGO => Cache.Get("ALGO");
+        public static Asset ALICE => Cache.Get("ALICE");
+        public static Asset ALPHA => Cache.Get("ALPHA");
         public static Asset AMB => Cache.Get("AMB");
         public static Asset ANKR => Cache.Get("ANKR");
+        public static Asset ANT => Cache.Get("ANT");
         public static Asset APPC => Cache.Get("APPC");
+        public static Asset AR => Cache.Get("AR");
         public static Asset ARDR => Cache.Get("ARDR");
         public static Asset ARK => Cache.Get("ARK");
         public static Asset ARN => Cache.Get("ARN");
+        public static Asset ARPA => Cache.Get("ARPA");
+        public static Asset ASR => Cache.Get("ASR");
         public static Asset AST => Cache.Get("AST");
+        public static Asset ATA => Cache.Get("ATA");
+        public static Asset ATM => Cache.Get("ATM");
         public static Asset ATOM => Cache.Get("ATOM");
+        public static Asset AUCTION => Cache.Get("AUCTION");
+        public static Asset AUD => Cache.Get("AUD");
+        public static Asset AUDIO => Cache.Get("AUDIO");
+        public static Asset AUTO => Cache.Get("AUTO");
+        public static Asset AVA => Cache.Get("AVA");
+        public static Asset AVAX => Cache.Get("AVAX");
+        public static Asset AXS => Cache.Get("AXS");
+        public static Asset BADGER => Cache.Get("BADGER");
+        public static Asset BAKE => Cache.Get("BAKE");
+        public static Asset BAL => Cache.Get("BAL");
         public static Asset BAND => Cache.Get("BAND");
+        public static Asset BAR => Cache.Get("BAR");
         public static Asset BAT => Cache.Get("BAT");
         public static Asset BCC => Cache.Get("BCC");
         public static Asset BCD => Cache.Get("BCD");
+        public static Asset BCH => Cache.Get("BCH");
+        public static Asset BCHA => Cache.Get("BCHA");
         public static Asset BCHABC => Cache.Get("BCHABC");
+        public static Asset BCHDOWN => Cache.Get("BCHDOWN");
         public static Asset BCHSV => Cache.Get("BCHSV");
+        public static Asset BCHUP => Cache.Get("BCHUP");
         public static Asset BCN => Cache.Get("BCN");
         public static Asset BCPT => Cache.Get("BCPT");
+        public static Asset BEAM => Cache.Get("BEAM");
+        public static Asset BEAR => Cache.Get("BEAR");
+        public static Asset BEL => Cache.Get("BEL");
+        public static Asset BETH => Cache.Get("BETH");
         public static Asset BGBP => Cache.Get("BGBP");
+        public static Asset BIDR => Cache.Get("BIDR");
+        public static Asset BIFI => Cache.Get("BIFI");
+        public static Asset BKRW => Cache.Get("BKRW");
         public static Asset BLZ => Cache.Get("BLZ");
         public static Asset BNB => Cache.Get("BNB");
+        public static Asset BNBBEAR => Cache.Get("BNBBEAR");
+        public static Asset BNBBULL => Cache.Get("BNBBULL");
+        public static Asset BNBDOWN => Cache.Get("BNBDOWN");
+        public static Asset BNBUP => Cache.Get("BNBUP");
         public static Asset BNT => Cache.Get("BNT");
+        public static Asset BOND => Cache.Get("BOND");
+        public static Asset BOT => Cache.Get("BOT");
         public static Asset BQX => Cache.Get("BQX");
         public static Asset BRD => Cache.Get("BRD");
+        public static Asset BRL => Cache.Get("BRL");
         public static Asset BTC => Cache.Get("BTC");
         public static Asset BTCB => Cache.Get("BTCB");
+        public static Asset BTCDOWN => Cache.Get("BTCDOWN");
+        public static Asset BTCST => Cache.Get("BTCST");
+        public static Asset BTCUP => Cache.Get("BTCUP");
         public static Asset BTG => Cache.Get("BTG");
         public static Asset BTS => Cache.Get("BTS");
         public static Asset BTT => Cache.Get("BTT");
+        public static Asset BULL => Cache.Get("BULL");
+        public static Asset BURGER => Cache.Get("BURGER");
         public static Asset BUSD => Cache.Get("BUSD");
+        public static Asset BVND => Cache.Get("BVND");
+        public static Asset BZRX => Cache.Get("BZRX");
+        public static Asset C98 => Cache.Get("C98");
+        public static Asset CAKE => Cache.Get("CAKE");
         public static Asset CDT => Cache.Get("CDT");
+        public static Asset CELO => Cache.Get("CELO");
         public static Asset CELR => Cache.Get("CELR");
+        public static Asset CFX => Cache.Get("CFX");
         public static Asset CHAT => Cache.Get("CHAT");
+        public static Asset CHR => Cache.Get("CHR");
         public static Asset CHZ => Cache.Get("CHZ");
+        public static Asset CKB => Cache.Get("CKB");
         public static Asset CLOAK => Cache.Get("CLOAK");
+        public static Asset CLV => Cache.Get("CLV");
         public static Asset CMT => Cache.Get("CMT");
         public static Asset CND => Cache.Get("CND");
         public static Asset COCOS => Cache.Get("COCOS");
+        public static Asset COMP => Cache.Get("COMP");
         public static Asset COS => Cache.Get("COS");
+        public static Asset COTI => Cache.Get("COTI");
+        public static Asset COVER => Cache.Get("COVER");
+        public static Asset CREAM => Cache.Get("CREAM");
+        public static Asset CRV => Cache.Get("CRV");
+        public static Asset CTK => Cache.Get("CTK");
+        public static Asset CTSI => Cache.Get("CTSI");
+        public static Asset CTXC => Cache.Get("CTXC");
         public static Asset CVC => Cache.Get("CVC");
+        public static Asset CVP => Cache.Get("CVP");
+        public static Asset DAI => Cache.Get("DAI");
         public static Asset DASH => Cache.Get("DASH");
         public static Asset DATA => Cache.Get("DATA");
         public static Asset DCR => Cache.Get("DCR");
+        public static Asset DEGO => Cache.Get("DEGO");
         public static Asset DENT => Cache.Get("DENT");
+        public static Asset DEXE => Cache.Get("DEXE");
+        public static Asset DF => Cache.Get("DF");
+        public static Asset DGB => Cache.Get("DGB");
         public static Asset DGD => Cache.Get("DGD");
+        public static Asset DIA => Cache.Get("DIA");
         public static Asset DLT => Cache.Get("DLT");
         public static Asset DNT => Cache.Get("DNT");
         public static Asset DOCK => Cache.Get("DOCK");
+        public static Asset DODO => Cache.Get("DODO");
         public static Asset DOGE => Cache.Get("DOGE");
+        public static Asset DOT => Cache.Get("DOT");
+        public static Asset DOTDOWN => Cache.Get("DOTDOWN");
+        public static Asset DOTUP => Cache.Get("DOTUP");
+        public static Asset DREP => Cache.Get("DREP");
         public static Asset DUSK => Cache.Get("DUSK");
+        public static Asset EASY => Cache.Get("EASY");
         public static Asset EDO => Cache.Get("EDO");
+        public static Asset EGLD => Cache.Get("EGLD");
         public static Asset ELF => Cache.Get("ELF");
         public static Asset ENG => Cache.Get("ENG");
         public static Asset ENJ => Cache.Get("ENJ");
         public static Asset EOS => Cache.Get("EOS");
+        public static Asset EOSBEAR => Cache.Get("EOSBEAR");
+        public static Asset EOSBULL => Cache.Get("EOSBULL");
+        public static Asset EOSDOWN => Cache.Get("EOSDOWN");
+        public static Asset EOSUP => Cache.Get("EOSUP");
+        public static Asset EPS => Cache.Get("EPS");
         public static Asset ERD => Cache.Get("ERD");
+        public static Asset ERN => Cache.Get("ERN");
         public static Asset ETC => Cache.Get("ETC");
         public static Asset ETH => Cache.Get("ETH");
+        public static Asset ETHBEAR => Cache.Get("ETHBEAR");
+        public static Asset ETHBULL => Cache.Get("ETHBULL");
+        public static Asset ETHDOWN => Cache.Get("ETHDOWN");
+        public static Asset ETHUP => Cache.Get("ETHUP");
+        public static Asset EUR => Cache.Get("EUR");
         public static Asset EVX => Cache.Get("EVX");
+        public static Asset EZ => Cache.Get("EZ");
         public static Asset FET => Cache.Get("FET");
+        public static Asset FIL => Cache.Get("FIL");
+        public static Asset FILDOWN => Cache.Get("FILDOWN");
+        public static Asset FILUP => Cache.Get("FILUP");
+        public static Asset FIO => Cache.Get("FIO");
+        public static Asset FIRO => Cache.Get("FIRO");
+        public static Asset FIS => Cache.Get("FIS");
+        public static Asset FLM => Cache.Get("FLM");
+        public static Asset FLOW => Cache.Get("FLOW");
+        public static Asset FOR => Cache.Get("FOR");
+        public static Asset FORTH => Cache.Get("FORTH");
+        public static Asset FRONT => Cache.Get("FRONT");
         public static Asset FTM => Cache.Get("FTM");
+        public static Asset FTT => Cache.Get("FTT");
         public static Asset FUEL => Cache.Get("FUEL");
         public static Asset FUN => Cache.Get("FUN");
+        public static Asset FXS => Cache.Get("FXS");
         public static Asset GAS => Cache.Get("GAS");
+        public static Asset GBP => Cache.Get("GBP");
+        public static Asset GHST => Cache.Get("GHST");
+        public static Asset GLM => Cache.Get("GLM");
         public static Asset GNT => Cache.Get("GNT");
         public static Asset GO => Cache.Get("GO");
         public static Asset GRS => Cache.Get("GRS");
+        public static Asset GRT => Cache.Get("GRT");
+        public static Asset GTC => Cache.Get("GTC");
         public static Asset GTO => Cache.Get("GTO");
         public static Asset GVT => Cache.Get("GVT");
         public static Asset GXS => Cache.Get("GXS");
+        public static Asset GYEN => Cache.Get("GYEN");
+        public static Asset HARD => Cache.Get("HARD");
+        public static Asset HBAR => Cache.Get("HBAR");
         public static Asset HC => Cache.Get("HC");
+        public static Asset HEGIC => Cache.Get("HEGIC");
+        public static Asset HIVE => Cache.Get("HIVE");
+        public static Asset HNT => Cache.Get("HNT");
         public static Asset HOT => Cache.Get("HOT");
         public static Asset HSR => Cache.Get("HSR");
         public static Asset ICN => Cache.Get("ICN");
+        public static Asset ICP => Cache.Get("ICP");
         public static Asset ICX => Cache.Get("ICX");
+        public static Asset IDEX => Cache.Get("IDEX");
+        public static Asset IDRT => Cache.Get("IDRT");
+        public static Asset INJ => Cache.Get("INJ");
         public static Asset INS => Cache.Get("INS");
         public static Asset IOST => Cache.Get("IOST");
         public static Asset IOTA => Cache.Get("IOTA");
         public static Asset IOTX => Cache.Get("IOTX");
+        public static Asset IQ => Cache.Get("IQ");
+        public static Asset IRIS => Cache.Get("IRIS");
+        public static Asset JST => Cache.Get("JST");
+        public static Asset JUV => Cache.Get("JUV");
+        public static Asset KAVA => Cache.Get("KAVA");
+        public static Asset KEEP => Cache.Get("KEEP");
         public static Asset KEY => Cache.Get("KEY");
+        public static Asset KLAY => Cache.Get("KLAY");
         public static Asset KMD => Cache.Get("KMD");
         public static Asset KNC => Cache.Get("KNC");
+        public static Asset KP3R => Cache.Get("KP3R");
+        public static Asset KSM => Cache.Get("KSM");
         public static Asset LEND => Cache.Get("LEND");
+        public static Asset LINA => Cache.Get("LINA");
         public static Asset LINK => Cache.Get("LINK");
+        public static Asset LINKDOWN => Cache.Get("LINKDOWN");
+        public static Asset LINKUP => Cache.Get("LINKUP");
+        public static Asset LIT => Cache.Get("LIT");
         public static Asset LOOM => Cache.Get("LOOM");
+        public static Asset LPT => Cache.Get("LPT");
         public static Asset LRC => Cache.Get("LRC");
         public static Asset LSK => Cache.Get("LSK");
         public static Asset LTC => Cache.Get("LTC");
+        public static Asset LTCDOWN => Cache.Get("LTCDOWN");
+        public static Asset LTCUP => Cache.Get("LTCUP");
+        public static Asset LTO => Cache.Get("LTO");
         public static Asset LUN => Cache.Get("LUN");
+        public static Asset LUNA => Cache.Get("LUNA");
         public static Asset MANA => Cache.Get("MANA");
+        public static Asset MASK => Cache.Get("MASK");
         public static Asset MATIC => Cache.Get("MATIC");
+        public static Asset MBL => Cache.Get("MBL");
         public static Asset MCO => Cache.Get("MCO");
         public static Asset MDA => Cache.Get("MDA");
+        public static Asset MDT => Cache.Get("MDT");
+        public static Asset MDX => Cache.Get("MDX");
         public static Asset MFT => Cache.Get("MFT");
+        public static Asset MIR => Cache.Get("MIR");
         public static Asset MITH => Cache.Get("MITH");
+        public static Asset MKR => Cache.Get("MKR");
+        public static Asset MLN => Cache.Get("MLN");
         public static Asset MOD => Cache.Get("MOD");
         public static Asset MTH => Cache.Get("MTH");
         public static Asset MTL => Cache.Get("MTL");
         public static Asset NANO => Cache.Get("NANO");
         public static Asset NAS => Cache.Get("NAS");
         public static Asset NAV => Cache.Get("NAV");
+        public static Asset NBS => Cache.Get("NBS");
         public static Asset NCASH => Cache.Get("NCASH");
+        public static Asset NEAR => Cache.Get("NEAR");
         public static Asset NEBL => Cache.Get("NEBL");
         public static Asset NEO => Cache.Get("NEO");
+        public static Asset NGN => Cache.Get("NGN");
+        public static Asset NKN => Cache.Get("NKN");
+        public static Asset NMR => Cache.Get("NMR");
         public static Asset NPXS => Cache.Get("NPXS");
+        public static Asset NU => Cache.Get("NU");
         public static Asset NULS => Cache.Get("NULS");
         public static Asset NXS => Cache.Get("NXS");
         public static Asset OAX => Cache.Get("OAX");
+        public static Asset OCEAN => Cache.Get("OCEAN");
+        public static Asset OG => Cache.Get("OG");
+        public static Asset OGN => Cache.Get("OGN");
+        public static Asset OM => Cache.Get("OM");
         public static Asset OMG => Cache.Get("OMG");
         public static Asset ONE => Cache.Get("ONE");
         public static Asset ONG => Cache.Get("ONG");
         public static Asset ONT => Cache.Get("ONT");
+        public static Asset ORN => Cache.Get("ORN");
         public static Asset OST => Cache.Get("OST");
+        public static Asset OXT => Cache.Get("OXT");
         public static Asset PAX => Cache.Get("PAX");
+        public static Asset PAXG => Cache.Get("PAXG");
         public static Asset PERL => Cache.Get("PERL");
+        public static Asset PERP => Cache.Get("PERP");
+        public static Asset PHA => Cache.Get("PHA");
         public static Asset PHB => Cache.Get("PHB");
         public static Asset PHX => Cache.Get("PHX");
         public static Asset PIVX => Cache.Get("PIVX");
+        public static Asset PNT => Cache.Get("PNT");
         public static Asset POA => Cache.Get("POA");
         public static Asset POE => Cache.Get("POE");
+        public static Asset POLS => Cache.Get("POLS");
         public static Asset POLY => Cache.Get("POLY");
+        public static Asset POND => Cache.Get("POND");
         public static Asset POWR => Cache.Get("POWR");
         public static Asset PPT => Cache.Get("PPT");
+        public static Asset PROM => Cache.Get("PROM");
+        public static Asset PROS => Cache.Get("PROS");
+        public static Asset PSG => Cache.Get("PSG");
+        public static Asset PUNDIX => Cache.Get("PUNDIX");
         public static Asset QKC => Cache.Get("QKC");
         public static Asset QLC => Cache.Get("QLC");
+        public static Asset QNT => Cache.Get("QNT");
         public static Asset QSP => Cache.Get("QSP");
         public static Asset QTUM => Cache.Get("QTUM");
+        public static Asset QUICK => Cache.Get("QUICK");
+        public static Asset RAMP => Cache.Get("RAMP");
         public static Asset RCN => Cache.Get("RCN");
         public static Asset RDN => Cache.Get("RDN");
+        public static Asset REEF => Cache.Get("REEF");
         public static Asset REN => Cache.Get("REN");
+        public static Asset RENBTC => Cache.Get("RENBTC");
         public static Asset REP => Cache.Get("REP");
         public static Asset REQ => Cache.Get("REQ");
+        public static Asset RIF => Cache.Get("RIF");
         public static Asset RLC => Cache.Get("RLC");
+        public static Asset ROSE => Cache.Get("ROSE");
         public static Asset RPX => Cache.Get("RPX");
+        public static Asset RSR => Cache.Get("RSR");
+        public static Asset RUB => Cache.Get("RUB");
+        public static Asset RUNE => Cache.Get("RUNE");
         public static Asset RVN => Cache.Get("RVN");
         public static Asset SALT => Cache.Get("SALT");
+        public static Asset SAND => Cache.Get("SAND");
         public static Asset SC => Cache.Get("SC");
+        public static Asset SCRT => Cache.Get("SCRT");
+        public static Asset SFP => Cache.Get("SFP");
+        public static Asset SHIB => Cache.Get("SHIB");
+        public static Asset SKL => Cache.Get("SKL");
         public static Asset SKY => Cache.Get("SKY");
+        public static Asset SLP => Cache.Get("SLP");
         public static Asset SNGLS => Cache.Get("SNGLS");
         public static Asset SNM => Cache.Get("SNM");
         public static Asset SNT => Cache.Get("SNT");
+        public static Asset SNX => Cache.Get("SNX");
+        public static Asset SOL => Cache.Get("SOL");
+        public static Asset SPARTA => Cache.Get("SPARTA");
+        public static Asset SRM => Cache.Get("SRM");
         public static Asset STEEM => Cache.Get("STEEM");
+        public static Asset STMX => Cache.Get("STMX");
         public static Asset STORJ => Cache.Get("STORJ");
         public static Asset STORM => Cache.Get("STORM");
+        public static Asset STPT => Cache.Get("STPT");
         public static Asset STRAT => Cache.Get("STRAT");
+        public static Asset STRAX => Cache.Get("STRAX");
+        public static Asset STX => Cache.Get("STX");
         public static Asset SUB => Cache.Get("SUB");
+        public static Asset SUN => Cache.Get("SUN");
+        public static Asset SUPER => Cache.Get("SUPER");
+        public static Asset SUSD => Cache.Get("SUSD");
+        public static Asset SUSHI => Cache.Get("SUSHI");
+        public static Asset SUSHIDOWN => Cache.Get("SUSHIDOWN");
+        public static Asset SUSHIUP => Cache.Get("SUSHIUP");
+        public static Asset SWRV => Cache.Get("SWRV");
+        public static Asset SXP => Cache.Get("SXP");
+        public static Asset SXPDOWN => Cache.Get("SXPDOWN");
+        public static Asset SXPUP => Cache.Get("SXPUP");
         public static Asset SYS => Cache.Get("SYS");
+        public static Asset TCT => Cache.Get("TCT");
         public static Asset TFUEL => Cache.Get("TFUEL");
         public static Asset THETA => Cache.Get("THETA");
+        public static Asset TKO => Cache.Get("TKO");
+        public static Asset TLM => Cache.Get("TLM");
         public static Asset TNB => Cache.Get("TNB");
         public static Asset TNT => Cache.Get("TNT");
         public static Asset TOMO => Cache.Get("TOMO");
+        public static Asset TORN => Cache.Get("TORN");
+        public static Asset TRB => Cache.Get("TRB");
         public static Asset TRIG => Cache.Get("TRIG");
+        public static Asset TROY => Cache.Get("TROY");
+        public static Asset TRU => Cache.Get("TRU");
         public static Asset TRX => Cache.Get("TRX");
+        public static Asset TRXDOWN => Cache.Get("TRXDOWN");
+        public static Asset TRXUP => Cache.Get("TRXUP");
+        public static Asset TRY => Cache.Get("TRY");
         public static Asset TUSD => Cache.Get("TUSD");
         public static Asset TUSDB => Cache.Get("TUSDB");
+        public static Asset TVK => Cache.Get("TVK");
+        public static Asset TWT => Cache.Get("TWT");
+        public static Asset UAH => Cache.Get("UAH");
+        public static Asset UFT => Cache.Get("UFT");
+        public static Asset UMA => Cache.Get("UMA");
+        public static Asset UNFI => Cache.Get("UNFI");
+        public static Asset UNI => Cache.Get("UNI");
+        public static Asset UNIDOWN => Cache.Get("UNIDOWN");
+        public static Asset UNIUP => Cache.Get("UNIUP");
         public static Asset USDC => Cache.Get("USDC");
         public static Asset USDS => Cache.Get("USDS");
         public static Asset USDSB => Cache.Get("USDSB");
         public static Asset USDT => Cache.Get("USDT");
+        public static Asset UTK => Cache.Get("UTK");
+        public static Asset VAI => Cache.Get("VAI");
         public static Asset VEN => Cache.Get("VEN");
         public static Asset VET => Cache.Get("VET");
         public static Asset VIA => Cache.Get("VIA");
         public static Asset VIB => Cache.Get("VIB");
         public static Asset VIBE => Cache.Get("VIBE");
+        public static Asset VIDT => Cache.Get("VIDT");
+        public static Asset VITE => Cache.Get("VITE");
+        public static Asset VTHO => Cache.Get("VTHO");
         public static Asset WABI => Cache.Get("WABI");
         public static Asset WAN => Cache.Get("WAN");
         public static Asset WAVES => Cache.Get("WAVES");
+        public static Asset WBTC => Cache.Get("WBTC");
         public static Asset WIN => Cache.Get("WIN");
+        public static Asset WING => Cache.Get("WING");
         public static Asset WINGS => Cache.Get("WINGS");
+        public static Asset WNXM => Cache.Get("WNXM");
         public static Asset WPR => Cache.Get("WPR");
+        public static Asset WRX => Cache.Get("WRX");
         public static Asset WTC => Cache.Get("WTC");
         public static Asset XEM => Cache.Get("XEM");
         public static Asset XLM => Cache.Get("XLM");
+        public static Asset XLMDOWN => Cache.Get("XLMDOWN");
+        public static Asset XLMUP => Cache.Get("XLMUP");
         public static Asset XMR => Cache.Get("XMR");
         public static Asset XRP => Cache.Get("XRP");
+        public static Asset XRPBEAR => Cache.Get("XRPBEAR");
+        public static Asset XRPBULL => Cache.Get("XRPBULL");
+        public static Asset XRPDOWN => Cache.Get("XRPDOWN");
+        public static Asset XRPUP => Cache.Get("XRPUP");
+        public static Asset XTZ => Cache.Get("XTZ");
+        public static Asset XTZDOWN => Cache.Get("XTZDOWN");
+        public static Asset XTZUP => Cache.Get("XTZUP");
         public static Asset XVG => Cache.Get("XVG");
+        public static Asset XVS => Cache.Get("XVS");
         public static Asset XZC => Cache.Get("XZC");
+        public static Asset YFI => Cache.Get("YFI");
+        public static Asset YFIDOWN => Cache.Get("YFIDOWN");
+        public static Asset YFII => Cache.Get("YFII");
+        public static Asset YFIUP => Cache.Get("YFIUP");
         public static Asset YOYO => Cache.Get("YOYO");
+        public static Asset ZAR => Cache.Get("ZAR");
         public static Asset ZEC => Cache.Get("ZEC");
         public static Asset ZEN => Cache.Get("ZEN");
         public static Asset ZIL => Cache.Get("ZIL");
@@ -252,189 +501,438 @@ namespace Binance
 
                 Cache.Set(
                     new[] {
+                        new Asset("1INCH", 8),
+                        new Asset("1INCHDOWN", 8),
+                        new Asset("1INCHUP", 8),
+                        new Asset("AAVE", 8),
+                        new Asset("AAVEDOWN", 8),
+                        new Asset("AAVEUP", 8),
+                        new Asset("ACM", 8),
                         new Asset("ADA", 8),
+                        new Asset("ADADOWN", 8),
+                        new Asset("ADAUP", 8),
                         new Asset("ADX", 8),
                         new Asset("AE", 8),
+                        new Asset("AERGO", 8),
                         new Asset("AGI", 8),
+                        new Asset("AGIX", 8),
                         new Asset("AION", 8),
+                        new Asset("AKRO", 8),
                         new Asset("ALGO", 8),
+                        new Asset("ALICE", 8),
+                        new Asset("ALPHA", 8),
                         new Asset("AMB", 8),
                         new Asset("ANKR", 8),
+                        new Asset("ANT", 8),
                         new Asset("APPC", 8),
+                        new Asset("AR", 8),
                         new Asset("ARDR", 8),
                         new Asset("ARK", 8),
                         new Asset("ARN", 8),
+                        new Asset("ARPA", 8),
+                        new Asset("ASR", 8),
                         new Asset("AST", 8),
+                        new Asset("ATA", 8),
+                        new Asset("ATM", 8),
                         new Asset("ATOM", 8),
+                        new Asset("AUCTION", 8),
+                        new Asset("AUD", 8),
+                        new Asset("AUDIO", 8),
+                        new Asset("AUTO", 8),
+                        new Asset("AVA", 8),
+                        new Asset("AVAX", 8),
+                        new Asset("AXS", 8),
+                        new Asset("BADGER", 8),
+                        new Asset("BAKE", 8),
+                        new Asset("BAL", 8),
                         new Asset("BAND", 8),
+                        new Asset("BAR", 8),
                         new Asset("BAT", 8),
                         new Asset("BCC", 8),
                         new Asset("BCD", 8),
+                        new Asset("BCH", 8),
+                        new Asset("BCHA", 8),
                         new Asset("BCHABC", 8),
+                        new Asset("BCHDOWN", 8),
                         new Asset("BCHSV", 8),
+                        new Asset("BCHUP", 8),
                         new Asset("BCN", 8),
                         new Asset("BCPT", 8),
+                        new Asset("BEAM", 8),
+                        new Asset("BEAR", 8),
+                        new Asset("BEL", 8),
+                        new Asset("BETH", 8),
                         new Asset("BGBP", 8),
+                        new Asset("BIDR", 2),
+                        new Asset("BIFI", 8),
+                        new Asset("BKRW", 8),
                         new Asset("BLZ", 8),
                         new Asset("BNB", 8),
+                        new Asset("BNBBEAR", 8),
+                        new Asset("BNBBULL", 8),
+                        new Asset("BNBDOWN", 8),
+                        new Asset("BNBUP", 8),
                         new Asset("BNT", 8),
+                        new Asset("BOND", 8),
+                        new Asset("BOT", 8),
                         new Asset("BQX", 8),
                         new Asset("BRD", 8),
+                        new Asset("BRL", 8),
                         new Asset("BTC", 8),
                         new Asset("BTCB", 8),
+                        new Asset("BTCDOWN", 8),
+                        new Asset("BTCST", 8),
+                        new Asset("BTCUP", 8),
                         new Asset("BTG", 8),
                         new Asset("BTS", 8),
                         new Asset("BTT", 8),
+                        new Asset("BULL", 8),
+                        new Asset("BURGER", 8),
                         new Asset("BUSD", 8),
+                        new Asset("BVND", 2),
+                        new Asset("BZRX", 8),
+                        new Asset("C98", 8),
+                        new Asset("CAKE", 8),
                         new Asset("CDT", 8),
+                        new Asset("CELO", 8),
                         new Asset("CELR", 8),
+                        new Asset("CFX", 8),
                         new Asset("CHAT", 8),
+                        new Asset("CHR", 8),
                         new Asset("CHZ", 8),
+                        new Asset("CKB", 8),
                         new Asset("CLOAK", 8),
+                        new Asset("CLV", 8),
                         new Asset("CMT", 8),
                         new Asset("CND", 8),
                         new Asset("COCOS", 8),
+                        new Asset("COMP", 8),
                         new Asset("COS", 8),
+                        new Asset("COTI", 8),
+                        new Asset("COVER", 8),
+                        new Asset("CREAM", 8),
+                        new Asset("CRV", 8),
+                        new Asset("CTK", 8),
+                        new Asset("CTSI", 8),
+                        new Asset("CTXC", 8),
                         new Asset("CVC", 8),
+                        new Asset("CVP", 8),
+                        new Asset("DAI", 8),
                         new Asset("DASH", 8),
                         new Asset("DATA", 8),
                         new Asset("DCR", 8),
+                        new Asset("DEGO", 8),
                         new Asset("DENT", 8),
+                        new Asset("DEXE", 8),
+                        new Asset("DF", 8),
+                        new Asset("DGB", 8),
                         new Asset("DGD", 8),
+                        new Asset("DIA", 8),
                         new Asset("DLT", 8),
                         new Asset("DNT", 8),
                         new Asset("DOCK", 8),
+                        new Asset("DODO", 8),
                         new Asset("DOGE", 8),
+                        new Asset("DOT", 8),
+                        new Asset("DOTDOWN", 8),
+                        new Asset("DOTUP", 8),
+                        new Asset("DREP", 8),
                         new Asset("DUSK", 8),
+                        new Asset("EASY", 8),
                         new Asset("EDO", 8),
+                        new Asset("EGLD", 8),
                         new Asset("ELF", 8),
                         new Asset("ENG", 8),
                         new Asset("ENJ", 8),
                         new Asset("EOS", 8),
+                        new Asset("EOSBEAR", 8),
+                        new Asset("EOSBULL", 8),
+                        new Asset("EOSDOWN", 8),
+                        new Asset("EOSUP", 8),
+                        new Asset("EPS", 8),
                         new Asset("ERD", 8),
+                        new Asset("ERN", 8),
                         new Asset("ETC", 8),
                         new Asset("ETH", 8),
+                        new Asset("ETHBEAR", 8),
+                        new Asset("ETHBULL", 8),
+                        new Asset("ETHDOWN", 8),
+                        new Asset("ETHUP", 8),
+                        new Asset("EUR", 8),
                         new Asset("EVX", 8),
+                        new Asset("EZ", 8),
                         new Asset("FET", 8),
+                        new Asset("FIL", 8),
+                        new Asset("FILDOWN", 8),
+                        new Asset("FILUP", 8),
+                        new Asset("FIO", 8),
+                        new Asset("FIRO", 8),
+                        new Asset("FIS", 8),
+                        new Asset("FLM", 8),
+                        new Asset("FLOW", 8),
+                        new Asset("FOR", 8),
+                        new Asset("FORTH", 8),
+                        new Asset("FRONT", 8),
                         new Asset("FTM", 8),
+                        new Asset("FTT", 8),
                         new Asset("FUEL", 8),
                         new Asset("FUN", 8),
+                        new Asset("FXS", 8),
                         new Asset("GAS", 8),
+                        new Asset("GBP", 8),
+                        new Asset("GHST", 8),
+                        new Asset("GLM", 8),
                         new Asset("GNT", 8),
                         new Asset("GO", 8),
                         new Asset("GRS", 8),
+                        new Asset("GRT", 8),
+                        new Asset("GTC", 8),
                         new Asset("GTO", 8),
                         new Asset("GVT", 8),
                         new Asset("GXS", 8),
+                        new Asset("GYEN", 8),
+                        new Asset("HARD", 8),
+                        new Asset("HBAR", 8),
                         new Asset("HC", 8),
+                        new Asset("HEGIC", 8),
+                        new Asset("HIVE", 8),
+                        new Asset("HNT", 8),
                         new Asset("HOT", 8),
                         new Asset("HSR", 8),
                         new Asset("ICN", 8),
+                        new Asset("ICP", 8),
                         new Asset("ICX", 8),
+                        new Asset("IDEX", 8),
+                        new Asset("IDRT", 2),
+                        new Asset("INJ", 8),
                         new Asset("INS", 8),
                         new Asset("IOST", 8),
                         new Asset("IOTA", 8),
                         new Asset("IOTX", 8),
+                        new Asset("IQ", 8),
+                        new Asset("IRIS", 8),
+                        new Asset("JST", 8),
+                        new Asset("JUV", 8),
+                        new Asset("KAVA", 8),
+                        new Asset("KEEP", 8),
                         new Asset("KEY", 8),
+                        new Asset("KLAY", 8),
                         new Asset("KMD", 8),
                         new Asset("KNC", 8),
+                        new Asset("KP3R", 8),
+                        new Asset("KSM", 8),
                         new Asset("LEND", 8),
+                        new Asset("LINA", 8),
                         new Asset("LINK", 8),
+                        new Asset("LINKDOWN", 8),
+                        new Asset("LINKUP", 8),
+                        new Asset("LIT", 8),
                         new Asset("LOOM", 8),
+                        new Asset("LPT", 8),
                         new Asset("LRC", 8),
                         new Asset("LSK", 8),
                         new Asset("LTC", 8),
+                        new Asset("LTCDOWN", 8),
+                        new Asset("LTCUP", 8),
+                        new Asset("LTO", 8),
                         new Asset("LUN", 8),
+                        new Asset("LUNA", 8),
                         new Asset("MANA", 8),
+                        new Asset("MASK", 8),
                         new Asset("MATIC", 8),
+                        new Asset("MBL", 8),
                         new Asset("MCO", 8),
                         new Asset("MDA", 8),
+                        new Asset("MDT", 8),
+                        new Asset("MDX", 8),
                         new Asset("MFT", 8),
+                        new Asset("MIR", 8),
                         new Asset("MITH", 8),
+                        new Asset("MKR", 8),
+                        new Asset("MLN", 8),
                         new Asset("MOD", 8),
                         new Asset("MTH", 8),
                         new Asset("MTL", 8),
                         new Asset("NANO", 8),
                         new Asset("NAS", 8),
                         new Asset("NAV", 8),
+                        new Asset("NBS", 8),
                         new Asset("NCASH", 8),
+                        new Asset("NEAR", 8),
                         new Asset("NEBL", 8),
                         new Asset("NEO", 8),
+                        new Asset("NGN", 8),
+                        new Asset("NKN", 8),
+                        new Asset("NMR", 8),
                         new Asset("NPXS", 8),
+                        new Asset("NU", 8),
                         new Asset("NULS", 8),
                         new Asset("NXS", 8),
                         new Asset("OAX", 8),
+                        new Asset("OCEAN", 8),
+                        new Asset("OG", 8),
+                        new Asset("OGN", 8),
+                        new Asset("OM", 8),
                         new Asset("OMG", 8),
                         new Asset("ONE", 8),
                         new Asset("ONG", 8),
                         new Asset("ONT", 8),
+                        new Asset("ORN", 8),
                         new Asset("OST", 8),
+                        new Asset("OXT", 8),
                         new Asset("PAX", 8),
+                        new Asset("PAXG", 8),
                         new Asset("PERL", 8),
+                        new Asset("PERP", 8),
+                        new Asset("PHA", 8),
                         new Asset("PHB", 8),
                         new Asset("PHX", 8),
                         new Asset("PIVX", 8),
+                        new Asset("PNT", 8),
                         new Asset("POA", 8),
                         new Asset("POE", 8),
+                        new Asset("POLS", 8),
                         new Asset("POLY", 8),
+                        new Asset("POND", 8),
                         new Asset("POWR", 8),
                         new Asset("PPT", 8),
+                        new Asset("PROM", 8),
+                        new Asset("PROS", 8),
+                        new Asset("PSG", 8),
+                        new Asset("PUNDIX", 8),
                         new Asset("QKC", 8),
                         new Asset("QLC", 8),
+                        new Asset("QNT", 8),
                         new Asset("QSP", 8),
                         new Asset("QTUM", 8),
+                        new Asset("QUICK", 8),
+                        new Asset("RAMP", 8),
                         new Asset("RCN", 8),
                         new Asset("RDN", 8),
+                        new Asset("REEF", 8),
                         new Asset("REN", 8),
+                        new Asset("RENBTC", 8),
                         new Asset("REP", 8),
                         new Asset("REQ", 8),
+                        new Asset("RIF", 8),
                         new Asset("RLC", 8),
+                        new Asset("ROSE", 8),
                         new Asset("RPX", 8),
+                        new Asset("RSR", 8),
+                        new Asset("RUB", 8),
+                        new Asset("RUNE", 8),
                         new Asset("RVN", 8),
                         new Asset("SALT", 8),
+                        new Asset("SAND", 8),
                         new Asset("SC", 8),
+                        new Asset("SCRT", 8),
+                        new Asset("SFP", 8),
+                        new Asset("SHIB", 2),
+                        new Asset("SKL", 8),
                         new Asset("SKY", 8),
+                        new Asset("SLP", 8),
                         new Asset("SNGLS", 8),
                         new Asset("SNM", 8),
                         new Asset("SNT", 8),
+                        new Asset("SNX", 8),
+                        new Asset("SOL", 8),
+                        new Asset("SPARTA", 8),
+                        new Asset("SRM", 8),
                         new Asset("STEEM", 8),
+                        new Asset("STMX", 8),
                         new Asset("STORJ", 8),
                         new Asset("STORM", 8),
+                        new Asset("STPT", 8),
                         new Asset("STRAT", 8),
+                        new Asset("STRAX", 8),
+                        new Asset("STX", 8),
                         new Asset("SUB", 8),
+                        new Asset("SUN", 8),
+                        new Asset("SUPER", 8),
+                        new Asset("SUSD", 8),
+                        new Asset("SUSHI", 8),
+                        new Asset("SUSHIDOWN", 8),
+                        new Asset("SUSHIUP", 8),
+                        new Asset("SWRV", 8),
+                        new Asset("SXP", 8),
+                        new Asset("SXPDOWN", 8),
+                        new Asset("SXPUP", 8),
                         new Asset("SYS", 8),
+                        new Asset("TCT", 8),
                         new Asset("TFUEL", 8),
                         new Asset("THETA", 8),
+                        new Asset("TKO", 8),
+                        new Asset("TLM", 8),
                         new Asset("TNB", 8),
                         new Asset("TNT", 8),
                         new Asset("TOMO", 8),
+                        new Asset("TORN", 8),
+                        new Asset("TRB", 8),
                         new Asset("TRIG", 8),
+                        new Asset("TROY", 8),
+                        new Asset("TRU", 8),
                         new Asset("TRX", 8),
+                        new Asset("TRXDOWN", 8),
+                        new Asset("TRXUP", 8),
+                        new Asset("TRY", 8),
                         new Asset("TUSD", 8),
                         new Asset("TUSDB", 8),
+                        new Asset("TVK", 8),
+                        new Asset("TWT", 8),
+                        new Asset("UAH", 8),
+                        new Asset("UFT", 8),
+                        new Asset("UMA", 8),
+                        new Asset("UNFI", 8),
+                        new Asset("UNI", 8),
+                        new Asset("UNIDOWN", 8),
+                        new Asset("UNIUP", 8),
                         new Asset("USDC", 8),
                         new Asset("USDS", 8),
                         new Asset("USDSB", 8),
                         new Asset("USDT", 8),
+                        new Asset("UTK", 8),
+                        new Asset("VAI", 8),
                         new Asset("VEN", 8),
                         new Asset("VET", 8),
                         new Asset("VIA", 8),
                         new Asset("VIB", 8),
                         new Asset("VIBE", 8),
+                        new Asset("VIDT", 8),
+                        new Asset("VITE", 8),
+                        new Asset("VTHO", 8),
                         new Asset("WABI", 8),
                         new Asset("WAN", 8),
                         new Asset("WAVES", 8),
+                        new Asset("WBTC", 8),
                         new Asset("WIN", 8),
+                        new Asset("WING", 8),
                         new Asset("WINGS", 8),
+                        new Asset("WNXM", 8),
                         new Asset("WPR", 8),
+                        new Asset("WRX", 8),
                         new Asset("WTC", 8),
                         new Asset("XEM", 8),
                         new Asset("XLM", 8),
+                        new Asset("XLMDOWN", 8),
+                        new Asset("XLMUP", 8),
                         new Asset("XMR", 8),
                         new Asset("XRP", 8),
+                        new Asset("XRPBEAR", 8),
+                        new Asset("XRPBULL", 8),
+                        new Asset("XRPDOWN", 8),
+                        new Asset("XRPUP", 8),
+                        new Asset("XTZ", 8),
+                        new Asset("XTZDOWN", 8),
+                        new Asset("XTZUP", 8),
                         new Asset("XVG", 8),
+                        new Asset("XVS", 8),
                         new Asset("XZC", 8),
+                        new Asset("YFI", 8),
+                        new Asset("YFIDOWN", 8),
+                        new Asset("YFII", 8),
+                        new Asset("YFIUP", 8),
                         new Asset("YOYO", 8),
+                        new Asset("ZAR", 8),
                         new Asset("ZEC", 8),
                         new Asset("ZEN", 8),
                         new Asset("ZIL", 8),

@@ -31,6 +31,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             dict.Add("50", (indicator, new double[] { 50 }));
             dict.Add("100", (indicator, new double[] { 100 }));
             dict.Add("Srsi", (Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 }));
+            dict.Add("rsi", (Tulip.Indicators.rsi, new double[] { 14 }));
             return dict;
         }
 
@@ -39,14 +40,20 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var MA25 = indicatorOutputs["25"][0].ToList();
             var MA50 = indicatorOutputs["50"][0].ToList();
             var MA100= indicatorOutputs["100"][0].ToList();
-            var sRsi = indicatorOutputs["Srsi"][0].ToList();
-
+            var sRsiK = indicatorOutputs["Srsi"][0].ToList();
+            var sRsiD = indicatorOutputs["Srsi"][1].ToList();
+            var rsi = indicatorOutputs["rsi"][0].ToList();
+            sRsiK.Reverse();
+            sRsiD.Reverse();
             // log values
             
             var condition1 = MA50.Last() >= MA100.Last();
-            var condition2 = MA100.Last() <= (double)closePrice.Close;
+            var condition2 = MA50.Last() <= (double)closePrice.Close;
             //var condition3 = MA25.Last() >= MA50.Last();
-            var condition4 = sRsi.Last() <= 50;
+            var condition4 = sRsiK.First() <= 50.0;
+            //var condition5 = sRsiK.Skip(1).First() <= sRsiK.First();
+            var condition5 = sRsiD.First() <= sRsiK.First();
+            var condition6 = rsi.Last() <=35.0;
             if (condition1 && condition2 && condition4)
             {
                 LogResult(1);
