@@ -24,6 +24,7 @@ namespace CryptoTrading.App.Algorthm.StopLimits
 
         public decimal TargetPrice { get; private set; }
         public decimal CurrentPrice { get => _currentPrice; set => _currentPrice = value; }
+        public DateTime EndDateTime { get; set; }
 
         public void Configure(Order order)
         {

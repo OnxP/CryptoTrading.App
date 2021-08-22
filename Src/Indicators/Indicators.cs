@@ -27,6 +27,7 @@ namespace Tulip
             { nameof(bop), new Indicator("Bop", "Balance of Power", "open|high|low|close", String.Empty, nameof(bop)) },
             { nameof(cci), new Indicator("Cci", "Commodity Channel Index", "high|low|close", "period", nameof(cci)) },
             { nameof(ceil), new Indicator("Ceil", "Vector Ceiling", "real", String.Empty, nameof(ceil)) },
+            { nameof(close), new Indicator("Close", "Close Prices", "real", "period", nameof(close)) },
             { nameof(cmo), new Indicator("Cmo", "Chande Momentum Oscillator", "real", "period", nameof(cmo)) },
             { nameof(cos), new Indicator("Cos", "Vector Cosine", "real", String.Empty, nameof(cos)) },
             { nameof(cosh), new Indicator("Cosh", "Vector Hyperbolic Cosine", "real", String.Empty, nameof(cosh)) },
@@ -155,6 +156,8 @@ namespace Tulip
         public static Indicator cci = IndicatorsDefinition[nameof(cci)];
 
         public static Indicator ceil = IndicatorsDefinition[nameof(ceil)];
+
+        public static Indicator close = IndicatorsDefinition[nameof(close)];
 
         public static Indicator cmo = IndicatorsDefinition[nameof(cmo)];
 

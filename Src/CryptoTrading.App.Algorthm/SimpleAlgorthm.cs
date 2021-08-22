@@ -39,6 +39,7 @@ namespace CryptoTrading.App.Algorthm
             //want to reduce dependancy on the candle stick object=> may need to create my own.
             _candleSticks.AddRange(candlesticks);
             Logger.LogInformation($"Added {candlesticks.Count()} historic candlesticks for {candlesticks.First().Symbol}");
+            StopLimitTrackers.EndDateTime = candlesticks.First().CloseTime;
             var result = CalculateTradeStrategies(candlesticks.First().Symbol, candlesticks.First().Interval.AsString(), candlesticks.Last().CloseTime);
             //log load algothrm is sucessful.
 
@@ -76,7 +77,7 @@ namespace CryptoTrading.App.Algorthm
             tradingStrategies.Log($"Interval: {interval}");
             tradingStrategies.Log($"CloseTime: {closeTime}");
 
-            result = tradingStrategies.Calculate(_candleSticks);
+            result = tradingStrategies.Calculate(_candleSticks, StopLimitTrackers);
             //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
             var request = RequestBuilder.BuildTradeRequest(result, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers);
 

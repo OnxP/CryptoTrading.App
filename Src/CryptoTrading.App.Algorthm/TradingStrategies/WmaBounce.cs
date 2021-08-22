@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         {
         }
 
-        protected override double StrategyWeight => 1.0;
+        public WmaBounce(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        {
+            noOfTrades = NoOfTrades;
+        }
 
+        protected override double StrategyWeight => 1.0 / noOfTrades;
+        private double noOfTrades = 1d;
 
         //public override int OutputLength => 1000;
 
@@ -46,7 +52,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var macd = indicatorOutputs["MACD"][0].ToList();
             var signal = indicatorOutputs["MACD"][1].ToList();

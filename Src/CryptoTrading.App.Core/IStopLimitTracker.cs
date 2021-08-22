@@ -13,5 +13,7 @@ namespace CryptoTrading.App.Core
         void MoveStopLimit();
         void Dispose();
         decimal CurrentPrice { get; set; }
+        public DateTime EndDateTime { get; set; }
+
     }
 }

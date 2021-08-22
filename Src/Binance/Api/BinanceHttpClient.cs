@@ -52,7 +52,42 @@ namespace Binance.Api
 
         #region Private Fields
 
-        private readonly HttpClient _httpClient;
+        //private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private BinanceApiOptions _apiOptions;
+        private HttpClient HttpClient
+        {
+            get
+            {
+                try
+                {
+                    var client = _httpClientFactory.CreateClient("myClient");
+                    client.BaseAddress = new Uri(_apiOptions.EndpointUrl); ;
+                    client.Timeout = TimeSpan.FromSeconds(_apiOptions.HttpClientTimeoutDefaultSeconds);
+                    try
+                    {
+                        var version = GetType().Assembly.GetName().Version;
+
+                        var versionString = $"{version.Major}.{version.Minor}.{version.Build}{(version.Revision > 0 ? $".{version.Revision}" : string.Empty)}";
+
+                        client.DefaultRequestHeaders.Add("User-Agent", $"Binance/{versionString} (.NET; +https://github.com/sonvister/Binance)");
+                    }
+                    catch (Exception e)
+                    {
+                        var message = $"{nameof(BinanceHttpClient)}: Failed to set User-Agent.";
+                        Logger?.LogError(e, message);
+                        throw new BinanceApiException(message, e);
+                    }
+                    return client;
+                }
+                catch (Exception e)
+                {
+                    var message = $"{nameof(BinanceHttpClient)}: Failed to create HttpClient.";
+                    Logger?.LogError(e, message);
+                    throw new BinanceApiException(message, e);
+                }
+            }
+        }
 
         #endregion Private Fields
 
@@ -65,23 +100,25 @@ namespace Binance.Api
         /// <param name="rateLimiter">The rate limiter (auto configured).</param>
         /// <param name="options">The options.</param>
         /// <param name="logger">The logger.</param>
-        internal BinanceHttpClient(ITimestampProvider timestampProvider = null, IApiRateLimiter rateLimiter = null, IOptions<BinanceApiOptions> options = null, ILogger<BinanceHttpClient> logger = null)
+        internal BinanceHttpClient(IHttpClientFactory factory = null,ITimestampProvider timestampProvider = null, IApiRateLimiter rateLimiter = null, IOptions<BinanceApiOptions> options = null, ILogger<BinanceHttpClient> logger = null)
             : base(logger)
         {
             TimestampProvider = timestampProvider ?? new TimestampProvider();
             RateLimiter = rateLimiter ?? new ApiRateLimiter();
-            var apiOptions = options?.Value ?? new BinanceApiOptions();
+            _apiOptions = options?.Value ?? new BinanceApiOptions();
 
-            DefaultRecvWindow = apiOptions.RecvWindowDefault ?? default;
+            _httpClientFactory = factory;
 
-            TimestampProvider.TimestampOffsetRefreshPeriod = TimeSpan.FromMinutes(apiOptions.TimestampOffsetRefreshPeriodMinutes);
+            DefaultRecvWindow = _apiOptions.RecvWindowDefault ?? default;
+
+            TimestampProvider.TimestampOffsetRefreshPeriod = TimeSpan.FromMinutes(_apiOptions.TimestampOffsetRefreshPeriodMinutes);
 
             try
             {
                 // Configure request rate limiter.
-                RateLimiter.Configure(TimeSpan.FromMinutes(apiOptions.RequestRateLimit.DurationMinutes), apiOptions.RequestRateLimit.Count);
+                RateLimiter.Configure(TimeSpan.FromMinutes(_apiOptions.RequestRateLimit.DurationMinutes), _apiOptions.RequestRateLimit.Count);
                 // Configure request burst rate limiter.
-                RateLimiter.Configure(TimeSpan.FromSeconds(apiOptions.RequestRateLimit.BurstDurationSeconds), apiOptions.RequestRateLimit.BurstCount);
+                RateLimiter.Configure(TimeSpan.FromSeconds(_apiOptions.RequestRateLimit.BurstDurationSeconds), _apiOptions.RequestRateLimit.BurstCount);
             }
             catch (Exception e)
             {
@@ -90,31 +127,17 @@ namespace Binance.Api
                 throw new BinanceApiException(message, e);
             }
 
-            var uri = new Uri(apiOptions.EndpointUrl);
+            var uri = new Uri(_apiOptions.EndpointUrl);
 
-            try
-            {
-                _httpClient = new HttpClient
-                {
-                    BaseAddress = uri,
-                    Timeout = TimeSpan.FromSeconds(apiOptions.HttpClientTimeoutDefaultSeconds)
-                };
-            }
-            catch (Exception e)
-            {
-                var message = $"{nameof(BinanceHttpClient)}: Failed to create HttpClient.";
-                Logger?.LogError(e, message);
-                throw new BinanceApiException(message, e);
-            }
 
-            if (apiOptions.ServicePointManagerConnectionLeaseTimeoutMilliseconds > 0)
+            if (_apiOptions.ServicePointManagerConnectionLeaseTimeoutMilliseconds > 0)
             {
                 try
                 {
                     // FIX: Singleton HttpClient doesn't respect DNS changes.
                     // https://github.com/dotnet/corefx/issues/11224
                     var sp = ServicePointManager.FindServicePoint(uri);
-                    sp.ConnectionLeaseTimeout = apiOptions.ServicePointManagerConnectionLeaseTimeoutMilliseconds;
+                    sp.ConnectionLeaseTimeout = _apiOptions.ServicePointManagerConnectionLeaseTimeoutMilliseconds;
                 }
                 catch (Exception e)
                 {
@@ -122,22 +145,7 @@ namespace Binance.Api
                     Logger?.LogError(e, message);
                     throw new BinanceApiException(message, e);
                 }
-            }
-
-            try
-            {
-                var version = GetType().Assembly.GetName().Version;
-
-                var versionString = $"{version.Major}.{version.Minor}.{version.Build}{(version.Revision > 0 ? $".{version.Revision}" : string.Empty)}";
-
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", $"Binance/{versionString} (.NET; +https://github.com/sonvister/Binance)");
-            }
-            catch (Exception e)
-            {
-                var message = $"{nameof(BinanceHttpClient)}: Failed to set User-Agent.";
-                Logger?.LogError(e, message);
-                throw new BinanceApiException(message, e);
-            }
+            }            
         }
 
         #endregion Constructors
@@ -201,7 +209,7 @@ namespace Binance.Api
 
             Logger?.LogDebug($"{nameof(BinanceHttpClient)}.{nameof(RequestAsync)}: [{method.Method}] \"{requestMessage.RequestUri}\"");
 
-            using (var response = await _httpClient.SendAsync(requestMessage, token).ConfigureAwait(false))
+            using (var response = await HttpClient.SendAsync(requestMessage, token).ConfigureAwait(false))
             {
                 if (response.IsSuccessStatusCode)
                 {
@@ -274,7 +282,6 @@ namespace Binance.Api
 
             if (disposing)
             {
-                _httpClient?.Dispose();
                 RateLimiter?.Dispose();
             }
 

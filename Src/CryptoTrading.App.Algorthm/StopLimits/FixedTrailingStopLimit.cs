@@ -10,14 +10,19 @@ namespace CryptoTrading.App.Algorthm.StopLimits
     {
         private decimal _risk = 0.991m;
         private decimal _fixed = 1.0152m;
-        private decimal _increment = 0.005m;
+        private decimal _increment = 0.009m;
         private int i = 1;
         private decimal _currentPrice;
         private decimal _boughtPrice;
         public decimal StopLimitPrice { get; private set; }
-
+        public FixedTrailingStopLimit(decimal risk, decimal increment)
+        {
+            _risk = 1 - (risk / 100m);
+            _fixed = 1 + (increment / 100m);
+        }
         public decimal TargetPrice { get; private set; }
         public decimal CurrentPrice { get => _currentPrice; set { _currentPrice = value; } }
+        public DateTime EndDateTime { get; set; }
 
         public void Configure(Order order)
         {

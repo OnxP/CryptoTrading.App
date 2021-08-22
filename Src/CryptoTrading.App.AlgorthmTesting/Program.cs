@@ -32,8 +32,9 @@ namespace CryptoTrading.App.AlgorthmTesting
         {
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
             Database.SetInitializer<CryptoDBContext>(null);
-            var noOfTrades = new List<double>() { 4};
-            var risks = new List<decimal>() {3.5m };
+            var customText = "Tfuel with extra macd conditions";
+            var noOfTrades = new List<double>() { 5};
+            var risks = new List<decimal>() {2.48m };
             var increments = new List<decimal>() {1.52m};
             var tasks = new List<Task>();
 
@@ -61,7 +62,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                     {
                         foreach (var increment in increments)
                         {
-                            tasks.Add(CreateTask(Indicators.ema, noOfTrade, risk, increment,marketData, services));
+                            tasks.Add(CreateTask(Indicators.macd, noOfTrade, risk, increment,marketData, customText, services));
                             
                         }
                     }
@@ -77,7 +78,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             Console.WriteLine("Complete");
         }
 
-        private static Task CreateTask(Indicator strat, double noOfTrade, decimal risk, decimal increment,IMarketData marketData, ServiceProvider services)
+        private static Task CreateTask(Indicator strat, double noOfTrade, decimal risk, decimal increment,IMarketData marketData,string text, ServiceProvider services)
         {
             var run = new RunContext();
             run.stratgy = strat;
@@ -85,6 +86,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             run.Risk = risk;
             run.Increment = increment;
             run.marketData = marketData;
+            run.CustomText = text;
             run.RunApp(services);
             return new Task(run.CompleteApp);
         }

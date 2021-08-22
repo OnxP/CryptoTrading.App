@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var rsi = indicatorOutputs["Rsi"][0].ToList();
             //var longEma = indicatorOutputs["LongEma"][0].ToList();

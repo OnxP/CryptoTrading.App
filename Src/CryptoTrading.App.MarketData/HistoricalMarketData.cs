@@ -25,6 +25,13 @@ namespace CryptoTrading.App.MarketData
 
         ICandlestickClient _client;
         IBinanceWebSocketStream _webSocket;
+        IBinanceApi api;
+        public ILogger<HistoricalMarketData> Logger { get; set; }
+
+        public HistoricalMarketData(ILogger<HistoricalMarketData> logger)
+        {
+            Logger = logger;
+        }
 
         public override void Configure(IRequest request)
         {
@@ -43,7 +50,7 @@ namespace CryptoTrading.App.MarketData
 
             // Initialize client.
             _client = services.GetService<ICandlestickClient>();
-
+            api = services.GetService<IBinanceApi>();
             // Initialize the stream.
             _webSocket = services.GetService<IBinanceWebSocketStream>();
             _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
@@ -54,17 +61,18 @@ namespace CryptoTrading.App.MarketData
         {
             try
             {
-                var api = new BinanceApi();
+                Logger.LogInformation("Loading Historic Candlesticks");
                 var tasks = new List<Task>();
                 foreach (var item in historicDataSubscribers)
                 {
                     tasks.Add(LoadHistoricData(api, item.Key, From, item.Value));
                 }
                 Task.WaitAll(tasks.ToArray());
-
+                Logger.LogInformation("Finished loading Historic Candlesticks");
                 tasks = new List<Task>();
                 //LoadData
 
+                Logger.LogInformation("Loading Candlesticks");
 
                 //StreamHistoricData
                 foreach (var item in subscribers)
@@ -82,10 +90,11 @@ namespace CryptoTrading.App.MarketData
                     }
                 }
                 //Task.WaitAll(tasks.ToArray());
+                Logger.LogInformation("Finished Loading Candlesticks");
 
                 //sort the list
-                
-                
+
+
 
             }
             catch (Exception e)
@@ -99,10 +108,12 @@ namespace CryptoTrading.App.MarketData
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
 
-        private void StreamData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private void StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-            var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1200, from.ToUniversalTime(), to.ToUniversalTime()).Result.ToList();
+            var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).Result.ToList();
             var action = historicDataSubscribers.First().Value.First();
+            Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candleSticks.Count()}");
+
             action.Invoke(candleSticks);
         }
 
@@ -138,7 +149,7 @@ namespace CryptoTrading.App.MarketData
                 _ => dateTime,
             };
         }
-        private async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
+        private async System.Threading.Tasks.Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime());

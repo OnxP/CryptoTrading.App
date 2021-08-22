@@ -18,15 +18,15 @@ namespace CryptoTrading.App.Algorthm
 
             services.AddTransient<IAlgorthm, SimpleAlgorthm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
-            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
+            services.AddTransient<IStopLimitTracker, FixedProfitStopLimit>();
 
             return services;
         }
 
         public static IServiceCollection AddAlgorthm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
         {
-            services.AddTransient<ITradingStrategy, MovingAverangeTradingStrategy>(provider => 
-            new MovingAverangeTradingStrategy(provider.GetService<ILogger<TradingStrategy>>(),Indicators.ema, NoOfTrades));
+            services.AddTransient<ITradingStrategy, PriceActionTradingStrategy>( provider => 
+            new PriceActionTradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), NoOfTrades));
 
             services.AddTransient<IAlgorthm, SimpleAlgorthm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();

@@ -11,7 +11,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         //public Dictionary<string, (Indicator indicator, double[] options)> Indicators { get; }
         int OutputLength { get; }
 
-        double Calculate(OrderedFixedLengthList<Candlestick> candleSticks);
+        double Calculate(OrderedFixedLengthList<Candlestick> candleSticks, IStopLimitTracker StopLimitTrackers);
         void Log(string v);
     }
 }

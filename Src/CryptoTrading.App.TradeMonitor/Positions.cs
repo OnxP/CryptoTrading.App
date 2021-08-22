@@ -13,6 +13,11 @@ namespace CryptoTrading.App.Monitor
 
         private readonly Dictionary<string, IPosition> _positions;
 
+        public IPosition GetPosition(string asset)
+        {
+            return _positions[asset];
+        }
+
         public Positions(ITradeFactory factory, Dictionary<string, IPosition> positions, ICalculator calculator)
         {
             _factory = factory;

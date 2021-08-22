@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,12 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             noOfTrades = NoOfTrades;
         }
 
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        {
+            indicator = Tulip.Indicators.wma;
+            noOfTrades = NoOfTrades;
+        }
+
         protected override double StrategyWeight => 1.0d/ noOfTrades;
         private double noOfTrades = 1d;
 
@@ -32,29 +39,23 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             dict.Add("100", (indicator, new double[] { 100 }));
             dict.Add("Srsi", (Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 }));
             dict.Add("rsi", (Tulip.Indicators.rsi, new double[] { 14 }));
+            dict.Add("close", (Tulip.Indicators.close, new double[] { 6 }));
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var MA25 = indicatorOutputs["25"][0].ToList();
             var MA50 = indicatorOutputs["50"][0].ToList();
             var MA100= indicatorOutputs["100"][0].ToList();
-            var sRsiK = indicatorOutputs["Srsi"][0].ToList();
-            var sRsiD = indicatorOutputs["Srsi"][1].ToList();
-            var rsi = indicatorOutputs["rsi"][0].ToList();
-            sRsiK.Reverse();
-            sRsiD.Reverse();
+            var close = indicatorOutputs["close"][0];
             // log values
             
             var condition1 = MA50.Last() >= MA100.Last();
+            var condition3 = MA25.Last() >= MA50.Last();
             var condition2 = MA50.Last() <= (double)closePrice.Close;
-            //var condition3 = MA25.Last() >= MA50.Last();
-            var condition4 = sRsiK.First() <= 50.0;
-            //var condition5 = sRsiK.Skip(1).First() <= sRsiK.First();
-            var condition5 = sRsiD.First() <= sRsiK.First();
-            var condition6 = rsi.Last() <=35.0;
-            if (condition1 && condition2 && condition4)
+            var condition5 = LastSixClose(close);
+            if (condition1 && condition2 && condition5)
             {
                 LogResult(1);
                 return StrategyWeight;
@@ -66,6 +67,23 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return 0;
         }
 
-        
+        private bool LastSixClose(double[] close)
+        {
+            if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4])
+                return true;
+            else if (close[2] < close[3] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5])
+                return true;
+            else return false;
+        }
     }
 }

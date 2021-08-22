@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var ema = (Tulip.Indicators.ema, new double[] { 100 });
             var srsi = (Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
             var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
+            dict.Add("close", (Tulip.Indicators.close, new double[] { 6 }));
+
             dict.Add("sRsi", srsi);
             dict.Add("Rsi", rsi);
             dict.Add("BBands", bbands);
@@ -38,7 +41,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var lower = indicatorOutputs["BBands"][0].ToList();
             var middle = indicatorOutputs["BBands"][1].ToList();
@@ -47,6 +50,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var rsi = indicatorOutputs["Rsi"][0].ToList();
             var kLine = indicatorOutputs["sRsi"][0].ToList();
             var dLine = indicatorOutputs["sRsi"][1].ToList();
+            var close = indicatorOutputs["close"][0];
+
 
             longEma.Reverse();
 
@@ -65,10 +70,12 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var condition2 = rsi.Last() <= 40;
             var condition3 = kLine.Last() >= dLine.Last();
             var condition4 = kLine.Last() <= 30;
+            var condition5 = LastSixClose(close);
+
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition2 && condition3 && condition4)
+            if (condition1 && condition2 && condition3 && condition4 && condition5)
             {
                 LogResult(1);
                 return StrategyWeight;
@@ -79,7 +86,24 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             LogResult(0);
             return 0;
         }
+        private bool LastSixClose(double[] close)
+        {
+            if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4])
+                return true;
+            else if (close[2] < close[3] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[4] < close[5] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[5] < close[6])
+                return true;
+            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5])
+                return true;
+            else return false;
+        }
 
-        
     }
 }

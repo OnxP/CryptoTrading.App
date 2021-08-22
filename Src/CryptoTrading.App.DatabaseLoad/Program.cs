@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Binance;
-using Binance.Application;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.MarketData;
@@ -28,15 +27,21 @@ namespace CryptoTrading.App.DatabaseLoad
                 .AddBinance(useSingleCombinedStream: true)
                 .AddHistoricMarketData()
                 // Configure logging.
-                .AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(Configuration.GetSection("Logging:File")))
-
+                .AddLogging(builder => builder // configure logging.
+                        .SetMinimumLevel(LogLevel.Trace)
+                        .AddConsole()
+                        )
                 .BuildServiceProvider();
             //context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
-            marketDate.From = new DateTime(2020, 12, 01);//25-12-20
-            var symbols = Symbol.BtcPairs;
+            marketDate.From = new DateTime(2021, 04, 01);//25-12-20
+            var symbols = Symbol.BtcPairsNine;
+            symbols.AddRange(Symbol.BtcPairsTen);
+            symbols.AddRange(Symbol.BtcPairsEleven);
+            symbols.AddRange(Symbol.BtcPairsTwelve);
+            symbols.AddRange(Symbol.BtcPairsThirteen);
+            symbols.AddRange(Symbol.BtcPairsFourteen);
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
               CandlestickInterval.Minute

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Net.Http;
 
 // ReSharper disable once CheckNamespace
 namespace Binance
@@ -18,6 +19,7 @@ namespace Binance
         public static IServiceCollection AddBinance(this IServiceCollection services, bool useSingleCombinedStream = false)
         {
             // API
+            services.AddHttpClient();
             services.AddSingleton<IBinanceApiUserProvider, BinanceApiUserProvider>();
             services.AddSingleton<ITimestampProvider, TimestampProvider>();
             services.AddSingleton<IBinanceHttpClient>(s =>
@@ -28,6 +30,7 @@ namespace Binance
                 // Replace initializer.
                 BinanceHttpClient.Initializer = new Lazy<BinanceHttpClient>(() =>
                     new BinanceHttpClient(
+                        s.GetService< IHttpClientFactory>(),
                         s.GetService<ITimestampProvider>(),
                         s.GetService<IApiRateLimiter>(),
                         s.GetService<IOptions<BinanceApiOptions>>(),

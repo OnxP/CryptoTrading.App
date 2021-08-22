@@ -42,6 +42,7 @@ namespace CryptoTrading.App.Monitor
                 if (marketMonitor.CheckOrder(Trade.CurrentTransaction))
                 {
                     Trade.CurrentTransaction.TransactionDate = currentCloseTime;
+                    Tracker.EndDateTime = currentCloseTime;
                     Trade.Open = false;
                     //unsubscribe to monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);

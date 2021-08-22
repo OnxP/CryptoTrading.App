@@ -8,7 +8,15 @@ namespace CryptoTrading.App.Algorthm.StopLimits
 {
     class FixedProfitStopLimit : IStopLimitTracker
     {
+        private decimal _risk = 3.48m / 100m;
+        private decimal _increment = 1.52m / 100m;
+        public FixedProfitStopLimit(decimal risk, decimal increment)
+        {
+            _risk =1-( risk / 100m);
+            _increment = 1+(increment / 100m);
+        }
         public decimal StopLimitPrice { get; set; }
+        public DateTime EndDateTime { get; set; }
 
         public decimal TargetPrice { get; set; }
         public decimal CurrentPrice { get; set; }
@@ -17,8 +25,8 @@ namespace CryptoTrading.App.Algorthm.StopLimits
         {
             var price = order.Price;
 
-            StopLimitPrice = price * 0.991m;
-            TargetPrice = price * 1.0152m;
+            StopLimitPrice = price * _risk;
+            TargetPrice = price * _increment;
         }
 
         public void Dispose()

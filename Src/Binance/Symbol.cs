@@ -3424,347 +3424,500 @@ namespace Binance
         {
             get
             {
+                List<Symbol> symbols = new List<Symbol>();
+                symbols.AddRange(BtcPairsOne);
+                symbols.AddRange(BtcPairsTwo);
+                symbols.AddRange(BtcPairsThree);
+                symbols.AddRange(BtcPairsFour);
+                symbols.AddRange(BtcPairsFive);
+                symbols.AddRange(BtcPairsSix);
+                symbols.AddRange(BtcPairsSeven);
+                symbols.AddRange(BtcPairsEight);
+                symbols.AddRange(BtcPairsNine);
+                symbols.AddRange(BtcPairsTen);
+                symbols.AddRange(BtcPairsEleven);
+                symbols.AddRange(BtcPairsTwelve);
+                symbols.AddRange(BtcPairsThirteen);
+                symbols.AddRange(BtcPairsFourteen);
+                return symbols;
+            }
+        }
+
+        public static List<Symbol> BtcPairsOne
+        {
+            get
+            {
                 List<Symbol> symbols = new List<Symbol>()
-                { 
-Symbol.INCH_BTC
-,Symbol.AAVE_BTC
-,Symbol.ACM_BTC
-,Symbol.ADA_BTC
-,Symbol.ADX_BTC
-,Symbol.AE_BTC
-,Symbol.AERGO_BTC
-,Symbol.AGI_BTC
-,Symbol.AGIX_BTC
-,Symbol.AION_BTC
-,Symbol.AKRO_BTC
-,Symbol.ALGO_BTC
-,Symbol.ALICE_BTC
-,Symbol.ALPHA_BTC
-,Symbol.AMB_BTC
-,Symbol.ANKR_BTC
-,Symbol.ANT_BTC
-,Symbol.APPC_BTC
-,Symbol.AR_BTC
-,Symbol.ARDR_BTC
-,Symbol.ARK_BTC
-,Symbol.ARN_BTC
-,Symbol.ARPA_BTC
-,Symbol.ASR_BTC
-,Symbol.AST_BTC
-,Symbol.ATA_BTC
-,Symbol.ATM_BTC
-,Symbol.ATOM_BTC
-,Symbol.AUCTION_BTC
-,Symbol.AUDIO_BTC
-,Symbol.AUTO_BTC
-,Symbol.AVA_BTC
-,Symbol.AVAX_BTC
-,Symbol.AXS_BTC
-,Symbol.BADGER_BTC
-,Symbol.BAKE_BTC
-,Symbol.BAL_BTC
-,Symbol.BAND_BTC
-,Symbol.BAR_BTC
-,Symbol.BAT_BTC
-,Symbol.BCC_BTC
-,Symbol.BCD_BTC
-,Symbol.BCHABC_BTC
-,Symbol.BCH_BTC
-,Symbol.BCHSV_BTC
-,Symbol.BCN_BTC
-,Symbol.BCPT_BTC
-,Symbol.BEAM_BTC
-,Symbol.BEL_BTC
-,Symbol.BLZ_BTC
-,Symbol.BNB_BTC
-,Symbol.BNT_BTC
-,Symbol.BOND_BTC
-,Symbol.BOT_BTC
-,Symbol.BQX_BTC
-,Symbol.BRD_BTC
-,Symbol.BTCB_BTC
-,Symbol.BTCST_BTC
-,Symbol.BTG_BTC
-,Symbol.BTS_BTC
-,Symbol.BTT_BTC
-,Symbol.BZRX_BTC
-,Symbol.C98_BTC
-,Symbol.CAKE_BTC
-,Symbol.CDT_BTC
-,Symbol.CELO_BTC
-,Symbol.CELR_BTC
-,Symbol.CFX_BTC
-,Symbol.CHAT_BTC
-,Symbol.CHR_BTC
-,Symbol.CHZ_BTC
-,Symbol.CKB_BTC
-,Symbol.CLOAK_BTC
-,Symbol.CLV_BTC
-,Symbol.CMT_BTC
-,Symbol.CND_BTC
-,Symbol.COCOS_BTC
-,Symbol.COMP_BTC
-,Symbol.COS_BTC
-,Symbol.COTI_BTC
-,Symbol.CRV_BTC
-,Symbol.CTK_BTC
-,Symbol.CTSI_BTC
-,Symbol.CTXC_BTC
-,Symbol.CVC_BTC
-,Symbol.DAI_BTC
-,Symbol.DASH_BTC
-,Symbol.DATA_BTC
-,Symbol.DCR_BTC
-,Symbol.DEGO_BTC
-,Symbol.DENT_BTC
-,Symbol.DGB_BTC
-,Symbol.DGD_BTC
-,Symbol.DIA_BTC
-,Symbol.DLT_BTC
-,Symbol.DNT_BTC
-,Symbol.DOCK_BTC
-,Symbol.DODO_BTC
-,Symbol.DOGE_BTC
-,Symbol.DOT_BTC
-,Symbol.DREP_BTC
-,Symbol.DUSK_BTC
-,Symbol.EASY_BTC
-,Symbol.EDO_BTC
-,Symbol.EGLD_BTC
-,Symbol.ELF_BTC
-,Symbol.ENG_BTC
-,Symbol.ENJ_BTC
-,Symbol.EOS_BTC
-,Symbol.EPS_BTC
-,Symbol.ERD_BTC
-,Symbol.ETC_BTC
-,Symbol.ETH_BTC
-,Symbol.EVX_BTC
-,Symbol.EZ_BTC
-,Symbol.FET_BTC
-,Symbol.FIL_BTC
-,Symbol.FIO_BTC
-,Symbol.FIRO_BTC
-,Symbol.FIS_BTC
-,Symbol.FLM_BTC
-,Symbol.FLOW_BTC
-,Symbol.FOR_BTC
-,Symbol.FORTH_BTC
-,Symbol.FRONT_BTC
-,Symbol.FTM_BTC
-,Symbol.FTT_BTC
-,Symbol.FUEL_BTC
-,Symbol.FUN_BTC
-,Symbol.FXS_BTC
-,Symbol.GAS_BTC
-,Symbol.GLM_BTC
-,Symbol.GNT_BTC
-,Symbol.GO_BTC
-,Symbol.GRS_BTC
-,Symbol.GRT_BTC
-,Symbol.GTC_BTC
-,Symbol.GTO_BTC
-,Symbol.GVT_BTC
-,Symbol.GXS_BTC
-,Symbol.HARD_BTC
-,Symbol.HBAR_BTC
-,Symbol.HC_BTC
-,Symbol.HIVE_BTC
-,Symbol.HNT_BTC
-,Symbol.HOT_BTC
-,Symbol.HSR_BTC
-,Symbol.ICN_BTC
-,Symbol.ICP_BTC
-,Symbol.ICX_BTC
-,Symbol.IDEX_BTC
-,Symbol.INJ_BTC
-,Symbol.INS_BTC
-,Symbol.IOST_BTC
-,Symbol.IOTA_BTC
-,Symbol.IOTX_BTC
-,Symbol.IRIS_BTC
-,Symbol.JST_BTC
-,Symbol.JUV_BTC
-,Symbol.KAVA_BTC
-,Symbol.KEEP_BTC
-,Symbol.KEY_BTC
-,Symbol.KLAY_BTC
-,Symbol.KMD_BTC
-,Symbol.KNC_BTC
-,Symbol.KSM_BTC
-,Symbol.LEND_BTC
-,Symbol.LINA_BTC
-,Symbol.LINK_BTC
-,Symbol.LIT_BTC
-,Symbol.LOOM_BTC
-,Symbol.LPT_BTC
-,Symbol.LRC_BTC
-,Symbol.LSK_BTC
-,Symbol.LTC_BTC
-,Symbol.LTO_BTC
-,Symbol.LUNA_BTC
-,Symbol.LUN_BTC
-,Symbol.MANA_BTC
-,Symbol.MATIC_BTC
-,Symbol.MBL_BTC
-,Symbol.MCO_BTC
-,Symbol.MDA_BTC
-,Symbol.MDT_BTC
-,Symbol.MDX_BTC
-,Symbol.MFT_BTC
-,Symbol.MIR_BTC
-,Symbol.MITH_BTC
-,Symbol.MKR_BTC
-,Symbol.MLN_BTC
-,Symbol.MOD_BTC
-,Symbol.MTH_BTC
-,Symbol.MTL_BTC
-,Symbol.NANO_BTC
-,Symbol.NAS_BTC
-,Symbol.NAV_BTC
-,Symbol.NBS_BTC
-,Symbol.NCASH_BTC
-,Symbol.NEAR_BTC
-,Symbol.NEBL_BTC
-,Symbol.NEO_BTC
-,Symbol.NKN_BTC
-,Symbol.NMR_BTC
-,Symbol.NPXS_BTC
-,Symbol.NU_BTC
-,Symbol.NULS_BTC
-,Symbol.NXS_BTC
-,Symbol.OAX_BTC
-,Symbol.OCEAN_BTC
-,Symbol.OG_BTC
-,Symbol.OGN_BTC
-,Symbol.OM_BTC
-,Symbol.OMG_BTC
-,Symbol.ONE_BTC
-,Symbol.ONG_BTC
-,Symbol.ONT_BTC
-,Symbol.ORN_BTC
-,Symbol.OST_BTC
-,Symbol.OXT_BTC
-,Symbol.PAX_BTC
-,Symbol.PAXG_BTC
-,Symbol.PERL_BTC
-,Symbol.PERP_BTC
-,Symbol.PHA_BTC
-,Symbol.PHB_BTC
-,Symbol.PHX_BTC
-,Symbol.PIVX_BTC
-,Symbol.PNT_BTC
-,Symbol.POA_BTC
-,Symbol.POE_BTC
-,Symbol.POLS_BTC
-,Symbol.POLY_BTC
-,Symbol.POND_BTC
-,Symbol.POWR_BTC
-,Symbol.PPT_BTC
-,Symbol.PSG_BTC
-,Symbol.QKC_BTC
-,Symbol.QLC_BTC
-,Symbol.QNT_BTC
-,Symbol.QSP_BTC
-,Symbol.QTUM_BTC
-,Symbol.QUICK_BTC
-,Symbol.RAMP_BTC
-,Symbol.RCN_BTC
-,Symbol.RDN_BTC
-,Symbol.REEF_BTC
-,Symbol.REN_BTC
-,Symbol.RENBTC_BTC
-,Symbol.REP_BTC
-,Symbol.REQ_BTC
-,Symbol.RIF_BTC
-,Symbol.RLC_BTC
-,Symbol.ROSE_BTC
-,Symbol.RPX_BTC
-,Symbol.RSR_BTC
-,Symbol.RUNE_BTC
-,Symbol.RVN_BTC
-,Symbol.SALT_BTC
-,Symbol.SAND_BTC
-,Symbol.SC_BTC
-,Symbol.SCRT_BTC
-,Symbol.SFP_BTC
-,Symbol.SKL_BTC
-,Symbol.SKY_BTC
-,Symbol.SNGLS_BTC
-,Symbol.SNM_BTC
-,Symbol.SNT_BTC
-,Symbol.SNX_BTC
-,Symbol.SOL_BTC
-,Symbol.SRM_BTC
-,Symbol.STEEM_BTC
-,Symbol.STMX_BTC
-,Symbol.STORJ_BTC
-,Symbol.STORM_BTC
-,Symbol.STPT_BTC
-,Symbol.STRAT_BTC
-,Symbol.STRAX_BTC
-,Symbol.STX_BTC
-,Symbol.SUB_BTC
-,Symbol.SUN_BTC
-,Symbol.SUPER_BTC
-,Symbol.SUSD_BTC
-,Symbol.SUSHI_BTC
-,Symbol.SXP_BTC
-,Symbol.SYS_BTC
-,Symbol.TCT_BTC
-,Symbol.TFUEL_BTC
-,Symbol.THETA_BTC
-,Symbol.TKO_BTC
-,Symbol.TLM_BTC
-,Symbol.TNB_BTC
-,Symbol.TNT_BTC
-,Symbol.TOMO_BTC
-,Symbol.TORN_BTC
-,Symbol.TRB_BTC
-,Symbol.TRIG_BTC
-,Symbol.TROY_BTC
-,Symbol.TRU_BTC
-,Symbol.TRX_BTC
-,Symbol.TUSD_BTC
-,Symbol.TVK_BTC
-,Symbol.TWT_BTC
-,Symbol.UMA_BTC
-,Symbol.UNFI_BTC
-,Symbol.UNI_BTC
-,Symbol.UTK_BTC
-,Symbol.VEN_BTC
-,Symbol.VET_BTC
-,Symbol.VIA_BTC
-,Symbol.VIB_BTC
-,Symbol.VIBE_BTC
-,Symbol.VIDT_BTC
-,Symbol.VITE_BTC
-,Symbol.WABI_BTC
-,Symbol.WAN_BTC
-,Symbol.WAVES_BTC
-,Symbol.WBTC_BTC
-,Symbol.WIN_BTC
-,Symbol.WING_BTC
-,Symbol.WINGS_BTC
-,Symbol.WNXM_BTC
-,Symbol.WPR_BTC
-,Symbol.WRX_BTC
-,Symbol.WTC_BTC
-,Symbol.XEM_BTC
-,Symbol.XLM_BTC
-,Symbol.XMR_BTC
-,Symbol.XRP_BTC
-,Symbol.XTZ_BTC
-,Symbol.XVG_BTC
-,Symbol.XVS_BTC
-,Symbol.XZC_BTC
-,Symbol.YFI_BTC
-,Symbol.YFII_BTC
-,Symbol.YOYO_BTC
-,Symbol.ZEC_BTC
-,Symbol.ZEN_BTC
-,Symbol.ZIL_BTC
-,Symbol.ZRX_BTC
+                {
+                    Symbol.INCH_BTC
+                    ,Symbol.AAVE_BTC
+                    ,Symbol.ACM_BTC
+                    ,Symbol.ADA_BTC
+                    ,Symbol.ADX_BTC
+                    ,Symbol.AE_BTC
+                    ,Symbol.AERGO_BTC
+                    ,Symbol.AGI_BTC
+                    ,Symbol.AGIX_BTC
+                    ,Symbol.AION_BTC
+                    ,Symbol.AKRO_BTC
+                    ,Symbol.ALGO_BTC
+                    ,Symbol.ALICE_BTC
+                    ,Symbol.ALPHA_BTC
+                    ,Symbol.AMB_BTC
+                    ,Symbol.ANKR_BTC
+                    ,Symbol.ANT_BTC
+                    ,Symbol.APPC_BTC
+                    ,Symbol.AR_BTC
+                    ,Symbol.ARDR_BTC
+                    ,Symbol.ARK_BTC
+                    ,Symbol.ARN_BTC
+                    ,Symbol.ARPA_BTC
+                    ,Symbol.ASR_BTC
+                    ,Symbol.AST_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsTwo
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.ATA_BTC
+                    ,Symbol.ATM_BTC
+                    ,Symbol.ATOM_BTC
+                    ,Symbol.AUCTION_BTC
+                    ,Symbol.AUDIO_BTC
+                    ,Symbol.AUTO_BTC
+                    ,Symbol.AVA_BTC
+                    ,Symbol.AVAX_BTC
+                    ,Symbol.AXS_BTC
+                    ,Symbol.BADGER_BTC
+                    ,Symbol.BAKE_BTC
+                    ,Symbol.BAL_BTC
+                    ,Symbol.BAND_BTC
+                    ,Symbol.BAR_BTC
+                    ,Symbol.BAT_BTC
+                    ,Symbol.BCC_BTC
+                    ,Symbol.BCD_BTC
+                    ,Symbol.BCHABC_BTC
+                    ,Symbol.BCH_BTC
+                    ,Symbol.BCHSV_BTC
+                    ,Symbol.BCN_BTC
+                    ,Symbol.BCPT_BTC
+                    ,Symbol.BEAM_BTC
+                    ,Symbol.BEL_BTC
+                    ,Symbol.BLZ_BTC                
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsThree
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.BNB_BTC
+                    ,Symbol.BNT_BTC
+                    ,Symbol.BOND_BTC
+                    ,Symbol.BOT_BTC
+                    ,Symbol.BQX_BTC
+                    ,Symbol.BRD_BTC
+                    ,Symbol.BTCB_BTC
+                    ,Symbol.BTCST_BTC
+                    ,Symbol.BTG_BTC
+                    ,Symbol.BTS_BTC
+                    ,Symbol.BTT_BTC
+                    ,Symbol.BZRX_BTC
+                    ,Symbol.C98_BTC
+                    ,Symbol.CAKE_BTC
+                    ,Symbol.CDT_BTC
+                    ,Symbol.CELO_BTC
+                    ,Symbol.CELR_BTC
+                    ,Symbol.CFX_BTC
+                    ,Symbol.CHAT_BTC
+                    ,Symbol.CHR_BTC
+                    ,Symbol.CHZ_BTC
+                    ,Symbol.CKB_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsFour
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.CLOAK_BTC
+                    ,Symbol.CLV_BTC
+                    ,Symbol.CMT_BTC
+                    ,Symbol.CND_BTC
+                    ,Symbol.COCOS_BTC
+                    ,Symbol.COMP_BTC
+                    ,Symbol.COS_BTC
+                    ,Symbol.COTI_BTC
+                    ,Symbol.CRV_BTC
+                    ,Symbol.CTK_BTC
+                    ,Symbol.CTSI_BTC
+                    ,Symbol.CTXC_BTC
+                    ,Symbol.CVC_BTC
+                    ,Symbol.DAI_BTC
+                    ,Symbol.DASH_BTC
+                    ,Symbol.DATA_BTC
+                    ,Symbol.DCR_BTC
+                    ,Symbol.DEGO_BTC
+                    ,Symbol.DENT_BTC
+                    ,Symbol.DGB_BTC
+                    ,Symbol.DGD_BTC
+                    ,Symbol.DIA_BTC
+                    ,Symbol.DLT_BTC
+                    ,Symbol.DNT_BTC
+                    ,Symbol.DOCK_BTC
+                    ,Symbol.DODO_BTC                 
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsFive
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.DOGE_BTC
+                    ,Symbol.DOT_BTC
+                    ,Symbol.DREP_BTC
+                    ,Symbol.DUSK_BTC
+                    ,Symbol.EASY_BTC
+                    ,Symbol.EDO_BTC
+                    ,Symbol.EGLD_BTC
+                    ,Symbol.ELF_BTC
+                    ,Symbol.ENG_BTC
+                    ,Symbol.ENJ_BTC
+                    ,Symbol.EOS_BTC
+                    ,Symbol.EPS_BTC
+                    ,Symbol.ERD_BTC
+                    ,Symbol.ETC_BTC
+                    ,Symbol.ETH_BTC
+                    ,Symbol.EVX_BTC
+                    ,Symbol.EZ_BTC
+                    ,Symbol.FET_BTC
+                    ,Symbol.FIL_BTC
+                    ,Symbol.FIO_BTC
+                    ,Symbol.FIRO_BTC
+                    ,Symbol.FIS_BTC
+                    ,Symbol.FLM_BTC
+                    ,Symbol.FLOW_BTC
+                    ,Symbol.FOR_BTC
+                    ,Symbol.FORTH_BTC                    
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsSix
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.FRONT_BTC
+                    ,Symbol.FTM_BTC
+                    ,Symbol.FTT_BTC
+                    ,Symbol.FUEL_BTC
+                    ,Symbol.FUN_BTC
+                    ,Symbol.FXS_BTC
+                    ,Symbol.GAS_BTC
+                    ,Symbol.GLM_BTC
+                    ,Symbol.GNT_BTC
+                    ,Symbol.GO_BTC
+                    ,Symbol.GRS_BTC
+                    ,Symbol.GRT_BTC
+                    ,Symbol.GTC_BTC
+                    ,Symbol.GTO_BTC
+                    ,Symbol.GVT_BTC
+                    ,Symbol.GXS_BTC
+                    ,Symbol.HARD_BTC
+                    ,Symbol.HBAR_BTC
+                    ,Symbol.HC_BTC
+                    ,Symbol.HIVE_BTC
+                    ,Symbol.HNT_BTC
+                    ,Symbol.HOT_BTC
+                    ,Symbol.HSR_BTC
+                    ,Symbol.ICN_BTC
+                    ,Symbol.ICP_BTC
+                    ,Symbol.ICX_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsSeven
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.IDEX_BTC
+                    ,Symbol.INJ_BTC
+                    ,Symbol.INS_BTC
+                    ,Symbol.IOST_BTC
+                    ,Symbol.IOTA_BTC
+                    ,Symbol.IOTX_BTC
+                    ,Symbol.IRIS_BTC
+                    ,Symbol.JST_BTC
+                    ,Symbol.JUV_BTC
+                    ,Symbol.KAVA_BTC
+                    ,Symbol.KEEP_BTC
+                    ,Symbol.KEY_BTC
+                    ,Symbol.KLAY_BTC
+                    ,Symbol.KMD_BTC
+                    ,Symbol.KNC_BTC
+                    ,Symbol.KSM_BTC
+                    ,Symbol.LEND_BTC
+                    ,Symbol.LINA_BTC
+                    ,Symbol.LINK_BTC
+                    ,Symbol.LIT_BTC
+                    ,Symbol.LOOM_BTC
+                    ,Symbol.LPT_BTC
+                    ,Symbol.LRC_BTC
+                    ,Symbol.LSK_BTC
+                    ,Symbol.LTC_BTC
+                    ,Symbol.LTO_BTC
+                    ,Symbol.LUNA_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsEight
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.LUN_BTC
+                    ,Symbol.MANA_BTC
+                    ,Symbol.MATIC_BTC
+                    ,Symbol.MBL_BTC
+                    ,Symbol.MCO_BTC
+                    ,Symbol.MDA_BTC
+                    ,Symbol.MDT_BTC
+                    ,Symbol.MDX_BTC
+                    ,Symbol.MFT_BTC
+                    ,Symbol.MIR_BTC
+                    ,Symbol.MITH_BTC
+                    ,Symbol.MKR_BTC
+                    ,Symbol.MLN_BTC
+                    ,Symbol.MOD_BTC
+                    ,Symbol.MTH_BTC
+                    ,Symbol.MTL_BTC
+                    ,Symbol.NANO_BTC
+                    ,Symbol.NAS_BTC
+                    ,Symbol.NAV_BTC
+                    ,Symbol.NBS_BTC
+                    ,Symbol.NCASH_BTC
+                    ,Symbol.NEAR_BTC
+                    ,Symbol.NEBL_BTC
+                    ,Symbol.NEO_BTC
+                    ,Symbol.NKN_BTC
+                    ,Symbol.NMR_BTC
+                    ,Symbol.NPXS_BTC
+                    ,Symbol.NU_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsNine
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.NULS_BTC
+                    ,Symbol.NXS_BTC
+                    ,Symbol.OAX_BTC
+                    ,Symbol.OCEAN_BTC
+                    ,Symbol.OG_BTC
+                    ,Symbol.OGN_BTC
+                    ,Symbol.OM_BTC
+                    ,Symbol.OMG_BTC
+                    ,Symbol.ONE_BTC
+                    ,Symbol.ONG_BTC
+                    ,Symbol.ONT_BTC
+                    ,Symbol.ORN_BTC
+                    ,Symbol.OST_BTC
+                    ,Symbol.OXT_BTC
+                    ,Symbol.PAX_BTC
+                    ,Symbol.PAXG_BTC
+                    ,Symbol.PERL_BTC
+                    ,Symbol.PERP_BTC
+                    ,Symbol.PHA_BTC
+                    ,Symbol.PHB_BTC
+                    ,Symbol.PHX_BTC
+                    ,Symbol.PIVX_BTC
+                    ,Symbol.PNT_BTC
+                    ,Symbol.POA_BTC
+                    ,Symbol.POE_BTC
+                    ,Symbol.POLS_BTC
+                    ,Symbol.POLY_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsTwelve
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.SXP_BTC
+                    ,Symbol.SYS_BTC
+                    ,Symbol.TCT_BTC
+                    ,Symbol.TFUEL_BTC
+                    ,Symbol.THETA_BTC
+                    ,Symbol.TKO_BTC
+                    ,Symbol.TLM_BTC
+                    ,Symbol.TNB_BTC
+                    ,Symbol.TNT_BTC
+                    ,Symbol.TOMO_BTC
+                    ,Symbol.TORN_BTC
+                    ,Symbol.TRB_BTC
+                    ,Symbol.TRIG_BTC
+                    ,Symbol.TROY_BTC
+                    ,Symbol.TRU_BTC
+                    ,Symbol.TRX_BTC
+                    ,Symbol.TUSD_BTC
+                    ,Symbol.TVK_BTC
+                    ,Symbol.TWT_BTC
+                    ,Symbol.UMA_BTC
+                    ,Symbol.UNFI_BTC
+                    ,Symbol.UNI_BTC
+                    ,Symbol.UTK_BTC
+                    ,Symbol.VEN_BTC
+                    ,Symbol.VET_BTC
+                    ,Symbol.VIA_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsTen
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.POND_BTC
+                    ,Symbol.POWR_BTC
+                    ,Symbol.PPT_BTC
+                    ,Symbol.PSG_BTC
+                    ,Symbol.QKC_BTC
+                    ,Symbol.QLC_BTC
+                    ,Symbol.QNT_BTC
+                    ,Symbol.QSP_BTC
+                    ,Symbol.QTUM_BTC
+                    ,Symbol.QUICK_BTC
+                    ,Symbol.RAMP_BTC
+                    ,Symbol.RCN_BTC
+                    ,Symbol.RDN_BTC
+                    ,Symbol.REEF_BTC
+                    ,Symbol.REN_BTC
+                    ,Symbol.RENBTC_BTC
+                    ,Symbol.REP_BTC
+                    ,Symbol.REQ_BTC
+                    ,Symbol.RIF_BTC
+                    ,Symbol.RLC_BTC
+                    ,Symbol.ROSE_BTC
+                    ,Symbol.RPX_BTC
+                    ,Symbol.RSR_BTC
+                    ,Symbol.RUNE_BTC
+                    ,Symbol.RVN_BTC
+                    ,Symbol.SALT_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsEleven
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.SAND_BTC
+                    ,Symbol.SC_BTC
+                    ,Symbol.SCRT_BTC
+                    ,Symbol.SFP_BTC
+                    ,Symbol.SKL_BTC
+                    ,Symbol.SKY_BTC
+                    ,Symbol.SNGLS_BTC
+                    ,Symbol.SNM_BTC
+                    ,Symbol.SNT_BTC
+                    ,Symbol.SNX_BTC
+                    ,Symbol.SOL_BTC
+                    ,Symbol.SRM_BTC
+                    ,Symbol.STEEM_BTC
+                    ,Symbol.STMX_BTC
+                    ,Symbol.STORJ_BTC
+                    ,Symbol.STORM_BTC
+                    ,Symbol.STPT_BTC
+                    ,Symbol.STRAT_BTC
+                    ,Symbol.STRAX_BTC
+                    ,Symbol.STX_BTC
+                    ,Symbol.SUB_BTC
+                    ,Symbol.SUN_BTC
+                    ,Symbol.SUPER_BTC
+                    ,Symbol.SUSD_BTC
+                    ,Symbol.SUSHI_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsThirteen
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.VIB_BTC
+                    ,Symbol.VIBE_BTC
+                    ,Symbol.VIDT_BTC
+                    ,Symbol.VITE_BTC
+                    ,Symbol.WABI_BTC
+                    ,Symbol.WAN_BTC
+                    ,Symbol.WAVES_BTC
+                    ,Symbol.WBTC_BTC
+                    ,Symbol.WIN_BTC
+                    ,Symbol.WING_BTC
+                    ,Symbol.WINGS_BTC
+                    ,Symbol.WNXM_BTC
+                    ,Symbol.WPR_BTC
+                    ,Symbol.WRX_BTC
+                    ,Symbol.WTC_BTC
+                    ,Symbol.XEM_BTC
+                    ,Symbol.XLM_BTC
+                    ,Symbol.XMR_BTC
+                    ,Symbol.XRP_BTC
+                    ,Symbol.XTZ_BTC
+                    ,Symbol.XVG_BTC
+                    ,Symbol.XVS_BTC
+                    ,Symbol.XZC_BTC
+                    ,Symbol.YFI_BTC
+                    ,Symbol.YFII_BTC
+                };
+                return symbols;
+            }
+        }
+        public static List<Symbol> BtcPairsFourteen
+        {
+            get
+            {
+                List<Symbol> symbols = new List<Symbol>()
+                {
+                    Symbol.YOYO_BTC
+                    ,Symbol.ZEC_BTC
+                    ,Symbol.ZEN_BTC
+                    ,Symbol.ZIL_BTC
+                    ,Symbol.ZRX_BTC
                 };
                 return symbols;
             }

@@ -3,6 +3,7 @@ using CryptoTrading.App.Core;
 using System.Collections.Generic;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.Position;
+using System;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -17,6 +18,10 @@ namespace CryptoTrading.App.Monitor
             _factory = factory;
             _positions = positionsProvider;
             //_calculator = calculator;
+        }
+        public IPosition GetPosition(string asset)
+        {
+            return _positions[asset];
         }
 
         public bool CheckBalance(string sellSymbol, double sellPercentage)

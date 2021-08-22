@@ -50,7 +50,7 @@ namespace CryptoTrading.App.MarketDataTesting
             //var logger = ServiceProvider.
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
             writer.WriteLine($"Historic,Symbol,Open,High,Low,Close,Open Time ,Close Time");
-            IMarketData marketDate = new HistoricalMarketData();
+            IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
             marketDate.From = new DateTime(2020, 08, 24);
             //subscribe to several symbols

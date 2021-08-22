@@ -25,7 +25,7 @@ namespace CryptoTrading.App.MarketData
 
         CryptoDBContext context;
 
-        private string SQL_HISTORIC_QUERY = @"SELECT DISTINCT Top 300 [ID]
+        private string SQL_HISTORIC_QUERY = @"SELECT DISTINCT Top 200 [ID]
       ,[Symbol]
       ,[Interval]
       ,[OpenTime]
@@ -101,16 +101,27 @@ namespace CryptoTrading.App.MarketData
         public void InvokeCandleStick()
         {
             //var tasks = new List<Task>();
-            
+
             var candleSticks = orderedList.FirstOrDefault(x => x.Key == _mangement.CurrentTick);
             if (candleSticks == null) return;
-            foreach (var candleStick in candleSticks)
+
+            candleSticks.AsParallel()
+            .WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0)))
+            .ForAll(x =>
             {
-                foreach (var action in subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
+                foreach (var action in subscribers[(x.candlestick.Symbol, x.interval)])
                 {
-                    action.Invoke(new CandlestickEventArgs(candleSticks.Key, candleStick.candlestick, 0, 0, true));
+                    action.Invoke(new CandlestickEventArgs(candleSticks.Key, x.candlestick, 0, 0, true));
                 }
-            }
+            });
+
+            //foreach (var candleStick in candleSticks)
+            //{
+            //    foreach (var action in subscribers[(candleStick.candlestick.Symbol, candleStick.interval)])
+            //    {
+            //        action.Invoke(new CandlestickEventArgs(candleSticks.Key, candleStick.candlestick, 0, 0, true));
+            //    }
+            //}
             //tasks.AsParallel().ForAll(x => x.Start());
             //Task.WaitAll(tasks.ToArray());
             //runs the algo but the request to the process monitor takes some time to execute due to the checks that it does.
@@ -133,6 +144,7 @@ namespace CryptoTrading.App.MarketData
         {
             int interval = (int)symbol.interval;
             var candleSticks = context.CandleSticks.SqlQuery(SQL_HISTORIC_QUERY, from, symbol.symbol, interval).ToListAsync().Result;
+            if (candleSticks.Count() == 0) return;
             var cs = candleSticks.OrderBy(x => x.OpenTime).ToList();
             //need to drop first candle
             //candleSticks.Reverse();
