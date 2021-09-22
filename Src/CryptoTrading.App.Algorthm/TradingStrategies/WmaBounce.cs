@@ -85,7 +85,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             shortWma.Reverse();
             mediumWma.Reverse();
             longWma.Reverse();
-
+            //improve the bounce buy combining it with support and resistance, when the bounce hits resistances then 
             var condition10 = EmaBounce(shortWma, closePrice) && EmaBounce(mediumWma, closePrice) && EmaBounce(longWma,closePrice) && closePrice.Open < closePrice.Close;
 
             //Price > than Long EMA

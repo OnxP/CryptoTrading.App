@@ -20,13 +20,16 @@ namespace CryptoTrading.App.Algorthm.StopLimits
 
         public decimal TargetPrice { get; set; }
         public decimal CurrentPrice { get; set; }
+        public bool IsOpen { get; set; }
+        public decimal Increment { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public decimal Risk { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void Configure(Order order)
         {
             var price = order.Price;
-
-            StopLimitPrice = price * _risk;
-            TargetPrice = price * _increment;
+            IsOpen = true;
+            //StopLimitPrice = price * _risk;
+            //TargetPrice = price * _increment;
         }
 
         public void Dispose()

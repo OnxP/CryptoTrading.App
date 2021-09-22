@@ -46,6 +46,7 @@ namespace CryptoTrading.App.Monitor
                     Trade.Open = false;
                     //unsubscribe to monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
+                    Tracker.IsOpen = false;
                     Dispose();
                 }
                 else
@@ -63,7 +64,8 @@ namespace CryptoTrading.App.Monitor
 
         private void Dispose()
         {
-            Tracker.Dispose();
+            //Tracker.Dispose();
+            
             marketMonitor = null;
         }
 

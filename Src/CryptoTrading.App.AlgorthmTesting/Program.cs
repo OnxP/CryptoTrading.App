@@ -32,10 +32,10 @@ namespace CryptoTrading.App.AlgorthmTesting
         {
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
             Database.SetInitializer<CryptoDBContext>(null);
-            var customText = "Tfuel with extra macd conditions";
-            var noOfTrades = new List<double>() { 5};
-            var risks = new List<decimal>() {2.48m };
-            var increments = new List<decimal>() {1.52m};
+            var customText = "Price Acton 9 Strat UNFI";
+            var noOfTrades = new List<double>() { 3};
+            var risks = new List<decimal>() { 3m };//,0.98m,1.98m };
+            var increments = new List<decimal>() { 2m };//,2m,3m};
             var tasks = new List<Task>();
 
             var services = new ServiceCollection()
@@ -62,7 +62,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                     {
                         foreach (var increment in increments)
                         {
-                            tasks.Add(CreateTask(Indicators.macd, noOfTrade, risk, increment,marketData, customText, services));
+                            tasks.Add(CreateTask(Indicators.stochrsi2, noOfTrade, risk, increment,marketData, customText, services));
                             
                         }
                     }
@@ -71,7 +71,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             marketData.StartStream();
             foreach (var task in tasks)
             {
-                task.Start();
+                task.RunSynchronously();
+                task.Wait();
             }
 
             Task.WaitAll(tasks.ToArray());

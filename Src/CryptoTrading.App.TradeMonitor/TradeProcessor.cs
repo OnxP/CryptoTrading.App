@@ -70,18 +70,27 @@ namespace CryptoTrading.App.Monitor
             {
                 Order order = obj.What;
                 //assume that order has been filled.
-                var trade = CurrentMonitors.First(x => x.Symbol == order.Symbol);
-                switch (transaction.Type)
+                try
                 {
+                    var trade = CurrentMonitors.First(x => x.Symbol == order.Symbol);
+                
+                    switch (transaction.Type)
+                    {
+                        case TransactionType.StopLimitTransaction:
+                            trade.UpdateStopLimitOrder(order);
+                            break;
+                        case TransactionType.Transaction:
+                            break;
+                        case TransactionType.MarketTransaction:
+                            trade.UpdateInitialTransaction(order);
+                            break;
+                    }
+                }
+                catch
+                {
+                    //if the stoploss is hit while the next order is being placed then we need to cancel and pull out of the trade
+                    //for now just skip and continue.
 
-                    case TransactionType.StopLimitTransaction:
-                        trade.UpdateStopLimitOrder(order);
-                        break;
-                    case TransactionType.Transaction:
-                        break;
-                    case TransactionType.MarketTransaction:
-                        trade.UpdateInitialTransaction(order);
-                        break;
                 }
             }
         }

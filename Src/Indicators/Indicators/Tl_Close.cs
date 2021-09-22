@@ -25,7 +25,7 @@ namespace Tulip
             double[] input = inputs[0];
             double[] output = outputs[0];
 
-            for(int i = 0; i <= period; i++)
+            for(int i = 0; i < period; i++)
             {
                 output[i] = input[inputs[0].Length - i - 1];
             }

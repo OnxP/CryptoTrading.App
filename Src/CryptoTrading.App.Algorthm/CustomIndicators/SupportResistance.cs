@@ -337,7 +337,7 @@ get
         {
             Calculate();
             SRLine line;
-            if (!DoesSRLevelExists(price, range, out line)) return -1;
+            if (!DoesSRLevelExists(price, range, out line)) return _lines[0].Price;
             if (line == null) return -1;
 
             for (int i = 1; i < _lines.Count; ++i)
@@ -347,7 +347,7 @@ get
                     return _lines[i - 1].Price;
                 }
             }
-            return -1;
+            return _lines[0].Price;
         }
 
         //+------------------------------------------------------------------+
@@ -355,7 +355,7 @@ get
         {
             Calculate();
             SRLine line;
-            if (!DoesSRLevelExists(price, range, out line)) return -1;
+            if (!DoesSRLevelExists(price, range, out line)) return _lines.Last().Price;
             if (line == null) return -1;
 
             for (int i = 0; i + 1 < _lines.Count; ++i)
@@ -365,7 +365,7 @@ get
                     return _lines[i + 1].Price;
                 }
             }
-            return -1;
+            return _lines.Last().Price;
         }
     }
 }

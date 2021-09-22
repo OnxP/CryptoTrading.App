@@ -38,7 +38,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         protected override Dictionary<string, (Tulip.Indicator indicator, double[] options)> GenerateIndicators()
         {
             var dict = new Dictionary<string, (Tulip.Indicator indicator, double[] options)>();
-            dict.Add("25", (Tulip.Indicators.wma, new double[] { 100 }));
+            dict.Add("PSAR", (Tulip.Indicators.psar, new double[] { 0.02, 0.2 }));
+            dict.Add("100", (Tulip.Indicators.ema, new double[] { 100 }));
             _signal.Indicators.Add(new CustomIndicators.Indicator("ZigZag"));
             _signal.Indicators.Add(new CustomIndicators.Indicator("MBFX"));
             _signal.Indicators.Add(new CustomIndicators.Indicator("Trend"));
@@ -74,14 +75,14 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                     zigZagPrice = Candles[bar].Low;
                 }
 
-                if (arrow == ArrowType.Sell)
-                {
-                    break;
-                    //zigZagBuy = false;
-                    //zigZagSell = true;
-                    //zigZagBar = bar;
-                    //zigZagPrice = Symbol.Candles[bar].High;
-                }
+                //if (arrow == ArrowType.Sell)
+                //{
+                //    break;
+                //    //zigZagBuy = false;
+                //    //zigZagSell = true;
+                //    //zigZagBar = bar;
+                //    //zigZagPrice = Candles[bar].High;
+                //}
             }
 
             // BUY signals
@@ -108,13 +109,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 }
 
                 // rule #4: price should be above 15 SMA
-                var ma1 = MovingAverage.Get(Candles, 1, MovingAveragePeriod, MaMethod.Sma, AppliedPrice.Close);
+                var ma1 = MovingAverage.Get(Candles, 15, MovingAveragePeriod, MaMethod.Sma, AppliedPrice.Close);
                 if (Candles[1].Close > ma1)
                 {
                     sma15Ok = true;
                 }
             }
-            /*
+            
             // SELL signals
             if (zigZagSell && zigZagBar > 0)
             {
@@ -140,14 +141,14 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 }
 
                 // rule #4: and price below SMA15 on previous candle
-                var ma1 = MovingAverage.Get(Symbol, 1, MovingAveragePeriod, MaMethod.Sma, AppliedPrice.Close);
-                if (Symbol.Candles[1].Close < ma1)
+                var ma1 = MovingAverage.Get(Candles, 1, MovingAveragePeriod, MaMethod.Sma, AppliedPrice.Close);
+                if (Candles[1].Close < ma1)
                 {
                     sma15Ok = true;
                 }
             }
-            */
-
+            
+            
             // set indicators
             if (zigZagBar >= 1 && (zigZagBuy || zigZagSell))
             {
@@ -171,6 +172,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 }
                 
             }
+            
             else
             {
                 _signal.Type = SignalType.None;
@@ -190,26 +192,35 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         }
         public override double Calculate(OrderedFixedLengthList<Candlestick> closePrices, IStopLimitTracker StopLimitTrackers)
         {
+            var psar = base.Calculate(closePrices,StopLimitTrackers);
             var candles = closePrices.ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);
+
             _signal = Process(candles);
             var validCount = _signal.Indicators.Count(e => e.IsValid);
-            if (validCount == 5)
+            if (validCount == 5 && _signal.Type == SignalType.Buy)
             {
                 LogResult(1);
+                StopLimitTrackers.StopLimitPrice = Convert.ToDecimal(psar);
+                StopLimitTrackers.TargetPrice = _signal.CloseAtPrice;
                 return StrategyWeight;
-
             }
             else
             {
+                //if (StopLimitTrackers.IsOpen && validCount == 5 && _signal.Type == SignalType.Sell)
+                //{
+                //    StopLimitTrackers.TargetPrice = closePrices.Current.Close;
+                //    LogResult(-1);
+                //}
                 return 0;
             }
         }
 
         protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
-            return 0;//does nothing
+            var pSar = indicatorOutputs["PSAR"][0].ToList();
+            return pSar.Last();//does nothing
         }
     }
 }

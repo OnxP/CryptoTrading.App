@@ -104,14 +104,15 @@ namespace CryptoTrading.App.MarketData
 
             var candleSticks = orderedList.FirstOrDefault(x => x.Key == _mangement.CurrentTick);
             if (candleSticks == null) return;
+            var sortedCandleSticks = candleSticks.OrderBy(x => x.candlestick.Volume);
 
-            candleSticks.AsParallel()
+            sortedCandleSticks.AsParallel()
             .WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0)))
             .ForAll(x =>
             {
                 foreach (var action in subscribers[(x.candlestick.Symbol, x.interval)])
                 {
-                    action.Invoke(new CandlestickEventArgs(candleSticks.Key, x.candlestick, 0, 0, true));
+                    action.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, x.candlestick, 0, 0, true));
                 }
             });
 

@@ -69,19 +69,19 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         private bool LastSixClose(double[] close)
         {
-            if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
+            if (close[0] < close[1] && close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5])
                 return true;
-            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4])
-                return true;
-            else if (close[2] < close[3] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
-                return true;
-            else if (close[1] < close[2] && close[3] < close[4] && close[4] < close[5] && close[5] < close[6])
-                return true;
-            else if (close[1] < close[2] && close[2] < close[3] && close[4] < close[5] && close[5] < close[6])
-                return true;
-            else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[5] < close[6])
+            else if (close[0] < close[1] && close[1] < close[2] && close[2] < close[3])
                 return true;
             else if (close[1] < close[2] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5])
+                return true;
+            else if (close[0] < close[1] && close[2] < close[3] && close[3] < close[4] && close[4] < close[5])
+                return true;
+            else if (close[0] < close[1] && close[1] < close[2] && close[3] < close[4] && close[4] < close[5])
+                return true;
+            else if (close[0] < close[1] && close[1] < close[2] && close[2] < close[3] && close[4] < close[5])
+                return true;
+            else if (close[0] < close[1] && close[1] < close[2] && close[2] < close[3] && close[3] < close[4])
                 return true;
             else return false;
         }

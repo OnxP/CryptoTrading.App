@@ -398,7 +398,7 @@ Symbol.SOL_BTC
 
         private void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
-            var symbol = new List<Symbol>() { Symbol.TFUEL_BTC };
+            var symbol = new List<Symbol>() { Symbol.UNFI_BTC };
             
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
