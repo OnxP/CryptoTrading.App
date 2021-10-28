@@ -35,11 +35,11 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Tulip.Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Tulip.Indicator indicator, double[] options)>();
-            dict.Add("PSAR", (Tulip.Indicators.psar, new double[] { 0.02, 0.2 }));
-            dict.Add("100", (Tulip.Indicators.ema, new double[] { 100 }));
+            var dict = new Dictionary<string, IndicatorSetUp>();
+            dict.Add("PSAR", new IndicatorSetUp(Tulip.Indicators.psar, new double[] { 0.02, 0.2 }));
+            dict.Add("100", new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 }));
             _signal.Indicators.Add(new CustomIndicators.Indicator("ZigZag"));
             _signal.Indicators.Add(new CustomIndicators.Indicator("MBFX"));
             _signal.Indicators.Add(new CustomIndicators.Indicator("Trend"));

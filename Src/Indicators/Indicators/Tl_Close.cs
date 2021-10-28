@@ -22,12 +22,17 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] input = inputs[0];
-            double[] output = outputs[0];
+            double[] close = inputs[0];
+            double[] volume = inputs[1];
+            double[] high = inputs[2];
+            double[] low = inputs[3];
 
-            for(int i = 0; i < period; i++)
+            for (int i = 0; i < period; i++)
             {
-                output[i] = input[inputs[0].Length - i - 1];
+                outputs[0][i] = close[inputs[0].Length - i - 1];
+                outputs[1][i] = volume[inputs[1].Length - i - 1];
+                outputs[2][i] = high[inputs[2].Length - i - 1];
+                outputs[3][i] = low[inputs[3].Length - i - 1];
             }
 
             return TI_OKAY;

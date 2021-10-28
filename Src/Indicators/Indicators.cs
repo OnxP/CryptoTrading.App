@@ -43,6 +43,7 @@ namespace Tulip
             { nameof(dx), new Indicator("Dx", "Directional Movement Index", "high|low|close", "period", nameof(dx)) },
             { nameof(edecay), new Indicator("Edecay", "Exponential Decay", "real", "period", nameof(edecay)) },
             { nameof(ema), new Indicator("Ema", "Exponential Moving Average", "real", "period", nameof(ema)) },
+            { nameof(gema), new Indicator("Gema", "Gradient Exponential Moving Average", "real", "period", nameof(gema)) },
             { nameof(emv), new Indicator("Emv", "Ease of Movement", "high|low|volume", String.Empty, nameof(emv)) },
             { nameof(exp), new Indicator("Exp", "Vector Exponential", "real", String.Empty, nameof(exp)) },
             { nameof(fisher), new Indicator("Fisher", "Fisher Transform", "high|low", "period", "fisher|fisher_signal") },
@@ -188,6 +189,7 @@ namespace Tulip
         public static Indicator edecay = IndicatorsDefinition[nameof(edecay)];
 
         public static Indicator ema = IndicatorsDefinition[nameof(ema)];
+        public static Indicator gema = IndicatorsDefinition[nameof(gema)];
 
         public static Indicator emv = IndicatorsDefinition[nameof(emv)];
 

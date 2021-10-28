@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CryptoTrading.App.Algorthm.StopLimits
 {
-    class FixedProfitStopLimit : IStopLimitTracker
+    class FixedProfitStopLimit : StopLimitBase
     {
         private decimal _risk = 3.48m / 100m;
         private decimal _increment = 1.52m / 100m;
@@ -15,30 +15,13 @@ namespace CryptoTrading.App.Algorthm.StopLimits
             _risk =1-( risk / 100m);
             _increment = 1+(increment / 100m);
         }
-        public decimal StopLimitPrice { get; set; }
-        public DateTime EndDateTime { get; set; }
 
-        public decimal TargetPrice { get; set; }
-        public decimal CurrentPrice { get; set; }
-        public bool IsOpen { get; set; }
-        public decimal Increment { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public decimal Risk { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public void Configure(Order order)
+        public override void Configure(Order order)
         {
             var price = order.Price;
             IsOpen = true;
             //StopLimitPrice = price * _risk;
             //TargetPrice = price * _increment;
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public void MoveStopLimit()
-        {
-            StopLimitPrice = CurrentPrice;
         }
     }
 }

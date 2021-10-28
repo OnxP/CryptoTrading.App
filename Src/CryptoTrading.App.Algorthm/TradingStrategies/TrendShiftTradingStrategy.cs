@@ -18,19 +18,19 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
             //add indicators to dictionary
             double shortPeriod = 12;
             double longPeriod = 26;
             double signal = 9;
-            var macd = (Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
-            var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
-            var adx = (Tulip.Indicators.adx, new double[] { 14, 14 });
-            var srsi = (Tulip.Indicators.stochrsi, new double[] { 14 });
-            var vwap = (Tulip.Indicators.vwap, new double[] { 0 });
+            var macd = new IndicatorSetUp(Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
+            var rsi = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 });
+            var adx = new IndicatorSetUp(Tulip.Indicators.adx, new double[] { 14, 14 });
+            var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi, new double[] { 14 });
+            var vwap = new IndicatorSetUp(Tulip.Indicators.vwap, new double[] { 0 });
 
 
 

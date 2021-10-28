@@ -27,16 +27,16 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Tulip.Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Tulip.Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
-            var ema8 = (Tulip.Indicators.ema, new double[] { 8 });
-            var ema14 = (Tulip.Indicators.ema, new double[] { 14 });
-            var ema50 = (Tulip.Indicators.ema, new double[] { 50 });
-            var srsi = (Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
-            var atr = (Tulip.Indicators.atr, new double[] { 14 });
-            dict.Add("close", (Tulip.Indicators.close, new double[] { 6 }));
+            var ema8 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 8 });
+            var ema14 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 14 });
+            var ema50 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 50 });
+            var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
+            var atr = new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 14 });
+            dict.Add("close", new IndicatorSetUp(Tulip.Indicators.close, new double[] { 6 }));
 
             dict.Add("sRsi", srsi);
             dict.Add("Atr", atr);

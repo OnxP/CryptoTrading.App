@@ -23,23 +23,23 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
             //add indicators to dictionary
             double shortPeriod = 12;
             double longPeriod = 26;
             double signal = 9;
-            var macd = (Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
-            var ema100 = (Tulip.Indicators.wma, new double[] { 100 });
-            var ema50 = (Tulip.Indicators.wma, new double[] { 50 });
-            var ema25 = (Tulip.Indicators.wma, new double[] { 25 });
-            var psar = (Tulip.Indicators.psar, new double[] { 0.02, 0.2 });
-            var srsi = (Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 });
-            var adx = (Tulip.Indicators.adx, new double[] { 14 });
-            var dc = (Tulip.Indicators.adx, new double[] { 20 });
-            var bbands = (Tulip.Indicators.bbands, new double[] { 20,2 });
+            var macd = new IndicatorSetUp(Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
+            var ema100 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 100 });
+            var ema50 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 50 });
+            var ema25 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 25 });
+            var psar = new IndicatorSetUp(Tulip.Indicators.psar, new double[] { 0.02, 0.2 });
+            var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 });
+            var adx = new IndicatorSetUp(Tulip.Indicators.adx, new double[] { 14 });
+            var dc = new IndicatorSetUp(Tulip.Indicators.adx, new double[] { 20 });
+            var bbands = new IndicatorSetUp(Tulip.Indicators.bbands, new double[] { 20,2 });
             dict.Add("MACD", macd);
             dict.Add("LongWma", ema100);
             dict.Add("MediumWma", ema50);

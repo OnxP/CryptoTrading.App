@@ -18,13 +18,13 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
             //add indicators to dictionary
-            var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
-            //var ema = (Tulip.Indicators.ema, new double[] { 100 });
+            var rsi = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 });
+            //var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
             dict.Add("Rsi", rsi);
             //dict.Add("LongEma", ema);
             return dict;

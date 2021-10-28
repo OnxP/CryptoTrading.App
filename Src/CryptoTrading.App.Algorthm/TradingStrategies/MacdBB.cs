@@ -19,15 +19,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
             double shortPeriod = 12;
             double longPeriod = 26;
             double signal = 9;
             //add indicators to dictionary
-            dict.Add("BBands", (Tulip.Indicators.bbands, new double[] { 20, 2 }));
-            dict.Add("MACD", (Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod, signal }));
+            dict.Add("BBands", new IndicatorSetUp(Tulip.Indicators.bbands, new double[] { 20, 2 }));
+            dict.Add("MACD", new IndicatorSetUp(Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod, signal }));
             return dict;
         }
 

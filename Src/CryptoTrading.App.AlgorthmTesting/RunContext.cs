@@ -398,14 +398,14 @@ Symbol.SOL_BTC
 
         private void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
-            var symbol = new List<Symbol>() { Symbol.UNFI_BTC };
+            var symbol = new List<Symbol>() { Symbol.ETH_BTC };
             
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
                 CandlestickInterval.Minutes_15
             };
-            AddEvents(marketData as AbstractMarketData, symbol, intervals, services);
+            AddEvents(marketData as AbstractMarketData, symbols, intervals, services);
         }
 
         private void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandlestickInterval> intervals, ServiceProvider services)

@@ -18,18 +18,18 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
             //add indicators to dictionary
             double shortPeriod = 12;
             double longPeriod = 26;
             double signal = 9;
-            var wma100 = (Tulip.Indicators.wma, new double[] { 100 });
-            var wma50 = (Tulip.Indicators.wma, new double[] { 50 });
-            var srsi = (Tulip.Indicators.stoch, new double[] { 14, 1, 3 });
-            var aroon = (Tulip.Indicators.aroon, new double[] { 14 });
+            var wma100 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 100 });
+            var wma50 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 50 });
+            var srsi = new IndicatorSetUp(Tulip.Indicators.stoch, new double[] { 14, 1, 3 });
+            var aroon = new IndicatorSetUp(Tulip.Indicators.aroon, new double[] { 14 });
 
 
             dict.Add("LongEma", wma100);

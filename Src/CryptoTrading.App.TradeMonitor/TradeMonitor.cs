@@ -56,7 +56,7 @@ namespace CryptoTrading.App.Monitor
                 
             }
 
-            if (closePrice >= Tracker.TargetPrice)
+            if (Tracker.RequestUpdateOfStopLimit(closePrice))
             {
                 UpdateStopLimit();
             }

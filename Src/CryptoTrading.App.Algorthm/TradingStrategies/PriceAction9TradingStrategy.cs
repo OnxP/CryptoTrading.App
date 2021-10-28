@@ -26,12 +26,12 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Tulip.Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Tulip.Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
-            var atr = (Tulip.Indicators.atr, new double[] { 14 });
-            dict.Add("close", (Tulip.Indicators.close, new double[] { 40 }));
+            var atr = new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 14 });
+            dict.Add("close", new IndicatorSetUp(Tulip.Indicators.close, new double[] { 40 }));
             dict.Add("atr", atr);
             return dict;
         }

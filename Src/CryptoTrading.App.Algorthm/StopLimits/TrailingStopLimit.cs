@@ -6,58 +6,39 @@ using System.Text;
 
 namespace CryptoTrading.App.Algorthm.StopLimits
 {
-    class TrailingStopLimit : IStopLimitTracker
+    class TrailingStopLimit : StopLimitBase
     {
-        private decimal _risk = 3.48m / 100m;
-        private decimal _increment = 1.52m / 100m;
         private int i = 1;
-        private decimal _currentPrice;
-        private decimal _boughtPrice;
 
         public TrailingStopLimit(decimal risk, decimal increment)
         {
-            _risk = risk / 100m;
-            _increment = increment / 100m;
+            Risk = risk / 100m;
+            Increment = increment / 100m;
         }
 
-        public decimal StopLimitPrice { get; set; }
-
-        public decimal TargetPrice { get; set; }
-        public decimal CurrentPrice { get => _currentPrice; set => _currentPrice = value; }
-        public DateTime EndDateTime { get; set; }
-        public bool IsOpen { get; set; }
-        public decimal Increment { get =>_increment; set => _increment = value; }
-        public decimal Risk { get => _risk; set => _risk = value; }
-
-        public void Configure(Order order)
+        public override void Configure(Order order)
         {
             //set stopLimitValue to 10% of current price.
-            _currentPrice = order.Price;
-            _boughtPrice = order.Price;
-            StopLimitPrice = _currentPrice * (1 - _risk);
-            TargetPrice = _currentPrice * (1 + _increment);
+            CurrentPrice = order.Price;
+            StopLimitPrice = CurrentPrice * (1 - Risk);
+            TargetPrice = CurrentPrice * (1 + Increment);
             i = 1;
             //when the price is small, where a single sitoshi becomes more that 1% the risk and increments need to be adjusted.
-            while (Math.Round(_currentPrice, 9) == Math.Round(TargetPrice, 9))
+            while (Math.Round(CurrentPrice, 9) == Math.Round(TargetPrice, 9))
             {
-                _increment *= 2;
-                _risk *= 2;
+                Increment *= 2;
+                Risk *= 2;
 
-                StopLimitPrice = _currentPrice * (1 - _risk);
-                TargetPrice = _currentPrice * (1 + _increment);
+                StopLimitPrice = CurrentPrice * (1 - Risk);
+                TargetPrice = CurrentPrice * (1 + Increment);
             }
         }
 
-        public void Dispose()
+        public override void MoveStopLimit()
         {
-            return;
-        }
-
-        public void MoveStopLimit()
-        {
-            TargetPrice *= 1+_increment;
-            StopLimitPrice *= 1+_increment;
-            if (i == 1) StopLimitPrice = TargetPrice * (1 - _increment);
+            TargetPrice *= 1+ Increment;
+            StopLimitPrice *= 1+ Increment;
+            if (i == 1) StopLimitPrice = CurrentPrice * (1 - Increment);
             i++;
 
         }

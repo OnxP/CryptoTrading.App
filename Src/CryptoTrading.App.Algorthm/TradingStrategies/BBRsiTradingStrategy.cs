@@ -24,15 +24,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
-            var bbands = (Tulip.Indicators.bbands, new double[] { 20,2 });
-            var ema = (Tulip.Indicators.ema, new double[] { 100 });
-            var srsi = (Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
-            var rsi = (Tulip.Indicators.rsi, new double[] { 14 });
-            dict.Add("close", (Tulip.Indicators.close, new double[] { 6 }));
+            var bbands = new IndicatorSetUp(Tulip.Indicators.bbands, new double[] { 20,2 });
+            var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
+            var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
+            var rsi = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 });
+            dict.Add("close", new IndicatorSetUp(Tulip.Indicators.close, new double[] { 6 }));
 
             dict.Add("sRsi", srsi);
             dict.Add("Rsi", rsi);

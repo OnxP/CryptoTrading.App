@@ -18,15 +18,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
+            var dict = new Dictionary<string, IndicatorSetUp>();
 
             //add indicators to dictionary
             //for simple ema strat, we need slow fast and long, 13 21 and 200
-            var fastEma = (Tulip.Indicators.ema, new double[] { 13 });
-            var slowEma = (Tulip.Indicators.ema, new double[] { 21 });
-            var longEma = (Tulip.Indicators.ema, new double[] { 100 });
+            var fastEma = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 13 });
+            var slowEma = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 21 });
+            var longEma = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
             dict.Add("FastEma", fastEma);
             dict.Add("SlowEma", slowEma);
             dict.Add("LongEma", longEma);

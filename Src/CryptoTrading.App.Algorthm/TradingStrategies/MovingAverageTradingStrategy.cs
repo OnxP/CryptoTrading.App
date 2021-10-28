@@ -31,15 +31,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
         private Indicator indicator = Tulip.Indicators.kama;
         //public override int OutputLength => 1000;
 
-        protected override Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators()
+        protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
         {
-            var dict = new Dictionary<string, (Indicator indicator, double[] options)>();
-            dict.Add("25", (indicator, new double[] { 25 }));
-            dict.Add("50", (indicator, new double[] { 50 }));
-            dict.Add("100", (indicator, new double[] { 100 }));
-            dict.Add("Srsi", (Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 }));
-            dict.Add("rsi", (Tulip.Indicators.rsi, new double[] { 14 }));
-            dict.Add("close", (Tulip.Indicators.close, new double[] { 6 }));
+            var dict = new Dictionary<string, IndicatorSetUp>();
+            dict.Add("25", new IndicatorSetUp(indicator, new double[] { 25 }));
+            dict.Add("50", new IndicatorSetUp(indicator, new double[] { 50 }));
+            dict.Add("100", new IndicatorSetUp(indicator, new double[] { 100 }));
+            dict.Add("Srsi", new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 }));
+            dict.Add("rsi", new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 }));
+            dict.Add("close", new IndicatorSetUp(Tulip.Indicators.close, new double[] { 6 }));
             return dict;
         }
 

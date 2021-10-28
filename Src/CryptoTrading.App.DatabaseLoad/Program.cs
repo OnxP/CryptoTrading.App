@@ -36,16 +36,18 @@ namespace CryptoTrading.App.DatabaseLoad
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
             marketDate.Configure(null);
             marketDate.From = new DateTime(2021, 04, 01);//25-12-20
-            var symbols = Symbol.BtcPairsNine;
-            symbols.AddRange(Symbol.BtcPairsTen);
-            symbols.AddRange(Symbol.BtcPairsEleven);
-            symbols.AddRange(Symbol.BtcPairsTwelve);
-            symbols.AddRange(Symbol.BtcPairsThirteen);
-            symbols.AddRange(Symbol.BtcPairsFourteen);
+            var symbols = Symbol.BtcPairsOne;
+            symbols.AddRange(Symbol.BtcPairsTwo);
+            symbols.AddRange(Symbol.BtcPairsThree);
+            symbols.AddRange(Symbol.BtcPairsFour);
+            symbols.AddRange(Symbol.BtcPairsFive);
+            symbols.AddRange(Symbol.BtcPairsSix);
+            symbols.AddRange(Symbol.BtcPairsSeven);
+            symbols.AddRange(Symbol.BtcPairsEight);
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
-              CandlestickInterval.Minute
-            , CandlestickInterval.Minutes_15
+              CandlestickInterval.Minutes_30
+            , CandlestickInterval.Hour
             };
         
             //subscribe to several symbols

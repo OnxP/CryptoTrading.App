@@ -11,7 +11,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
     public abstract class TradingStrategy : ITradingStrategy
     {
-        public Dictionary<string, (Indicator indicator, double[] options)> Indicators { get; }
+        public Dictionary<string, IndicatorSetUp> Indicators { get; }
 
         public int OutputLength { get; private set; }
         protected abstract double StrategyWeight { get; }
@@ -66,8 +66,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             int i = 0;
             foreach (var item in Indicators)
             {
-                var optionLength = item.Value.indicator.Start(item.Value.options);
-                if (optionLength == 0) optionLength = Convert.ToInt32(Math.Round(item.Value.options[0], 0));
+                var optionLength = item.Value.Indicator.Start(item.Value.Options);
+                if (optionLength == 0) optionLength = Convert.ToInt32(Math.Round(item.Value.Options[0], 0));
                 i = Math.Max(optionLength, i);
             }
 
@@ -75,7 +75,7 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             logger.LogInformation($"Stragegy Initialisation complete for {this}, output length = {OutputLength}, Strategy Weight = {StrategyWeight}");
         }
 
-        protected abstract Dictionary<string, (Indicator indicator, double[] options)> GenerateIndicators();
+        protected abstract Dictionary<string, IndicatorSetUp> GenerateIndicators();
 
         public virtual double Calculate(OrderedFixedLengthList<Candlestick> closePrices, IStopLimitTracker StopLimitTrackers)
         {
@@ -89,14 +89,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
                 double[] low = closePrices.Select(x => (double)x.Low).ToArray();
 
                 //Find output size and allocate output space.
-                int output_length = close_prices.Length - item.Value.indicator.Start(item.Value.options);
+                int output_length = close_prices.Length - item.Value.Indicator.Start(item.Value.Options);
                 double[] output = new double[output_length];
                 double[] output1 = new double[output_length];
                 double[] output2 = new double[output_length];
+                double[] output3 = new double[output_length];
 
                 double[][] inputs = { close_prices, volume, high,low };
-                double[][] outputs = { output,output1,output2 };
-                int success = item.Value.indicator.Run(inputs, item.Value.options, outputs);
+                double[][] outputs = { output,output1,output2,output3 };
+                int success = item.Value.Indicator.Run(inputs, item.Value.Options, outputs);
                 // log.
                 indicatorOutputs.Add(item.Key, outputs);
             }

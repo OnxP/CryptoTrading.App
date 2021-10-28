@@ -6,42 +6,37 @@ using System.Text;
 
 namespace CryptoTrading.App.Algorthm.StopLimits
 {
-    class ManualStopLimit : IStopLimitTracker
+    class ManualStopLimit : StopLimitBase
     {
-        private decimal _risk = 3.48m / 100m;
-        private decimal _increment = 1.52m / 100m;
-        private int i = 1;
-        private decimal _currentPrice;
-        private decimal _boughtPrice;
-
+        private bool _triggerUpdate = false;
         public ManualStopLimit(decimal risk, decimal increment)
         {
-            _risk = risk / 100m;
-            _increment = increment / 100m;
+            Risk = risk / 100m;
+            Increment = increment / 100m;
+        }
+        public override void Configure(Order order)
+        {
+            base.Configure(order);
+            _triggerUpdate = false;
+        }
+        public override void ManualChangeSL(decimal sl)
+        {
+            if (sl > StopLimitPrice)
+            {
+                StopLimitPrice = sl;
+                _triggerUpdate = true;
+            }
+        }
+        public override void MoveStopLimit()
+        {
+            //do nothing.
         }
 
-        public decimal StopLimitPrice { get; set; }
-
-        public decimal TargetPrice { get; set; }
-        public decimal CurrentPrice { get => _currentPrice; set => _currentPrice = value; }
-        public DateTime EndDateTime { get; set; }
-        public bool IsOpen { get; set; }
-        public decimal Increment { get =>_increment; set => _increment = value; }
-        public decimal Risk { get => _risk; set => _risk = value; }
-
-        public void Configure(Order order)
+        public override bool RequestUpdateOfStopLimit(decimal closePrice)
         {
-            IsOpen = true;
-        }
-
-        public void Dispose()
-        {
-            return;
-        }
-
-        public void MoveStopLimit()
-        {
-
+            var update = _triggerUpdate;
+            _triggerUpdate = false;
+            return update;
         }
     }
 }

@@ -7,12 +7,12 @@ using Tulip;
 
 namespace CryptoTrading.App.Algorthm.TradingStrategies
 {
-    public class MacdTradingStrategy : TradingStrategy
+    public class MacdGmaTradingStrategy : TradingStrategy
     {
-        public MacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public MacdGmaTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
-        public MacdTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        public MacdGmaTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }
@@ -32,23 +32,19 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             double longPeriod = 26;
             double signal = 9;
             var macd = new IndicatorSetUp(Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod,signal });
-            var ema100 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 100 });
-            var ema50 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 50 });
-            var ema25 = new IndicatorSetUp(Tulip.Indicators.wma, new double[] { 25 });
-            var psar = new IndicatorSetUp(Tulip.Indicators.psar, new double[] { 0.02, 0.2 });
+            var ema100 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
+            var ema5 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 5 });
+            var ema20 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 20 });
+            var gema20 = new IndicatorSetUp(Tulip.Indicators.gema, new double[] { 20,10 });
             var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14,14,3,3 });
-            var adx = new IndicatorSetUp(Tulip.Indicators.adx, new double[] { 14 });
-            var dc = new IndicatorSetUp(Tulip.Indicators.adx, new double[] { 20 });
-            var bbands = new IndicatorSetUp(Tulip.Indicators.bbands, new double[] { 20,2 });
+            var rsi = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 });
             dict.Add("MACD", macd);
             dict.Add("LongWma", ema100);
-            dict.Add("MediumWma", ema50);
-            dict.Add("ShortWma", ema25);
-            dict.Add("PSAR", psar);
+            dict.Add("MediumWma", ema20);
+            dict.Add("ShortWma", ema5);
+            dict.Add("gema", gema20);
             dict.Add("SRSI", srsi);
-            dict.Add("ADX", adx);
-            dict.Add("DC", dc);
-            dict.Add("BB", bbands);
+            dict.Add("rsi", rsi);
             return dict;
         }
 
@@ -58,40 +54,24 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var signal = indicatorOutputs["MACD"][1].ToList();
             var hist = indicatorOutputs["MACD"][2].ToList();
             var shortWma = indicatorOutputs["ShortWma"][0].ToList();
+            var gema = indicatorOutputs["gema"][0].ToList();
             var longWma = indicatorOutputs["LongWma"][0].ToList();
             var mediumWma = indicatorOutputs["MediumWma"][0].ToList();
-            var pSar = indicatorOutputs["PSAR"][0].ToList();
             var kLine = indicatorOutputs["SRSI"][0].ToList();
             var dLine = indicatorOutputs["SRSI"][1].ToList();
-            var adx = indicatorOutputs["ADX"][0].ToList();
-            var dcUpper = indicatorOutputs["DC"][2].ToList();
-            var bbLower = indicatorOutputs["BB"][0].ToList();
-            var bbMedium = indicatorOutputs["BB"][1].ToList();
-            var bbUpper = indicatorOutputs["BB"][2].ToList();
+            var rsi = indicatorOutputs["rsi"][0].ToList();
 
-            dcUpper.Reverse();
 
-            var condition1 = macd.Last() >= signal.Last();
-            var condition2 = pSar.Last() <= (double)closePrice.Close;
-            var condition3 = mediumWma.Last() >= longWma.Last();
-            var condition4 = shortWma.Last() >= mediumWma.Last();
-            var condition5 = kLine.Last() >= dLine.Last();
-            var condition6 = adx.Last()<25 && kLine.Last() >=80.0 && dLine.Last() >=80.0;
-            var macdDivergance = (((macd.Last() - signal.Last()) / signal.Last()) * 100.0);
-            var condition7 = macdDivergance > 20.0 || macdDivergance < -20.0;
-            var condition8 = (double)closePrice.High >= dcUpper.Skip(1).First();
-            var condition9 = dcUpper.Skip(1).First() == dcUpper.Skip(2).First() && dcUpper.Skip(2).First() == dcUpper.Skip(3).First();
-
-            shortWma.Reverse();
-            mediumWma.Reverse();
-            longWma.Reverse();
-
-            var condition10 = EmaBounce(shortWma, closePrice) || EmaBounce(mediumWma, closePrice) || EmaBounce(longWma,closePrice);
+            var condition1 = macd.Last() > signal.Last();
+            var condition2 = shortWma.Last() >= mediumWma.Last();
+            var condition3 = kLine.Last() >= dLine.Last();
+            var condition4 = rsi.Last() < 50;
+            var condition5 = gema.Last() >0;
 
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-             if (condition1 && condition2 && condition3 && (condition4 || condition5) && condition10)
+             if (condition1 && condition2 && condition3 && condition5)
             {
                 LogResult(1);
                 return 1;
