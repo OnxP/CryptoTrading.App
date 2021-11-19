@@ -83,19 +83,15 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             //load indicators
             foreach (var item in Indicators)
             {
-                double[] close_prices = closePrices.Select(x=> (double)x.Close).ToArray();
-                double[] volume = closePrices.Select(x => (double)x.Volume).ToArray(); 
-                double[] high = closePrices.Select(x => (double)x.High).ToArray(); 
-                double[] low = closePrices.Select(x => (double)x.Low).ToArray();
+                double[][] inputs = BuildInputs(item.Value,closePrices);                
 
                 //Find output size and allocate output space.
-                int output_length = close_prices.Length - item.Value.Indicator.Start(item.Value.Options);
+                int output_length = (inputs[0].Length - item.Value.Indicator.Start(item.Value.Options));
                 double[] output = new double[output_length];
                 double[] output1 = new double[output_length];
                 double[] output2 = new double[output_length];
                 double[] output3 = new double[output_length];
 
-                double[][] inputs = { close_prices, volume, high,low };
                 double[][] outputs = { output,output1,output2,output3 };
                 int success = item.Value.Indicator.Run(inputs, item.Value.Options, outputs);
                 // log.
@@ -104,6 +100,42 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
 
             return Calculate(indicatorOutputs, closePrices.Current, StopLimitTrackers) * StrategyWeight;
         }
+
+        private double[][] BuildInputs(IndicatorSetUp indicator, OrderedFixedLengthList<Candlestick> closePrices)
+        {
+            if (indicator.Multiplier == 1)
+            {
+                double[] close_prices = closePrices.Select(x => (double)x.Close).ToArray();
+                double[] volume = closePrices.Select(x => (double)x.Volume).ToArray();
+                double[] high = closePrices.Select(x => (double)x.High).ToArray();
+                double[] low = closePrices.Select(x => (double)x.Low).ToArray();
+
+                return new double[][] { close_prices, volume, high, low };
+            }
+            else
+            {//fix this..do it in reverse order
+                var startCandleStick = closePrices.Last(x => x.OpenTime.Minute == 0);
+                var index = closePrices.IndexOf(startCandleStick);
+                int size = index / 4;
+                double[] close_prices = new double[size];
+                double[] volume = new double[size];
+                double[] high = new double[size];
+                double[] low = new double[size];
+                int idx = size-1;
+                while (index >= indicator.Multiplier)//might need a -1 here
+                {
+                    var group = closePrices.Skip(index).Take(indicator.Multiplier);
+                    close_prices[idx] = (double)group.Last().Close;
+                    volume[idx] = (double)group.Sum(x=>x.Volume);
+                    high[idx] = (double)group.Max(x=>x.High);
+                    low[idx] = (double)group.Min(x=>x.Low);
+                    idx--;
+                    index -= indicator.Multiplier;
+                }
+                return new double[][] { close_prices, volume, high, low };
+            }
+        }
+
         //return +1 for buy Trade, -1 for sell, and 0 for Hold.
         protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers);
     }

@@ -9,6 +9,12 @@ namespace CryptoTrading.App.Core
     {
         public IndicatorSetUp(Indicator macd, double[] vs)
         {
+            Indicator = macd;
+            Options = vs;
+        }
+        public IndicatorSetUp(Indicator macd, double[] vs,int multiplier):this(macd, vs)
+        {
+            Multiplier = multiplier;
         }
 
         public Indicator Indicator { get; set; }

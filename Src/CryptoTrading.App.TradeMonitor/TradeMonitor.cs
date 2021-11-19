@@ -64,7 +64,7 @@ namespace CryptoTrading.App.Monitor
 
         private void Dispose()
         {
-            //Tracker.Dispose();
+            Tracker.Close();
             
             marketMonitor = null;
         }

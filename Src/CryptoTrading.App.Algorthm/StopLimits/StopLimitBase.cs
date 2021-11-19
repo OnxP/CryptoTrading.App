@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Algorthm.StopLimits
             IsOpen = true;
         }
 
-        public void Dispose()
+        public void Close()
         {
             IsOpen = false;
         }

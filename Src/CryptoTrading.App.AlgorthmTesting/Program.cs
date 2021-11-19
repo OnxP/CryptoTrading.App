@@ -32,10 +32,10 @@ namespace CryptoTrading.App.AlgorthmTesting
         {
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
             Database.SetInitializer<CryptoDBContext>(null);
-            var customText = "MACD Bar+gma";
-            var noOfTrades = new List<double>() { 2};
-            var risks = new List<decimal>() { 3m };//,0.98m,1.98m };
-            var increments = new List<decimal>() { 2m };//,2m,3m};
+            var customText = "MACD 1hr SRSI";
+            var noOfTrades = new List<double>() { 4};
+            var risks = new List<decimal>() { 2m };//,0.98m,1.98m };
+            var increments = new List<decimal>() { 1.5m };//,2m,3m};
             var tasks = new List<Task>();
 
             var services = new ServiceCollection()
@@ -51,8 +51,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             var marketData = services.GetService<IMarketData>();
             var marketMonitor = services.GetService<IMarketMonitor>();
             marketData.Configure(null);
-            marketData.From = new DateTime(2021, 05, 01, 00, 00, 00);
-            marketData.To = new DateTime(2021, 06, 01, 00, 00, 00);
+            marketData.From = new DateTime(2021, 06, 01, 00, 00, 00);
+            marketData.To = new DateTime(2021, 07, 01, 00, 00, 00);
 
             //foreach (var strat in strats)
             //{

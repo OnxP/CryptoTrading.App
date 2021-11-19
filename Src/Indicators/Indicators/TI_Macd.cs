@@ -39,12 +39,6 @@ namespace Tulip
 
             double shortPer = 2.0 / (shortPeriod + 1);
             double longPer = 2.0 / (longPeriod + 1);
-            if (shortPeriod == 12 && longPeriod == 26)
-            {
-                // It's what people expect.
-                shortPer = 0.15;
-                longPer = 0.075;
-            }
 
             double signalPer = 2.0 / (signalPeriod + 1);
             double shortEma = input[0];
@@ -98,12 +92,6 @@ namespace Tulip
 
             decimal shortPer = 2m / (shortPeriod + 1);
             decimal longPer = 2m / (longPeriod + 1);
-            if (shortPeriod == 12 && longPeriod == 26)
-            {
-                // It's what people expect.
-                shortPer = 0.15m;
-                longPer = 0.075m;
-            }
 
             decimal signalPer = 2m / (signalPeriod + 1);
             decimal shortEma = input[0];

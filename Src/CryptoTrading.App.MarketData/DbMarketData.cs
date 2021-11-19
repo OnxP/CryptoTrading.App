@@ -143,18 +143,23 @@ namespace CryptoTrading.App.MarketData
         }
         private void LoadHistoricData((string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
-            int interval = (int)symbol.interval;
-            var candleSticks = context.CandleSticks.SqlQuery(SQL_HISTORIC_QUERY, from, symbol.symbol, interval).ToListAsync().Result;
-            if (candleSticks.Count() == 0) return;
-            var cs = candleSticks.OrderBy(x => x.OpenTime).ToList();
-            //need to drop first candle
-            //candleSticks.Reverse();
-            List<Candlestick> sticks = new List<Candlestick>();
-            cs.ForEach(x => sticks.Add(CandleStickDb.ConvertObject(x)));
-            foreach (var action in callback)
+            try
             {
-                action.Invoke(sticks);
+                int interval = (int)symbol.interval;
+                var candleSticks = context.CandleSticks.SqlQuery(SQL_HISTORIC_QUERY, from, symbol.symbol, interval).ToListAsync().Result;
+                if (candleSticks.Count() == 0) return;
+                var cs = candleSticks.OrderBy(x => x.OpenTime).ToList();
+                //need to drop first candle
+                //candleSticks.Reverse();
+                List<Candlestick> sticks = new List<Candlestick>();
+                cs.ForEach(x => sticks.Add(CandleStickDb.ConvertObject(x)));
+                foreach (var action in callback)
+                {
+                    action.Invoke(sticks);
+                }
             }
+            catch
+            { }
         }
     }
 }

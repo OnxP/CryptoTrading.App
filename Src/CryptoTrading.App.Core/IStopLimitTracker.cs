@@ -11,7 +11,7 @@ namespace CryptoTrading.App.Core
         decimal TargetPrice { get; set; }
         void Configure(Order order);
         void MoveStopLimit();
-        void Dispose();
+        void Close();
         decimal CurrentPrice { get; set; }
         public DateTime EndDateTime { get; set; }
         bool IsOpen { get; set; }
