@@ -72,6 +72,7 @@ namespace CryptoTrading.App.Monitor
                 //assume that order has been filled.
                 try
                 {
+                    //error occurs here because there are not monitors set up for trade...need to find out why!
                     var trade = CurrentMonitors.First(x => x.Symbol == order.Symbol);
                 
                     switch (transaction.Type)

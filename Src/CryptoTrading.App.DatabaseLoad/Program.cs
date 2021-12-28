@@ -69,7 +69,7 @@ namespace CryptoTrading.App.DatabaseLoad
                 }
             }
         }
-        public static CryptoDBContext context = new CryptoDBContext();
+        public static CryptoDbContext context = new CryptoDbContext();
         private static void AddCandleStick(CandlestickEventArgs obj)
         {
             lock (_object)

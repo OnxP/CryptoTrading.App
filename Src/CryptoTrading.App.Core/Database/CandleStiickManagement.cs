@@ -24,26 +24,16 @@ namespace CryptoTrading.App.Core.Database
 
         Dictionary<int, DateTime> timeKeeper = new Dictionary<int, DateTime>();
         int _index = 0;
+        public static bool PauseFlow { get; set; } = false;
 
-        public DateTime CurrentTick
-        {
-            get { 
-                if (_index < timeKeeper.Count())
-                {
-                    return timeKeeper[_index];
-                }
-                else
-                {
-                    return FinalTick;
-                }
-            } 
-        }
+        public DateTime CurrentTick => _index < timeKeeper.Count() ? timeKeeper[_index] : FinalTick;
 
-        public DateTime FinalTick
-        {
-            get { return timeKeeper.Last().Value; }
-        }
+        public DateTime NextTick => _index < timeKeeper.Count() ? timeKeeper[_index + 1] : FinalTick;
 
+        public DateTime FinalTick => timeKeeper.Last().Value;
+
+        public DateTime FirstTick => timeKeeper[0];
+        public int Index => _index;
 
         public void GetNextTick()
         {
@@ -59,6 +49,7 @@ namespace CryptoTrading.App.Core.Database
                 currentTime = From.AddMinutes(i);
                 timeKeeper.Add(i++,currentTime);
             }
+            //GetNextTick();
         }
 
         public void AddMarketStream(Action invokeCandleStick)
@@ -74,7 +65,7 @@ namespace CryptoTrading.App.Core.Database
             _StopLimitMonitor = null;
         }
 
-        public static bool PauseFlow { get; set; } = false;
+        
 
         public void StartTimeKeeper()
         {
@@ -99,7 +90,7 @@ namespace CryptoTrading.App.Core.Database
                 //if (_StopLimitMonitor==null) 
                 //    Thread.Sleep(10);
 
-            } while (_index < timeKeeper.Count);
+            } while (_index < timeKeeper.Count-1);
         }
     }
 }

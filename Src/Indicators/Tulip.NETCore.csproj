@@ -15,6 +15,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageIcon>tulip.png</PackageIcon>
     <PackageTags>tulip;technical;analysis;financial;data;stock;market</PackageTags>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

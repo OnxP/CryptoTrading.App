@@ -14,7 +14,7 @@ namespace CryptoTraading.App.RunIndicators
         {
             List<string> symbols;
             //load candlesticks from database...maybe stream them into the system.
-            using (var context = new CryptoDBContext())
+            using (var context = new CryptoDbContext())
             {
                 symbols = context.CandleSticks.Select(x => x.Symbol).Distinct().ToList();
             }
@@ -24,14 +24,14 @@ namespace CryptoTraading.App.RunIndicators
             {
                 List<CandlestickInterval> intervals;
                 //load candlesticks from database...maybe stream them into the system.
-                using (var context = new CryptoDBContext())
+                using (var context = new CryptoDbContext())
                 {
                     intervals = context.CandleSticks.Where(x => x.Symbol == symbol).Select(x => x.Interval).Distinct().ToList();
                 }
                 foreach (var interval in intervals)
                 {
                     List<CandleStickDb> candlesticks;
-                    using (var context = new CryptoDBContext())
+                    using (var context = new CryptoDbContext())
                     {
                         candlesticks = context.CandleSticks.Where(x => x.Symbol == symbol && x.Interval == interval).OrderBy(x => x.OpenTime).ToList();
                     }

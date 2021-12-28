@@ -345,7 +345,6 @@ Symbol.SOL_BTC
 ,Symbol.CHR_BTC
 ,Symbol.INJ_BTC
 ,Symbol.SFP_BTC
-,Symbol.AGI_BTC
 ,Symbol.ATM_BTC
 ,Symbol.LINA_BTC
 ,Symbol.BCD_BTC
@@ -369,7 +368,6 @@ Symbol.SOL_BTC
 ,Symbol.SCRT_BTC
 ,Symbol.ALPHA_BTC
 ,Symbol.CDT_BTC
-,Symbol.EASY_BTC
 ,Symbol.OXT_BTC
 ,Symbol.BLZ_BTC
 ,Symbol.LTC_BTC
@@ -398,7 +396,7 @@ Symbol.SOL_BTC
 
         private void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
-            var symbol = new List<Symbol>() { Symbol.WNXM_BTC };
+            var symbol = new List<Symbol>() { Symbol.ETH_BTC };
             
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()

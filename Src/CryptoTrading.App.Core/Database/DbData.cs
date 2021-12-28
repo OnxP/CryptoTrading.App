@@ -1,89 +1,152 @@
 ﻿using Binance;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data.Entity;
 using System.Linq;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
     public class DbData : IDbData
     {
         private static DbData _instance;
-        public static DbData GetInstance
-        {
-            get
-            {
-                if (_instance == null) _instance = new DbData();
-                return _instance;
-            }
-        }
+        public static DbData GetInstance => _instance ??= new DbData();
+
         private readonly object _lock = new object();
-        //public Dictionary<string, IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>>> _data = 
-        //    new Dictionary<string, IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>>>();
 
-        public Dictionary<DateTime, Dictionary<string, Candlestick>> data = new Dictionary<DateTime, Dictionary<string, Candlestick>>();
+        private CryptoDbContext context = new CryptoDbContext();
 
-        IEnumerable<IGrouping<DateTime, (Candlestick candlestick, int interval)>> orderedList;
+        private IQueryable<CandleStickDb> data;
+        public void Initialise(DateTime from, DateTime to, List<string> symbols, CandlestickInterval interval)
+        {
+            
+            data = context.CandleSticks.Where(
+                x=> x.CloseTime>=from && x.CloseTime<=to && symbols.Contains(x.Symbol) && (x.Interval == interval || x.Interval == CandlestickInterval.Minute)).AsNoTracking();
+        }
 
-        public void LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, string symbol, int interval)
+        private Dictionary<DateTime, Dictionary<string, Candlestick>> _data = new Dictionary<DateTime, Dictionary<string, Candlestick>>();
+        private Dictionary<DateTime, Dictionary<string, Candlestick>> _data_minute = new Dictionary<DateTime, Dictionary<string, Candlestick>>();
+
+        public void LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbols, int interval,int numberOfRows,int offSet)
         {
             lock (_lock)
             {
-                //IEnumerable<CandleStickDb> orderedList;
-                if (data.ContainsKey(currentTick) && data[currentTick].ContainsKey(symbol))
-                {
-                    return;
-                }
-                else
-                {
-                    using (var context = new CryptoDBContext())
+                Dictionary<DateTime, Dictionary<string, Candlestick>> data = interval == 0 ? _data_minute : _data;
+                //if (data.ContainsKey(currentTick)) return;
+                
+                var query = sQL_STREAM_QUERY.Replace("@Symbols", Format(symbols));
+                IEnumerable<CandleStickDb> candleSticks;
+
+
+                    candleSticks = context.CandleSticks.SqlQuery(query,
+                        currentTick, finalTick, interval, offSet,numberOfRows);
+                    //Where(x =>
+                    //symbols.Contains(x.Symbol) && (int)x.Interval == interval && x.CloseTime == currentTick &&
+                    //(finalTick == null || x.CloseTime <= finalTick)).AsNoTracking();
+
+
+
+                if (!candleSticks.Any()) throw new Exception("Bad Data.");
+                    //candleSticks.All(x => candleSticksToStream.Add(CandleStickDb.ConvertObject(x)));
+
+                    //first group by closetime
+                    foreach (var candleStickList in candleSticks.GroupBy(x => x.CloseTime))
                     {
-                        List<(Candlestick candlestick, int interval)> candleSticksToStream = new List<(Candlestick candlestick, int interval)>();
-                        var candleSticks = context.CandleSticks.SqlQuery(sQL_STREAM_QUERY, currentTick, finalTick, symbol, interval).ToList();
-                        if (candleSticks.Count() == 0) throw new Exception("Bad Data.");
-                        candleSticks.ForEach(x => candleSticksToStream.Add((CandleStickDb.ConvertObject(x), interval)));
-
-                        foreach (var candlestick in candleSticksToStream)
+                        if (data.ContainsKey(candleStickList.Key))
                         {
-                            if(data.ContainsKey(candlestick.candlestick.CloseTime))
+                            foreach (var candleStick in candleStickList)
                             {
-                                if (data[candlestick.candlestick.CloseTime].ContainsKey(symbol)) continue;
+                                if (data[candleStickList.Key].ContainsKey(candleStick.Symbol)) continue;
 
-                                data[candlestick.candlestick.CloseTime].Add(symbol, candlestick.candlestick);
-                            }
-                            else
-                            {
-                                data.Add(candlestick.candlestick.CloseTime, new Dictionary<string, Candlestick>() { { symbol, candlestick.candlestick } });
+                                data[candleStickList.Key].Add(candleStick.Symbol,
+                                    CandleStickDb.ConvertObject(candleStick));
                             }
                         }
-                        //_data.Add(symbol, candleSticksToStream.OrderBy(x => x.candlestick.CloseTime).GroupBy(x => x.candlestick.CloseTime));
+                        else
+                        {
+                            data.Add(
+                                candleStickList
+                                    .Key, //new Dictionary<string, Candlestick>() { { candlestick.Symbol, candlestick } });
+                                candleStickList.ToDictionary(x => x.Symbol, CandleStickDb.ConvertObject));
+                        }
                     }
-                }
+
             }
         }
 
-        public Dictionary<string,Candlestick> GetData(DateTime currentTick)
+
+        private string Format(List<string> symbols)
         {
-            lock (_lock)
-            {
-                Dictionary<string, Candlestick> list;
-                if (data.TryGetValue(currentTick, out list))
-                {
-                    return list;
-                }
-                else
-                {
-                    return new Dictionary<string, Candlestick>();
-                }
+            var str = string.Join("','", symbols);
+            return str;
+        }
 
-                //Dictionary<string,Candlestick> list = new Dictionary<string,Candlestick>();
-                //foreach (var kvp in _data)
-                //{
-                //    //this is taking it time. slowing down the app. too much data to filter thorugh maybe use a dict list by close time
-                //    list.Add(kvp.Key, kvp.Value.FirstOrDefault(x => x.Key == currentTick)?.FirstOrDefault().candlestick);
-                //}
-                //return list;
+        public Dictionary<string,Candlestick> GetData(DateTime currentTick,bool minute)
+        {
+            var data = minute ? _data_minute : _data;
+
+            return data.TryGetValue(currentTick, out var listMinute)
+                ? listMinute
+                : new Dictionary<string, Candlestick>();
+        }
+
+        public IOrderedQueryable<CandleStickDb> GetQuerableData(DateTime currentTick, bool minute)
+        {
+            //var data = minute ? _data_minute : _data;
+
+            //return data.TryGetValue(currentTick, out var listMinute)
+            //    ? listMinute
+            //    : new Dictionary<string, Candlestick>();
+
+            return data.Where(x =>
+                x.CloseTime == currentTick && minute
+                    ? x.Interval == CandlestickInterval.Minute
+                    : x.Interval != CandlestickInterval.Minute).OrderByDescending(x => x.Volume);
+        }
+
+        public bool CheckNextTick(DateTime nextTick, string symbol, bool minute)
+        {
+            var candlesticks = GetData(nextTick, minute);
+            return candlesticks.Any() && candlesticks.ContainsKey(symbol);
+        }
+
+        public void RemoveTick(DateTime currentTick, bool minute)
+        {
+            var test = minute ? _data_minute.Remove(currentTick) : _data.Remove(currentTick);
+        }
+
+        public List<Candlestick> GetData(string symbol)
+        {
+            var list = new List<Candlestick>();
+            foreach (var dict in _data)
+            {
+                if (dict.Value.TryGetValue(symbol, out var item))
+                {
+                    list.Add(item);
+                }
+            }
+
+            return list;
+        }
+
+        public void ClearHistoric(DateTime from,bool minute)
+        {
+            var data = minute ? _data_minute : _data;   
+            foreach (var kvp in data.Where(kvp => kvp.Key<=from))
+            {
+                RemoveTick(kvp.Key,minute);
             }
         }
+
+        public int Count(bool minute)
+        {
+            var data = minute ? _data_minute : _data;
+            return data.Count();
+        }
+
+        
     }
 }

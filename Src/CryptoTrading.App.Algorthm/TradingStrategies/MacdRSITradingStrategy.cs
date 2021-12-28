@@ -75,7 +75,8 @@ namespace CryptoTrading.App.Algorthm.TradingStrategies
             var trough = FindTrough(macd, closePrice.OpenTime);
 
             var multiple = Convert.ToDecimal(atr.Last());
-            var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
+            var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100);
+                var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA

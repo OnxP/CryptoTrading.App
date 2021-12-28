@@ -6,6 +6,9 @@ namespace CryptoTrading.App.Core.Database
     {
         public DateTime CurrentTick { get; }
         public DateTime FinalTick { get; }
+        public DateTime NextTick { get; }
+        DateTime FirstTick { get; }
+        int Index { get; }
 
         void BuildTimeKeeper(DateTime from, DateTime dateTime);
         void AddMarketStream(Action invokeCandleStick);

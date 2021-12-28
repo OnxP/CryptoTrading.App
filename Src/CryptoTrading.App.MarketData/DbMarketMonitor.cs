@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -23,6 +24,8 @@ namespace CryptoTrading.App.MarketData
     public class DbMarketMonitor : IMarketMonitor
     {
         ICandleStickManagement _mangement;
+        IDbData _data;
+        private Dictionary<string, Dictionary<string, Action<CandlestickEventArgs>>> actions;
         public DbMarketMonitor(ICandleStickManagement management, IDbData data)
         {
             _mangement = management;
@@ -32,6 +35,8 @@ namespace CryptoTrading.App.MarketData
         }
 
         public CandlestickInterval Interval { get; set; }
+        public int NumberOfRows { get; set; } = 100;
+        public int OffSet => _mangement.Index / NumberOfRows ;
 
         private string SQL_STREAM_QUERY = @"SELECT [ID]
       ,[Symbol]
@@ -48,9 +53,12 @@ namespace CryptoTrading.App.MarketData
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Symbol=@p2 AND Interval=@p3
-  ORDER BY OpenTime";
+  WHERE CloseTime >= @p0 AND CloseTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  ORDER BY CloseTime
+  OFFSET @p3 ROWS
+  FETCH NEXT @p4 ROWS ONLY";
         private readonly object _lock = new object();
+        private readonly object _lockAction = new object();
         public bool CheckOrder(ITransaction transaction)
         {
             transaction.Complete();
@@ -63,39 +71,41 @@ namespace CryptoTrading.App.MarketData
             return;
         }
 
-        IDbData _data;
-        private Dictionary<string, Dictionary<string,Action<CandlestickEventArgs>>> actions;
-
         public void InvokeCandleStick()
         {
-            var candleSticks = _data.GetData(_mangement.CurrentTick);
-            if (candleSticks.Where(x=>x.Value != null).Count() == 0) return;
+            var candleSticks = _data.GetData(_mangement.CurrentTick, true).ToList();
+            if (candleSticks.All(x => x.Value == null)) return;
 
             foreach (var kvp in candleSticks)
             {
-                if(actions.ContainsKey(kvp.Key))
+                if (!actions.ContainsKey(kvp.Key)) continue;
+                foreach (var action in actions[kvp.Key])
                 {
-                    foreach (var action in actions[kvp.Key])
+                    action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0,
+                        true));
+
+                    if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key, true))
                     {
-                        action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0, true));
+                        _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick, _mangement.FinalTick, new List<string>() { kvp.Key }, 0, NumberOfRows, OffSet);
                     }
                 }
-                    //actions[kvp.Key].All(x => x.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0, true)));
             }
+            _data.ClearHistoric(_mangement.CurrentTick, true);
         }
 
         public void Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
         {
-            lock (_lock)
+            lock (_lockAction)
             {
                 if (actions.ContainsKey(symbol))
                     actions[symbol].Add(keyValue,processCandleStick);
                 else
                 {
-                    _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, symbol, 0);
-                    
+                    _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0,NumberOfRows, OffSet);
                     actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
                 }
+
+                _data.ClearHistoric(_mangement.CurrentTick, true);
 
                 if (actions.Count >= 1) _mangement.AddStopLimitStream(InvokeCandleStick);
 
@@ -105,17 +115,12 @@ namespace CryptoTrading.App.MarketData
 
         public bool IsSubscribed(string symbol, string keyValue)
         {
-            if (actions.ContainsKey(symbol))
-            {
-                if (actions[symbol].ContainsKey(keyValue))
-                    return true;
-            }
-            return false;
+            return actions.ContainsKey(symbol) && actions[symbol].ContainsKey(keyValue);
         }
 
         public void UnSubscribe(string symbol, string keyValue)
         {
-            lock (_lock)
+            lock (_lockAction)
             {
                 if (actions[symbol].Count == 1)
                 {

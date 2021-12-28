@@ -31,7 +31,7 @@ namespace CryptoTrading.App.AlgorthmTesting
         static void Main(string[] args)
         {
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
-            Database.SetInitializer<CryptoDBContext>(null);
+            Database.SetInitializer<CryptoDbContext>(null);
             var customText = "MACD 1hr SRSI";
             var noOfTrades = new List<double>() { 4};
             var risks = new List<decimal>() { 2m };//,0.98m,1.98m };
@@ -41,6 +41,7 @@ namespace CryptoTrading.App.AlgorthmTesting
             var services = new ServiceCollection()
                     .AddDbMarketData()
                     .AddDbMarketMonitor(RunTypeEnum.BackTesting)
+                    //.AddStoreTrades(RunTypeEnum.BackTesting)
                     .AddTradingCore()
                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
@@ -50,6 +51,7 @@ namespace CryptoTrading.App.AlgorthmTesting
 
             var marketData = services.GetService<IMarketData>();
             var marketMonitor = services.GetService<IMarketMonitor>();
+            //var TradeStorage = services.GetService<>(ITradeStorage);
             marketData.Configure(null);
             marketData.From = new DateTime(2021, 06, 01, 00, 00, 00);
             marketData.To = new DateTime(2021, 07, 01, 00, 00, 00);
