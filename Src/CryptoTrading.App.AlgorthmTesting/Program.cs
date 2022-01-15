@@ -1,5 +1,5 @@
 ﻿using Binance;
-using CryptoTrading.App.Algorthm;
+using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core.Extensions;
@@ -23,7 +23,7 @@ using CryptoTrading.App.Core.Database;
 using System.Data.Common;
 using System.Data.Entity;
 
-namespace CryptoTrading.App.AlgorthmTesting
+namespace CryptoTrading.App.AlgorithmTesting
 {
     class Program
     {
@@ -53,8 +53,8 @@ namespace CryptoTrading.App.AlgorthmTesting
             var marketMonitor = services.GetService<IMarketMonitor>();
             //var TradeStorage = services.GetService<>(ITradeStorage);
             marketData.Configure(null);
-            marketData.From = new DateTime(2021, 06, 01, 00, 00, 00);
-            marketData.To = new DateTime(2021, 07, 01, 00, 00, 00);
+            marketData.From = new DateTime(2021, 05, 01, 00, 00, 00);
+            marketData.To = new DateTime(2021, 06, 01, 00, 00, 00);
 
             //foreach (var strat in strats)
             //{

@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace CryptoTrading.App.AlgorthmTesting
+namespace CryptoTrading.App.AlgorithmTesting
 {
     public static class TableParser
     {

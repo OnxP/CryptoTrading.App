@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tulip;
 
-namespace CryptoTrading.App.Algorthm.TradingStrategies
+namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class RsiTradingStrategy : TradingStrategy
     {

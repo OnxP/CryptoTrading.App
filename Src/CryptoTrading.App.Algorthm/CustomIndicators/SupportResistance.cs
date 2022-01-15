@@ -6,7 +6,7 @@ using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace CryptoTrading.App.Algorthm.CustomIndicators
+namespace CryptoTrading.App.Algorithm.CustomIndicators
 {
     public enum Details
     {

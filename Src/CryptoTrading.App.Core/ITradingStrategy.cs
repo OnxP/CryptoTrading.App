@@ -4,7 +4,7 @@ using CryptoTrading.App.Core.Database;
 using System.Collections.Generic;
 using Tulip;
 
-namespace CryptoTrading.App.Algorthm.TradingStrategies
+namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public interface ITradingStrategy
     {

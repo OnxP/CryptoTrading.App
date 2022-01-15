@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CryptoTrading.App.Algorthm.CustomIndicators
+namespace CryptoTrading.App.Algorithm.CustomIndicators
 {
     public enum SignalType
     {

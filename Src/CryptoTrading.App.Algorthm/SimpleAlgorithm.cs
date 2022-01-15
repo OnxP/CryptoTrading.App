@@ -1,6 +1,6 @@
 ﻿using Binance;
 using Binance.Client;
-using CryptoTrading.App.Algorthm.TradingStrategies;
+using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.KeyClass;
@@ -12,24 +12,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CryptoTrading.App.Algorthm
+namespace CryptoTrading.App.Algorithm
 {
-    public class SimpleAlgorthm : IAlgorthm
+    public class SimpleAlgorithm : IAlgorithm
     {
-        public ILogger<SimpleAlgorthm> Logger { get; set; }
+        public ILogger<SimpleAlgorithm> Logger { get; set; }
         public int NumberOfCandleSticksToKeep => tradingStrategies.OutputLength;
         private OrderedFixedLengthList<Candlestick> _candleSticks;
         public ITradingStrategy tradingStrategies;
         public IStopLimitTracker StopLimitTrackers { get; set; } 
         public string KeyValue { get; set; }
-        public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger, IStopLimitTracker stopLimitTrackers)
+        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers)
         { 
             tradingStrategies = strategies;
             _candleSticks = new OrderedFixedLengthList<Candlestick>(NumberOfCandleSticksToKeep);
             StopLimitTrackers = stopLimitTrackers;
             Logger = logger;
         }
-        public SimpleAlgorthm(ITradingStrategy strategies, ILogger<SimpleAlgorthm> logger, IStopLimitTracker stopLimitTrackers, IKey key):this(strategies,logger,stopLimitTrackers)
+        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers, IKey key):this(strategies,logger,stopLimitTrackers)
         {
             KeyValue = key.KeyValue;
         }

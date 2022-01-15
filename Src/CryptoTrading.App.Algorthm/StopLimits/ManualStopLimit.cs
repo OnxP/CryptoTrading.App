@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CryptoTrading.App.Algorthm.StopLimits
+namespace CryptoTrading.App.Algorithm.StopLimits
 {
     class ManualStopLimit : StopLimitBase
     {

@@ -5,13 +5,14 @@ using System.Text;
 
 namespace CryptoTrading.App.Core.Database
 {
-    public class CryptoConfig
+    public class CryptoConfigSymbols
     { 
-        public CryptoConfig()
+        public CryptoConfigSymbols()
         {
 
         }
 
-        public bool IsRunning { get; set; }
+        public string Symbol { get; set; }
+        public bool ValidSymbol { get; set; }
     }
 }

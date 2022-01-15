@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CryptoTrading.App.Algorthm.CustomIndicators
+namespace CryptoTrading.App.Algorithm.CustomIndicators
 {
     public class Mbfx
     {

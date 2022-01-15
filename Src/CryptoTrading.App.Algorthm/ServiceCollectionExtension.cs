@@ -1,5 +1,5 @@
-﻿using CryptoTrading.App.Algorthm.StopLimits;
-using CryptoTrading.App.Algorthm.TradingStrategies;
+﻿using CryptoTrading.App.Algorithm.StopLimits;
+using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,27 +8,27 @@ using System.Collections.Generic;
 using System.Linq;
 using Tulip;
 
-namespace CryptoTrading.App.Algorthm
+namespace CryptoTrading.App.Algorithm
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddAlgorthm(this IServiceCollection services)
+        public static IServiceCollection AddAlgorithm(this IServiceCollection services)
         {
             services.AddTransient<ITradingStrategy, SimpleMacdTradingStrategy>();
 
-            services.AddTransient<IAlgorthm, SimpleAlgorthm>();
+            services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
             services.AddTransient<IStopLimitTracker, FixedProfitStopLimit>();
 
             return services;
         }
 
-        public static IServiceCollection AddAlgorthm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
+        public static IServiceCollection AddAlgorithm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
         {
             services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>( provider => 
             new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), NoOfTrades));
 
-            services.AddTransient<IAlgorthm, SimpleAlgorthm>();
+            services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
             services.AddTransient<IStopLimitTracker, ManualTrailingStopLimit>(provider=> new ManualTrailingStopLimit(Risk,Increment));
 

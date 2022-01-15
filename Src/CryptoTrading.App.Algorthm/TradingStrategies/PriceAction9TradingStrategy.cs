@@ -1,5 +1,5 @@
 ﻿using Binance;
-using CryptoTrading.App.Algorthm.CustomIndicators;
+using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tulip;
 
-namespace CryptoTrading.App.Algorthm.TradingStrategies
+namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class PriceAction9TradingStrategy : TradingStrategy
     {

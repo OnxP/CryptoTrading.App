@@ -11,7 +11,7 @@ using System.Text;
 
 namespace CryptoTrading.App.Monitor
 {
-    //Monitors a Trade, and manages transations.
+    //Monitors a Trade, and manages transactions.
     //Each transaction is linked to an order.
     //The trade is considered to be live if there are open transactions
     class TradeMonitor : ITradeMonitor

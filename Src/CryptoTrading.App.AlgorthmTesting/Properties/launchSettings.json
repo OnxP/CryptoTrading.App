@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "CryptoTrading.App.AlgorthmTesting": {
+    "CryptoTrading.App.AlgorithmTesting": {
       "commandName": "Project",
       "nativeDebugging": true
     }

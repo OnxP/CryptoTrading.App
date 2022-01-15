@@ -39,7 +39,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceTradeHistory", "Samp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceConsoleApp", "Samples\BinanceConsoleApp\BinanceConsoleApp.csproj", "{29FDB72E-6E2A-4CF7-B167-B979A5845345}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Algorthm", "CryptoTrading.App.Algorthm\CryptoTrading.App.Algorthm.csproj", "{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Algorithm", "CryptoTrading.App.Algorthm\CryptoTrading.App.Algorithm.csproj", "{A0F0B10D-FD51-4021-B6E7-F8C4B61B7391}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Process", "CryptoTrading.App.Process\CryptoTrading.App.Process.csproj", "{A8F43646-F731-4696-A131-B8D338093C7B}"
 EndProject

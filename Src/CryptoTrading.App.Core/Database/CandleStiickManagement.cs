@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Algorthm.TradingStrategies;
+﻿using CryptoTrading.App.Algorithm.TradingStrategies;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

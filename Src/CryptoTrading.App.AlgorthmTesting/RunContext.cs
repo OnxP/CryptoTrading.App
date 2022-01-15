@@ -1,5 +1,5 @@
 ﻿using Binance;
-using CryptoTrading.App.Algorthm;
+using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core.Extensions;
@@ -20,7 +20,7 @@ using CryptoTrading.App.Core.Database.Indicators;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using System.Threading.Tasks;
 
-namespace CryptoTrading.App.AlgorthmTesting
+namespace CryptoTrading.App.AlgorithmTesting
 {
     public class RunContext
     {
@@ -63,7 +63,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                         .AddConsole()
                         )
                     .AddKey(Key)
-                    .AddAlgorthm(NoOfTrades, Risk, Increment)
+                    .AddAlgorithm(NoOfTrades, Risk, Increment)
                     .AddTestBroker()
                     .AddTradeMonitor(dictionaryPositions, masterServices)
                     .BuildServiceProvider();
@@ -262,7 +262,6 @@ Symbol.SOL_BTC
 ,Symbol.UNI_BTC
 ,Symbol.BTS_BTC
 ,Symbol.APPC_BTC
-,Symbol.SNM_BTC
 ,Symbol.REP_BTC
 ,Symbol.CELR_BTC
 ,Symbol.REN_BTC
@@ -412,7 +411,7 @@ Symbol.SOL_BTC
             {
                 foreach (var interval in intervals)
                 {
-                    var algo = services.GetService<IAlgorthm>();
+                    var algo = services.GetService<IAlgorithm>();
                     marketDate.InitialDataLoadSubscribe(symbol, interval, algo.ProcessHistoricMarketData);
                     marketDate.InitialDataStreamSubscribe(symbol, interval, algo.ProcessLiveCandleStick);
                 }

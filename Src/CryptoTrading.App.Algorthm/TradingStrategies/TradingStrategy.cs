@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using Tulip;
 
-namespace CryptoTrading.App.Algorthm.TradingStrategies
+namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public abstract class TradingStrategy : ITradingStrategy
     {
