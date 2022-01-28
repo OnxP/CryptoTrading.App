@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Binance;
-using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 
-namespace CryptoTrading.App.Monitor
+namespace CryptoTrading.App.Core.Position
 {
     public class Position : IPosition
     {

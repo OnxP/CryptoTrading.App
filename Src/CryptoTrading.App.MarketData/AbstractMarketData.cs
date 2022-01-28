@@ -4,6 +4,7 @@ using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
+using CryptoTrading.App.Core;
 
 namespace CryptoTrading.App.MarketData
 {

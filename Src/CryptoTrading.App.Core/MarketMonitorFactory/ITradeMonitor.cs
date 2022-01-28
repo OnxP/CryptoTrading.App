@@ -9,6 +9,7 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         string Symbol { get;}
         string KeyValue { get; set; }
 
+        ITrade Trade { get; }
         void UpdateInitialTransaction(Order order);
         void CancelLimitOrder(string order);
         void UpdateStopLimitOrder(Order order);

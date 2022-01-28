@@ -17,13 +17,11 @@ namespace CryptoTrading.App.Monitor
     public class TradeProcessor : ITradeProcessor
     {
         public IPositions Positions { get; set; }
-        private IMarketMonitorFactory TradeFactory {get;set;}
+        private IMarketMonitorFactory TradeFactory {get;}
 
         private readonly object _lock = new object();
-        public List<ITrade> Trades { get; set; }
         public List<ITradeMonitor> OrderMonitors { get; set; }
-
-        public IEnumerable<ITrade> LiveTrades => Trades.Where(x => x.Open);
+        public IEnumerable<ITrade> LiveTrades => OrderMonitors.Where(x => x.Live).Select(x=>x.Trade);
         public string KeyValue { get; set; }
         public IEnumerable<ITradeMonitor> CurrentMonitors
         {
@@ -36,12 +34,14 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        public TradeProcessor(IPositions positions, IMarketMonitorFactory factory)
+        public TradeProcessor(IMarketMonitorFactory factory)
+        {
+            TradeFactory = factory;
+            OrderMonitors = new List<ITradeMonitor>(); 
+        }
+        public TradeProcessor(IPositions positions, IMarketMonitorFactory factory):this(factory)
         {
             Positions = positions;
-            TradeFactory = factory;
-            Trades = new List<ITrade>();
-            OrderMonitors = new List<ITradeMonitor>();
         }
 
         public TradeProcessor(IPositions positions, IMarketMonitorFactory factory, IKey key): this(positions,factory)
@@ -131,7 +131,6 @@ namespace CryptoTrading.App.Monitor
                     DbCandleStickManagement.PauseFlow = true;
                     //need to pause the data stream.
                     var trade = Positions.CreateTrade(obj.What);
-                    Trades.Add(trade);
                     var tradeMonitor = TradeFactory.CreateMonitor(trade);
                     tradeMonitor.KeyValue = KeyValue;
                     OrderMonitors.Add(tradeMonitor);
@@ -155,8 +154,25 @@ namespace CryptoTrading.App.Monitor
 
         public void CompleteAllTransactions()
         {
-            Trades.Where(x=>x.CurrentTransaction.Status==TransactionStatus.Pending).ToList().ForEach(x=>x.CompleteTrade());
+            LiveTrades.ToList().ForEach(x=>x.CompleteTrade());
+            //Trades.Where(x=>x.CurrentTransaction.Status==TransactionStatus.Pending).ToList().ForEach(x=>x.CompleteTrade());
             //convert all positions to BTC.
+        }
+
+        public void ClearInactiveTrades()
+        {
+            lock (_lock)
+            {
+                foreach(var monitor in OrderMonitors.Where(x=>!x.Live))
+                {
+                    OrderMonitors.Remove(monitor);
+                }
+            }
+        }
+
+        public List<ITrade> GetCompletedTrades()
+        {
+            return OrderMonitors.Where(x => !x.Live).Select(x=>x.Trade).ToList();
         }
     }
 }

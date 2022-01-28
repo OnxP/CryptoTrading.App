@@ -4,14 +4,9 @@ using System.IO;
 using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using IMarketDataEvents = CryptoTrading.App.Core.IMarketDataEvents;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.MarketDataTesting
 {

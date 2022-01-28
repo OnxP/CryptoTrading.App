@@ -6,9 +6,9 @@ namespace CryptoTrading.App.Core
 {
     public interface ITradeProcessor
     {
-        public List<ITrade> Trades { get; set; }
         public IPositions Positions { get; set; }
-
         void CompleteAllTransactions();
+        void ClearInactiveTrades();
+        List<ITrade> GetCompletedTrades();
     }
 }

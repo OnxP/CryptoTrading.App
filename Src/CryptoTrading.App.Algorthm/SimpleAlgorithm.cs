@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CryptoTrading.App.Process;
 
 namespace CryptoTrading.App.Algorithm
 {
@@ -64,6 +65,11 @@ namespace CryptoTrading.App.Algorithm
             {
                 Logger.LogError(0,e,"Algo Error Occured");
             }
+        }
+
+        public void Configure(IConfig config)
+        {
+            throw new NotImplementedException();
         }
 
         public ITradeRequest CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)

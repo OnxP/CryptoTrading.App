@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CryptoTrading.App.Process;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -55,6 +56,11 @@ namespace CryptoTrading.App.MarketData
             _webSocket = services.GetService<IBinanceWebSocketStream>();
             _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
 
+        }
+
+        public void Configure(IConfig request)
+        {
+            throw new NotImplementedException();
         }
 
         public void StartStream()

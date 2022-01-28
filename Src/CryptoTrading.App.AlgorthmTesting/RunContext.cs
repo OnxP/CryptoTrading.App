@@ -15,6 +15,7 @@ using System.Threading;
 using CryptoTrading.App.Core.Trade;
 using System.Text;
 using System.Linq;
+using System.Net;
 using Tulip;
 using CryptoTrading.App.Core.Database.Indicators;
 using CryptoTrading.App.Core.Database.StoreTrades;
@@ -85,33 +86,34 @@ namespace CryptoTrading.App.AlgorithmTesting
             tradeMonitor.CompleteAllTransactions();
             _scope.Dispose();
             //need to add summary of trades and PnL
+            var completedTrades = tradeMonitor.GetCompletedTrades();
 
-            Console.WriteLine(PrintTrades(tradeMonitor.Trades));
+            Console.WriteLine(PrintTrades(completedTrades));
             Console.WriteLine(Environment.NewLine);
-            Console.WriteLine(PrintSummary(tradeMonitor));
+            Console.WriteLine(PrintSummary(tradeMonitor, completedTrades));
             
             File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{CustomText}_{NoOfTrades}_{Risk}_{Increment}.txt", 
-                new List<string>() { PrintTrades(tradeMonitor.Trades), Environment.NewLine, PrintSummary(tradeMonitor) });
+                new List<string>() { PrintTrades(completedTrades), Environment.NewLine, PrintSummary(tradeMonitor, completedTrades) });
             //Load to Database
 
             using (var context = new TradeContext())
             {
-                tradeMonitor.Trades.ForEach(x => context.Trades.Add(new TradesDb(x, stratgy, NoOfTrades, Risk, Increment)));
+                completedTrades.ForEach(x => context.Trades.Add(new TradesDb(x, stratgy, NoOfTrades, Risk, Increment)));
                 context.SaveChanges();
             }
         }
 
-        private string PrintSummary(ITradeProcessor processor)
+        private string PrintSummary(ITradeProcessor processor, List<ITrade> completedTrades)
         {
-            var count = processor.Trades.Count();
+            var count = completedTrades.Count();
             var sb = new StringBuilder();
             sb.Append($"Total Number of Trades: [{count}]");
             sb.Append(Environment.NewLine);
-            sb.Append($"Winning Trades: [{processor.Trades.Count(x => x.Profit > 0)}] - {((double)processor.Trades.Count(x => x.Profit > 0) / count) * 100}%");
+            sb.Append($"Winning Trades: [{completedTrades.Count(x => x.Profit > 0)}] - {((double)completedTrades.Count(x => x.Profit > 0) / count) * 100}%");
             sb.Append(Environment.NewLine);
-            sb.Append($"Losing Trades: [{processor.Trades.Count(x => x.Profit < 0)}] - {((double)processor.Trades.Count(x => x.Profit < 0) / count) * 100}%");
+            sb.Append($"Losing Trades: [{completedTrades.Count(x => x.Profit < 0)}] - {((double)completedTrades.Count(x => x.Profit < 0) / count) * 100}%");
             sb.Append(Environment.NewLine);
-            sb.Append($"Total Profit: [{processor.Trades.Sum(x => x.Profit)}]%");
+            sb.Append($"Total Profit: [{completedTrades.Sum(x => x.Profit)}]%");
             sb.Append(Environment.NewLine);
             sb.Append($"Total BTC: {Math.Round(processor.Positions.GetPosition("BTC").FreeAmount,4)} : {Math.Round((processor.Positions.GetPosition("BTC").FreeAmount-1) * 100,4)}%");
             sb.Append(Environment.NewLine);

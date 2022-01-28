@@ -1,10 +1,7 @@
-﻿using Binance;
-using CryptoTrading.App.Core;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.Position;
 
-namespace CryptoTrading.App.Monitor
+namespace CryptoTrading.App.Core.Position
 {
     public class Positions : IPositions
     {
@@ -15,6 +12,8 @@ namespace CryptoTrading.App.Monitor
 
         public IPosition GetPosition(string asset)
         {
+            if(!_positions.ContainsKey(asset))
+                _positions.Add(asset, new Position(asset, 0.0m));
             return _positions[asset];
         }
 

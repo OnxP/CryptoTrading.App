@@ -36,10 +36,11 @@ namespace CryptoTrading.App.Process
                 {
                     //Change the sleep count to time of day. 10 minutes past the hour...etc.
                     if (loopCount % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
-                    if (loopCount % 60 == 0) LogProcess(Process.RefreshBinanceData); //1 Hour
-                    if (loopCount % 1440 == 0) 
+                    if (loopCount % 60 == 0) LogProcess(Process.RefreshPositionsData); //1 Hour
+                    if (loopCount % 1440 == 0) // 24 Hours
                     {
-                        LogProcess(Process.ArchiveAndReport); // 24 Hours
+                        LogProcess(Process.ArchiveAndReport); 
+                        LogProcess(Process.RefreshSymbols);
                         loopCount = 0;
                     }
                     Thread.Sleep(60 * 1000); //1 Minute

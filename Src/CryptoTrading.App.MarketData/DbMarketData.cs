@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CryptoTrading.App.Process;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -74,6 +75,11 @@ SELECT DISTINCT [ID]
         public override void Configure(IRequest request)
         {
             //context = new CryptoDbContext();
+        }
+
+        public void Configure(IConfig request)
+        {
+            throw new NotImplementedException();
         }
 
         public void StartStream()
