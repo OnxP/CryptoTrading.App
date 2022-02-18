@@ -12,51 +12,26 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
     public abstract class TradingStrategy : ITradingStrategy
     {
         public Dictionary<string, IndicatorSetUp> Indicators { get; }
-
         public int OutputLength { get; private set; }
         protected abstract double StrategyWeight { get; }
         public ILogger<TradingStrategy> Logger { get; }
 
-        public StringBuilder builder = new StringBuilder();
+        public StringBuilder Builder = new StringBuilder();
         public void Log(string v)
         {
-            builder.Append(v).Append(",\t");
+            Builder.Append(v).Append(",\t");
         }
         protected void LogResult(int v)
         {
             Log($"Result: {v}");
-            builder.Append($"Weight: {StrategyWeight}");
-            Logger.LogInformation(builder.ToString());
-            builder.Clear();
+            Builder.Append($"Weight: {StrategyWeight}");
+            Logger.LogInformation(Builder.ToString());
+            Builder.Clear();
         }
         protected bool CheckLastTrade(System.DateTime endDateTime, System.DateTime closeTime, CandlestickInterval interval)
         {
-            var nextTradeDate = CalculateFrom(endDateTime, interval);
+            var nextTradeDate = CandleStickIntervalHelper.NextCandleStickTime(endDateTime, interval);
             return nextTradeDate < closeTime;
-        }
-
-        private DateTime CalculateFrom(DateTime dateTime, CandlestickInterval interval)
-        {
-            int candleSticksToLoad = -1;
-            return interval switch
-            {
-                CandlestickInterval.Minute => dateTime.AddMinutes(-1 * candleSticksToLoad),
-                CandlestickInterval.Minutes_3 => dateTime.AddMinutes(-3 * candleSticksToLoad),
-                CandlestickInterval.Minutes_5 => dateTime.AddMinutes(-5 * candleSticksToLoad),
-                CandlestickInterval.Minutes_15 => dateTime.AddMinutes(-15 * candleSticksToLoad),
-                CandlestickInterval.Minutes_30 => dateTime.AddMinutes(-30 * candleSticksToLoad),
-                CandlestickInterval.Hour => dateTime.AddHours(-1 * candleSticksToLoad),
-                CandlestickInterval.Hours_2 => dateTime.AddHours(-2 * candleSticksToLoad),
-                CandlestickInterval.Hours_4 => dateTime.AddHours(-4 * candleSticksToLoad),
-                CandlestickInterval.Hours_6 => dateTime.AddHours(-6 * candleSticksToLoad),
-                CandlestickInterval.Hours_8 => dateTime.AddHours(-8 * candleSticksToLoad),
-                CandlestickInterval.Hours_12 => dateTime.AddHours(-12 * candleSticksToLoad),
-                CandlestickInterval.Day => dateTime.AddDays(-1 * candleSticksToLoad),
-                CandlestickInterval.Days_3 => dateTime.AddDays(-3 * candleSticksToLoad),
-                CandlestickInterval.Week => dateTime.AddDays(-7 * candleSticksToLoad),
-                CandlestickInterval.Month => dateTime.AddMonths(-1 * candleSticksToLoad),
-                _ => dateTime,
-            };
         }
 
         protected TradingStrategy(ILogger<TradingStrategy> logger)
@@ -72,12 +47,12 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
 
             OutputLength = i * 2;
-            logger.LogInformation($"Stragegy Initialisation complete for {this}, output length = {OutputLength}, Strategy Weight = {StrategyWeight}");
+            logger.LogInformation($"Strategy Initialisation complete for {this}, output length = {OutputLength}, Strategy Weight = {StrategyWeight}");
         }
 
         protected abstract Dictionary<string, IndicatorSetUp> GenerateIndicators();
 
-        public virtual double Calculate(OrderedFixedLengthList<Candlestick> closePrices, IStopLimitTracker StopLimitTrackers)
+        public virtual double Calculate(CandleStickDictionary closePrices, IStopLimitTracker stopLimitTrackers)
         {
             Dictionary<string, double[][]> indicatorOutputs = new Dictionary<string, double[][]>();
             //load indicators
@@ -98,42 +73,19 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 indicatorOutputs.Add(item.Key, outputs);
             }
 
-            return Calculate(indicatorOutputs, closePrices.Current, StopLimitTrackers) * StrategyWeight;
+            return Calculate(indicatorOutputs, closePrices.Current, stopLimitTrackers) * StrategyWeight;
         }
-
-        private double[][] BuildInputs(IndicatorSetUp indicator, OrderedFixedLengthList<Candlestick> closePrices)
+        //indicators work in reverse order, so the first item is the earliest candlestick.
+        private double[][] BuildInputs(IndicatorSetUp indicator, CandleStickDictionary closePrices)
         {
-            if (indicator.Multiplier == 1)
-            {
-                double[] close_prices = closePrices.Select(x => (double)x.Close).ToArray();
-                double[] volume = closePrices.Select(x => (double)x.Volume).ToArray();
-                double[] high = closePrices.Select(x => (double)x.High).ToArray();
-                double[] low = closePrices.Select(x => (double)x.Low).ToArray();
+            var candleSticks = closePrices.GroupCandleSticks(indicator.Multiplier);
 
-                return new double[][] { close_prices, volume, high, low };
-            }
-            else
-            {//fix this..do it in reverse order
-                var startCandleStick = closePrices.Last(x => x.OpenTime.Minute == 0);
-                var index = closePrices.IndexOf(startCandleStick);
-                int size = index / 4;
-                double[] close_prices = new double[size];
-                double[] volume = new double[size];
-                double[] high = new double[size];
-                double[] low = new double[size];
-                int idx = size-1;
-                while (index >= indicator.Multiplier)//might need a -1 here
-                {
-                    var group = closePrices.Skip(index).Take(indicator.Multiplier);
-                    close_prices[idx] = (double)group.Last().Close;
-                    volume[idx] = (double)group.Sum(x=>x.Volume);
-                    high[idx] = (double)group.Max(x=>x.High);
-                    low[idx] = (double)group.Min(x=>x.Low);
-                    idx--;
-                    index -= indicator.Multiplier;
-                }
-                return new double[][] { close_prices, volume, high, low };
-            }
+            double[] close_prices = candleSticks.Select(x => (double)x.Close).ToArray();
+            double[] volume = candleSticks.Select(x => (double)x.Volume).ToArray();
+            double[] high = candleSticks.Select(x => (double)x.High).ToArray();
+            double[] low = candleSticks.Select(x => (double)x.Low).ToArray();
+
+            return new double[][] { close_prices, volume, high, low };
         }
 
         //return +1 for buy Trade, -1 for sell, and 0 for Hold.

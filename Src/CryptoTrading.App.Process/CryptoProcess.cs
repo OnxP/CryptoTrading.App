@@ -43,10 +43,9 @@ namespace CryptoTrading.App.Process
         //Archive Trade Data to the database and generate a report, to be emailed.
         public void ArchiveAndReport()
         {
-            var completedTrades = ProcessHelper.GetCompletedTrades(TradeProcessor);
-            ArchiveHelper.StoreTradesToDb(completedTrades);
-            ArchiveHelper.EmailTrades(completedTrades);
-            ArchiveHelper.ClearCompletedTrades(completedTrades);
+            var completedTrades = ProcessHelper.GetCompletedTrades(TradeProcessor,Config);
+            ArchiveHelper.StoreTradesToDb(completedTrades, Config);
+            ArchiveHelper.EmailTrades(completedTrades, Config);//need to do positions as well.
         }
         //Start Streaming
         public void StartProcessing()

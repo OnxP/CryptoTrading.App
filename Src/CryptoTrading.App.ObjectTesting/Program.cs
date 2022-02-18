@@ -1,0 +1,35 @@
+﻿// See https://aka.ms/new-console-template for more information
+
+using Binance;
+using CryptoTrading.App.Core;
+
+var dic = new CandleStickDictionary(5);
+
+var openDateTime = new DateTime(2021, 09, 10, 10, 00, 00);
+dic.Add(
+    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
+        0.15m, 10, new DateTime(2021, 09, 10, 10, 15, 00), 0m, 10, 10, 10));
+
+openDateTime = new DateTime(2021, 09, 10, 10, 15, 00);
+dic.Add(
+    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
+        0.15m, 10, new DateTime(2021, 09, 10, 10, 30, 00), 0m, 10, 10, 10));
+
+openDateTime = new DateTime(2021, 09, 10, 10, 30, 00);
+dic.Add(
+    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
+        0.15m, 10, new DateTime(2021, 09, 10, 10, 45, 00), 0m, 10, 10, 10));
+
+openDateTime = new DateTime(2021, 09, 10, 10, 45, 00);
+dic.Add(
+    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
+        0.15m, 10, new DateTime(2021, 09, 10, 11, 00, 00), 0m, 10, 10, 10));
+
+
+foreach (var candle in dic.GroupCandleSticks(2))
+{
+    Console.WriteLine(candle.OpenTime.ToString("s"));
+}
+
+
+

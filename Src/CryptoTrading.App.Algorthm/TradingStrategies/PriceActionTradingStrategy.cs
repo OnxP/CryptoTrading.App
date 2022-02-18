@@ -190,10 +190,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             AverageCandleSize /= ((decimal)(Candles.Count));
             return AverageCandleSize;
         }
-        public override double Calculate(OrderedFixedLengthList<Candlestick> closePrices, IStopLimitTracker StopLimitTrackers)
+        public override double Calculate(CandleStickDictionary closePrices, IStopLimitTracker StopLimitTrackers)
         {
             var psar = base.Calculate(closePrices,StopLimitTrackers);
-            var candles = closePrices.ToList();
+            var candles = closePrices.Values.ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);
 

@@ -54,8 +54,8 @@ namespace CryptoTrading.App.Monitor
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Action<MessagePayload<Order>> NewTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue,NewTradeMesssage);
+            Action<MessagePayload<Order>> newTradeMesssage = ProcessMessageAction;
+            messageBroker.Subscribe(KeyValue,newTradeMesssage);
 
             Action<MessagePayload<string>> CancelTradeMessage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue,CancelTradeMessage);

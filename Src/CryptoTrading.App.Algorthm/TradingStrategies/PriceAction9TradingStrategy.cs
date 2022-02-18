@@ -38,11 +38,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
         private SupportResistance _supportResistance;
         private decimal _average;
-        public override double Calculate(OrderedFixedLengthList<Candlestick> closePrices, IStopLimitTracker StopLimitTrackers)
+        public override double Calculate(CandleStickDictionary closePrices, IStopLimitTracker StopLimitTrackers)
         {
             //convert from 15min to hourly scale
             var numberToSkip = 0;
-            switch(closePrices.Last().CloseTime.Minute)
+            switch(closePrices.Last().Value.CloseTime.Minute)
             {
                 case 0:
                     numberToSkip = 0;
@@ -59,7 +59,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
 
 
-            var candles = closePrices.ToList();
+            var candles = closePrices.Values.ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);
             _average = AverageCandleSize(candles);

@@ -31,11 +31,14 @@ namespace CryptoTrading.App.Process
             }
         }
 
-        public static List<ITrade> GetCompletedTrades(ITradeProcessor tradeProcessor)
+        public static List<HistoricTrades> GetCompletedTrades(ITradeProcessor tradeProcessor, IConfig config)
         {
             var completedTrades = tradeProcessor.GetCompletedTrades();
             tradeProcessor.ClearInactiveTrades();
-            return completedTrades;
+            var factory = new ArchiveTradeFactory(config);
+            var historicTrades = new List<HistoricTrades>();
+            completedTrades.ForEach(x => factory.CreateHistoricTrades(x,historicTrades));
+            return historicTrades;
         }
 
         public static bool HasSymbols(bool added, List<Symbol> currentSymbols, List<Symbol> newSymbols, out List<Symbol> symbols)
