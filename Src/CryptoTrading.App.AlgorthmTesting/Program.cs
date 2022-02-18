@@ -25,11 +25,14 @@ namespace CryptoTrading.App.AlgorithmTesting
             var increments = new List<decimal>() { 1.5m };//,2m,3m};
             var tasks = new List<Task>();
 
+            var config = new CryptoConfig();
+            config.RunType = RunTypeEnum.BackTesting;
+
             var services = new ServiceCollection()
-                    .AddDbMarketData()
-                    .AddDbMarketMonitor(RunTypeEnum.BackTesting)
+                    .AddMarketData(config)
+                    .AddMarketMonitor(config)
                     //.AddStoreTrades(RunTypeEnum.BackTesting)
-                    .AddTradingCore()
+                    .AddTradingCore(config)
                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
                         .AddConsole()

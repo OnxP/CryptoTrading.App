@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Core;
+﻿using System;
+using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
@@ -18,13 +19,28 @@ namespace CryptoTrading.App.Monitor
             return services;
         }
 
-        public static IServiceCollection AddTradeMonitor(this IServiceCollection services)
+        public static IServiceCollection AddTradeMonitor(this IServiceCollection services, IConfig config)
         {
+            switch (config.RunType)
+            {
+                case RunTypeEnum.BackTesting:
+                    services.AddTransient<ITradeFactory, TestTradeFactory>();
+                    services.AddTransient<IPositions, TestPositions>();
+                    break;
+                case RunTypeEnum.LiveTesting:
+                case RunTypeEnum.Live:
+                    services.AddTransient<ITradeFactory, TestTradeFactory>();
+                    services.AddTransient<IPositions, Positions>();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             services.AddTransient<ITradeProcessor, TradeProcessor>();
-            services.AddTransient<ITradeFactory, TestTradeFactory>();
             services.AddTransient<ITradeMonitor, TradeMonitor>();
             services.AddTransient<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
-            services.AddTransient<IPositions, TestPositions>();
+            return services;
+
+            
             return services;
         }
     }

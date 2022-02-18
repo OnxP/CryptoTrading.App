@@ -23,6 +23,20 @@ namespace CryptoTrading.App.Algorithm
             return services;
         }
 
+
+        public static IServiceCollection AddAlgorithm(this IServiceCollection services, IConfig config)
+        {
+            services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>(provider =>
+                new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), config.NoOfTrades));
+
+            services.AddTransient<IAlgorithm, SimpleAlgorithm>();
+            services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
+            services.AddTransient<IStopLimitTracker, ManualTrailingStopLimit>(provider => new ManualTrailingStopLimit(config.Risk, config.Increment));
+
+            return services;
+        }
+
+
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
         {
             services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>( provider => 

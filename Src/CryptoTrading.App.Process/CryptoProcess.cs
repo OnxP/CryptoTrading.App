@@ -14,20 +14,25 @@ namespace CryptoTrading.App.Process
 {
     public class CryptoProcess
     {
-        private IMarketData MarketData { get; }
-        private ITradeProcessor TradeProcessor { get; }
-        private IAlgorithm Algorithm { get; }
+        private IMarketData MarketData { get; set; }
+        private ITradeProcessor TradeProcessor { get; set; }
+        private IAlgorithm Algorithm { get; set; }
         private IConfig Config { get; }
-        private IAccountConfig AccountConfig { get; }
+        private IAccountConfig AccountConfig { get; set; }
         private List<Symbol> Symbols { get; set; }
-        public CryptoProcess(IMarketData marketData, ITradeProcessor tradeProcessor, IAlgorithm algorithm, IConfig config, IAccountConfig accountConfig)
+        public CryptoProcess(IMarketData marketData, ITradeProcessor tradeProcessor, IAlgorithm algorithm, IConfig config, IAccountConfig accountConfig) : this(config)
         {
             MarketData = marketData;
             TradeProcessor  = tradeProcessor;
             Algorithm = algorithm; 
-            Config = config;    
             AccountConfig = accountConfig;
         }
+
+        public CryptoProcess(IConfig config)
+        {
+            Config = config;
+        }
+
         //Load the positions dictionary and current tickers and map the events.
         public void ReadBinanceData()
         {
@@ -41,14 +46,7 @@ namespace CryptoTrading.App.Process
         {
             Config.Load();
             //MarketData.Configure(Config);
-            services.AddDbMarketMonitor(Config.RunType);
             //Algorithm.Configure(Config);
-            services.AddAlgorithm(Config.NoOfTrades, Config.Risk, Config.Increment);
-            services.AddLogging(builder => builder // configure logging.
-                    .SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(Config.FilePath, LogLevel.Information)
-                    .AddConsole()
-            );
         }
         //Archive Trade Data to the database and generate a report, to be emailed.
         public void ArchiveAndReport()
@@ -65,14 +63,14 @@ namespace CryptoTrading.App.Process
         }
         //Build the service objects, some properties are linked in the constuctor but they can be set here.
 
-        private ServiceCollection services = new ServiceCollection();
         public void BuildServiceObjects()
         {
-            services.AddDbMarketData()
-                .AddTradingCore()
-                .AddTradeMonitor()
-                .AddTestBroker()
-                .BuildServiceProvider();
+            var services = ServiceHelper.BuildServices(Config);
+
+            MarketData = services.GetService<IMarketData>();
+            TradeProcessor = services.GetService<ITradeProcessor>(); ;
+            Algorithm = services.GetService<IAlgorithm>(); ;
+            AccountConfig = services.GetService<IAccountConfig>(); ;
         }
         //Close the app down. Exit out of any open position for a safe shutdown.
         public void CompleteRunningTrades()

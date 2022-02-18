@@ -7,6 +7,9 @@
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
   </ItemGroup>
@@ -17,6 +20,12 @@
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.MarketData\CryptoTrading.App.MarketData.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.TradeMonitor\CryptoTrading.App.Monitor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

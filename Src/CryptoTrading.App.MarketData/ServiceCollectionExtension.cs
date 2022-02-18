@@ -1,5 +1,6 @@
 ﻿using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Monitor;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.MarketData
@@ -26,28 +27,36 @@ namespace CryptoTrading.App.MarketData
             
             return services;
         }
-        public static IServiceCollection AddDbMarketData(this IServiceCollection services)
+        public static IServiceCollection AddMarketData(this IServiceCollection services,IConfig config)
         {
-            services.AddTransient<IMarketData, DbMarketData>();
-            services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
+            switch (config.RunType)
+            {
+                case RunTypeEnum.BackTesting:
+                    services.AddTransient<IMarketData, DbMarketData>();
+                    services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
+                    break;
+                case RunTypeEnum.LiveTesting:
+                    services.AddTransient<IMarketData, HistoricalMarketData>();
+                    break;
+                case RunTypeEnum.Live:
+                    services.AddTransient<IMarketData, LiveMarketData>();
+                    break;
+            }
+            
 
             return services;
         }
 
-        public static IServiceCollection AddDbMarketMonitor(this IServiceCollection services, RunTypeEnum runType)
+        public static IServiceCollection AddMarketMonitor(this IServiceCollection services, IConfig config)
         {
-            switch (runType)
+            switch (config.RunType)
             {
                 case RunTypeEnum.BackTesting:
                     services.AddSingleton<IMarketMonitor, DbMarketMonitor>();
                     break;
                 case RunTypeEnum.LiveTesting:
-                    //services.AddTransient<IMarketMonitor, LiveTestMarketMonitor>();
-                    break;
                 case RunTypeEnum.Live:
-                    //services.AddTransient<IMarketMonitor, LiveMarketMonitor>();
-                    break;
-                default:
+                    services.AddTransient<IMarketMonitor, LiveMarketMonitor>();
                     break;
             }
 
