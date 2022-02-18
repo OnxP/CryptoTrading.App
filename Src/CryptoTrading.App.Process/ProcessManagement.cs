@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Process
@@ -31,20 +29,17 @@ namespace CryptoTrading.App.Process
             {
                 LogProcess(Process.StartProcessing);
                 //loops over the database checks for updates every 2 minutes.
-                int loopCount = 0;
                 do
                 {
                     //Change the sleep count to time of day. 10 minutes past the hour...etc.
-                    if (loopCount % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
-                    if (loopCount % 60 == 0) LogProcess(Process.RefreshPositionsData); //1 Hour
-                    if (loopCount % 1440 == 0) // 24 Hours
+                    if (DateTime.Now.Minute % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
+                    if (DateTime.Now.Minute == 25) LogProcess(Process.RefreshPositionsData); //1 Hour
+                    if (DateTime.Now.Hour == 1 && DateTime.Now.Minute==10) // 24 Hours
                     {
                         LogProcess(Process.ArchiveAndReport); 
                         LogProcess(Process.RefreshSymbols);
-                        loopCount = 0;
                     }
                     Thread.Sleep(60 * 1000); //1 Minute
-                    loopCount++;
                 } while (Process.IsRunning);
 
                 LogProcess(Process.CompleteRunningTrades);
@@ -60,12 +55,12 @@ namespace CryptoTrading.App.Process
         {
             try
             {
+                LogProcess(Process.ReadDatabaseConfig);
+                
                 LogProcess(Process.BuildServiceObjects);
 
-                LogProcess(Process.ReadDatabaseConfig);
-
                 LogProcess(Process.ReadBinanceData);
-
+                
                 return true;
             }
             catch (Exception e)

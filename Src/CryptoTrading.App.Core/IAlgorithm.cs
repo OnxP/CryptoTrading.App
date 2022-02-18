@@ -1,10 +1,8 @@
-﻿using Binance;
+﻿using System.Collections.Generic;
+using Binance;
 using Binance.Client;
-using CryptoTrading.App.Core.Database;
-using System.Collections.Generic;
-using CryptoTrading.App.Process;
 
-namespace CryptoTrading.App.Algorithm
+namespace CryptoTrading.App.Core
 {
     public interface IAlgorithm
     {

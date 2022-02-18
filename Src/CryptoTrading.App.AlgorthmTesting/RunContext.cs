@@ -11,15 +11,12 @@ using System.Collections.Generic;
 using System.IO;
 using CryptoTrading.App.Monitor;
 using CryptoTrading.App.Core.Position;
-using System.Threading;
 using CryptoTrading.App.Core.Trade;
 using System.Text;
 using System.Linq;
-using System.Net;
 using Tulip;
-using CryptoTrading.App.Core.Database.Indicators;
 using CryptoTrading.App.Core.Database.StoreTrades;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.AlgorithmTesting
 {

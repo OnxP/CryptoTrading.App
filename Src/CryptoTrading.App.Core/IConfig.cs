@@ -1,8 +1,7 @@
 ﻿using System.Security;
 using Binance;
-using CryptoTrading.App.Core;
 
-namespace CryptoTrading.App.Process
+namespace CryptoTrading.App.Core
 {
     public interface IConfig
     {
@@ -17,5 +16,15 @@ namespace CryptoTrading.App.Process
         SecureString EmailPassword { get; set; }
         int EmailPort { get; set; }
         string HtmlTemplate { get; set; }
+
+        double NoOfTrades
+        {
+            get;
+            set;
+        }
+
+        decimal Risk { get; set; }
+        decimal Increment { get; set; }
+        string FilePath { get; set; }
     }
 }

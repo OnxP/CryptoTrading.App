@@ -17,5 +17,15 @@ namespace CryptoTrading.App.Monitor
             services.AddScoped<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
             return services;
         }
+
+        public static IServiceCollection AddTradeMonitor(this IServiceCollection services)
+        {
+            services.AddTransient<ITradeProcessor, TradeProcessor>();
+            services.AddTransient<ITradeFactory, TestTradeFactory>();
+            services.AddTransient<ITradeMonitor, TradeMonitor>();
+            services.AddTransient<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
+            services.AddTransient<IPositions, TestPositions>();
+            return services;
+        }
     }
 }

@@ -60,7 +60,6 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var dLine = indicatorOutputs["SRSI"][1].ToList();
             var atr = indicatorOutputs["atr"][0].ToList();
 
-
             var condition1 = macd.Last() >= signal.Last();
             var condition3 = mediumWma.Last() >= longWma.Last();
             var condition4 = shortWma.Last() >= mediumWma.Last();
@@ -71,15 +70,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var condition8 = (double)closePrice.Close > longWma.Last();
             var condition10 = closePrice.Volume > 2.0m && closePrice.NumberOfTrades > 10m;
 
-            var peeks = FindPeeks(macd,closePrice.OpenTime );
-            var trough = FindTrough(macd, closePrice.OpenTime);
-
             var multiple = Convert.ToDecimal(atr.Last());
-            var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100);
-                var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
-            //Price > than Long EMA
-            //Long EMA is in an uptrend
-            //Fast > Slow EMA
+            var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100); 
+            var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
+
             if (condition1 && condition5 && condition10 && !highvol && condition4 && ((condition7 && condition9) || (condition8  && condition6)))
             {
                 if(!StopLimitTrackers.IsOpen)
@@ -96,46 +90,5 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             LogResult(0);
             return 0;
         }
-
-        private Dictionary<DateTime, double> FindTrough(List<double> macd, DateTime open)
-        {
-            var test = macd.Select((x, idx) => new { idx, x })
-                        .Where(x => (x.idx > 1 && x.idx < macd.Count-2) 
-                        && (macd[x.idx - 2] > macd[x.idx - 1]
-                        && macd[x.idx - 1] > x.x 
-                        && x.x < macd[x.idx + 1] 
-                        && macd[x.idx + 1] < macd[x.idx + 2]));
-
-            return test.ToDictionary(x => open.AddMinutes((x.idx- macd.Count) * 15), x => x.x);
-        }
-
-        private Dictionary<DateTime, double> FindPeeks(List<double> macd, DateTime open)
-        {
-            var test = macd.Select((x, idx) => new { idx, x })
-                        .Where(x => (x.idx > 1 && x.idx < macd.Count-2) && 
-                        (macd[x.idx - 2] < macd[x.idx - 1] 
-                        && macd[x.idx - 1] < x.x 
-                        && x.x > macd[x.idx + 1] 
-                        && macd[x.idx + 1]  > macd[x.idx + 2]));        
-
-            return test.ToDictionary(x => open.AddMinutes(-(macd.Count-x.idx)*15), x => x.x);
-        }
-        private bool EmaBounce(List<double> wma, Candlestick closePrice)
-        {
-            if (lastClose == null)
-            {
-                lastClose = closePrice;
-                return false;
-            }
-            if (wma.Count() == 1)
-            {
-                return false;
-            }
-            var bounce = (double)closePrice.Low < wma.First() && (double)closePrice.Close > wma.First();
-            var previousPassThrough = (double)lastClose.Close < wma.Skip(1).First() && (double)lastClose.Open > wma.Skip(1).First();
-            lastClose = closePrice;
-            return bounce && previousPassThrough;
-        }
-        public Candlestick lastClose;
     }
 }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using Binance;
-using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
 

@@ -23,6 +23,10 @@ namespace CryptoTrading.App.Algorithm
         public ITradingStrategy TradingStrategies;
         public IStopLimitTracker StopLimitTrackers { get; set; } 
         public string KeyValue { get; set; }
+        public void Configure(IConfig config)
+        {
+            throw new NotImplementedException();
+        }
         public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers)
         { 
             TradingStrategies = strategies;
@@ -64,11 +68,6 @@ namespace CryptoTrading.App.Algorithm
             {
                 Logger.LogError(0,e,"Algo Error Occurred");
             }
-        }
-
-        public void Configure(IConfig config)
-        {
-            throw new NotImplementedException();
         }
 
         public ITradeRequest CalculateTradeStrategies(string symbol, string interval, DateTime closeTime)

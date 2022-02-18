@@ -1,16 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration.Internal;
-using System.Text;
+﻿using System.Collections.Generic;
 using Binance;
 using CryptoTrading.App.Algorithm;
+using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Extensions;
+using CryptoTrading.App.MarketData;
+using CryptoTrading.App.Monitor;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.Process
 {
     public class CryptoProcess
     {
-        //TODO Email and Logging
         private IMarketData MarketData { get; }
         private ITradeProcessor TradeProcessor { get; }
         private IAlgorithm Algorithm { get; }
@@ -37,8 +40,15 @@ namespace CryptoTrading.App.Process
         public void ReadDatabaseConfig()
         {
             Config.Load();
-            MarketData.Configure(Config);
-            Algorithm.Configure(Config);
+            //MarketData.Configure(Config);
+            services.AddDbMarketMonitor(Config.RunType);
+            //Algorithm.Configure(Config);
+            services.AddAlgorithm(Config.NoOfTrades, Config.Risk, Config.Increment);
+            services.AddLogging(builder => builder // configure logging.
+                    .SetMinimumLevel(LogLevel.Trace)
+                    .AddFile(Config.FilePath, LogLevel.Information)
+                    .AddConsole()
+            );
         }
         //Archive Trade Data to the database and generate a report, to be emailed.
         public void ArchiveAndReport()
@@ -54,9 +64,15 @@ namespace CryptoTrading.App.Process
             IsRunning = true;
         }
         //Build the service objects, some properties are linked in the constuctor but they can be set here.
+
+        private ServiceCollection services = new ServiceCollection();
         public void BuildServiceObjects()
         {
-            throw new NotImplementedException();
+            services.AddDbMarketData()
+                .AddTradingCore()
+                .AddTradeMonitor()
+                .AddTestBroker()
+                .BuildServiceProvider();
         }
         //Close the app down. Exit out of any open position for a safe shutdown.
         public void CompleteRunningTrades()
