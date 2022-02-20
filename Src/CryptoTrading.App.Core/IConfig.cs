@@ -16,15 +16,14 @@ namespace CryptoTrading.App.Core
         SecureString EmailPassword { get; set; }
         int EmailPort { get; set; }
         string HtmlTemplate { get; set; }
-
-        double NoOfTrades
-        {
-            get;
-            set;
-        }
-
+        double NoOfTrades { get; set; }
         decimal Risk { get; set; }
         decimal Increment { get; set; }
         string FilePath { get; set; }
+        string? From { get; set; }
+        string? To { get; set; }
+        decimal StartBtcAmount { get; set; }
+        decimal StartBnbAmount { get; set; }
+        void Update();
     }
 }

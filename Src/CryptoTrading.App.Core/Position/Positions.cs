@@ -6,7 +6,6 @@ namespace CryptoTrading.App.Core.Position
     public class Positions : IPositions
     {
         private readonly ITradeFactory _factory;
-        private ICalculator _calculator;
 
         private readonly Dictionary<string, IPosition> _positions;
 
@@ -17,11 +16,16 @@ namespace CryptoTrading.App.Core.Position
             return _positions[asset];
         }
 
-        public Positions(ITradeFactory factory, Dictionary<string, IPosition> positions, ICalculator calculator)
+        public Positions(ITradeFactory factory, Dictionary<string, IPosition> positionsProvider) : this(factory)
         {
             _factory = factory;
-            _positions = positions;
-            _calculator = calculator;
+            _positions = positionsProvider;
+            //_calculator = calculator;
+        }
+
+        public Positions(ITradeFactory factory)
+        {
+            _factory = factory;
         }
 
         public bool CheckBalance(string sellSymbol, double sellPercentage)
@@ -47,9 +51,11 @@ namespace CryptoTrading.App.Core.Position
         public ITrade CreateTrade(ITradeRequest request)
         {
             var buyPosition = _positions[request.BaseSymbol];
+            buyPosition.IsLocked = true;
             var sellPosition = _positions[request.QuoteSymbol];
-            var feePosition = _positions["BNBBTC"];
+            var feePosition = _positions["BNB"];
             ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition, request);
+            buyPosition.IsLocked = false;
             return trade;
         }
 

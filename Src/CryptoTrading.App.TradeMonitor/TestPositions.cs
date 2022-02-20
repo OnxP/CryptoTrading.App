@@ -27,6 +27,8 @@ namespace CryptoTrading.App.Monitor
 
         public IPosition GetPosition(string asset)
         {
+            if (!_positions.ContainsKey(asset))
+                _positions.Add(asset, new Position(asset, 0.0m));
             return _positions[asset];
         }
 

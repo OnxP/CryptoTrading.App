@@ -3,7 +3,6 @@ using CryptoTrading.App.Core.BinanceAccount;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
-using CryptoTrading.App.Process;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Core

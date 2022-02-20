@@ -4,6 +4,7 @@ using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Extensions;
+using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.MarketData;
 using CryptoTrading.App.Monitor;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +45,7 @@ namespace CryptoTrading.App.Process
         //Load the config from the database and set it in the services.
         public void ReadDatabaseConfig()
         {
+            //TODO this is a refresh of the config object so it should have all the details about which SQL server it should be connected to.
             Config.Load();
             //MarketData.Configure(Config);
             //Algorithm.Configure(Config);
@@ -85,6 +87,7 @@ namespace CryptoTrading.App.Process
             var symbols = AccountConfig.LoadCurrencies();
             if (ProcessHelper.HasSymbols(true,Symbols, symbols, out var newSymbols))
             {
+                newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x));
                 ProcessHelper.WireMarketDataEvents(MarketData, newSymbols, Config, Algorithm);
             }
 
@@ -104,6 +107,8 @@ namespace CryptoTrading.App.Process
         {
             ReadDatabaseConfig();
             IsRunning = Config.EndProcess;
+            Config.EndProcess = false;
+            Config.Update();
         }
 
         public bool IsRunning { get; set; }

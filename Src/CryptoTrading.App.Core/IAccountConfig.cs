@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using Binance;
-using CryptoTrading.App.Core.Position;
 
-namespace CryptoTrading.App.Process
+namespace CryptoTrading.App.Core
 {
     public interface IAccountConfig
     {

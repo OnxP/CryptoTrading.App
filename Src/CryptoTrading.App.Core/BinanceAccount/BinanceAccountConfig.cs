@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Binance;
 using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.Process;
 
 namespace CryptoTrading.App.Core.BinanceAccount
 {
