@@ -1,9 +1,4 @@
-﻿using Binance;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CryptoTrading.App.Core.Database.Indicators
+﻿namespace CryptoTrading.App.Core.Database.Indicators
 {
     public class IndicatorBaseDb
     {

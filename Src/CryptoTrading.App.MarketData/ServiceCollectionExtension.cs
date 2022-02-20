@@ -2,6 +2,7 @@
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Monitor;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -32,11 +33,11 @@ namespace CryptoTrading.App.MarketData
             switch (config.RunType)
             {
                 case RunTypeEnum.BackTesting:
-                    services.AddTransient<IMarketData, DbMarketData>();
+                    services.AddTransient<IMarketData, DbMarketData>(p=> new DbMarketData(p.GetService<ICandleStickManagement>(),p.GetService<IDbData>(),config.From,config.To));
                     services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
                     break;
                 case RunTypeEnum.LiveTesting:
-                    services.AddTransient<IMarketData, HistoricalMarketData>();
+                    services.AddTransient<IMarketData, HistoricalMarketData>(p=> new HistoricalMarketData(p.GetService<ILogger<HistoricalMarketData>>(), config.From, config.To));
                     break;
                 case RunTypeEnum.Live:
                     services.AddTransient<IMarketData, LiveMarketData>();

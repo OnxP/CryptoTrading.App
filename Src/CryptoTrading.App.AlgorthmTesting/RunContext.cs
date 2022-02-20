@@ -16,7 +16,6 @@ using System.Text;
 using System.Linq;
 using Tulip;
 using CryptoTrading.App.Core.Database.StoreTrades;
-using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.AlgorithmTesting
 {

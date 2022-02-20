@@ -1,7 +1,6 @@
 ﻿using CryptoTrading.App.Core.Database;
-using System;
 using System.Collections.Generic;
-using CryptoTrading.App.Core.Database.Indicators;using Tulip;
+using CryptoTrading.App.Core.Database.Indicators;
 using System.Linq;
 using Binance;
 using CryptoTrading.App.Core.Database.RunIndicators.Indicators;

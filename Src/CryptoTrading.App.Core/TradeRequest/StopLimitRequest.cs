@@ -1,8 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core.Trade;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CryptoTrading.App.Core.TradeRequest
 {

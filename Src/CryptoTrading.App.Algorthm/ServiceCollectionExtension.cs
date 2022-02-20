@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Tulip;
 
 namespace CryptoTrading.App.Algorithm
 {
@@ -31,7 +30,7 @@ namespace CryptoTrading.App.Algorithm
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
-            services.AddTransient<IStopLimitTracker, ManualTrailingStopLimit>(provider => new ManualTrailingStopLimit(config.Risk, config.Increment));
+            services.AddTransient<IStopLimitTracker, ManualTrailingStopLimit>(provider => new ManualTrailingStopLimit(Convert.ToDecimal(config.Risk), Convert.ToDecimal(config.Increment)));
 
             return services;
         }

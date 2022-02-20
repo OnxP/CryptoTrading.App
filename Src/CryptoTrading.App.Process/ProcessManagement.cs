@@ -1,22 +1,34 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Process
 {
-    public class ProcessManagement
+    public class ProcessManagement: IProcessManagement
     {
         //configuration 
         //set up configuration for the process. the main one is run type. Algorithm testing, backtesting, market testing and live.
 
         //specific config should come from the database
-        public ProcessManagement(ILogger logger, CryptoProcess process)
+        public ProcessManagement(ILogger<ProcessManagement> logger, IProcess process)
         {
             Logger = logger;
             Process = process;
         }
         private ILogger Logger { get; }
-        public CryptoProcess Process { get; }
+        public IProcess Process { get; }
+
+        public void Run(int retries)
+        {
+            int i = 0;
+            while (i <= retries)
+            {
+                Run();
+                i++;
+                Logger.LogError($"App Failed Retrying attempt {i}");
+            }
+        }
 
         public void Run()
         {
@@ -74,9 +86,12 @@ namespace CryptoTrading.App.Process
 
         private void LogProcess(Action function)
         {
-            Logger.LogInformation($"");
+            var timer = new Stopwatch();
+            timer.Start();
+            Logger.LogInformation($"Executing Function: {function.Method.Name} Start: {DateTime.Now}");
             function.Invoke();
-            Logger.LogInformation($"");
+            timer.Stop();
+            Logger.LogInformation($"Completed Function: {function.Method.Name} Finish: {DateTime.Now} - {timer.ElapsedMilliseconds}ms");
         }
 
     }

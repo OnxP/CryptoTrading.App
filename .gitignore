@@ -14,3 +14,4 @@ Src/CryptoTrading.App/.vs/CryptoTrading.App/v16/.suo
 *.cache
 *.dll
 *.pdb
+Src/CryptoTrading.App.Config/Program.cs

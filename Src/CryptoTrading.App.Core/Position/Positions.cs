@@ -26,6 +26,7 @@ namespace CryptoTrading.App.Core.Position
         public Positions(ITradeFactory factory)
         {
             _factory = factory;
+            _positions = new Dictionary<string, IPosition>();
         }
 
         public bool CheckBalance(string sellSymbol, double sellPercentage)

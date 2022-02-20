@@ -4,10 +4,7 @@ using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Linq;
-using System.Reflection.Metadata;
-using Tulip;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {

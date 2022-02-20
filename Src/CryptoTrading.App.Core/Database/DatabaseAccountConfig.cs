@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Binance;
-using CryptoTrading.App.Core.Database.Config;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -20,7 +18,7 @@ namespace CryptoTrading.App.Core.Database
         public List<Symbol> LoadCurrencies()
         {
             using var context = new CryptoDbContext();
-            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x=>x.Symbol).ToList();
+            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x=>x.Symbol).Distinct().ToList();
             var list = new List<Symbol>();
             foreach (var symbol in res)
             {
@@ -53,25 +51,20 @@ namespace CryptoTrading.App.Core.Database
             return list;
         }
 
-        private string Symbols => @"select Distinct Symbol from 
-            (
-            select Symbol from CandleStickDbs where opentime=@p0 and Interval=@p2
-            UNION ALL
-            select Symbol from CandleStickDbs where closetime=@p1 and Interval=@p2
-            )as T";
+        private string Symbols => @"select * from CandleStickDbs where (opentime=@p0 OR closetime=@p1) and Interval=@p2";
 
         public List<AccountBalance> LoadPositions()
         {
             using var context = new CryptoDbContext();
-            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x => x.Symbol).ToList();
+            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x => x.Symbol).Distinct().ToList();
 
             var list = new List<AccountBalance>();
             foreach (var symbol in res)
             {
                 var asset = Symbol.Cache.Get(symbol).BaseAsset;
                 decimal free = 0m;
-                if (asset.Symbol == "BTC") free = Config.StartBtcAmount;
-                if (asset.Symbol == "BNB") free = Config.StartBnbAmount;
+                if (asset.Symbol == "BTC") free = Convert.ToDecimal(Config.StartBtcAmount);
+                if (asset.Symbol == "BNB") free = Convert.ToDecimal(Config.StartBnbAmount);
 
                 list.Add(new AccountBalance(asset, free, 0m));
             }

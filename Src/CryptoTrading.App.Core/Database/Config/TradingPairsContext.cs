@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Text;
+﻿using System.Data.Entity;
 
 namespace CryptoTrading.App.Core.Database.Config
 {

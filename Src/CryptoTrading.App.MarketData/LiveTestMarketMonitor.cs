@@ -1,6 +1,4 @@
 ﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Monitor

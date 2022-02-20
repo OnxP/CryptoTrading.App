@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Binance;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Broker

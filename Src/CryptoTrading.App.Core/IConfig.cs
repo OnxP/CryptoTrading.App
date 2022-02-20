@@ -1,4 +1,5 @@
-﻿using System.Security;
+﻿using System;
+using System.Data.Entity;
 using Binance;
 
 namespace CryptoTrading.App.Core
@@ -13,17 +14,18 @@ namespace CryptoTrading.App.Core
         string EmailServer { get; set; }
         string EmailFrom { get; set; }
         string EmailTo { get; set; }
-        SecureString EmailPassword { get; set; }
+        string EmailPassword { get; set; }
         int EmailPort { get; set; }
         string HtmlTemplate { get; set; }
         double NoOfTrades { get; set; }
-        decimal Risk { get; set; }
-        decimal Increment { get; set; }
+        double Risk { get; set; }
+        double Increment { get; set; }
         string FilePath { get; set; }
-        string? From { get; set; }
-        string? To { get; set; }
-        decimal StartBtcAmount { get; set; }
-        decimal StartBnbAmount { get; set; }
+        DateTime From { get; set; }
+        DateTime To { get; set; }
+        double StartBtcAmount { get; set; }
+        double StartBnbAmount { get; set; }
         void Update();
+        void SetContext(DbContext context);
     }
 }

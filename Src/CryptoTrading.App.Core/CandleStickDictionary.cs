@@ -1,14 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.Entity.Core.Metadata.Edm;
 using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Binance;
 
 namespace CryptoTrading.App.Core
 {
-    public class CandleStickDictionary : Dictionary<DateTime,Candlestick>
+    public class CandleStickDictionary : ConcurrentDictionary<DateTime,Candlestick>
     {
         public int NumberOfCandleSticksToKeep { get; }
 
@@ -16,16 +14,16 @@ namespace CryptoTrading.App.Core
         {
             NumberOfCandleSticksToKeep = numberOfCandleSticksToKeep+1;
         }
-        public Candlestick Current => this[this.Max(x => x.Key)];
-        public CandlestickInterval Interval => this.Values.First().Interval;
-        public bool Ready => this.Count >= NumberOfCandleSticksToKeep;
-        public bool HasMissing => this.Values.Any(x => x == null);
+        public Candlestick Current => this[this.Where(x=>x.Value!=null).Max(x => x.Key)];
+        public CandlestickInterval Interval => Values.First(x => x != null).Interval;
+        public bool Ready => Count >= NumberOfCandleSticksToKeep;
+        public bool HasMissing => Values.Any(x => x == null);
 
         public void Add(Candlestick item)
         {
             if (Count == 0)
             {
-                this.Add(item.OpenTime, item);
+                TryAdd(item.OpenTime, item);
                 return;
             }
 
@@ -34,12 +32,14 @@ namespace CryptoTrading.App.Core
                 var nextTime = CandleStickIntervalHelper.NextCandleStickTime(Current.OpenTime, Interval);
                 while (nextTime < item.OpenTime)
                 {
-                    this.Add(nextTime,null);
+                    TryAdd(nextTime, null);
                     nextTime = CandleStickIntervalHelper.NextCandleStickTime(nextTime, Interval);
                 }
-                this.Add(item.OpenTime, item);
-                if (Count > NumberOfCandleSticksToKeep) Remove(Keys.Min());
+
+                TryAdd(item.OpenTime, item);
+                if (Count > NumberOfCandleSticksToKeep) TryRemove(Keys.Min(),out item);
             }
+
         }
 
         public void AddRange(IEnumerable<Candlestick> candlesticks)

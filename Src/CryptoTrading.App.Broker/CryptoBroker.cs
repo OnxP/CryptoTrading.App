@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
 using Binance;
-using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace CryptoTrading.App.Broker
 {

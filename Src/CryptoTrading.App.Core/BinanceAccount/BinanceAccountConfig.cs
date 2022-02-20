@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Binance;
-using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.Core.BinanceAccount
 {

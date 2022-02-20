@@ -1,6 +1,5 @@
 ﻿using System;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Broker

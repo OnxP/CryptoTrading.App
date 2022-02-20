@@ -1,8 +1,5 @@
 ﻿using Binance;
-using CryptoTrading.App.Core;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CryptoTrading.App.Algorithm.StopLimits
 {

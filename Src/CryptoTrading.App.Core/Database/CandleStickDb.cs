@@ -1,48 +1,113 @@
 ﻿using Binance;
 using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Security;
-using System.Text;
 
 namespace CryptoTrading.App.Core.Database
 {
-    public class CryptoConfig: IConfig
+    public class CandleStickDb
     { 
-        private DbContext DbContext { get; }
-        public CryptoConfig(DbContext context)
+        public CandleStickDb()
         {
-            DbContext = context;
+
+        }
+        public CandleStickDb(Candlestick candlestick)
+        {
+            Symbol = candlestick.Symbol;
+            Interval = candlestick.Interval;
+            OpenTime = candlestick.OpenTime;
+            Open =  Convert.ToDouble(candlestick.Open);
+            High =  Convert.ToDouble(candlestick.High);
+            Low =   Convert.ToDouble(candlestick.Low);
+            Close = Convert.ToDouble(candlestick.Close);
+            Volume = candlestick.Volume;
+            CloseTime = candlestick.CloseTime;
+            QuoteAssetVolume = candlestick.QuoteAssetVolume;
+            NumberOfTrades = candlestick.NumberOfTrades;
+            TakerBuyBaseAssetVolume = candlestick.TakerBuyBaseAssetVolume;
+            TakerBuyQuoteAssetVolume = candlestick.TakerBuyQuoteAssetVolume;
         }
 
-        public bool IsRunning { get; set; }
-        public void Load()
+        public static Candlestick ConvertObject(CandleStickDb stick)
         {
-            DbContext.Entry(this).Reload();
-        }
-        public void Update()
-        {
-            DbContext.SaveChanges();
+            return new Candlestick(
+                
+                stick.Symbol,
+                stick.Interval,
+                stick.OpenTime,
+                Convert.ToDecimal(stick.Open),
+                Convert.ToDecimal(stick.High),
+                Convert.ToDecimal(stick.Low),
+                Convert.ToDecimal(stick.Close),
+                stick.Volume,
+                stick.CloseTime,
+                stick.QuoteAssetVolume,
+                stick.NumberOfTrades,
+                stick.TakerBuyBaseAssetVolume,
+                stick.TakerBuyQuoteAssetVolume
+            );
         }
 
+        public int ID { get; set; }
+        public string Symbol { get; set; }
+
+        /// <summary>
+        /// Get the interval.
+        /// </summary>
         public CandlestickInterval Interval { get; set; }
-        public bool EndProcess { get; set; }
-        public RunTypeEnum RunType { get; set; }
-        public string StoreTradesConnectionString { get; set; }
-        public string EmailServer { get; set; }
-        public string EmailFrom { get; set; }
-        public string EmailTo { get; set; }
-        public SecureString EmailPassword { get; set; }
-        public int EmailPort { get; set; }
-        public string HtmlTemplate { get; set; }
-        public double NoOfTrades { get; set; }
-        public decimal Risk { get; set; }
-        public decimal Increment { get; set; }
-        public string FilePath { get; set; }
-        public string From { get; set; }
-        public string To { get; set; }
-        public decimal StartBtcAmount { get; set; }
-        public decimal StartBnbAmount { get; set; }
-        
+
+        /// <summary>
+        /// Get the open time.
+        /// </summary>
+        public DateTime OpenTime { get; set; }
+
+        /// <summary>
+        /// Get the open price in quote asset units.
+        /// </summary>
+        public double Open { get; set; }
+
+        /// <summary>
+        /// Get the high price in quote asset units.
+        /// </summary>
+        public double High { get; set; }
+
+        /// <summary>
+        /// Get the low price in quote asset units.
+        /// </summary>
+        public double Low { get; set; }
+
+        /// <summary>
+        /// Get the close price in quote asset units.
+        /// </summary>
+        public double Close { get; set; }
+
+        /// <summary>
+        /// Get the volume in base asset units.
+        /// </summary>
+        public decimal Volume { get; set; }
+
+        /// <summary>
+        /// Get the close time.
+        /// </summary>
+        public DateTime CloseTime { get; set; }
+
+        /// <summary>
+        /// Get the volume in quote asset units.
+        /// </summary>
+        public decimal QuoteAssetVolume { get; set; }
+
+        /// <summary>
+        /// Get the number of trades.
+        /// </summary>
+        public long NumberOfTrades { get; set; }
+
+        /// <summary>
+        /// Get the taker buy base asset volume.
+        /// </summary>
+        public decimal TakerBuyBaseAssetVolume { get; set; }
+
+        /// <summary>
+        /// Get the taker buy quote asset volume.
+        /// </summary>
+        public decimal TakerBuyQuoteAssetVolume { get; set; }
+
     }
 }

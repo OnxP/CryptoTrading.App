@@ -1,9 +1,5 @@
-﻿using System;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.MarketMonitorFactory;
-using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Monitor;
+﻿using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Database.Config;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Process
@@ -12,8 +8,8 @@ namespace CryptoTrading.App.Process
     {
         public static IServiceCollection AddCryptoService(this IServiceCollection services)
         {
-            services.AddScoped<IC, TradeProcessor>();
-            services.AddScoped<ITradeFactory, TestTradeFactory>();
+            services.AddSingleton<IProcessManagement,ProcessManagement>();
+            services.AddTransient<IProcess,CryptoProcess>(provider => new CryptoProcess(new CryptoDbConfigContext()));
             return services;
         }
     }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CryptoTrading.App.Core.KeyClass
+﻿namespace CryptoTrading.App.Core.KeyClass
 {
     public class Key : IKey
     {

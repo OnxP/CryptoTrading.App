@@ -1,16 +1,18 @@
-﻿using CryptoTrading.App.Core;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Data.Entity;
+using System.Threading.Tasks;
+using CryptoTrading.App.AlgorithmTesting;
+using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using Tulip;
-using System.Threading.Tasks;
-using CryptoTrading.App.Core.Database;
-using System.Data.Common;
-using System.Data.Entity;
 
-namespace CryptoTrading.App.AlgorithmTesting
+namespace CryptoTrading.App.AlgorthmTesting
 {
     class Program
     {

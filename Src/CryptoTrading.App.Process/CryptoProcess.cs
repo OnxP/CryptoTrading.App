@@ -1,19 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Binance;
-using CryptoTrading.App.Algorithm;
-using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Extensions;
-using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.MarketData;
-using CryptoTrading.App.Monitor;
+using CryptoTrading.App.Core.Database.Config;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
 
 namespace CryptoTrading.App.Process
 {
-    public class CryptoProcess
+    public class CryptoProcess :IProcess
     {
         private IMarketData MarketData { get; set; }
         private ITradeProcessor TradeProcessor { get; set; }
@@ -21,17 +15,10 @@ namespace CryptoTrading.App.Process
         private IConfig Config { get; }
         private IAccountConfig AccountConfig { get; set; }
         private List<Symbol> Symbols { get; set; }
-        public CryptoProcess(IMarketData marketData, ITradeProcessor tradeProcessor, IAlgorithm algorithm, IConfig config, IAccountConfig accountConfig) : this(config)
+        public CryptoProcess(CryptoDbConfigContext context)
         {
-            MarketData = marketData;
-            TradeProcessor  = tradeProcessor;
-            Algorithm = algorithm; 
-            AccountConfig = accountConfig;
-        }
-
-        public CryptoProcess(IConfig config)
-        {
-            Config = config;
+            Config = context.CryptoConfigs.First(x => x.Id == 1);
+            Config.SetContext(context);
         }
 
         //Load the positions dictionary and current tickers and map the events.

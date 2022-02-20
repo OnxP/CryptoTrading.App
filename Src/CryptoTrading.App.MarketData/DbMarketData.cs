@@ -6,7 +6,6 @@ using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
@@ -20,6 +19,12 @@ namespace CryptoTrading.App.MarketData
         {
             _mangement = management;
             _data = data;
+        }
+
+        public DbMarketData(ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
+        {
+            From = from;
+            To = to;
         }
 
         public DateTime From { get; set; }
@@ -65,7 +70,7 @@ SELECT DISTINCT [ID]
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]	
   FROM [dbo].[CandleStickDbs]
-  WHERE CloseTime >= @p0 AND CloseTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  WHERE OpenTime > @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
   ORDER BY CloseTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY

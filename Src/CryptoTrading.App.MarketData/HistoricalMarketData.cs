@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
@@ -31,6 +30,12 @@ namespace CryptoTrading.App.MarketData
         public HistoricalMarketData(ILogger<HistoricalMarketData> logger)
         {
             Logger = logger;
+        }
+
+        public HistoricalMarketData(ILogger<HistoricalMarketData> logger,DateTime from,DateTime to):this(logger)
+        {
+            From = from;
+            To = to;
         }
 
         public override void Configure(IRequest request)

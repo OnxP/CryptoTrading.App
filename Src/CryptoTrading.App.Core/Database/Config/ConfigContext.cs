@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Text;
+﻿using System.Data.Entity;
 
 namespace CryptoTrading.App.Core.Database.Config
 {
-    class ConfigContext : DbContext
+    public class CryptoDbConfigContext : DbContext
     {
-        public ConfigContext() : base(@"Data Source=AnkurPC\AnkurPC;Initial Catalog=CryptoDb;Integrated Security=True")
+        public CryptoDbConfigContext() : base(@"Data Source=AnkurPC\AnkurPC;Initial Catalog=CryptoDb;Integrated Security=True")
         { }
-        public virtual DbSet<ConfigDb> Config { get; set; }
+        public virtual DbSet<CryptoConfig> CryptoConfigs { get; set; }
     }
 }

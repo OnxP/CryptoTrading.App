@@ -6,8 +6,6 @@ using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CryptoTrading.App.Monitor
 {

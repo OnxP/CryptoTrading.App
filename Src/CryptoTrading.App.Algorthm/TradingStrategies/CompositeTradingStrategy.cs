@@ -1,11 +1,6 @@
-﻿using Binance;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database;
-using System;
+﻿using CryptoTrading.App.Core;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Tulip;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {

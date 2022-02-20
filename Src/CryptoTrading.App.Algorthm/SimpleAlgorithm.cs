@@ -1,8 +1,6 @@
 ﻿using Binance;
 using Binance.Client;
-using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;

@@ -1,16 +1,10 @@
 ﻿using Binance;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
 using CryptoTrading.App.Broker;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Logging;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
-using Microsoft.Extensions.Logging;
 using CryptoTrading.App.Core.TradeRequest;
-using Binance.Client;
 using System.Threading;
 using Trade = CryptoTrading.App.Core.Trade.Trade;
 using CryptoTrading.App.Core.Position;

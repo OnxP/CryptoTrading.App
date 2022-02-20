@@ -1,8 +1,6 @@
 ﻿using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CryptoTrading.App.Core.MarketMonitorFactory
 {

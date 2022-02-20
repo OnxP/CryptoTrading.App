@@ -1,11 +1,9 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database.RunIndicators.Indicators;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Tulip;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
