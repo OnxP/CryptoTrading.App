@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
 using System.Text;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.Trade;
+using MailKit.Net.Smtp;
+using MimeKit;
 
 namespace CryptoTrading.App.Process
 {
@@ -20,26 +21,27 @@ namespace CryptoTrading.App.Process
 
         public static void EmailTrades(List<HistoricTrades> completedTrades, IConfig config)
         {
-            SmtpClient SmtpServer = new SmtpClient(config.EmailServer);
+            using var smtpClient = new SmtpClient();
+            smtpClient.Connect(config.EmailServer, config.EmailPort, true);
+            smtpClient.Authenticate(config.EmailFrom, config.EmailPassword);
             var mail = CreateEmail(completedTrades, config);
-            SmtpServer.Port = config.EmailPort;
-            SmtpServer.UseDefaultCredentials = false;
-            SmtpServer.Credentials = new System.Net.NetworkCredential(config.EmailFrom, config.EmailPassword);
-            SmtpServer.EnableSsl = true;
-            SmtpServer.Send(mail);
+            smtpClient.Send(mail);
+            smtpClient.Disconnect(true);
         }
 
-        private static MailMessage CreateEmail(List<HistoricTrades> completedTrades, IConfig config)
+        private static MimeMessage CreateEmail(List<HistoricTrades> completedTrades, IConfig config)
         {
-            var mail = new MailMessage();
-            mail.From = new MailAddress(config.EmailFrom);
-            mail.To.Add(config.EmailTo);
+            var mail = new MimeMessage();
+            mail.From.Add(new MailboxAddress("Ankur", config.EmailFrom));
+            mail.To.Add(new MailboxAddress("Ankur", config.EmailTo));
             mail.Subject = $"CryptoTrading Summary {completedTrades.Min(x => x.StartDate.ToShortDateString())} - {completedTrades.Max(x => x.CloseDate.ToShortDateString())}";
-            mail.IsBodyHtml = true;
-            mail.Body = GenerateHtmlBody(completedTrades, config);
+            new TextPart("html")
+            {
+                Text = GenerateHtmlBody(completedTrades, config)
+            }; 
             return mail;
         }
-
+        
         private static string GenerateHtmlBody(List<HistoricTrades> completedTrades, IConfig config)
         {
             StringBuilder builder = new StringBuilder();

@@ -1,7 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Net.Mail;
 using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Trade;
+using MimeKit;
+using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 var dic = new CandleStickDictionary(5);
 
@@ -31,5 +35,27 @@ foreach (var candle in dic.GroupCandleSticks(2))
     Console.WriteLine(candle.OpenTime.ToString("s"));
 }
 
+EmailTrades();
 
 
+void EmailTrades()
+{
+    using var smtpClient = new SmtpClient();
+    smtpClient.Connect("smtp.gmail.com", 465,true);
+    smtpClient.Authenticate("onx.patel@gmail.com", "nowgxuyliqbhmvwe");
+    smtpClient.Send(CreateEmail());
+    smtpClient.Disconnect(true);
+}
+
+static MimeMessage CreateEmail()
+{
+    var mail = new MimeMessage();
+    mail.From.Add(new MailboxAddress("Ankur", "onx.patel@gmail.com"));
+    mail.To.Add(new MailboxAddress("Ankur", "ankurpatel0000@hotmail.com"));
+    mail.Subject = $"Test";
+    mail.Body = new TextPart("html")
+    {
+        Text = "Plain"
+    };
+    return mail;
+}
