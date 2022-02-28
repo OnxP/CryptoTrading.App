@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
@@ -51,7 +52,7 @@ namespace CryptoTrading.App.MarketDataTesting
             //subscribe to several symbols
             AddEvents(marketDate as IMarketDataEvents);
 
-            marketDate.StartStream();
+            marketDate.StartStream(new CancellationTokenSource());
 
             writer.Flush();
             writer.Close();

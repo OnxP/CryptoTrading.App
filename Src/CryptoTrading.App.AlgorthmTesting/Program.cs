@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Entity;
+using System.Threading;
 using System.Threading.Tasks;
 using CryptoTrading.App.AlgorithmTesting;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.Config;
+using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -62,7 +64,7 @@ namespace CryptoTrading.App.AlgorthmTesting
                     }
                 }
             //}
-            marketData.StartStream();
+            marketData.StartStream(new CancellationTokenSource());
             foreach (var task in tasks)
             {
                 task.RunSynchronously();

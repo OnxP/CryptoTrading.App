@@ -27,7 +27,7 @@ namespace CryptoTrading.App.Process
         {
             foreach (var symbol in symbols)
             {
-                tradeProcessorPositions.GetPosition(symbol);
+                tradeProcessorPositions.GetPosition(symbol.BaseAsset);
             }
 
             foreach (var accountPosition in accountPositions)

@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
@@ -11,10 +14,14 @@ namespace CryptoTrading.App.Process
     {
         private IMarketData MarketData { get; set; }
         private ITradeProcessor TradeProcessor { get; set; }
-        private IAlgorithm Algorithm { get; set; }
+        private IBroker Broker { get; set; }
+        private Func<IAlgorithm> Algorithm { get; set; }
         private IConfig Config { get; }
         private IAccountConfig AccountConfig { get; set; }
         private List<Symbol> Symbols { get; set; }
+
+        private Task RunningProcess { get; set; }
+        private CancellationTokenSource taskToken = new CancellationTokenSource();
         public CryptoProcess(CryptoDbConfigContext context)
         {
             Config = context.CryptoConfigs.First(x => x.Id == 1);
@@ -41,14 +48,15 @@ namespace CryptoTrading.App.Process
         public void ArchiveAndReport()
         {
             var completedTrades = ProcessHelper.GetCompletedTrades(TradeProcessor,Config);
-            ArchiveHelper.StoreTradesToDb(completedTrades, Config);
             ArchiveHelper.EmailTrades(completedTrades, Config);//need to do positions as well.
+            ArchiveHelper.StoreTradesToDb(completedTrades, Config);
+
         }
         //Start Streaming
         public void StartProcessing()
         {
-            MarketData.StartStream();
-            IsRunning = true;
+            RunningProcess = new Task(() => MarketData.StartStream(taskToken));
+            RunningProcess.Start();
         }
         //Build the service objects, some properties are linked in the constuctor but they can be set here.
 
@@ -58,13 +66,13 @@ namespace CryptoTrading.App.Process
 
             MarketData = services.GetService<IMarketData>();
             TradeProcessor = services.GetService<ITradeProcessor>(); ;
-            Algorithm = services.GetService<IAlgorithm>(); ;
+            Broker = services.GetService<IBroker>(); ;
+            Algorithm = services.GetService<IAlgorithm>;
             AccountConfig = services.GetService<IAccountConfig>(); ;
         }
         //Close the app down. Exit out of any open position for a safe shutdown.
         public void CompleteRunningTrades()
         {
-            IsRunning = false;
             TradeProcessor.CompleteAllTransactions();
             ArchiveAndReport();
         }
@@ -80,7 +88,7 @@ namespace CryptoTrading.App.Process
 
             if (ProcessHelper.HasSymbols(false,Symbols, symbols, out var removeSymbols))
             {
-                ProcessHelper.RemoveMarketDataEvents(MarketData, removeSymbols, Config, Algorithm);
+                ProcessHelper.RemoveMarketDataEvents(MarketData, removeSymbols, Config);
             }
         }
 
@@ -93,11 +101,12 @@ namespace CryptoTrading.App.Process
         public void RefreshDatabaseConfig()
         {
             ReadDatabaseConfig();
-            IsRunning = Config.EndProcess;
+            if (!Config.EndProcess) return;
+            taskToken.Cancel();
             Config.EndProcess = false;
             Config.Update();
         }
 
-        public bool IsRunning { get; set; }
+        public bool IsRunning => !RunningProcess.IsCompleted;
     }
 }

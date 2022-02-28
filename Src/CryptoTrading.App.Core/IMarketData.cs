@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace CryptoTrading.App.Core
 {
@@ -7,6 +8,6 @@ namespace CryptoTrading.App.Core
         DateTime From { get; set; }
         DateTime To { get; set; }
         public void Configure(IConfig request);
-        void StartStream();
+        void StartStream(CancellationTokenSource ct);
     }
 }

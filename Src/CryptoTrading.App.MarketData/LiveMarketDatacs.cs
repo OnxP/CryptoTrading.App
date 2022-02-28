@@ -1,6 +1,7 @@
 ﻿using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
+using System.Threading;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -10,6 +11,11 @@ namespace CryptoTrading.App.MarketData
         public DateTime To { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void Configure(IConfig request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void StartStream(CancellationTokenSource ct)
         {
             throw new NotImplementedException();
         }

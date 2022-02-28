@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
+using Binance;
+using Binance.Client;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.Trade;
 using MailKit.Net.Smtp;
 using MimeKit;
+using MimeKit.Text;
 
 namespace CryptoTrading.App.Process
 {
@@ -15,7 +20,8 @@ namespace CryptoTrading.App.Process
         public static void StoreTradesToDb(List<HistoricTrades> completedTrades, IConfig config)
         {
             using var context = new HistoricTradeContext(config.StoreTradesConnectionString);
-            completedTrades.ForEach(x => context.Trades.AddRange(completedTrades));
+            context.BulkInsert(completedTrades);
+            //completedTrades.ForEach(x => context.HistoricTrades.AddRange(completedTrades));
             context.SaveChanges();
         }
 
@@ -35,7 +41,7 @@ namespace CryptoTrading.App.Process
             mail.From.Add(new MailboxAddress("Ankur", config.EmailFrom));
             mail.To.Add(new MailboxAddress("Ankur", config.EmailTo));
             mail.Subject = $"CryptoTrading Summary {completedTrades.Min(x => x.StartDate.ToShortDateString())} - {completedTrades.Max(x => x.CloseDate.ToShortDateString())}";
-            new TextPart("html")
+            mail.Body = new TextPart(TextFormat.Plain)
             {
                 Text = GenerateHtmlBody(completedTrades, config)
             }; 
@@ -56,9 +62,19 @@ namespace CryptoTrading.App.Process
         private static string PrintTrades(List<HistoricTrades> trades)
         {
             var sb = new StringBuilder();
-            sb.Append(String.Join(',', "Bought Price", "Sold Price", "Quantity", "Start Date", "Close Date", "Profit"));
             sb.Append(Environment.NewLine);
-            trades.ForEach(x=>sb.Append(String.Join(',', x.BoughtPrice, x.SoldPrice,x.Quantity, x.StartDate, x.CloseDate, x.Profit,Environment.NewLine)));
+            sb.Append(trades.ToStringTable(x => x.Symbol,
+                x => x.BoughtPrice, //.FirstTransaction.Price.ToString("0.#########"), 
+                x => x.SoldPrice,//.CurrentTransaction.Price.ToString("0.#########"), 
+                x => x.Quantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 
+                x => x.StartDate, //FirstTransaction.TransactionDate.ToString(), 
+                x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(), 
+                x => x.Profit,
+                x=> x.BtcProfit));
+            sb.Append(Environment.NewLine);
+            sb.Append(String.Join(',',"Symbol", "Bought Price", "Sold Price", "Quantity", "Start Date", "Close Date", "Profit","BtcProfit"));
+            sb.Append(Environment.NewLine);
+            trades.ForEach(x=>sb.Append(String.Join(',',x.Symbol, x.BoughtPrice, x.SoldPrice,x.Quantity, x.StartDate, x.CloseDate, x.Profit,x.BtcProfit,Environment.NewLine)));
             return sb.ToString();
         }
 
@@ -72,7 +88,7 @@ namespace CryptoTrading.App.Process
             sb.Append(Environment.NewLine);
             sb.Append($"Losing Trades: [{completedTrades.Count(x => x.Profit < 0)}] - {((double)completedTrades.Count(x => x.Profit < 0) / count) * 100}%");
             sb.Append(Environment.NewLine);
-            sb.Append($"Total Profit: [{completedTrades.Sum(x => x.Profit)}]%");
+            sb.Append($"Total Profit: [{completedTrades.Sum(x => x.BtcProfit)}] BTC");
             sb.Append(Environment.NewLine);
             return sb.ToString();
         }

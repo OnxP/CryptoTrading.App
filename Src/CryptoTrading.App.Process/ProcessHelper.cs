@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Binance;
 using CryptoTrading.App.Core;
@@ -8,23 +9,25 @@ namespace CryptoTrading.App.Process
 {
     internal class ProcessHelper
     {
-        public static void WireMarketDataEvents(IMarketDataEvents marketData, List<Symbol> symbols, IConfig config, IAlgorithm algorithm)
+        public static void WireMarketDataEvents(IMarketDataEvents marketData, List<Symbol> symbols, IConfig config, Func<IAlgorithm> getAlgorithm)
         {
             var interval = config.Interval;
 
             foreach (var symbol in symbols)
             {
+                //need to create a unique instance of algo
+                var algorithm = getAlgorithm.Invoke();
                 marketData.InitialDataLoadSubscribe(symbol, interval, algorithm.ProcessHistoricMarketData);
                 marketData.InitialDataStreamSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
             }
         }
-        public static void RemoveMarketDataEvents(IMarketDataEvents marketData, List<Symbol> removeSymbols, IConfig config, IAlgorithm algorithm)
+        public static void RemoveMarketDataEvents(IMarketDataEvents marketData, List<Symbol> removeSymbols, IConfig config)
         {
             var interval = config.Interval;
             foreach (var symbol in removeSymbols)
             {
                 marketData.InitialDataLoadUnSubscribe(symbol, interval);
-                marketData.InitialDataStreamUnSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
+                marketData.InitialDataStreamUnSubscribe(symbol, interval);
             }
         }
 

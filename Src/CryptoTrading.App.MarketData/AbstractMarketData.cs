@@ -50,7 +50,7 @@ namespace CryptoTrading.App.MarketData
             subscribers[(symbol, interval)].Add(callback);
         }
 
-        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval, Action<CandlestickEventArgs> callback)
+        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval)
         {
             subscribers.Remove((symbol, interval));
         }

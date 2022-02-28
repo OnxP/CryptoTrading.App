@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -63,7 +64,7 @@ namespace CryptoTrading.App.Core.Database
 
         
 
-        public void StartTimeKeeper()
+        public void StartTimeKeeper(CancellationTokenSource ct)
         {
             do
             {
@@ -85,7 +86,7 @@ namespace CryptoTrading.App.Core.Database
                 GetNextTick();
                 //if (_StopLimitMonitor==null) 
                 //    Thread.Sleep(10);
-
+                if(ct.IsCancellationRequested) return;
             } while (_index < timeKeeper.Count-1);
         }
     }

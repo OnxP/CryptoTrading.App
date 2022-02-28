@@ -18,12 +18,13 @@ namespace CryptoTrading.App.Broker
         {
             _market = market;
             _logger = logger;
+            KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
+            ConfigureMessageBroker();
         }
 
         public CryptoBroker(IMarket market, ILogger<CryptoBroker> logger, IKey key) : this(market,logger)
         {
             KeyValue = key.KeyValue;
-            ConfigureMessageBroker();
 
         }
 

@@ -3,6 +3,7 @@ using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Trade;
 using System;
+using CryptoTrading.App.Core.MarketMonitorFactory;
 
 namespace CryptoTrading.App.Monitor
 {

@@ -15,7 +15,6 @@ namespace CryptoTrading.App.Core
         public void InitialDataStreamSubscribe(string symbol, CandlestickInterval interval,
             Action<CandlestickEventArgs> callback);
 
-        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval,
-            Action<CandlestickEventArgs> callback);
+        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval);
     }
 }

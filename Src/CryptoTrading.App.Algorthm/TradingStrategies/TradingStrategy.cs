@@ -72,6 +72,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 indicatorOutputs.Add(item.Key, outputs);
             }
 
+            var symbol = closePrices.Current.Symbol;
             return Calculate(indicatorOutputs, closePrices.Current, stopLimitTrackers) * StrategyWeight;
         }
         //indicators work in reverse order, so the first item is the earliest candlestick.
@@ -83,7 +84,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             double[] volume = candleSticks.Select(x => (double)x.Volume).ToArray();
             double[] high = candleSticks.Select(x => (double)x.High).ToArray();
             double[] low = candleSticks.Select(x => (double)x.Low).ToArray();
-
+            var symbol = closePrices.Current.Symbol;
             return new double[][] { close_prices, volume, high, low };
         }
 

@@ -24,7 +24,7 @@ namespace CryptoTrading.App.Broker
             trades.Add(trade);
             var order = new Order(new BinanceApiUser("Test"),
                              trade.Symbol,
-                             0,
+                             1,
                              "",
                              trade.Price,
                              trade.Quantity,
@@ -39,14 +39,14 @@ namespace CryptoTrading.App.Broker
                              DateTime.Now,
                              DateTime.Now,
                              true);
-            Task<Order> task = new Task<Order>(()=> { return order; });
+            Task<Order> task = new Task<Order>(()=> order);
             task.Start();
             return task;
         }
 
         public Task<string> CancelOrder(ICancelRequest request)
         {
-            return Task.Run(() => { return ""; });
+            return Task.Run(() => "");
         }
 
         public Task<Order> SetLimitOrder(IStopLimitRequest trade)
@@ -54,7 +54,7 @@ namespace CryptoTrading.App.Broker
             trades.Add(trade);
             var order = new Order(new BinanceApiUser("Test"),
                              trade.Symbol,
-                             0,
+                             1,
                              "",
                              trade.StopPrice,
                              trade.Quantity,
@@ -69,7 +69,7 @@ namespace CryptoTrading.App.Broker
                              DateTime.Now,
                              DateTime.Now,
                              true);
-            Task<Order> task = new Task<Order>(() => { return order; });
+            Task<Order> task = new Task<Order>(() => order);
             task.Start();
             return task;
         }

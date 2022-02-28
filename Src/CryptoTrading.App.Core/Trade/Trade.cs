@@ -29,6 +29,18 @@ namespace CryptoTrading.App.Core.Trade
         public IPosition FeePosition { get; }
         public decimal CurrentPrice { get ; set; }
 
+        public decimal BtcProfit
+        {
+            get
+            {
+                var first = Transactions.First().Quote; //is negative
+                var current = CurrentTransaction.Quote;
+                var diff = current.Quantity - Math.Abs(first.Quantity);
+
+                return Math.Round(diff, 9);
+            }
+        }
+
         public decimal Profit
         {
             get

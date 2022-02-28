@@ -46,6 +46,7 @@ namespace CryptoTrading.App.Monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Tracker.IsOpen = false;
                     Dispose();
+                    return;
                 }
                 else
                 {
@@ -76,25 +77,42 @@ namespace CryptoTrading.App.Monitor
             MessageBroker.Instance.Publish(KeyValue,Trade.CurrentTransaction, request);
         }
 
-        private void CancelLimitOrder()
+        private void CancelLimitOrder(int count = 0)
         {
-            //Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice);
+            if (count >= 2) return;
             try
             {
-                ICancelRequest request = new CancelRequest(Trade.CurrentTransaction.Order.Id, Trade.Symbol);
-                MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, request);
+                long orderId = 0;
+                if (Trade.CurrentTransaction.Order != null && Trade.CurrentTransaction.Order.Id != null )
+                {
+                    orderId = Trade.CurrentTransaction.Order.Id;
+                    ICancelRequest request = new CancelRequest(orderId, Trade.Symbol);
+                    MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, request);
+
+                }
+                else
+                {
+                    count++;
+                    CancelLimitOrder(count);
+                }
+                
             }
             catch
             {
-                CancelLimitOrder();
+                count++;
+                CancelLimitOrder(count);
             }
         }
 
         public bool Live => Trade.Open;
+        public override string ToString()
+        {
+            return $"{Symbol} - {currentCloseTime:s}";
+        }
 
         public string Symbol => Trade.Symbol;
 
-        public string KeyValue { get; set; }
+        public string KeyValue { get; set; } = "1";
 
         public void CancelLimitOrder(string order)
         {

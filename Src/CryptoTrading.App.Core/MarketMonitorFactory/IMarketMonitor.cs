@@ -1,8 +1,8 @@
-﻿using Binance.Client;
+﻿using System;
+using Binance.Client;
 using CryptoTrading.App.Core.Trade;
-using System;
 
-namespace CryptoTrading.App.Core
+namespace CryptoTrading.App.Core.MarketMonitorFactory
 {
     public interface IMarketMonitor
     {

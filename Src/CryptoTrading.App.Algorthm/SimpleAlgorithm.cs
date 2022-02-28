@@ -30,6 +30,7 @@ namespace CryptoTrading.App.Algorithm
             _candleSticks = new CandleStickDictionary(NumberOfCandleSticksToKeep);
             StopLimitTrackers = stopLimitTrackers;
             Logger = logger;
+            KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
         }
         public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers, IKey key):this(strategies,logger,stopLimitTrackers)
         {

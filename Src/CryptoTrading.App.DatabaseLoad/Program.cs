@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Threading;
 using Binance.Client;
 
 namespace CryptoTrading.App.DatabaseLoad
@@ -53,7 +54,7 @@ namespace CryptoTrading.App.DatabaseLoad
             //subscribe to several symbols
             AddEvents(marketDate as AbstractMarketData, symbols,intervals);
 
-            marketDate.StartStream();
+            marketDate.StartStream(new CancellationTokenSource());
             context.Dispose();
 
         }

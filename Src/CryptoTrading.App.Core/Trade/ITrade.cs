@@ -14,6 +14,7 @@ namespace CryptoTrading.App.Core.Trade
         bool Open { get; set; }
         decimal CurrentPrice { get; set; }
         decimal Profit { get; }
+        decimal BtcProfit { get; }
         decimal StartPrice { get; }
         DateTime StartDate { get; }
         DateTime CloseDate { get; }

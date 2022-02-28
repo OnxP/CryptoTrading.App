@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -12,7 +13,7 @@ namespace CryptoTrading.App.Core.Database
 
         void BuildTimeKeeper(DateTime from, DateTime dateTime);
         void AddMarketStream(Action invokeCandleStick);
-        void StartTimeKeeper();
+        void StartTimeKeeper(CancellationTokenSource cancellationToken);
         void AddStopLimitStream(Action invokeCandleStick);
         void RemoveStopLimitStream();
     }

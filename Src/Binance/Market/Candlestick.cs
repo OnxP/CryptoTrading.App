@@ -83,6 +83,11 @@ namespace Binance
 
         #endregion Public Properties
 
+        public override string ToString()
+        {
+            return $"{Symbol}, {Interval}, {OpenTime:s}";
+        }
+
         #region Constructors
 
         /// <summary>

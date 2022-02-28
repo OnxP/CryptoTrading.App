@@ -6,6 +6,7 @@ using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
@@ -30,9 +31,10 @@ namespace CryptoTrading.App.MarketData
         public DateTime From { get; set; }
         public DateTime To { get; set; }
 
-        public int NumberOfRows=>100*subscribers.Keys.Count;
-        public int NoOfCalls { get; set; } = 0;
-        public int OffSet => NumberOfRows * NoOfCalls;
+        public int TotalNumberOfRows { get; set; }
+        public int RequestRows { get; set; }
+
+        private CancellationTokenSource CancellationToken { get; set; }
 
         private string SQL_HISTORIC_QUERY = @"
 SELECT DISTINCT [ID]
@@ -50,7 +52,7 @@ SELECT DISTINCT [ID]
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]	
   FROM [dbo].[CandleStickDbs]
-  WHERE CloseTime >= @p0 AND CloseTime < @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  WHERE CloseTime >= @p0 AND CloseTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
   ORDER BY CloseTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY
@@ -70,8 +72,8 @@ SELECT DISTINCT [ID]
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]	
   FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime > @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
-  ORDER BY CloseTime
+  WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  ORDER BY OpenTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY
 ";
@@ -86,10 +88,11 @@ SELECT DISTINCT [ID]
             throw new NotImplementedException();
         }
 
-        public void StartStream()
+        public void StartStream(CancellationTokenSource ct)
         {
             try
             {
+                CancellationToken = ct;
                 LoadHistoricData();
                 StreamData();
             }
@@ -109,13 +112,14 @@ SELECT DISTINCT [ID]
             _mangement.BuildTimeKeeper(From, To);
 
             _mangement.AddMarketStream(InvokeCandleStick);
-            _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
-                subscribers.Keys.Select(x => x.symbol).ToList(), (int)subscribers.Keys.Select(x => x.interval).First(), NumberOfRows, OffSet);
-            NoOfCalls++;
+            var rows = _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
+                subscribers.Keys.Select(x => x.symbol).ToList(), (int)subscribers.Keys.Select(x => x.interval).First(), RequestRows*10, 0);
+            RequestRows = rows;
+            TotalNumberOfRows = rows;
             //_data.Initialise(From, To, subscribers.Keys.Select(x => x.symbol).ToList(),
             //    subscribers.Keys.Select(x => x.interval).First());
 
-            _mangement.StartTimeKeeper();
+            _mangement.StartTimeKeeper(CancellationToken);
         }
 
         public void InvokeCandleStick()
@@ -128,9 +132,9 @@ SELECT DISTINCT [ID]
 
             //var task = LoadNextCandleSticksTask(candleSticks.Select(x => x.Key).ToList());
 
-            candleSticks.OrderBy(x => x.Value.Volume).AsParallel()
-                .WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0)))
-                .ForAll(x =>
+            candleSticks.OrderBy(x => x.Value.Volume)//.ToList().ForEach
+                .AsParallel().WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0))).ForAll
+                (x =>
                 {
                     if (!subscribers.TryGetValue((x.Value.Symbol, x.Value.Interval), out var list)) return;
                     foreach (var action in list)
@@ -164,12 +168,15 @@ SELECT DISTINCT [ID]
             {
                 throw new Exception();
             }
-            if (!_data.CheckNextTick(CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minutes_15, 1), toList.First(), false))
-            {
-                _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick,_mangement.FinalTick,
-                    toList, 3,NumberOfRows,OffSet);
-                NoOfCalls++;
-            }
+            if(CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minutes_15, 1)>_mangement.FinalTick) return;
+
+            if (_data.CheckNextTick(CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minutes_15, 1),
+                    toList.First(), false)) return;
+
+            var rows = _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick,_mangement.FinalTick,
+                toList, 3, RequestRows, TotalNumberOfRows);
+            RequestRows = rows;
+            TotalNumberOfRows += rows;
         }
 
         private DateTime CalculateFrom(DateTime dateTime, CandlestickInterval interval,int NoOfCandleSticks)
@@ -197,8 +204,8 @@ SELECT DISTINCT [ID]
         }
         private void LoadHistoricData()
         {
-            _data.LoadData(SQL_HISTORIC_QUERY, CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(),-200), From,
-                historicDataSubscribers.Keys.Select(x => x.symbol).ToList(), (int)historicDataSubscribers.Keys.Select(x => x.interval).First(),NumberOfRows*1000,OffSet);
+            RequestRows = _data.LoadData(SQL_HISTORIC_QUERY, CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(),-200), From,
+                historicDataSubscribers.Keys.Select(x => x.symbol).ToList(), (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 1000,0);
             foreach (var item in historicDataSubscribers)
             {
                 LoadHistoricData( item.Key, From, item.Value);

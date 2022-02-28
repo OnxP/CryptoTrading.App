@@ -24,13 +24,14 @@ namespace CryptoTrading.App.Process
             int i = 0;
             while (i <= retries)
             {
-                Run();
+                var res = Run();
+                if (res == 1) return;
                 i++;
                 Logger.LogError($"App Failed Retrying attempt {i}");
             }
         }
 
-        public void Run()
+        public int Run()
         {
             if (!InitiliseProcess())
             {
@@ -60,7 +61,10 @@ namespace CryptoTrading.App.Process
             {
                 Console.WriteLine(e);
                 Logger.LogError($"Error running process {e.Message} - {e.StackTrace}");
+                return -1;
             }
+
+            return 1;
         }
 
         private bool InitiliseProcess()

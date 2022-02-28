@@ -36,7 +36,9 @@ namespace CryptoTrading.App.Monitor
         public TradeProcessor(IMarketMonitorFactory factory)
         {
             TradeFactory = factory;
-            OrderMonitors = new List<ITradeMonitor>(); 
+            OrderMonitors = new List<ITradeMonitor>();
+            KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
+            ConfigureMessageBroker();
         }
         public TradeProcessor(IPositions positions, IMarketMonitorFactory factory):this(factory)
         {
@@ -46,8 +48,6 @@ namespace CryptoTrading.App.Monitor
         public TradeProcessor(IPositions positions, IMarketMonitorFactory factory, IKey key): this(positions,factory)
         {
             KeyValue = key.KeyValue;
-            ConfigureMessageBroker();
-
         }
         private void ConfigureMessageBroker()
         {
@@ -72,7 +72,7 @@ namespace CryptoTrading.App.Monitor
                 try
                 {
                     //error occurs here because there are not monitors set up for trade...need to find out why!
-                    var trade = CurrentMonitors.First(x => x.Symbol == order.Symbol);
+                    var trade = OrderMonitors.Last(x => x.Symbol == order.Symbol);
                 
                     switch (transaction.Type)
                     {
@@ -162,10 +162,7 @@ namespace CryptoTrading.App.Monitor
         {
             lock (_lock)
             {
-                foreach(var monitor in OrderMonitors.Where(x=>!x.Live))
-                {
-                    OrderMonitors.Remove(monitor);
-                }
+                OrderMonitors.RemoveAll(x => !x.Live);
             }
         }
 

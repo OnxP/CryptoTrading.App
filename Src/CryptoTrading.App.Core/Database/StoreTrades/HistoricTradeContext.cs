@@ -5,9 +5,9 @@ namespace CryptoTrading.App.Core.Database.StoreTrades
 {
     public class HistoricTradeContext :DbContext
     {
-        public HistoricTradeContext(string connectionString)
+        public HistoricTradeContext(string connectionString) : base(connectionString)
         {
         }
-        public DbSet<HistoricTrades> Trades { get; set; }
+        public DbSet<HistoricTrades> HistoricTrades { get; set; }
     }
 }

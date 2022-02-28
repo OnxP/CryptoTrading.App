@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
@@ -63,6 +64,11 @@ namespace CryptoTrading.App.MarketData
         }
 
         public void Configure(IConfig request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void StartStream(CancellationTokenSource ct)
         {
             throw new NotImplementedException();
         }

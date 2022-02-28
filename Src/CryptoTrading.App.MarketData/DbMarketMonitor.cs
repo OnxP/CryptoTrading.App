@@ -6,6 +6,7 @@ using CryptoTrading.App.Core.Trade;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CryptoTrading.App.Core.MarketMonitorFactory;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -34,7 +35,7 @@ namespace CryptoTrading.App.MarketData
 
         public CandlestickInterval Interval { get; set; }
         public int NumberOfRows { get; set; } = 100;
-        public int OffSet => _mangement.Index / NumberOfRows ;
+        public int OffSet => 0 ;
 
         private string SQL_STREAM_QUERY = @"SELECT [ID]
       ,[Symbol]
@@ -84,7 +85,7 @@ namespace CryptoTrading.App.MarketData
 
                     if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key, true))
                     {
-                        _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick, _mangement.FinalTick, new List<string>() { kvp.Key }, 0, NumberOfRows, OffSet);
+                        _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { kvp.Key }, 0, NumberOfRows, OffSet);
                     }
                 }
             }
