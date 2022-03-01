@@ -25,6 +25,8 @@ namespace CryptoTrading.App.Core
         DateTime To { get; set; }
         double StartBtcAmount { get; set; }
         double StartBnbAmount { get; set; }
+        bool UseFixedAmount { get; set; }
+        double FixedAmount { get; set; }
         void Update();
         void SetContext(DbContext context);
     }

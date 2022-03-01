@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.Position;
+using System;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -30,14 +31,9 @@ namespace CryptoTrading.App.Monitor
             return _positions[asset];
         }
 
-        public bool CheckBalance(string sellSymbol, double sellPercentage)
+        public bool CheckBalance(ITradeRequest what)
         {
-            if (_positions.ContainsKey(sellSymbol))
-            {
-                return _positions[sellSymbol].CheckFunds(sellPercentage);
-            }
-
-            return false;
+            return _positions.ContainsKey(what.QuoteSymbol) && _positions[what.QuoteSymbol].CheckFunds(what.Amount,what.FixedAmount);
         }
 
         public bool CheckOpenPosition(string requestBuySymbol)
@@ -63,7 +59,7 @@ namespace CryptoTrading.App.Monitor
 
         public bool CheckRequest(ITradeRequest what)
         {
-            return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what.QuoteSymbol, what.SellPercentage);
+            return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what);
         }
     }
 }

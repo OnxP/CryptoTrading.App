@@ -29,11 +29,11 @@ namespace CryptoTrading.App.Core.Position
             _positions = new Dictionary<string, IPosition>();
         }
 
-        public bool CheckBalance(string sellSymbol, double sellPercentage)
+        public bool CheckBalance(ITradeRequest what)
         {
-            if (_positions.ContainsKey(sellSymbol))
+            if (_positions.ContainsKey(what.QuoteSymbol))
             {
-                return _positions[sellSymbol].CheckFunds(sellPercentage);
+                return _positions[what.QuoteSymbol].CheckFunds(what.Amount,what.FixedAmount);
             }
 
             return false;
@@ -63,7 +63,7 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckRequest(ITradeRequest what)
         {
-            return CheckOpenPosition(what.BaseSymbol) && CheckBalance(what.QuoteSymbol, what.SellPercentage);
+            return CheckOpenPosition(what.BaseSymbol) && CheckBalance(what);
         }
     }
 }

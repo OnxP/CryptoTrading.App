@@ -26,7 +26,7 @@ namespace CryptoTrading.App.Algorithm
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, IConfig config)
         {
             services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>(provider =>
-                new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), config.NoOfTrades));
+                new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>()));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();

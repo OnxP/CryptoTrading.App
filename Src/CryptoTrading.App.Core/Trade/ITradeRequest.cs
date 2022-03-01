@@ -7,9 +7,9 @@ namespace CryptoTrading.App.Core.Trade
     {
         string BaseSymbol { get; set; }
         string QuoteSymbol { get; set; }
-        double SellPercentage { get; set; }
-        decimal SellAmount { get; set; }
         decimal Price { get; }
+        public bool FixedAmount { get; set; }
+        public double Amount { get; set; }
         DateTime? RequestDateTime { get; set; }
         IStopLimitTracker StopLimitTracker { get; set; }
         CandlestickInterval Interval { get; set; }

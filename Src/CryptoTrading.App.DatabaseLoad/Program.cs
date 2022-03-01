@@ -8,8 +8,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Binance.Client;
+using DateTime = System.DateTime;
 
 namespace CryptoTrading.App.DatabaseLoad
 {
@@ -34,21 +36,18 @@ namespace CryptoTrading.App.DatabaseLoad
                         )
                 .BuildServiceProvider();
             //context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
-            IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
-            marketDate.Configure(null);
-            marketDate.From = new DateTime(2021, 04, 01);//25-12-20
-            var symbols = Symbol.BtcPairsOne;
-            symbols.AddRange(Symbol.BtcPairsTwo);
-            symbols.AddRange(Symbol.BtcPairsThree);
-            symbols.AddRange(Symbol.BtcPairsFour);
-            symbols.AddRange(Symbol.BtcPairsFive);
-            symbols.AddRange(Symbol.BtcPairsSix);
-            symbols.AddRange(Symbol.BtcPairsSeven);
-            symbols.AddRange(Symbol.BtcPairsEight);
+            HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
+
+            var Api = ServiceProvider.GetService<IBinanceApi>();
+            var symbols = Api.GetSymbolsAsync().Result.Where(x=> x.QuoteAsset.Symbol=="BTC").ToList();//count
+
+            marketDate.Configure(Api);
+            marketDate.From = new DateTime(2021, 11, 01);
+
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
-              CandlestickInterval.Minutes_30
-            , CandlestickInterval.Hour
+              CandlestickInterval.Minutes_15
+            , CandlestickInterval.Minute
             };
         
             //subscribe to several symbols

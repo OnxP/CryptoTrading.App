@@ -34,7 +34,7 @@ namespace CryptoTrading.App.MarketData
         }
 
         public CandlestickInterval Interval { get; set; }
-        public int NumberOfRows { get; set; } = 100;
+        public int NumberOfRows { get; set; } = 30;
         public int OffSet => 0 ;
 
         private string SQL_STREAM_QUERY = @"SELECT [ID]
@@ -52,8 +52,8 @@ namespace CryptoTrading.App.MarketData
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
-  WHERE CloseTime >= @p0 AND CloseTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
-  ORDER BY CloseTime
+  WHERE OpenTime > @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  ORDER BY OpenTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY";
         private readonly object _lock = new object();

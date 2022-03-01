@@ -17,6 +17,10 @@ namespace CryptoTrading.App.Core.Database.Config
         {
             DbContext.Entry(this).Reload();
         }
+
+        public bool UseFixedAmount { get; set; }
+        public double FixedAmount { get; set; }
+
         public void Update()
         {
             DbContext.SaveChanges();

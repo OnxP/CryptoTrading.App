@@ -65,10 +65,12 @@ namespace CryptoTrading.App.Process
             var services = ServiceHelper.BuildServices(Config);
 
             MarketData = services.GetService<IMarketData>();
-            TradeProcessor = services.GetService<ITradeProcessor>(); ;
-            Broker = services.GetService<IBroker>(); ;
+            TradeProcessor = services.GetService<ITradeProcessor>();
+            Broker = services.GetService<IBroker>(); 
             Algorithm = services.GetService<IAlgorithm>;
-            AccountConfig = services.GetService<IAccountConfig>(); ;
+            AccountConfig = services.GetService<IAccountConfig>();
+
+            TradeProcessor.Configure(Config);
         }
         //Close the app down. Exit out of any open position for a safe shutdown.
         public void CompleteRunningTrades()

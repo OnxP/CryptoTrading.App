@@ -20,9 +20,11 @@ namespace CryptoTrading.App.Algorithm
         public ITradingStrategy TradingStrategies;
         public IStopLimitTracker StopLimitTrackers { get; set; } 
         public string KeyValue { get; set; }
+
+        public IConfig Config { get; set; }
         public void Configure(IConfig config)
         {
-            throw new NotImplementedException();
+            Config = config;
         }
         public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers)
         { 
@@ -59,7 +61,7 @@ namespace CryptoTrading.App.Algorithm
                 var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.Interval.AsString(), candlestickEventArgs.Candlestick.CloseTime);
                 Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
                 if (request==null) return;
-                if (request.SellPercentage <= 0) return;
+                if (request.Amount <= 0) return;
                 MessageBroker.Instance.Publish(KeyValue, this, request);
             }
             catch(Exception e)
@@ -82,10 +84,15 @@ namespace CryptoTrading.App.Algorithm
             }
 
             var result = TradingStrategies.Calculate(_candleSticks, StopLimitTrackers);
-            //Logger.LogInformation($"Finished processing strategy {strategy} with result {result}");
-            var request = RequestBuilder.BuildTradeRequest(result, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers);
+            
+            if(result == 0) return RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers);
+            
+            result = (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades;
+            //need access to config here.
+            var request = RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers);
 
             return request;
         }
+
     }
 }

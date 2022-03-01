@@ -52,8 +52,8 @@ SELECT DISTINCT [ID]
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]	
   FROM [dbo].[CandleStickDbs]
-  WHERE CloseTime >= @p0 AND CloseTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
-  ORDER BY CloseTime
+  WHERE OpenTime >= @p0 AND OpenTime < @p1 AND Interval=@p2
+  ORDER BY OpenTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY
 ";
@@ -72,7 +72,7 @@ SELECT DISTINCT [ID]
       ,[TakerBuyBaseAssetVolume]
       ,[TakerBuyQuoteAssetVolume]	
   FROM [dbo].[CandleStickDbs]
-  WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Interval=@p2
   ORDER BY OpenTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY
@@ -113,7 +113,7 @@ SELECT DISTINCT [ID]
 
             _mangement.AddMarketStream(InvokeCandleStick);
             var rows = _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
-                subscribers.Keys.Select(x => x.symbol).ToList(), (int)subscribers.Keys.Select(x => x.interval).First(), RequestRows*10, 0);
+                subscribers.Keys.Select(x => x.symbol).ToList(), (int)subscribers.Keys.Select(x => x.interval).First(), RequestRows*2, 0);
             RequestRows = rows;
             TotalNumberOfRows = rows;
             //_data.Initialise(From, To, subscribers.Keys.Select(x => x.symbol).ToList(),
@@ -204,7 +204,7 @@ SELECT DISTINCT [ID]
         }
         private void LoadHistoricData()
         {
-            RequestRows = _data.LoadData(SQL_HISTORIC_QUERY, CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(),-200), From,
+            RequestRows = _data.LoadData(SQL_HISTORIC_QUERY, CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(),-201), From,
                 historicDataSubscribers.Keys.Select(x => x.symbol).ToList(), (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 1000,0);
             foreach (var item in historicDataSubscribers)
             {

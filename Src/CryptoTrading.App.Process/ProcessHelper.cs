@@ -17,6 +17,7 @@ namespace CryptoTrading.App.Process
             {
                 //need to create a unique instance of algo
                 var algorithm = getAlgorithm.Invoke();
+                algorithm.Configure(config);
                 marketData.InitialDataLoadSubscribe(symbol, interval, algorithm.ProcessHistoricMarketData);
                 marketData.InitialDataStreamSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
             }

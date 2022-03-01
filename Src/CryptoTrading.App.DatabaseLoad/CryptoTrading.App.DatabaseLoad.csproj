@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
-    <PackageReference Include="Z.EntityFramework.Extensions" Version="6.13.6" />
+    <PackageReference Include="Z.EntityFramework.Extensions" Version="6.13.12" />
   </ItemGroup>
 
   <ItemGroup>

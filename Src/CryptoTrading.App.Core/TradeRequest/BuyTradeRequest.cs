@@ -8,11 +8,11 @@ namespace CryptoTrading.App.Core.TradeRequest
     {
         public string BaseSymbol { get; set; }
         public string QuoteSymbol { get; set; }
-        public decimal SellAmount { get; set; }
-        public double SellPercentage { get; set; }
         public decimal Price { get; internal set; }
         public DateTime? RequestDateTime { get; set; }
         public IStopLimitTracker StopLimitTracker { get; set; }
         public CandlestickInterval Interval { get ; set; }
+        public bool FixedAmount { get; set; }
+        public double Amount { get; set; }
     }
 }

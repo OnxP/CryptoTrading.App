@@ -10,5 +10,6 @@ namespace CryptoTrading.App.Core
         void CompleteAllTransactions();
         void ClearInactiveTrades();
         List<ITrade> GetCompletedTrades();
+        void Configure(IConfig config);
     }
 }

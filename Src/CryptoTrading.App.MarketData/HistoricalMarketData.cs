@@ -25,7 +25,7 @@ namespace CryptoTrading.App.MarketData
 
         ICandlestickClient _client;
         IBinanceWebSocketStream _webSocket;
-        IBinanceApi api;
+        IBinanceApi _api;
         public ILogger<HistoricalMarketData> Logger { get; set; }
 
         public HistoricalMarketData(ILogger<HistoricalMarketData> logger)
@@ -56,21 +56,44 @@ namespace CryptoTrading.App.MarketData
 
             // Initialize client.
             _client = services.GetService<ICandlestickClient>();
-            api = services.GetService<IBinanceApi>();
+            _api = services.GetService<IBinanceApi>();
             // Initialize the stream.
             _webSocket = services.GetService<IBinanceWebSocketStream>();
             _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
 
         }
 
+        public void Configure(IBinanceApi api)
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, false)
+                .Build();
+
+            // Configure services.
+            var services = new ServiceCollection()
+                .AddBinance() // add default Binance services.
+                .AddLogging(builder => builder // configure logging.
+                    .SetMinimumLevel(LogLevel.Trace)
+                    .AddFile(configuration.GetSection("Logging:File")))
+                .BuildServiceProvider();
+
+            // Initialize client.
+            _client = services.GetService<ICandlestickClient>();
+            _api = api;
+            // Initialize the stream.
+            _webSocket = services.GetService<IBinanceWebSocketStream>();
+            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
+        }
+
         public void Configure(IConfig request)
         {
-            throw new NotImplementedException();
+            Configure(new CancelRequest(0,"TEST"));
         }
 
         public void StartStream(CancellationTokenSource ct)
         {
-            throw new NotImplementedException();
+            StartStream();
         }
 
         public void StartStream()
@@ -81,7 +104,7 @@ namespace CryptoTrading.App.MarketData
                 var tasks = new List<Task>();
                 foreach (var item in historicDataSubscribers)
                 {
-                    tasks.Add(LoadHistoricData(api, item.Key, From, item.Value));
+                    tasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
                 }
                 Task.WaitAll(tasks.ToArray());
                 Logger.LogInformation("Finished loading Historic Candlesticks");
@@ -99,7 +122,7 @@ namespace CryptoTrading.App.MarketData
                     {
                         Stopwatch time = new Stopwatch();
                         time.Start();
-                        StreamData(api, item.Key, from, to);
+                        StreamData(_api, item.Key, from, to);
                         from = to;
                         //while (time.ElapsedMilliseconds <= 1000)
                         //{ }
@@ -269,6 +292,8 @@ namespace CryptoTrading.App.MarketData
                 yield return from.AddDays(daysdiff - j);
             }
         }
+
+
     }
 }
 
