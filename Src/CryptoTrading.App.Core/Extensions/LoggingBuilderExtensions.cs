@@ -36,11 +36,14 @@ namespace CryptoTrading.App.Core.Extensions
                     throw new InvalidOperationException($"Configuration value '{defaultLogLevel}' for category 'Default' is not supported.");
                 }
             }
+            var maxLogSizeSection = configuration.GetSection("MaxLogSize");
+            var defaultMaxLogSize = maxLogSizeSection.Value;
+            int maxLogSize = defaultMaxLogSize == null ? 10000 : Convert.ToInt32(defaultMaxLogSize);
 
-            return builder.AddFile(filePath, level);
+            return AddFile(builder, filePath, maxLogSize, level);
         }
 
-        public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string filePath, LogLevel level = LogLevel.Information)
+        public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string filePath, int maxLogSize, LogLevel level = LogLevel.Information)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder), $"{nameof(ILoggerFactory)} is null (add Microsoft.Extensions.Logging NuGet package).");
@@ -48,7 +51,7 @@ namespace CryptoTrading.App.Core.Extensions
             if (filePath == null)
                 throw new ArgumentNullException(nameof(filePath));
 
-            builder.AddProvider(new FileLoggerProvider(filePath, level));
+            builder.AddProvider(new FileLoggerProvider(filePath, level, maxLogSize));
 
             return builder;
         }

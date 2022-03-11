@@ -52,7 +52,8 @@ namespace CryptoTrading.App.MarketDataTesting
             //subscribe to several symbols
             AddEvents(marketDate as IMarketDataEvents);
 
-            marketDate.StartStream(new CancellationTokenSource());
+            var controller = marketDate.GetTaskController();
+            controller.Begin();
 
             writer.Flush();
             writer.Close();

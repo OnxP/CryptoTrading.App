@@ -20,6 +20,8 @@ namespace CryptoTrading.App.Core.Logging
 
         private readonly object _sync = new object();
 
+        private readonly int _maxLogSize;
+
         #endregion Private Fields
 
         #region Constructors
@@ -31,6 +33,16 @@ namespace CryptoTrading.App.Core.Logging
 
             _filePath = filePath;
             _level = level;
+
+            //delete first log file.
+
+            FileInfo fi1 = new FileInfo(filePath);
+            if(fi1.Exists) fi1.Delete();
+        }
+
+        public FileLogger(string filePath, LogLevel level, int maxLogSize) : this(filePath, level)
+        {
+            _maxLogSize = maxLogSize;
         }
 
         #endregion Constructors
@@ -50,6 +62,7 @@ namespace CryptoTrading.App.Core.Logging
             return logLevel >= _level;
         }
 
+        private int _logFileNumber = 0;
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
             if (formatter == null)
@@ -66,6 +79,17 @@ namespace CryptoTrading.App.Core.Logging
             {
                 lock (_sync)
                 {
+
+                    FileInfo fi1 = new FileInfo(_filePath);
+                    if (fi1.Exists && fi1.Length / 1000 >= _maxLogSize)
+                    {
+                        fi1.MoveTo(fi1.FullName+_logFileNumber++);
+                        FileInfo fi2 = new FileInfo(_filePath);
+                        if (fi2.Exists) fi2.Delete();
+                    }
+
+                    
+
                     using (var stream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.None))
                     using (var streamWriter = new StreamWriter(stream) { AutoFlush = false })
                     {

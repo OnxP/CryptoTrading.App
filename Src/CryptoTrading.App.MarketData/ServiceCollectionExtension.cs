@@ -38,8 +38,6 @@ namespace CryptoTrading.App.MarketData
                     services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
                     break;
                 case RunTypeEnum.LiveTesting:
-                    services.AddTransient<IMarketData, HistoricalMarketData>(p=> new HistoricalMarketData(p.GetService<ILogger<HistoricalMarketData>>(), config.From, config.To));
-                    break;
                 case RunTypeEnum.Live:
                     services.AddTransient<IMarketData, LiveMarketData>();
                     break;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
+using Binance.Utility;
 
 namespace CryptoTrading.App.Core
 {
@@ -8,6 +10,6 @@ namespace CryptoTrading.App.Core
         DateTime From { get; set; }
         DateTime To { get; set; }
         public void Configure(IConfig request);
-        void StartStream(CancellationTokenSource ct);
+        ITaskController GetTaskController();
     }
 }

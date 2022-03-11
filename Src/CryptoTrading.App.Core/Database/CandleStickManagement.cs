@@ -62,9 +62,7 @@ namespace CryptoTrading.App.Core.Database
             _StopLimitMonitor = null;
         }
 
-        
-
-        public void StartTimeKeeper(CancellationTokenSource ct)
+        public void StartTimeKeeper(CancellationToken ct)
         {
             do
             {

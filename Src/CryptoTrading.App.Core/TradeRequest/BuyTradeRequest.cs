@@ -12,7 +12,17 @@ namespace CryptoTrading.App.Core.TradeRequest
         public DateTime? RequestDateTime { get; set; }
         public IStopLimitTracker StopLimitTracker { get; set; }
         public CandlestickInterval Interval { get ; set; }
+        public decimal CalculateQuantity(decimal freeAmount, decimal nonFreeAmount)
+        {
+            var q = !FixedAmount ? (freeAmount - nonFreeAmount) * (decimal)Amount : (decimal)Amount;
+
+            if (q > Volume) q = Volume;
+
+            return q;
+        }
+
         public bool FixedAmount { get; set; }
         public double Amount { get; set; }
+        public decimal Volume { get; set; }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
+using Binance.Utility;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Process
@@ -24,14 +26,14 @@ namespace CryptoTrading.App.Process
             int i = 0;
             while (i <= retries)
             {
-                var res = Run();
-                if (res == 1) return;
+                var res = Run().Result;
+                if (res == 0) return;
                 i++;
                 Logger.LogError($"App Failed Retrying attempt {i}");
             }
         }
 
-        public int Run()
+        public async Task<int> Run()
         {
             if (!InitiliseProcess())
             {
@@ -40,20 +42,10 @@ namespace CryptoTrading.App.Process
 
             try
             {
-                LogProcess(Process.StartProcessing);
+
+                LoopProcess();
                 //loops over the database checks for updates every 2 minutes.
-                do
-                {
-                    //Change the sleep count to time of day. 10 minutes past the hour...etc.
-                    if (DateTime.Now.Minute % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
-                    if (DateTime.Now.Minute == 25) LogProcess(Process.RefreshPositionsData); //1 Hour
-                    if (DateTime.Now.Hour == 1 && DateTime.Now.Minute==10) // 24 Hours
-                    {
-                        LogProcess(Process.ArchiveAndReport); 
-                        LogProcess(Process.RefreshSymbols);
-                    }
-                    Thread.Sleep(60 * 1000); //1 Minute
-                } while (Process.IsRunning);
+                await Process.StartProcessing();
 
                 LogProcess(Process.CompleteRunningTrades);
             }
@@ -64,7 +56,24 @@ namespace CryptoTrading.App.Process
                 return -1;
             }
 
-            return 1;
+            return 0;
+        }
+
+        private async Task LoopProcess()
+        {
+            while (true)
+            {
+                if (!Process.IsRunning) break;
+                //Change the sleep count to time of day. 10 minutes past the hour...etc.
+                if (DateTime.Now.Minute % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
+                if (DateTime.Now.Minute == 25) LogProcess(Process.RefreshPositionsData); //1 Hour
+                if (DateTime.Now.Hour == 1 && DateTime.Now.Minute == 10) // 24 Hours
+                {
+                    LogProcess(Process.ArchiveAndReport);
+                    LogProcess(Process.RefreshSymbols);
+                }
+                await Task.Delay(60 * 1000); //1 Minute
+            }
         }
 
         private bool InitiliseProcess()

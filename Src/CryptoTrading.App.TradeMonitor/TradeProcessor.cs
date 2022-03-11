@@ -125,7 +125,7 @@ namespace CryptoTrading.App.Monitor
                 {
                     //do you want to scale in again
                 }
-                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
+                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<Config.NoOfTrades)
                 {
                     DbCandleStickManagement.PauseFlow = true;
                     //need to pause the data stream.
@@ -143,12 +143,7 @@ namespace CryptoTrading.App.Monitor
         private bool CheckCurrentOrderMonitors(string symbol)
         {
             if (CurrentMonitors.Count() != 0) return false;
-            if (CurrentMonitors.LastOrDefault(x => x.Symbol == symbol) != null)
-            {
-                return CurrentMonitors.LastOrDefault(x => x.Symbol == symbol).Live;
-            }
-
-            return false;
+            return CurrentMonitors.LastOrDefault(x => x.Symbol == symbol) != null && CurrentMonitors.LastOrDefault(x => x.Symbol == symbol)!.Live;
         }
 
         public void CompleteAllTransactions()

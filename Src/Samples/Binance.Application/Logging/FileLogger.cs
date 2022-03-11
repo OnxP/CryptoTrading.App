@@ -20,6 +20,8 @@ namespace Binance.Application.Logging
 
         private readonly object _sync = new object();
 
+        private readonly int _maxLogSize;
+
         #endregion Private Fields
 
         #region Constructors
@@ -32,6 +34,12 @@ namespace Binance.Application.Logging
             _filePath = filePath;
             _level = level;
         }
+
+        public FileLogger(string filePath, LogLevel level, int maxLogSize) : this(filePath, level)
+        {
+            _maxLogSize = maxLogSize;
+        }
+
 
         #endregion Constructors
 

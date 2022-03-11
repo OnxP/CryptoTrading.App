@@ -25,13 +25,13 @@ namespace CryptoTrading.App.Process
                 .AddMarketData(config)
                 .AddTradingCore(config)
                 .AddTradeMonitor(config)
-                .AddTestBroker(config)
+                .AddBroker(config)
                 .AddAlgorithm(config)
                 .AddMarketMonitor(config)
                 .AddAccountService(config)
                 .AddLogging(builder => builder // configure logging.
-                    .SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(config.FilePath, LogLevel.Information)
+                    .SetMinimumLevel(LogLevel.Information)
+                    .AddFile(config.FilePath, 10000, LogLevel.Information)
                     .AddConsole())
                 .BuildServiceProvider();
             return services;

@@ -56,7 +56,7 @@ namespace CryptoTrading.App.AlgorithmTesting
             var services = new ServiceCollection()
                                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
-                        .AddFile(filePath, LogLevel.Information)
+                        .AddFile(filePath,10000, LogLevel.Information)
                         .AddConsole()
                         )
                     .AddKey(Key)

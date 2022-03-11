@@ -20,6 +20,7 @@ namespace CryptoTrading.App.Core.Database.Config
 
         public bool UseFixedAmount { get; set; }
         public double FixedAmount { get; set; }
+        public double PercentDailyVolume { get; set; }
 
         public void Update()
         {

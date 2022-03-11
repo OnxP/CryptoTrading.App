@@ -6,9 +6,9 @@ namespace CryptoTrading.App.Core.Logging
     {
         private readonly ILogger _fileLogger;
 
-        public FileLoggerProvider(string filePath, LogLevel level)
+        public FileLoggerProvider(string filePath, LogLevel level, int maxLogSize)
         {
-            _fileLogger = new FileLogger(filePath, level);
+            _fileLogger = new FileLogger(filePath, level, maxLogSize);
         }
 
         public ILogger CreateLogger(string categoryName)

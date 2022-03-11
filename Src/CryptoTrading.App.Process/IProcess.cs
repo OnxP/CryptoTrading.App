@@ -1,9 +1,11 @@
-﻿namespace CryptoTrading.App.Process
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Binance.Utility;
+
+namespace CryptoTrading.App.Process
 {
     public interface IProcess
     {
-        bool IsRunning { get; }
-        void StartProcessing();
         void RefreshDatabaseConfig();
         void RefreshPositionsData();
         void ArchiveAndReport();
@@ -12,5 +14,7 @@
         void ReadDatabaseConfig();
         void BuildServiceObjects();
         void ReadBinanceData();
+        bool IsRunning { get; }
+        Task StartProcessing();
     }
 }

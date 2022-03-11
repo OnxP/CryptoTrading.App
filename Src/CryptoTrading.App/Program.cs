@@ -14,7 +14,7 @@ namespace CryptoTrading.App
                 var services = new ServiceCollection()
                     .AddCryptoService()
                     .AddLogging(builder => builder // configure logging.
-                        .SetMinimumLevel(LogLevel.Trace)
+                        .SetMinimumLevel(LogLevel.Information)
                         .AddConsole()
                     )
                     .BuildServiceProvider();

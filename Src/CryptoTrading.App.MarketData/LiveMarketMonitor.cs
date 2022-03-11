@@ -1,11 +1,16 @@
-﻿using Binance;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using Binance;
 using Binance.Client;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Trade;
-using System;
+using Binance.Utility;
+using Binance.WebSocket;
 using CryptoTrading.App.Core.MarketMonitorFactory;
+using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
 
-namespace CryptoTrading.App.Monitor
+namespace CryptoTrading.App.MarketData
 {
     //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data 
     //Input(Initial) - Trade details.
@@ -17,81 +22,58 @@ namespace CryptoTrading.App.Monitor
     //Initial - Configure Stoploss Monitor from Open trade. and set a stop limit order.
     //Continuous - Monitor price and once it hits a threshold reset stoploss to limit order X% below threshold then adjust threshold
 
-    public class LiveMarketMonitor : IMarketMonitor
+    public class LiveMarketMonitor : AbstractMarketData, IMarketMonitor
     {
-        private System.Action<CandlestickEventArgs> action;
-
-        public string Symbol { get; set; }
-
-        public bool Started => true;
-
+        private ICandlestickClient _client;
+        private IBinanceWebSocketStream _webSocket;
         private IBinanceApi _api;
         private IBinanceApiUser _user;
-        public LiveMarketMonitor(string symbol, IBinanceApi api, IBinanceApiUser user)
+        public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger,IBinanceApi api, ICandlestickClient candlestickClient, IBinanceWebSocketStream webSocket)
         {
             _api = api;
-            _user = user;
-            Symbol = symbol;
+            _client = candlestickClient;
+            _webSocket = webSocket;
+            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
+            GetTaskController();
         }
 
+        private List<string> symbols = new List<string>();
+        private ITaskController Controller { get; set; }
         public virtual bool CheckOrder(ITransaction transaction)
         {
-            var newOrder=_api.GetOrderAsync(_user,Symbol,transaction.Order.ClientOrderId).Result;
+            var newOrder = _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).Result;
             transaction.UpdateOrder(newOrder);
             return newOrder.Status == OrderStatus.Filled;
         }
-
-        public void Dispose()
-        {
-            _api = null;
-            _user = null;
-        }
-
-        public void StopStream()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void StartStream()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Subscribe(System.Action<CandlestickEventArgs> processCandleStick)
-        {
-            action = processCandleStick;
-        }
-
-        public void Subscribe(string symbol, Action<CandlestickEventArgs> processCandleStick)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsSubscribed(string symbol, Action<CandlestickEventArgs> processCandleStick)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UnSubscribe(string symbol, Action<CandlestickEventArgs> processCandleStick)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
         {
-            throw new NotImplementedException();
+            symbols.Add(symbol);
+            _client.Subscribe(symbol, CandlestickInterval.Minute, processCandleStick);
+            Configure();
+            if(!Controller.IsActive) Controller.Begin();
+        }
+
+        public void Configure()
+        {
+            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
         }
 
         public bool IsSubscribed(string symbol, string keyValue)
         {
-            throw new NotImplementedException();
+            return symbols.Contains(symbol);
         }
 
         public void UnSubscribe(string symbol, string keyValue)
         {
-            throw new NotImplementedException();
+            symbols.Remove(symbol);
+            _client.Unsubscribe(symbol, CandlestickInterval.Minute);
+        }
+
+        public void GetTaskController()
+        {
+            Controller = new RetryTaskController(_webSocket.StreamAsync);
+            Controller.Error += (s, e) => HandleError(e.Exception);
         }
     }
-
-
 }

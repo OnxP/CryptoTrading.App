@@ -53,8 +53,12 @@ namespace CryptoTrading.App.DatabaseLoad
             //subscribe to several symbols
             AddEvents(marketDate as AbstractMarketData, symbols,intervals);
 
-            marketDate.StartStream(new CancellationTokenSource());
-            context.Dispose();
+            var con = marketDate.GetTaskController();
+            con.Begin();
+            lock (_object)
+            {
+                context.Dispose();
+            }
 
         }
 

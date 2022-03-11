@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Broker
 {
-    public class LiveMarket : IMarket
+    public class TestLiveMarket : IMarket
     {
         private readonly IBinanceApi _api;
         private readonly IBinanceApiUser _user;
-        private readonly ILogger<LiveMarket> _logger;
-        public LiveMarket(ILogger<LiveMarket> logger,IBinanceApi api,IBinanceApiUser user)
+        private readonly ILogger<TestLiveMarket> _logger;
+        public TestLiveMarket(ILogger<TestLiveMarket> logger,IBinanceApi api,IBinanceApiUser user)
         {
             _api = api;
             _user = user;
@@ -40,8 +40,24 @@ namespace CryptoTrading.App.Broker
                 Quantity = trade.Quantity
             };
 
-            var order = await _api.PlaceAsync(clientOrder);
-
+            await _api.TestPlaceAsync(clientOrder);
+            var order = new Order(_user,
+                trade.Symbol,
+                1,
+                "",
+                trade.Price,
+                trade.Quantity,
+                trade.Quantity,
+                0,
+                OrderStatus.Filled,
+                TimeInForce.IOC,
+                OrderType.Market,
+                OrderSide.Buy,
+                0,
+                0,
+                DateTime.Now,
+                DateTime.Now,
+                true);
             return order;
         }
 
@@ -55,7 +71,24 @@ namespace CryptoTrading.App.Broker
                 Quantity = trade.Quantity
             };
 
-            var order = await _api.PlaceAsync(clientOrder);
+            await _api.TestPlaceAsync(clientOrder);
+            var order = new Order(_user,
+                trade.Symbol,
+                1,
+                "",
+                trade.StopPrice,
+                trade.Quantity,
+                trade.Quantity,
+                0,
+                OrderStatus.New,
+                TimeInForce.IOC,
+                OrderType.StopLossLimit,
+                OrderSide.Sell,
+                trade.StopPrice,
+                0,
+                DateTime.Now,
+                DateTime.Now,
+                true);
             LogOrder(order.Symbol, order.ClientOrderId, OrderStatus.Filled);
 
             return order;

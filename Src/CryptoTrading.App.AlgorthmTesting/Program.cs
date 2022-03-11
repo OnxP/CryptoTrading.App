@@ -64,7 +64,8 @@ namespace CryptoTrading.App.AlgorthmTesting
                     }
                 }
             //}
-            marketData.StartStream(new CancellationTokenSource());
+            var controller = marketData.GetTaskController();
+            controller.Begin();
             foreach (var task in tasks)
             {
                 task.RunSynchronously();

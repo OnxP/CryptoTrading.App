@@ -3,7 +3,7 @@ using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Monitor
 {
-    public class TestTradeFactory : ITradeFactory
+    public class TradeFactory : ITradeFactory
     {
         public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
         {

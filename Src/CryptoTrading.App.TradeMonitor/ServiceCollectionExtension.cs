@@ -12,7 +12,7 @@ namespace CryptoTrading.App.Monitor
         public static IServiceCollection AddTradeMonitor(this IServiceCollection services, System.Collections.Generic.Dictionary<string, IPosition> dictionaryPositions, ServiceProvider masterServices)
         {
             services.AddScoped<ITradeProcessor, TradeProcessor>();
-            services.AddScoped<ITradeFactory, TestTradeFactory>();
+            services.AddScoped<ITradeFactory, TradeFactory>();
             services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(masterServices.GetService<IMarketMonitor>()));
             services.AddScoped<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
             services.AddScoped<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
@@ -24,12 +24,12 @@ namespace CryptoTrading.App.Monitor
             switch (config.RunType)
             {
                 case RunTypeEnum.BackTesting:
-                    services.AddTransient<ITradeFactory, TestTradeFactory>();
+                    services.AddTransient<ITradeFactory, TradeFactory>();
                     services.AddTransient<IPositions, TestPositions>();
                     break;
                 case RunTypeEnum.LiveTesting:
                 case RunTypeEnum.Live:
-                    services.AddTransient<ITradeFactory, TestTradeFactory>();
+                    services.AddTransient<ITradeFactory, TradeFactory>();
                     services.AddTransient<IPositions, Positions>();
                     break;
                 default:

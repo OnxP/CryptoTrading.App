@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Binance;
+using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,9 +20,6 @@ namespace CryptoTrading.App.Process
         private IConfig Config { get; }
         private IAccountConfig AccountConfig { get; set; }
         private List<Symbol> Symbols { get; set; }
-
-        private Task RunningProcess { get; set; }
-        private CancellationTokenSource taskToken = new CancellationTokenSource();
         public CryptoProcess(CryptoDbConfigContext context)
         {
             Config = context.CryptoConfigs.First(x => x.Id == 1);
@@ -36,6 +34,7 @@ namespace CryptoTrading.App.Process
             PositionHelper.AddPositions(Symbols, accountPositions,TradeProcessor.Positions);
             ProcessHelper.WireMarketDataEvents(MarketData, Symbols, Config, Algorithm);
         }
+
         //Load the config from the database and set it in the services.
         public void ReadDatabaseConfig()
         {
@@ -52,11 +51,14 @@ namespace CryptoTrading.App.Process
             ArchiveHelper.StoreTradesToDb(completedTrades, Config);
 
         }
-        //Start Streaming
-        public void StartProcessing()
+
+        public bool IsRunning => Controller.IsActive;
+        private ITaskController Controller { get; set; }
+        public async Task StartProcessing()
         {
-            RunningProcess = new Task(() => MarketData.StartStream(taskToken));
-            RunningProcess.Start();
+            Controller = MarketData.GetTaskController();
+            Controller.Begin();
+            await Controller.Task;
         }
         //Build the service objects, some properties are linked in the constuctor but they can be set here.
 
@@ -86,6 +88,7 @@ namespace CryptoTrading.App.Process
             {
                 newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x));
                 ProcessHelper.WireMarketDataEvents(MarketData, newSymbols, Config, Algorithm);
+                MarketData.Configure(Config);
             }
 
             if (ProcessHelper.HasSymbols(false,Symbols, symbols, out var removeSymbols))
@@ -104,11 +107,9 @@ namespace CryptoTrading.App.Process
         {
             ReadDatabaseConfig();
             if (!Config.EndProcess) return;
-            taskToken.Cancel();
+            Controller.CancelAsync();
             Config.EndProcess = false;
             Config.Update();
         }
-
-        public bool IsRunning => !RunningProcess.IsCompleted;
     }
 }

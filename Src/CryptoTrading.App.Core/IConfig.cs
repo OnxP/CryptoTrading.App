@@ -27,6 +27,7 @@ namespace CryptoTrading.App.Core
         double StartBnbAmount { get; set; }
         bool UseFixedAmount { get; set; }
         double FixedAmount { get; set; }
+        double PercentDailyVolume { get; set; }
         void Update();
         void SetContext(DbContext context);
     }

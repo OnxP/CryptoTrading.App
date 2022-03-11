@@ -6,9 +6,9 @@ namespace CryptoTrading.App.Core.BinanceAccount
 {
     internal class BinanceAccountConfig :IAccountConfig
     {
-        private BinanceApi Api { get;}
-        private BinanceApiUser User { get; }
-        public BinanceAccountConfig(BinanceApi api,BinanceApiUser user)
+        private IBinanceApi Api { get;}
+        private IBinanceApiUser User { get; }
+        public BinanceAccountConfig(IBinanceApi api,IBinanceApiUser user)
         { 
             Api = api;
             User = user;

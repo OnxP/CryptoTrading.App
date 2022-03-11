@@ -39,7 +39,7 @@ namespace CryptoTrading.App.MarketData
             To = to;
         }
 
-        public override void Configure(IRequest request)
+        public void Configure(IRequest request)
         {
             var configuration = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
@@ -91,9 +91,15 @@ namespace CryptoTrading.App.MarketData
             Configure(new CancelRequest(0,"TEST"));
         }
 
-        public void StartStream(CancellationTokenSource ct)
+        public Task StartStream(CancellationToken ct)
         {
-            StartStream();
+            return new Task(StartStream);
+        }
+
+        public ITaskController GetTaskController()
+        {
+            var controller = new TaskController(StartStream);
+            return controller;
         }
 
         public void StartStream()

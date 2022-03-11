@@ -6,7 +6,7 @@ namespace CryptoTrading.App.Broker
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddTestBroker(this IServiceCollection services,IConfig config)
+        public static IServiceCollection AddBroker(this IServiceCollection services,IConfig config)
         {
             switch (config.RunType)
             {
@@ -14,6 +14,8 @@ namespace CryptoTrading.App.Broker
                     services.AddTransient<IMarket, TestMarket>();
                     break;
                 case RunTypeEnum.LiveTesting:
+                    services.AddTransient<IMarket, TestLiveMarket>();
+                    break;
                 case RunTypeEnum.Live:
                     services.AddTransient<IMarket, LiveMarket>();
                     break;

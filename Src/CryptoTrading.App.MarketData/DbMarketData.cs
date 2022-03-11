@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Binance.Utility;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -34,7 +35,7 @@ namespace CryptoTrading.App.MarketData
         public int TotalNumberOfRows { get; set; }
         public int RequestRows { get; set; }
 
-        private CancellationTokenSource CancellationToken { get; set; }
+        private CancellationToken CancellationToken { get; set; }
 
         private string SQL_HISTORIC_QUERY = @"
 SELECT DISTINCT [ID]
@@ -78,17 +79,12 @@ SELECT DISTINCT [ID]
   FETCH NEXT @p4 ROWS ONLY
 ";
 
-        public override void Configure(IRequest request)
-        {
-            //context = new CryptoDbContext();
-        }
-
         public void Configure(IConfig request)
         {
             throw new NotImplementedException();
         }
 
-        public void StartStream(CancellationTokenSource ct)
+        public async Task StartStream(CancellationToken ct)
         {
             try
             {
@@ -103,12 +99,20 @@ SELECT DISTINCT [ID]
             }
         }
 
+        //public Task StartStream(CancellationToken ct)
+        //{
+        //    CancellationToken = ct;
+        //    return new Task(StartStream);
+        //}
+
+        public ITaskController GetTaskController()
+        {
+            var controller = new TaskController(StartStream);
+            return controller;
+        }
+
         private void StreamData()
         {
-            //foreach (var item in subscribers)
-            //{
-            //    _data.LoadData(SQL_STREAM_QUERY, From, To, item.Key.symbol, (int)item.Key.interval);
-            //}
             _mangement.BuildTimeKeeper(From, To);
 
             _mangement.AddMarketStream(InvokeCandleStick);
@@ -116,8 +120,6 @@ SELECT DISTINCT [ID]
                 subscribers.Keys.Select(x => x.symbol).ToList(), (int)subscribers.Keys.Select(x => x.interval).First(), RequestRows*2, 0);
             RequestRows = rows;
             TotalNumberOfRows = rows;
-            //_data.Initialise(From, To, subscribers.Keys.Select(x => x.symbol).ToList(),
-            //    subscribers.Keys.Select(x => x.interval).First());
 
             _mangement.StartTimeKeeper(CancellationToken);
         }

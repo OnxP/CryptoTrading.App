@@ -13,7 +13,7 @@ namespace CryptoTrading.App.Core.Database
 
         void BuildTimeKeeper(DateTime from, DateTime dateTime);
         void AddMarketStream(Action invokeCandleStick);
-        void StartTimeKeeper(CancellationTokenSource cancellationToken);
+        void StartTimeKeeper(CancellationToken cancellationToken);
         void AddStopLimitStream(Action invokeCandleStick);
         void RemoveStopLimitStream();
     }

@@ -9,8 +9,6 @@ namespace CryptoTrading.App.MarketData
 {
     public abstract class AbstractMarketData : IMarketDataEvents
     {
-        public abstract void Configure(IRequest request);
-
         protected static readonly object Sync = new object();
 
         protected static void HandleError(Exception e)
@@ -20,8 +18,6 @@ namespace CryptoTrading.App.MarketData
                 Console.WriteLine(e.Message);
             }
         }
-
-
         protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>> historicDataSubscribers = 
             new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>>();
         protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> subscribers = 

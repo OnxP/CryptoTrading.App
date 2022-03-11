@@ -76,7 +76,7 @@ namespace CryptoTrading.App.Core.Trade
 
         public ITransaction CreateNewTransaction(ITradeRequest request)
         {
-            decimal quoteQuantity = !request.FixedAmount ? SellPosition.FreeAmount * (decimal)request.Amount : (decimal)request.Amount;
+            decimal quoteQuantity = request.CalculateQuantity(SellPosition.FreeAmount, SellPosition.NonFreeAmount);
             var quantity = quoteQuantity / request.Price;
 
             var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(quantity), 
