@@ -4,6 +4,7 @@ using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -13,7 +14,7 @@ namespace CryptoTrading.App.Monitor
         {
             services.AddScoped<ITradeProcessor, TradeProcessor>();
             services.AddScoped<ITradeFactory, TradeFactory>();
-            services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(masterServices.GetService<IMarketMonitor>()));
+            services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(masterServices.GetService<ILogger<TradeMonitor>>(),masterServices.GetService<IMarketMonitor>()));
             services.AddScoped<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
             services.AddScoped<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ITradeFactory>(),dictionaryPositions));
             return services;

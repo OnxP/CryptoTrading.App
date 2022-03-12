@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Binance.Utility;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -16,17 +17,18 @@ namespace CryptoTrading.App.MarketData
     {
         ICandleStickManagement _mangement;
         IDbData _data;
-        
+        private ILogger<DbMarketData> Logger { get; set; }
         public DbMarketData(ICandleStickManagement management, IDbData data)
         {
             _mangement = management;
             _data = data;
         }
 
-        public DbMarketData(ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
+        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
         {
             From = from;
             To = to;
+            Logger = logger;
         }
 
         public DateTime From { get; set; }
@@ -126,6 +128,7 @@ SELECT DISTINCT [ID]
 
         public void InvokeCandleStick()
         {
+            Logger.LogDebug($"Finished Processing tick :{_mangement.CurrentTick}");
             var candleSticks = _data.GetData(_mangement.CurrentTick, false).ToList();
             if (candleSticks.All(x => x.Value == null))
             {

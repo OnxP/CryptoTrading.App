@@ -10,6 +10,7 @@ using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -33,19 +34,21 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        public TradeProcessor(IMarketMonitorFactory factory)
+        private ILogger<TradeProcessor> Logger { get; set; }
+        public TradeProcessor(ILogger<TradeProcessor> logger ,IMarketMonitorFactory factory)
         {
             TradeFactory = factory;
             OrderMonitors = new List<ITradeMonitor>();
             KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
+            Logger = logger;
             ConfigureMessageBroker();
         }
-        public TradeProcessor(IPositions positions, IMarketMonitorFactory factory):this(factory)
+        public TradeProcessor(ILogger<TradeProcessor> logger,IPositions positions, IMarketMonitorFactory factory):this(logger,factory)
         {
             Positions = positions;
         }
 
-        public TradeProcessor(IPositions positions, IMarketMonitorFactory factory, IKey key): this(positions,factory)
+        public TradeProcessor(IPositions positions, ILogger<TradeProcessor> logger,IMarketMonitorFactory factory, IKey key): this(logger,positions, factory)
         {
             KeyValue = key.KeyValue;
         }
@@ -83,6 +86,7 @@ namespace CryptoTrading.App.Monitor
                             break;
                         case TransactionType.MarketTransaction:
                             trade.UpdateInitialTransaction(order);
+                            Logger.LogInformation($"Completed Trade for {order.Symbol} Q: {order.ExecutedQuantity} Price: {order.Price} originalQ: {order.OriginalQuantity} Original Price: {trade.Trade.CurrentPrice}");
                             break;
                     }
                 }
@@ -125,7 +129,7 @@ namespace CryptoTrading.App.Monitor
                 {
                     //do you want to scale in again
                 }
-                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<Config.NoOfTrades)
+                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
                 {
                     DbCandleStickManagement.PauseFlow = true;
                     //need to pause the data stream.
@@ -136,6 +140,7 @@ namespace CryptoTrading.App.Monitor
                     //create Market Order
                     var marketOrder = new MarketRequest(trade.CurrentTransaction);
                     MessageBroker.Instance.Publish<IMarketRequest>(KeyValue,trade.CurrentTransaction, marketOrder);
+                    Logger.LogInformation($"Place Trade for {trade.Symbol} Q: {trade.Quantity} BTC amt: {trade.CurrentTransaction.Quote.Quantity}");
                 }
             }
         }

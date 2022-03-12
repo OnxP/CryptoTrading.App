@@ -6,7 +6,7 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public static class RequestBuilder
     {
-        public static ITradeRequest BuildTradeRequest(double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume)
+        public static ITradeRequest BuildTradeRequest(double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume, decimal volumeLimit)
         {
             var tradeRequest = new BuyTradeRequest();
             Symbol symbol = Symbol.Cache.Get(ticker);
@@ -18,6 +18,7 @@ namespace CryptoTrading.App.Core.TradeRequest
             tradeRequest.RequestDateTime = dateTime;
             tradeRequest.StopLimitTracker = stopLimitTracker;
             tradeRequest.Volume = volume;
+            tradeRequest.VolumeLimit = volumeLimit;
             return tradeRequest;
         }
     }

@@ -6,6 +6,7 @@ using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -14,9 +15,11 @@ namespace CryptoTrading.App.Monitor
     //The trade is considered to be live if there are open transactions
     class TradeMonitor : ITradeMonitor
     {
-        public TradeMonitor(IMarketMonitor monitor)
+        private ILogger<TradeMonitor> Logger { get; set; }
+        public TradeMonitor(ILogger<TradeMonitor>logger,IMarketMonitor monitor)
         {
             marketMonitor = monitor;
+            Logger = logger;
         }
 
         public ITrade Trade { get; set; }
@@ -45,6 +48,7 @@ namespace CryptoTrading.App.Monitor
                     //unsubscribe to monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Tracker.IsOpen = false;
+                    Logger.LogInformation($"Completed Trade {Trade.Symbol} finalPrice {Trade.CurrentTransaction.Price} profit {(Trade.Profit/100):P}");
                     Dispose();
                     return;
                 }
