@@ -1,9 +1,11 @@
 ﻿using System;
+using Binance;
 using CryptoTrading.App.Core.BinanceAccount;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Core
 {
@@ -41,9 +43,11 @@ namespace CryptoTrading.App.Core
                     services.AddSingleton<IAccountConfig, DatabaseAccountConfig>(provider=> new DatabaseAccountConfig(config));
                     break;
                 case RunTypeEnum.LiveTesting:
-                    break;
                 case RunTypeEnum.Live:
-                    services.AddSingleton<IAccountConfig,BinanceAccountConfig>();
+                    services.AddSingleton<IAccountConfig, BinanceAccountConfig>((provider =>
+                        new BinanceAccountConfig(provider.GetService<IBinanceApi>(),
+                            provider.GetService<IBinanceApiUserProvider>()
+                                ?.CreateUser(config.ApiKey, config.ApiKeySecret))));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

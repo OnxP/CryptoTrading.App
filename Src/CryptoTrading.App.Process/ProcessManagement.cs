@@ -43,7 +43,7 @@ namespace CryptoTrading.App.Process
             try
             {
 
-                LoopProcess();
+                var task = LoopProcess().ConfigureAwait(true);
                 //loops over the database checks for updates every 2 minutes.
                 await Process.StartProcessing();
 
@@ -61,6 +61,7 @@ namespace CryptoTrading.App.Process
 
         private async Task LoopProcess()
         {
+            await Task.Delay(1000);
             while (true)
             {
                 if (!Process.IsRunning) break;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Binance;
 
 namespace CryptoTrading.App.Core.BinanceAccount
@@ -15,8 +16,9 @@ namespace CryptoTrading.App.Core.BinanceAccount
         }
         public List<Symbol> LoadCurrencies()
         {
-            var symbols = Api.GetSymbolsAsync();
-            return symbols.Result.ToList();
+            var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset == Asset.BTC);
+            Symbol.UpdateCacheAsync(Api).ConfigureAwait(false);
+            return symbols.ToList();
         }
 
         public List<AccountBalance> LoadPositions()

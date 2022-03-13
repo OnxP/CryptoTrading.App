@@ -20,6 +20,7 @@ namespace CryptoTrading.App.MarketData
         }
         protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>> historicDataSubscribers = 
             new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>>();
+
         protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> subscribers = 
             new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>>();
         //public events 

@@ -16,7 +16,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             IsOpen = true;
 
         }
-
+        
         public override void MoveStopLimit()
         {
             TargetPrice *= 1+ Increment;

@@ -1,6 +1,8 @@
 ﻿using System;
+using Binance;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Broker
 {
@@ -14,10 +16,10 @@ namespace CryptoTrading.App.Broker
                     services.AddTransient<IMarket, TestMarket>();
                     break;
                 case RunTypeEnum.LiveTesting:
-                    services.AddTransient<IMarket, TestLiveMarket>();
+                    services.AddTransient<IMarket, TestLiveMarket>(provider=> new TestLiveMarket(provider.GetService<ILogger<TestLiveMarket>>(),provider.GetService<IBinanceApi>(),provider.GetService<IBinanceApiUserProvider>()?.CreateUser(config.ApiKey,config.ApiKeySecret)));
                     break;
                 case RunTypeEnum.Live:
-                    services.AddTransient<IMarket, LiveMarket>();
+                    services.AddTransient<IMarket, LiveMarket>(provider => new LiveMarket(provider.GetService<ILogger<LiveMarket>>(), provider.GetService<IBinanceApi>(), provider.GetService<IBinanceApiUserProvider>()?.CreateUser(config.ApiKey, config.ApiKeySecret)));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -28,6 +28,10 @@ namespace CryptoTrading.App.Core
         bool UseFixedAmount { get; set; }
         double FixedAmount { get; set; }
         double PercentDailyVolume { get; set; }
+        string ApiKey { get; set; }
+        string ApiKeySecret { get; set; }
+        int NumberOfCandleSticksToLoad { get; set; }
+
         void Update();
         void SetContext(DbContext context);
     }

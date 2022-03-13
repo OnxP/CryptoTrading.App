@@ -21,6 +21,9 @@ namespace CryptoTrading.App.Core.Database.Config
         public bool UseFixedAmount { get; set; }
         public double FixedAmount { get; set; }
         public double PercentDailyVolume { get; set; }
+        public string ApiKey { get; set; }
+        public string ApiKeySecret { get; set; }
+        public int NumberOfCandleSticksToLoad { get; set; }
 
         public void Update()
         {

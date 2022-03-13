@@ -129,7 +129,7 @@ namespace CryptoTrading.App.Monitor
                 {
                     //do you want to scale in again
                 }
-                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
+                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<Config.NoOfTrades)
                 {
                     DbCandleStickManagement.PauseFlow = true;
                     //need to pause the data stream.

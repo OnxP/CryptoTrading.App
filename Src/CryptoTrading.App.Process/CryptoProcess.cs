@@ -52,10 +52,11 @@ namespace CryptoTrading.App.Process
 
         }
 
-        public bool IsRunning => Controller.IsActive;
+        public bool IsRunning => Controller?.IsActive ?? true;
         private ITaskController Controller { get; set; }
         public async Task StartProcessing()
         {
+            MarketData.Configure(Config);
             Controller = MarketData.GetTaskController();
             Controller.Begin();
             await Controller.Task;

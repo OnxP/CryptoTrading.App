@@ -79,7 +79,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                     StopLimitTrackers.TargetPrice = closePrice.Close + multiple * StopLimitTrackers.Risk;
                     StopLimitTrackers.StopLimitPrice = closePrice.Close - multiple;
                 }
-                //LogResult(1);
+                LogResult(1);
                 return 1;
             }
             //check if long is trading sideways, need more entries to determin that!

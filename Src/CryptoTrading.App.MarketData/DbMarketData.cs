@@ -137,8 +137,8 @@ SELECT DISTINCT [ID]
 
             //var task = LoadNextCandleSticksTask(candleSticks.Select(x => x.Key).ToList());
 
-            candleSticks.OrderBy(x => x.Value.Volume)//.ToList().ForEach
-                .AsParallel().WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0))).ForAll
+            candleSticks.OrderBy(x => x.Value.Volume).ToList().ForEach
+                //c.AsParallel().WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0))).ForAll
                 (x =>
                 {
                     if (!subscribers.TryGetValue((x.Value.Symbol, x.Value.Interval), out var list)) return;
