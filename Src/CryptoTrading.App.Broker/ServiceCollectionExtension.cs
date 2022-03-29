@@ -16,7 +16,8 @@ namespace CryptoTrading.App.Broker
                     services.AddTransient<IMarket, TestMarket>();
                     break;
                 case RunTypeEnum.LiveTesting:
-                    services.AddTransient<IMarket, TestLiveMarket>(provider=> new TestLiveMarket(provider.GetService<ILogger<TestLiveMarket>>(),provider.GetService<IBinanceApi>(),provider.GetService<IBinanceApiUserProvider>()?.CreateUser(config.ApiKey,config.ApiKeySecret)));
+                    //services.AddTransient<IMarket, TestLiveMarket>(provider=> new TestLiveMarket(provider.GetService<ILogger<TestLiveMarket>>(),provider.GetService<IBinanceApi>(),provider.GetService<IBinanceApiUserProvider>()?.CreateUser(config.ApiKey,config.ApiKeySecret)));
+                    services.AddTransient<IMarket, TestMarket>();
                     break;
                 case RunTypeEnum.Live:
                     services.AddTransient<IMarket, LiveMarket>(provider => new LiveMarket(provider.GetService<ILogger<LiveMarket>>(), provider.GetService<IBinanceApi>(), provider.GetService<IBinanceApiUserProvider>()?.CreateUser(config.ApiKey, config.ApiKeySecret)));
@@ -25,6 +26,7 @@ namespace CryptoTrading.App.Broker
                     throw new ArgumentOutOfRangeException();
             }
             services.AddTransient<IBroker, CryptoBroker>();
+
             return services;
         }
 

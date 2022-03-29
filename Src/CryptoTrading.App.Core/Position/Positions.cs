@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Core.Position
 {
@@ -15,16 +16,17 @@ namespace CryptoTrading.App.Core.Position
                 _positions.Add(asset, new Position(asset, 0.0m));
             return _positions[asset];
         }
-
-        public Positions(ITradeFactory factory, Dictionary<string, IPosition> positionsProvider) : this(factory)
+        private ILogger<Positions> Logger { get; set; }
+        public Positions(ILogger<Positions> logger, ITradeFactory factory, Dictionary<string, IPosition> positionsProvider) : this(logger,factory)
         {
             _factory = factory;
             _positions = positionsProvider;
             //_calculator = calculator;
         }
 
-        public Positions(ITradeFactory factory)
+        public Positions(ILogger<Positions> logger, ITradeFactory factory)
         {
+            Logger = logger;
             _factory = factory;
             _positions = new Dictionary<string, IPosition>();
         }
@@ -59,11 +61,19 @@ namespace CryptoTrading.App.Core.Position
             buyPosition.IsLocked = false;
             return trade;
         }
-
+        //
 
         public bool CheckRequest(ITradeRequest what)
         {
-            return CheckOpenPosition(what.BaseSymbol) && CheckBalance(what);
+            return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what);
+        }
+
+        public void AjdustPosition(string accountPositionAsset, decimal accountPositionFree)
+        {
+            Logger.LogInformation($"Ajusting Position from Binance {accountPositionAsset} - {accountPositionFree}");
+
+            var pos = GetPosition(accountPositionAsset);
+            pos.CreateTransaction(accountPositionFree);
         }
     }
 }

@@ -13,6 +13,7 @@ namespace CryptoTrading.App.Core.Trade
         DateTime? RequestDateTime { get; set; }
         IStopLimitTracker StopLimitTracker { get; set; }
         CandlestickInterval Interval { get; set; }
+        decimal Volume { get; set; }
         decimal CalculateQuantity(decimal freeAmount, decimal nonFreeAmount);
     }
 }

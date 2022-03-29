@@ -2,6 +2,7 @@
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.Position;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -11,9 +12,10 @@ namespace CryptoTrading.App.Monitor
 
         private readonly Dictionary<string, IPosition> _positions;
 
-        public TestPositions(ITradeFactory factory, Dictionary<string, IPosition> positionsProvider):this(factory)
+        private ILogger<TestPositions> Logger { get; set; }
+        public TestPositions(ILogger<TestPositions> logger, ITradeFactory factory, Dictionary<string, IPosition> positionsProvider) : this(factory)
         {
-            _factory = factory;
+            Logger = logger;
             _positions = positionsProvider;
             //_calculator = calculator;
         }
@@ -60,6 +62,14 @@ namespace CryptoTrading.App.Monitor
         public bool CheckRequest(ITradeRequest what)
         {
             return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what);
+        }
+
+        public void AjdustPosition(string accountPositionAsset, decimal accountPositionFree)
+        {
+            Logger.LogInformation($"Ajusting Position from Binance {accountPositionAsset} - {accountPositionFree}");
+
+            var pos = GetPosition(accountPositionAsset);
+            pos.CreateTransaction(accountPositionFree);
         }
     }
 }

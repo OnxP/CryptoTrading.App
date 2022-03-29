@@ -32,8 +32,7 @@ namespace CryptoTrading.App.Process
 
             foreach (var accountPosition in accountPositions)
             {
-                var position = tradeProcessorPositions.GetPosition(accountPosition.Asset);
-                position.CreateTransaction(accountPosition.Free);
+                tradeProcessorPositions.AjdustPosition(accountPosition.Asset,accountPosition.Free);
             }
         }
     }

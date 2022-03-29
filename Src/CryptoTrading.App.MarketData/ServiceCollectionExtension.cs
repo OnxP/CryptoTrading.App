@@ -55,6 +55,8 @@ namespace CryptoTrading.App.MarketData
                     services.AddSingleton<IMarketMonitor, DbMarketMonitor>();
                     break;
                 case RunTypeEnum.LiveTesting:
+                    services.AddTransient<IMarketMonitor, TestLiveMarketMonitor>();
+                    break;
                 case RunTypeEnum.Live:
                     services.AddTransient<IMarketMonitor, LiveMarketMonitor>();
                     break;

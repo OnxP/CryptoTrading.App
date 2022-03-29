@@ -81,10 +81,6 @@ SELECT DISTINCT [ID]
   FETCH NEXT @p4 ROWS ONLY
 ";
 
-        public void Configure(IConfig request)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task StartStream(CancellationToken ct)
         {
@@ -234,6 +230,11 @@ SELECT DISTINCT [ID]
             }
             catch
             { }
+        }
+
+        public override void Configure(IConfig request)
+        {
+            throw new NotImplementedException();
         }
     }
 }

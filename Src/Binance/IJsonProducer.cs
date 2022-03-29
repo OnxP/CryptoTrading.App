@@ -11,5 +11,6 @@ namespace Binance
         /// The message event.
         /// </summary>
         event EventHandler<JsonMessageEventArgs> Message;
+        event EventHandler<JsonMessageEventArgs> PostMessage;
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Core.Position
 {

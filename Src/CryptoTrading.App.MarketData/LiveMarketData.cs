@@ -9,6 +9,7 @@ using Binance;
 using Binance.Client;
 using Binance.Utility;
 using Binance.WebSocket;
+using CryptoTrading.App.Core.RequestTracker;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
@@ -31,9 +32,10 @@ namespace CryptoTrading.App.MarketData
             _client = candlestickClient;
             _webSocket = webSocket;
             _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
+            _webSocket.PostMessage += (s, e) => RequestTracker.Instance.SubmitRequests();
         }
 
-        public void Configure(IConfig request)
+        public override void Configure(IConfig request)
         {
             if (loadHistoric)
             {

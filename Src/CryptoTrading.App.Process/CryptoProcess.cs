@@ -7,6 +7,7 @@ using Binance;
 using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
+using CryptoTrading.App.Core.RequestTracker;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Process
@@ -89,13 +90,13 @@ namespace CryptoTrading.App.Process
             {
                 newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x));
                 ProcessHelper.WireMarketDataEvents(MarketData, newSymbols, Config, Algorithm);
-                MarketData.Configure(Config);
             }
 
             if (ProcessHelper.HasSymbols(false,Symbols, symbols, out var removeSymbols))
             {
                 ProcessHelper.RemoveMarketDataEvents(MarketData, removeSymbols, Config);
             }
+            MarketData.Configure(Config);
         }
 
         public void RefreshPositionsData()

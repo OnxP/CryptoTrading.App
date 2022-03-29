@@ -6,6 +6,7 @@ using Binance;
 using Binance.Client;
 using Binance.Utility;
 using Binance.WebSocket;
+using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
@@ -21,13 +22,15 @@ namespace CryptoTrading.App.MarketData
     //Processing logic
     //Initial - Configure Stoploss Monitor from Open trade. and set a stop limit order.
     //Continuous - Monitor price and once it hits a threshold reset stoploss to limit order X% below threshold then adjust threshold
+    
 
+    //this needs to send a signal back to Trade Processor with a ready. then the trade processor can decide on which order to execute the trades.
     public class LiveMarketMonitor : AbstractMarketData, IMarketMonitor
     {
-        private ICandlestickClient _client;
-        private IBinanceWebSocketStream _webSocket;
-        private IBinanceApi _api;
-        private IBinanceApiUser _user;
+        protected ICandlestickClient _client;
+        protected IBinanceWebSocketStream _webSocket;
+        protected IBinanceApi _api;
+        protected IBinanceApiUser _user;
         public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger,IBinanceApi api, ICandlestickClient candlestickClient, IBinanceWebSocketStream webSocket)
         {
             _api = api;
@@ -38,6 +41,11 @@ namespace CryptoTrading.App.MarketData
         }
 
         private List<string> symbols = new List<string>();
+
+        protected LiveMarketMonitor()
+        {
+        }
+
         private ITaskController Controller { get; set; }
         public virtual bool CheckOrder(ITransaction transaction)
         {
@@ -74,6 +82,11 @@ namespace CryptoTrading.App.MarketData
         {
             Controller = new RetryTaskController(_webSocket.StreamAsync);
             Controller.Error += (s, e) => HandleError(e.Exception);
+        }
+
+        public override void Configure(IConfig request)
+        {
+            throw new NotImplementedException();
         }
     }
 }

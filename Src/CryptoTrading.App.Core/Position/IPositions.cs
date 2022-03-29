@@ -9,5 +9,6 @@ namespace CryptoTrading.App.Core.Position
         ITrade CreateTrade(ITradeRequest request);
         bool CheckBalance(ITradeRequest what);
         bool CheckRequest(ITradeRequest what);
+        void AjdustPosition(string accountPositionAsset, decimal accountPositionFree);
     }
 }

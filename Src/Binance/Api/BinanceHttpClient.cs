@@ -258,6 +258,7 @@ namespace Binance.Api
                     case (HttpStatusCode)418:
                         throw new BinanceRequestRateLimitIpBanException(response.ReasonPhrase, errorCode, errorMessage);
                     default:
+                        
                         throw new BinanceHttpException(response.StatusCode, response.ReasonPhrase, errorCode, errorMessage);
                 }
             }

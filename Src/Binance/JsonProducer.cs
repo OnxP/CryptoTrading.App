@@ -22,7 +22,20 @@ namespace Binance
             }
             remove => _message -= value;
         }
+
+        public event EventHandler<JsonMessageEventArgs> PostMessage
+        {
+            add
+            {
+                if (_postMessage == null || !_postMessage.GetInvocationList().Contains(value))
+                {
+                    _postMessage += value;
+                }
+            }
+            remove => _postMessage -= value;
+        }
         private EventHandler<JsonMessageEventArgs> _message;
+        private EventHandler<JsonMessageEventArgs> _postMessage;
 
         #endregion Public Events
 
@@ -61,7 +74,11 @@ namespace Binance
         /// <param name="args">The JSON message event args (required).</param>
         protected void OnMessage(JsonMessageEventArgs args)
         {
-            try { _message?.Invoke(this, args); }
+            try
+            {
+                _message?.Invoke(this, args);
+                _postMessage?.Invoke(this, args);
+            }
             catch (Exception e)
             {
                 Logger?.LogWarning(e, $"{GetType().Name}: Unhandled {nameof(Message)} event handler exception.");

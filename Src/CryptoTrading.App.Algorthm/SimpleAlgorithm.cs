@@ -7,9 +7,11 @@ using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using CryptoTrading.App.Core.RequestTracker;
 
 namespace CryptoTrading.App.Algorithm
 {
@@ -53,18 +55,22 @@ namespace CryptoTrading.App.Algorithm
             //     candlesticks.Last().CloseTime, candlesticks.Last().Volume);
         }
 
+
+
         public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
         {
             try
             {
+                CandleStickTracker.Instance.UpdateCandleStick(candlestickEventArgs);
                 if (!candlestickEventArgs.IsFinal) return;
                 _candleSticks.Add(candlestickEventArgs.Candlestick);
                 //Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
                 var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.Volume);
-                Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
+                //Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
                 if (request==null) return;
                 if (request.Amount <= 0) return;
-                MessageBroker.Instance.Publish(KeyValue, this, request);
+                RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, request, KeyValue);
+                //MessageBroker.Instance.Publish(KeyValue, this, request);
             }
             catch(Exception e)
             {

@@ -43,11 +43,16 @@ namespace CryptoTrading.App.Core
                     services.AddSingleton<IAccountConfig, DatabaseAccountConfig>(provider=> new DatabaseAccountConfig(config));
                     break;
                 case RunTypeEnum.LiveTesting:
+                    services.AddSingleton<IAccountConfig, TestBinanceAccountConfig>(provider =>
+                        new TestBinanceAccountConfig(config,provider.GetService<IBinanceApi>(),
+                            provider.GetService<IBinanceApiUserProvider>()
+                                ?.CreateUser(config.ApiKey, config.ApiKeySecret)));
+                    break;
                 case RunTypeEnum.Live:
-                    services.AddSingleton<IAccountConfig, BinanceAccountConfig>((provider =>
+                    services.AddSingleton<IAccountConfig, BinanceAccountConfig>(provider =>
                         new BinanceAccountConfig(provider.GetService<IBinanceApi>(),
                             provider.GetService<IBinanceApiUserProvider>()
-                                ?.CreateUser(config.ApiKey, config.ApiKeySecret))));
+                                ?.CreateUser(config.ApiKey, config.ApiKeySecret)));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

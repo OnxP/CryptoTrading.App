@@ -86,7 +86,7 @@ namespace CryptoTrading.App.MarketData
             _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
         }
 
-        public void Configure(IConfig request)
+        public override void Configure(IConfig request)
         {
             Configure(new CancelRequest(0,"TEST"));
         }
@@ -298,7 +298,6 @@ namespace CryptoTrading.App.MarketData
                 yield return from.AddDays(daysdiff - j);
             }
         }
-
 
     }
 }

@@ -62,13 +62,14 @@ namespace CryptoTrading.App.Process
         private async Task LoopProcess()
         {
             await Task.Delay(1000);
+            await Task.Delay((60 - DateTime.Now.Second) * 1000);
             while (true)
             {
                 if (!Process.IsRunning) break;
                 //Change the sleep count to time of day. 10 minutes past the hour...etc.
                 if (DateTime.Now.Minute % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
                 if (DateTime.Now.Minute == 25) LogProcess(Process.RefreshPositionsData); //1 Hour
-                if (DateTime.Now.Hour == 1 && DateTime.Now.Minute == 10) // 24 Hours
+                if (DateTime.Now.Hour == 21 && DateTime.Now.Minute == 17) // 24 Hours
                 {
                     LogProcess(Process.ArchiveAndReport);
                     LogProcess(Process.RefreshSymbols);
