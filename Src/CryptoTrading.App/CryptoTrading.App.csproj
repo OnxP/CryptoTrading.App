@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <BaseOutputPath>C:\GitHub\CryptoTrading.App\Release</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

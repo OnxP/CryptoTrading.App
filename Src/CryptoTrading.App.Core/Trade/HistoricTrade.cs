@@ -16,7 +16,7 @@ namespace CryptoTrading.App.Core.Trade
         public HistoricTrades(ITrade trade)
         {
             SoldPrice = Convert.ToDouble(trade.StartPrice);
-            Symbol = trade.Symbol;
+            Symbol = trade.Pair;
             Quantity = Convert.ToDouble(trade.Quantity);
             Profit = Convert.ToDouble(trade.Profit);
             BtcProfit = Convert.ToDouble(trade.BtcProfit);

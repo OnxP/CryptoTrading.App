@@ -1,17 +1,6 @@
-*.dll
-*.pdb
-*.cache
-*.v2
-*.suo
-*.user
 _ReSharper.*
 bin
 obj
 packages
-*.cache
-*.v2
 Src/CryptoTrading.App/.vs/CryptoTrading.App/v16/.suo
-*.cache
-*.dll
-*.pdb
 Src/CryptoTrading.App.Config/Program.cs

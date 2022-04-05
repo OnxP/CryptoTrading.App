@@ -24,6 +24,8 @@ namespace CryptoTrading.App.Core.TradeRequest
             return q;
         }
 
+
+
         public bool FixedAmount { get; set; }
         public double Amount { get; set; }
         public decimal Volume { get; set; }

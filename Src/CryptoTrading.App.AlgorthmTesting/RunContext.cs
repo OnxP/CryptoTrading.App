@@ -118,7 +118,7 @@ namespace CryptoTrading.App.AlgorithmTesting
 
         private string PrintTrades(List<ITrade> trades)
         {
-            return trades.ToStringTable(x => x.Symbol,
+            return trades.ToStringTable(x => x.Pair,
                 x => x.StartPrice, //.FirstTransaction.Price.ToString("0.#########"), 
                 x => x.Price,//.CurrentTransaction.Price.ToString("0.#########"), 
                 x => x.Quantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 

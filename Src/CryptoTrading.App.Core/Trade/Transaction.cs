@@ -30,7 +30,8 @@ namespace CryptoTrading.App.Core.Trade
                 case OrderStatus.New:
                     break;
                 case OrderStatus.PartiallyFilled:
-                    throw new NotImplementedException();
+                    //wait for fill fill.
+                    break;
                 case OrderStatus.Filled:
                     UpdateTransactions(order);
                     SetTransactionStatus(TransactionLegStatus.Completed);
@@ -51,12 +52,12 @@ namespace CryptoTrading.App.Core.Trade
             if(order.Side == OrderSide.Buy)
             {
                 Base.Quantity = order.ExecutedQuantity;
-                Quote.Quantity = -order.ExecutedQuantity * order.Price;
+                Quote.Quantity = -order.CummulativeQuoteAssetQuantity;
             }
             if (order.Side == OrderSide.Sell)
             {
                 Base.Quantity = -order.ExecutedQuantity;
-                Quote.Quantity = order.ExecutedQuantity * order.Price;
+                Quote.Quantity = order.CummulativeQuoteAssetQuantity;
             }
 
         }

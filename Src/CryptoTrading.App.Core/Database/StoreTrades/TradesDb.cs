@@ -20,7 +20,7 @@ namespace CryptoTrading.App.Core.Database.StoreTrades
             Increment = Convert.ToDouble(increment);
 
             Price = Convert.ToDouble(trade.Price);
-            Symbol = trade.Symbol;
+            Symbol = trade.Pair;
             Quantity = Convert.ToDouble(trade.Quantity);
             Profit = Convert.ToDouble(trade.Profit);
             StartPrice = Convert.ToDouble(trade.StartPrice);

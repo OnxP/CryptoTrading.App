@@ -6,7 +6,7 @@ namespace CryptoTrading.App.Core.Trade
     public interface ITrade
     {
         decimal Price { get; }
-        string Symbol { get; }
+        string Pair { get; }
         OrderSide OrderType { get; }
         decimal Quantity { get; }
         ITransaction CurrentTransaction { get; }

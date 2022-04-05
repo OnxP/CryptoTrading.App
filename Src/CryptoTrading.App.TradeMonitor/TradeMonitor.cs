@@ -48,7 +48,7 @@ namespace CryptoTrading.App.Monitor
                     //unsubscribe to monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Tracker.IsOpen = false;
-                    Logger.LogInformation($"Completed Trade {Trade.Symbol} finalPrice {Trade.CurrentTransaction.Price} profit {(Trade.Profit/100):P}");
+                    Logger.LogInformation($"Completed Trade {Trade.Pair} finalPrice {Trade.CurrentTransaction.Price} profit {(Trade.Profit/100):P}");
                     Dispose();
                     return;
                 }
@@ -90,7 +90,7 @@ namespace CryptoTrading.App.Monitor
                 if (Trade.CurrentTransaction.Order != null && Trade.CurrentTransaction.Order.Id != null )
                 {
                     orderId = Trade.CurrentTransaction.Order.Id;
-                    ICancelRequest request = new CancelRequest(orderId, Trade.Symbol);
+                    ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
                     MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, request);
 
                 }
@@ -114,7 +114,7 @@ namespace CryptoTrading.App.Monitor
             return $"{Symbol} - {currentCloseTime:s}";
         }
 
-        public string Symbol => Trade.Symbol;
+        public string Symbol => Trade.Pair;
 
         public string KeyValue { get; set; } = "1";
 

@@ -140,7 +140,7 @@ namespace CryptoTrading.App.Monitor
                     //create Market Order
                     var marketOrder = new MarketRequest(trade.CurrentTransaction);
                     MessageBroker.Instance.Publish<IMarketRequest>(KeyValue,trade.CurrentTransaction, marketOrder);
-                    Logger.LogInformation($"Place Trade for {trade.Symbol} Q: {trade.Quantity} BTC amt: {trade.CurrentTransaction.Quote.Quantity}");
+                    Logger.LogInformation($"Place Trade for {trade.Pair} Q: {trade.Quantity} BTC amt: {trade.CurrentTransaction.Quote.Quantity}");
                 }
             }
         }

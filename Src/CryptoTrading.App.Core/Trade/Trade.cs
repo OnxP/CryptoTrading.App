@@ -20,7 +20,7 @@ namespace CryptoTrading.App.Core.Trade
         public ITransaction CurrentTransaction => Transactions.Last();
         public List<ITransaction> Transactions { get; set; }
         public decimal Price => CurrentTransaction.Price;
-        public string Symbol => CurrentTransaction.Pair;
+        public string Pair => CurrentTransaction.Pair;
         public OrderSide OrderType => Math.Sign(CurrentTransaction.Base.Quantity) > 0 ? OrderSide.Buy : OrderSide.Sell;
         public decimal Quantity => CurrentTransaction.Base.Quantity;
         public bool Open { get; set; }
@@ -76,8 +76,8 @@ namespace CryptoTrading.App.Core.Trade
 
         public ITransaction CreateNewTransaction(ITradeRequest request)
         {
-            decimal quoteQuantity = request.CalculateQuantity(SellPosition.FreeAmount, SellPosition.NonFreeAmount); //!request.FixedAmount ? SellPosition.FreeAmount * (decimal)request.Amount : (decimal)request.Amount;
-            var quantity = quoteQuantity / request.Price;
+            var symbol = Symbol.Cache.Get(request.BaseSymbol + request.QuoteSymbol);
+            AdjustBasedOnSymbol(symbol, request.CalculateQuantity(SellPosition.FreeAmount, SellPosition.NonFreeAmount), request.Price, out var quoteQuantity, out var quantity);
 
             var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(quantity), 
                 SellPosition.CreatePendingTransaction(-quoteQuantity), 
@@ -85,10 +85,24 @@ namespace CryptoTrading.App.Core.Trade
             Transactions.Add(transaction);
             return transaction;
         }
+
+        private void AdjustBasedOnSymbol(Symbol symbol, decimal calculateQuantity, decimal price, out decimal quoteQuantity, out decimal baseQuantity)
+        {
+            quoteQuantity = AdjustForMinimum(symbol.Quantity,calculateQuantity);
+            baseQuantity = AdjustForMinimum(symbol.Price, quoteQuantity * price);
+        }
+
+        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
+        {
+            int count = BitConverter.GetBytes(decimal.GetBits(symbolQuantity.Increment)[3])[2];
+            return Decimal.Round(calculateQuantity,count);
+        }
+
         public ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null)
         {
+            var symbol = Symbol.Cache.Get(Pair);
             var buyQuantity = -Transactions.First().Base.Quantity;
-            var sellQuantity = Transactions.First().Base.Quantity * currentStopLimit;
+            var sellQuantity = AdjustForMinimum(symbol.Price, Transactions.First().Base.Quantity * currentStopLimit);
             var feeQuantity = Transactions.First().Fee.Quantity;
             var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity), 
                 SellPosition.CreatePendingTransaction(sellQuantity), 
