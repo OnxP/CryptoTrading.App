@@ -6,10 +6,10 @@ namespace CryptoTrading.App.Process
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddCryptoService(this IServiceCollection services)
+        public static IServiceCollection AddCryptoService(this IServiceCollection services,string databaseName)
         {
             services.AddSingleton<IProcessManagement,ProcessManagement>();
-            services.AddTransient<IProcess,CryptoProcess>(provider => new CryptoProcess(new CryptoDbConfigContext()));
+            services.AddTransient<IProcess,CryptoProcess>(provider => new CryptoProcess(new CryptoDbConfigContext(databaseName)));
             return services;
         }
     }

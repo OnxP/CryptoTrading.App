@@ -11,8 +11,9 @@ namespace CryptoTrading.App
         {
             try
             {
+                var database = string.IsNullOrEmpty(args[0]) ? "SQL-SERVER-2016" : args[0];
                 var services = new ServiceCollection()
-                    .AddCryptoService()
+                    .AddCryptoService(database)
                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Information)
                         .AddConsole()
