@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CryptoTrading.App": {
+      "commandName": "Project",
+      "commandLineArgs": "AnkurPC\\AnkurPC"
+    }
+  }
+}
