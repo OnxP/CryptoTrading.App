@@ -203,7 +203,7 @@ namespace Binance
         /// <param name="recvWindow"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task TestPlaceAsync(ClientOrder clientOrder, long recvWindow = default, CancellationToken token = default);
+        Task<Order> TestPlaceAsync(ClientOrder clientOrder, long recvWindow = default, CancellationToken token = default);
 
         /// <summary>
         /// Get order by ID.

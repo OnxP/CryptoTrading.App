@@ -40,25 +40,7 @@ namespace CryptoTrading.App.Broker
                 Quantity = trade.Quantity
             };
 
-            await _api.TestPlaceAsync(clientOrder);
-            var order = new Order(_user,
-                trade.Symbol,
-                1,
-                "",
-                trade.Price,
-                trade.Quantity,
-                trade.Quantity,
-                0,
-                OrderStatus.Filled,
-                TimeInForce.IOC,
-                OrderType.Market,
-                OrderSide.Buy,
-                0,
-                0,
-                DateTime.Now,
-                DateTime.Now,
-                true);
-            return order;
+            return await _api.TestPlaceAsync(clientOrder);
         }
 
         public async Task<Order> SetLimitOrder(IStopLimitRequest trade)
@@ -71,27 +53,7 @@ namespace CryptoTrading.App.Broker
                 Quantity = trade.Quantity
             };
 
-            await _api.TestPlaceAsync(clientOrder);
-            var order = new Order(_user,
-                trade.Symbol,
-                1,
-                "",
-                trade.StopPrice,
-                trade.Quantity,
-                trade.Quantity,
-                0,
-                OrderStatus.New,
-                TimeInForce.IOC,
-                OrderType.StopLossLimit,
-                OrderSide.Sell,
-                trade.StopPrice,
-                0,
-                DateTime.Now,
-                DateTime.Now,
-                true);
-            LogOrder(order.Symbol, order.ClientOrderId, OrderStatus.Filled);
-
-            return order;
+            return await _api.TestPlaceAsync(clientOrder);
         }
 
         private void LogOrder(string symbol, string order, OrderStatus filled)
@@ -102,7 +64,7 @@ namespace CryptoTrading.App.Broker
         public async Task<string> CancelOrder(ICancelRequest order)
         {
             LogOrder(order.Symbol, order.ClientOrderId.ToString(), OrderStatus.Canceled);
-            return await _api.CancelOrderAsync(_user, order.Symbol, order.ClientOrderId);
+            return await Task.Run(() => "");
         }
     }
 }

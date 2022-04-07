@@ -19,8 +19,7 @@ namespace CryptoTrading.App.Core.TradeRequest
         public decimal Price => currentTransaction.Price;
         public string Symbol => currentTransaction.Pair;
 
-        public decimal StopPrice {get;set;}
+        public decimal StopPrice => currentTransaction.Price;
 
-        //public decimal StopPrice { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 } 

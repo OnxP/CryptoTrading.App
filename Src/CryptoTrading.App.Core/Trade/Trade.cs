@@ -88,14 +88,14 @@ namespace CryptoTrading.App.Core.Trade
 
         private void AdjustBasedOnSymbol(Symbol symbol, decimal calculateQuantity, decimal price, out decimal quoteQuantity, out decimal baseQuantity)
         {
-            quoteQuantity = AdjustForMinimum(symbol.Quantity,calculateQuantity);
-            baseQuantity = AdjustForMinimum(symbol.Price, quoteQuantity * price);
+            quoteQuantity = AdjustForMinimum(symbol.Price,calculateQuantity);
+            baseQuantity = AdjustForMinimum(symbol.Quantity, quoteQuantity / price);
         }
 
         private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
         {
-            int count = BitConverter.GetBytes(decimal.GetBits(symbolQuantity.Increment)[3])[2];
-            return Decimal.Round(calculateQuantity,count);
+            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
+            return Decimal.Round(calculateQuantity,precision);
         }
 
         public ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null)
@@ -106,7 +106,7 @@ namespace CryptoTrading.App.Core.Trade
             var feeQuantity = Transactions.First().Fee.Quantity;
             var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity), 
                 SellPosition.CreatePendingTransaction(sellQuantity), 
-                FeePosition.CreatePendingTransaction(feeQuantity), currentStopLimit, closeTime);
+                FeePosition.CreatePendingTransaction(feeQuantity), AdjustForMinimum(symbol.Price, currentStopLimit), closeTime);
             Transactions.Add(transaction);
             return transaction;
         }

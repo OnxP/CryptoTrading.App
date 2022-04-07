@@ -514,7 +514,7 @@ namespace Binance
             return order;
         }
 
-        public virtual async Task TestPlaceAsync(ClientOrder clientOrder, long recvWindow = default, CancellationToken token = default)
+        public virtual async Task<Order> TestPlaceAsync(ClientOrder clientOrder, long recvWindow = default, CancellationToken token = default)
         {
             Throw.IfNull(clientOrder, nameof(clientOrder));
             Throw.IfNull(clientOrder.Side, nameof(clientOrder.Side));
@@ -522,6 +522,16 @@ namespace Binance
             var limitOrder = clientOrder as LimitOrder;
             var stopOrder = clientOrder as IStopOrder;
 
+            var order = new Order(clientOrder.User)
+            {
+                Symbol = clientOrder.Symbol.FormatSymbol(),
+                OriginalQuantity = clientOrder.Quantity,
+                Price = limitOrder?.Price ?? 0,
+                Side = clientOrder.Side.Value,
+                Type = clientOrder.Type,
+                Status = OrderStatus.New,
+                TimeInForce = limitOrder?.TimeInForce ?? TimeInForce.GTC
+            };
             // Place the TEST order.
             var json = await HttpClient.PlaceOrderAsync(clientOrder.User, clientOrder.Symbol, clientOrder.Side.Value, clientOrder.Type,
                 clientOrder.Quantity, limitOrder?.Price ?? 0, clientOrder.Id, clientOrder.Type == OrderType.LimitMaker ? null : limitOrder?.TimeInForce,
@@ -533,6 +543,8 @@ namespace Binance
                 _logger?.LogError(message);
                 throw new BinanceApiException(message);
             }
+
+            return order;
         }
 
         public virtual async Task<Order> GetOrderAsync(IBinanceApiUser user, string symbol, long orderId, long recvWindow = default, CancellationToken token = default)

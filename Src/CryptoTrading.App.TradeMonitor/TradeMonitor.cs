@@ -77,7 +77,7 @@ namespace CryptoTrading.App.Monitor
             Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice,currentCloseTime);
             
             IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
-            request.StopPrice = Tracker.StopLimitPrice;
+            //request.StopPrice = request.Price;
             MessageBroker.Instance.Publish(KeyValue,Trade.CurrentTransaction, request);
         }
 
