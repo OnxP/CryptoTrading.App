@@ -4,3 +4,4 @@ obj
 packages
 Src/CryptoTrading.App/.vs/CryptoTrading.App/v16/.suo
 Src/CryptoTrading.App.Config/Program.cs
+Release/Debug/*

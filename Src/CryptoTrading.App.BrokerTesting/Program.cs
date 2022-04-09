@@ -28,7 +28,7 @@ namespace CryptoTrading.App.BrokerTesting
             dictionaryPositions.Add("XRP", new Position("XRP",0m));
             dictionaryPositions.Add("BTC", new Position("BTC",10)); 
             dictionaryPositions.Add("BNB", new Position("BNB",10));
-            IPositions positions = new TestPositions(null,factory, dictionaryPositions);
+            IPositions positions = new Positions(null,factory, dictionaryPositions);
             //IMarketDataEvents marketDataEvents = new 
 
             //var broker = new CryptoBroker(market, logger);

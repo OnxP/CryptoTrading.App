@@ -14,9 +14,9 @@ namespace CryptoTrading.App.Monitor
         {
             services.AddScoped<ITradeProcessor, TradeProcessor>();
             services.AddScoped<ITradeFactory, TradeFactory>();
-            services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(masterServices.GetService<ILogger<TradeMonitor>>(),masterServices.GetService<IMarketMonitor>()));
+            services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(masterServices.GetService<ILogger<TradeMonitor>>(),masterServices.GetService<IMarketMonitor>(),null));
             services.AddScoped<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
-            services.AddScoped<IPositions, TestPositions>(provider => new TestPositions(provider.GetService<ILogger<TestPositions>>() ,provider.GetService<ITradeFactory>(),dictionaryPositions));
+            services.AddScoped<IPositions, Positions>(provider => new Positions(provider.GetService<ILogger<Positions>>() ,provider.GetService<ITradeFactory>(),dictionaryPositions));
             return services;
         }
 
@@ -26,7 +26,7 @@ namespace CryptoTrading.App.Monitor
             {
                 case RunTypeEnum.BackTesting:
                     services.AddTransient<ITradeFactory, TradeFactory>();
-                    services.AddTransient<IPositions, TestPositions>();
+                    services.AddTransient<IPositions, Positions>(provider => new Positions(provider.GetService<ILogger<Positions>>(), provider.GetService<ITradeFactory>()));
                     break;
                 case RunTypeEnum.LiveTesting:
                 case RunTypeEnum.Live:
@@ -37,7 +37,7 @@ namespace CryptoTrading.App.Monitor
                     throw new ArgumentOutOfRangeException();
             }
             services.AddTransient<ITradeProcessor, TradeProcessor>();
-            services.AddTransient<ITradeMonitor, TradeMonitor>();
+            services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(x.GetService<ILogger<TradeMonitor>>(), x.GetService<IMarketMonitor>(),config));
             services.AddTransient<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
             return services;
 

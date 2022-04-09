@@ -42,10 +42,10 @@ namespace CryptoTrading.App.Core.Position
         }
 
 
-        public bool CheckFunds(double sellAmount, bool fixedAmount)
+        public bool CheckFunds(ITradeRequest request)
         {
-            return FreeAmount > 0 && !fixedAmount ||
-                   (decimal)Math.Abs(sellAmount) <= FreeAmount && FreeAmount > 0 && fixedAmount;
+            request.Validate(FreeAmount,NonFreeAmount);
+            return FreeAmount > 0 && FreeAmount > request.QuoteQuantity;
         }
 
         public bool HasOpenPosition => NonFreeAmount != 0 || IsLocked;

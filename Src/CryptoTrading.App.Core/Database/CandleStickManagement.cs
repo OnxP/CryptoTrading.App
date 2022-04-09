@@ -68,6 +68,7 @@ namespace CryptoTrading.App.Core.Database
             {
                 Logger.LogDebug($"Processing tick :{CurrentTick}");
                 _MarketDataStream.Invoke();
+                RequestTracker.RequestTracker.Instance.SubmitRequests();
                 //var task = new Task(_MarketDataStream);
                 //task.Start();
                 //task.Wait();

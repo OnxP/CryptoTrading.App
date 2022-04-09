@@ -16,11 +16,17 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             IsOpen = true;
 
         }
-        
+
+        public override void SetLimits(decimal quoteClosePrice)
+        {
+            TargetPrice = quoteClosePrice + (Multiple * Risk);
+            StopLimitPrice = quoteClosePrice - Multiple;
+        }
+
         public override void MoveStopLimit()
         {
-            TargetPrice *= 1+ Increment;
-            StopLimitPrice *= 1+ Increment;
+            TargetPrice += Multiple;
+            StopLimitPrice += Multiple;
         }
     }
 }

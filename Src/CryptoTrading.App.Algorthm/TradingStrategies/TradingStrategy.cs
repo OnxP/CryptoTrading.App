@@ -20,10 +20,18 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         {
             Builder.Append(v).Append(",\t");
         }
-        protected void LogResult(int v)
+        protected void LogResult( int v)
         {
             Log($"Result: {v}");
             Builder.Append($"Weight: {StrategyWeight}");
+            Logger.LogInformation(Builder.ToString());
+            Builder.Clear();
+        }
+        protected void LogResult(DateTime closeTime, string symbol, decimal close, decimal targetPrice,
+            decimal stopLimitPrice)
+        {
+            Builder.Append(
+                $"DateTime: {closeTime:G}|Symbol: {symbol}| Close: {close:0.00000000}| Target: {targetPrice:0.00000000}| Stop: {stopLimitPrice:0.00000000}");
             Logger.LogInformation(Builder.ToString());
             Builder.Clear();
         }

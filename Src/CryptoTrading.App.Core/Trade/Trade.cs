@@ -14,9 +14,12 @@ namespace CryptoTrading.App.Core.Trade
             SellPosition = sellPosition;
             FeePosition = feePosition;
             Transactions = new List<ITransaction>();
+            InitialRequest = request;
             StopLimitTracker = request.StopLimitTracker;
-            CreateNewTransaction(request);
+            CreateNewTransaction();
         }
+
+        public ITradeRequest InitialRequest { get; set; }
         public ITransaction CurrentTransaction => Transactions.Last();
         public List<ITransaction> Transactions { get; set; }
         public decimal Price => CurrentTransaction.Price;
@@ -74,39 +77,26 @@ namespace CryptoTrading.App.Core.Trade
             closeTransaction.Complete();
         }
 
-        public ITransaction CreateNewTransaction(ITradeRequest request)
+        public ITransaction CreateNewTransaction()
         {
-            var symbol = Symbol.Cache.Get(request.BaseSymbol + request.QuoteSymbol);
-            AdjustBasedOnSymbol(symbol, request.CalculateQuantity(SellPosition.FreeAmount, SellPosition.NonFreeAmount), request.Price, out var quoteQuantity, out var quantity);
-
-            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(quantity), 
-                SellPosition.CreatePendingTransaction(-quoteQuantity), 
-                FeePosition.CreatePendingTransaction(-quoteQuantity / 22.0m), request.Price, request.RequestDateTime);
+            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(InitialRequest.BaseQuantity), 
+                SellPosition.CreatePendingTransaction(-InitialRequest.QuoteQuantity), 
+                FeePosition.CreatePendingTransaction(-InitialRequest.QuoteQuantity / 22.0m), InitialRequest.QuoteClosePrice, InitialRequest.RequestDateTime);
             Transactions.Add(transaction);
             return transaction;
         }
 
-        private void AdjustBasedOnSymbol(Symbol symbol, decimal calculateQuantity, decimal price, out decimal quoteQuantity, out decimal baseQuantity)
-        {
-            quoteQuantity = AdjustForMinimum(symbol.Price,calculateQuantity);
-            baseQuantity = AdjustForMinimum(symbol.Quantity, quoteQuantity / price);
-        }
 
-        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
-        {
-            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
-            return Decimal.Round(calculateQuantity,precision);
-        }
 
         public ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null)
         {
             var symbol = Symbol.Cache.Get(Pair);
             var buyQuantity = -Transactions.First().Base.Quantity;
-            var sellQuantity = AdjustForMinimum(symbol.Price, Transactions.First().Base.Quantity * currentStopLimit);
+            var sellQuantity = Transactions.First().Base.Quantity * currentStopLimit;
             var feeQuantity = Transactions.First().Fee.Quantity;
             var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity), 
                 SellPosition.CreatePendingTransaction(sellQuantity), 
-                FeePosition.CreatePendingTransaction(feeQuantity), AdjustForMinimum(symbol.Price, currentStopLimit), closeTime);
+                FeePosition.CreatePendingTransaction(feeQuantity), currentStopLimit, closeTime);
             Transactions.Add(transaction);
             return transaction;
         }

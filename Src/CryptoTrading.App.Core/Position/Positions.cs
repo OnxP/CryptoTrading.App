@@ -35,7 +35,7 @@ namespace CryptoTrading.App.Core.Position
         {
             if (_positions.ContainsKey(what.QuoteSymbol))
             {
-                return _positions[what.QuoteSymbol].CheckFunds(what.Amount,what.FixedAmount);
+                return _positions[what.QuoteSymbol].CheckFunds(what);
             }
 
             return false;

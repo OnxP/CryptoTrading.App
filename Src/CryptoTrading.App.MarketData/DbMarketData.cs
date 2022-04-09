@@ -234,7 +234,7 @@ SELECT DISTINCT [ID]
 
         public override void Configure(IConfig request)
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

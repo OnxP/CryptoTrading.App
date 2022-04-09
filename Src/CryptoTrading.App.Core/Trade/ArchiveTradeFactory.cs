@@ -14,17 +14,19 @@ namespace CryptoTrading.App.Core.Trade
 
         public void CreateHistoricTrades(ITrade trade, List<HistoricTrades> historicTrades)
         {
+            historicTrades.Add(CreateHistoricTrades(trade));
+        }
+
+        public HistoricTrades CreateHistoricTrades(ITrade trade)
+        {
             switch (Config.RunType)
             {
                 case RunTypeEnum.BackTesting:
-                    historicTrades.Add(new BackTestingCompletedTrades(trade));
-                    break;
+                    return new BackTestingCompletedTrades(trade);
                 case RunTypeEnum.LiveTesting:
-                    historicTrades.Add(new LiveTestingCompletedTrades(trade));
-                    break;
+                    return new LiveTestingCompletedTrades(trade);
                 case RunTypeEnum.Live:
-                    historicTrades.Add(new CompletedTrades(trade));
-                    break;
+                    return new CompletedTrades(trade);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -21,7 +21,6 @@ namespace CryptoTrading.App.Process
         {
             using var context = new HistoricTradeContext(config.StoreTradesConnectionString);
             context.BulkInsert(completedTrades);
-            //completedTrades.ForEach(x => context.HistoricTrades.AddRange(completedTrades));
             context.SaveChanges();
         }
 

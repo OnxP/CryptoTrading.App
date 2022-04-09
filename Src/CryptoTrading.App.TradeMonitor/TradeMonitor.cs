@@ -6,6 +6,7 @@ using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
+using CryptoTrading.App.Core.Database.StoreTrades;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Monitor
@@ -16,10 +17,12 @@ namespace CryptoTrading.App.Monitor
     class TradeMonitor : ITradeMonitor
     {
         private ILogger<TradeMonitor> Logger { get; set; }
-        public TradeMonitor(ILogger<TradeMonitor>logger,IMarketMonitor monitor)
+        private IConfig Config { get; set; }
+        public TradeMonitor(ILogger<TradeMonitor>logger,IMarketMonitor monitor,IConfig config)
         {
             marketMonitor = monitor;
             Logger = logger;
+            Config = config;
         }
 
         public ITrade Trade { get; set; }
@@ -49,6 +52,12 @@ namespace CryptoTrading.App.Monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Tracker.IsOpen = false;
                     Logger.LogInformation($"Completed Trade {Trade.Pair} finalPrice {Trade.CurrentTransaction.Price} profit {(Trade.Profit/100):P}");
+                    if(Config != null)
+                    {
+                        var factory = new ArchiveTradeFactory(Config);
+                        var trade = factory.CreateHistoricTrades(Trade);
+                        StoreTradesToDb(trade, Config);
+                    }
                     Dispose();
                     return;
                 }
@@ -63,6 +72,13 @@ namespace CryptoTrading.App.Monitor
             {
                 UpdateStopLimit();
             }
+        }
+
+        public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)
+        {
+            using var context = new HistoricTradeContext(config.StoreTradesConnectionString);
+            context.HistoricTrades.Add(completedTrade);
+            context.SaveChanges();
         }
 
         private void Dispose()

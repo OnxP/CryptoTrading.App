@@ -8,11 +8,9 @@ namespace CryptoTrading.App.Core.TradeRequest
     {
         public static ITradeRequest BuildTradeRequest(double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume, decimal volumeLimit)
         {
-            var tradeRequest = new BuyTradeRequest();
-            Symbol symbol = Symbol.Cache.Get(ticker);
-            tradeRequest.BaseSymbol = symbol.BaseAsset;
-            tradeRequest.QuoteSymbol = symbol.QuoteAsset;
-            tradeRequest.Price = close;
+            var tradeRequest = new MarketTradeRequest();
+            tradeRequest.Pair = Symbol.Cache.Get(ticker);
+            tradeRequest.QuoteClosePrice = close;
             tradeRequest.FixedAmount = fixedAmount;
             tradeRequest.Amount = result;
             tradeRequest.RequestDateTime = dateTime;

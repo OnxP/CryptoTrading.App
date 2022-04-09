@@ -49,7 +49,7 @@ namespace CryptoTrading.App.Process
         {
             var completedTrades = ProcessHelper.GetCompletedTrades(TradeProcessor,Config);
             ArchiveHelper.EmailTrades(completedTrades, Config);//need to do positions as well.
-            ArchiveHelper.StoreTradesToDb(completedTrades, Config);
+            //ArchiveHelper.StoreTradesToDb(completedTrades, Config);
 
         }
 

@@ -7,11 +7,11 @@ namespace CryptoTrading.App.Core.Position
         string Symbol { get; }
         decimal FreeAmount { get; }
         decimal NonFreeAmount { get; }
-        bool CheckFunds(double sellAmount, bool fixedAmount);
         bool HasOpenPosition { get;}
         bool IsLocked { get; set; }
 
         TransactionLeg CreatePendingTransaction(decimal quantity);
         TransactionLeg CreateTransaction(decimal quantity);
+        bool CheckFunds(ITradeRequest sellAmount);
     }
 }

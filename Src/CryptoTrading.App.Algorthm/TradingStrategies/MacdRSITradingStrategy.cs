@@ -69,17 +69,20 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var condition10 = closePrice.Volume > 2.0m && closePrice.NumberOfTrades > 10m;
 
             var multiple = Convert.ToDecimal(atr.Last());
-            var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100); 
+            //var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100); 
             var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
 
             if (condition1 && condition5 && condition10 && !highvol && condition4 && ((condition7 && condition9) || (condition8  && condition6)))
             {
                 if(!StopLimitTrackers.IsOpen)
                 {
-                    StopLimitTrackers.TargetPrice = closePrice.Close + multiple * StopLimitTrackers.Risk;
-                    StopLimitTrackers.StopLimitPrice = closePrice.Close - multiple;
+                    StopLimitTrackers.Multiple = multiple;
+                    //var symbol = Symbol.Cache.Get(closePrice.Symbol);
+                    //multiple = AdjustForMinimum(symbol.Price, multiple);
+                    //StopLimitTrackers.TargetPrice = closePrice.Close + multiple * StopLimitTrackers.Risk;
+                    //StopLimitTrackers.StopLimitPrice = closePrice.Close - multiple;
                 }
-                LogResult(1);
+                LogResult(closePrice.CloseTime,closePrice.Symbol,closePrice.Close, StopLimitTrackers.TargetPrice, StopLimitTrackers.StopLimitPrice);
                 return 1;
             }
             //check if long is trading sideways, need more entries to determin that!
@@ -87,6 +90,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             //check if long is in an uptrend.
             //LogResult(0);
             return 0;
+        }
+        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
+        {
+            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
+            return Decimal.Round(calculateQuantity, precision, MidpointRounding.AwayFromZero);
         }
     }
 }

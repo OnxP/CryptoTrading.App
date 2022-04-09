@@ -13,6 +13,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         public bool IsOpen { get ; set ; }
         public decimal Increment { get ; set ; }
         public decimal Risk { get ; set ; }
+        public decimal Multiple { get; set; }
 
         public virtual void Configure(Order order)
         {
@@ -25,6 +26,11 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         }
 
         public virtual void ManualChangeSL(decimal sl)
+        {
+            
+        }
+
+        public virtual void SetLimits(decimal quoteClosePrice)
         {
             
         }
