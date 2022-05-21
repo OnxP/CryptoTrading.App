@@ -109,6 +109,7 @@ namespace Tulip
             { nameof(vidya), new Indicator("Vidya", "Variable Index Dynamic Average", "real", "short period|long period|alpha", nameof(vidya)) },
             { nameof(volatility), new Indicator("Volatility", "Annualized Historical Volatility", "real", "period", nameof(volatility)) },
             { nameof(vosc), new Indicator("Vosc", "Volume Oscillator", "volume", "short period|long period", nameof(vosc)) },
+            { nameof(volo), new Indicator("Volo", "Volatility Oscillator", "open|close", "length", nameof(volo)) },
             { nameof(vwma), new Indicator("Vwma", "Volume Weighted Moving Average", "close|volume", "period", nameof(vwma)) },
             { nameof(vwap), new Indicator("Vwap", "Volume Weighted Average Price", "close|volume", "period", nameof(vwap)) },
             { nameof(wad), new Indicator("Wad", "Williams Accumulation/Distribution", "high|low|close", String.Empty, nameof(wad)) },
@@ -319,6 +320,8 @@ namespace Tulip
         public static Indicator volatility = IndicatorsDefinition[nameof(volatility)];
 
         public static Indicator vosc = IndicatorsDefinition[nameof(vosc)];
+
+        public static Indicator volo = IndicatorsDefinition[nameof(volo)];
 
         public static Indicator vwap = IndicatorsDefinition[nameof(vwap)];
 

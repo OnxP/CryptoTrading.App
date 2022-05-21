@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -69,6 +70,7 @@ namespace CryptoTrading.App.Core.Database
                 Logger.LogDebug($"Processing tick :{CurrentTick}");
                 _MarketDataStream.Invoke();
                 RequestTracker.RequestTracker.Instance.SubmitRequests();
+
                 //var task = new Task(_MarketDataStream);
                 //task.Start();
                 //task.Wait();
@@ -81,6 +83,11 @@ namespace CryptoTrading.App.Core.Database
                     //monitorTask.Wait();
                 }
                 Logger.LogDebug($"Finished Processing tick :{CurrentTick}");
+
+                while (PauseFlow)
+                {
+                    Thread.Sleep(10);
+                }
 
                 GetNextTick();
                 //if (_StopLimitMonitor==null) 

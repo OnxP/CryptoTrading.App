@@ -4,14 +4,15 @@ namespace CryptoTrading.App.Algorithm.StopLimits
 {
     class FixedProfitStopLimit : StopLimitBase
     {
-        private decimal _risk = 3.48m / 100m;
-        private decimal _increment = 1.52m / 100m;
         public FixedProfitStopLimit(decimal risk, decimal increment)
         {
-            _risk =1-( risk / 100m);
-            _increment = 1+(increment / 100m);
+            Risk =1-( risk / 100m);
+            Increment = 1+(increment / 100m);
         }
-
+        public override void MoveStopLimit()
+        {
+            StopLimitPrice = TargetPrice;
+        }
         public override void Configure(Order order)
         {
             var price = order.Price;

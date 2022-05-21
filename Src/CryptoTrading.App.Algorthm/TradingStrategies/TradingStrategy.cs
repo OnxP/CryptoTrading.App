@@ -12,7 +12,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
     {
         public Dictionary<string, IndicatorSetUp> Indicators { get; }
         public int OutputLength { get; private set; }
-        protected abstract double StrategyWeight { get; }
+        protected virtual double StrategyWeight => 1;
         public ILogger<TradingStrategy> Logger { get; }
 
         public StringBuilder Builder = new StringBuilder();
@@ -45,6 +45,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         {
             Logger = logger;
             Indicators = GenerateIndicators();
+            Indicators.Add("atr", new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 14 }));
             int i = 0;
             foreach (var item in Indicators)
             {
@@ -73,14 +74,16 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 double[] output1 = new double[output_length];
                 double[] output2 = new double[output_length];
                 double[] output3 = new double[output_length];
+                double[] output4 = new double[output_length];
 
-                double[][] outputs = { output,output1,output2,output3 };
+                double[][] outputs = { output,output1,output2,output3,output4 };
                 int success = item.Value.Indicator.Run(inputs, item.Value.Options, outputs);
                 // log.
                 indicatorOutputs.Add(item.Key, outputs);
             }
 
             var symbol = closePrices.Current.Symbol;
+            Last10Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(10).Min(x => x.Low);
             return Calculate(indicatorOutputs, closePrices.Current, stopLimitTrackers) * StrategyWeight;
         }
         //indicators work in reverse order, so the first item is the earliest candlestick.
@@ -92,11 +95,37 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             double[] volume = candleSticks.Select(x => (double)x.Volume).ToArray();
             double[] high = candleSticks.Select(x => (double)x.High).ToArray();
             double[] low = candleSticks.Select(x => (double)x.Low).ToArray();
+            double[] open = candleSticks.Select(x => (double)x.Open).ToArray();
             var symbol = closePrices.Current.Symbol;
-            return new double[][] { close_prices, volume, high, low };
+            return new double[][] { close_prices, volume, high, low,open };
         }
+
+        private decimal Last10Low { get; set; }
 
         //return +1 for buy Trade, -1 for sell, and 0 for Hold.
         protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers);
+
+        protected virtual void SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        {
+            if (!StopLimitTrackers.IsOpen)
+            {
+                var diff = closePrice.Close - Last10Low;
+                var atr = indicatorOutputs["atr"][0].ToList();
+                StopLimitTrackers.CurrentPrice = closePrice.Close;
+                StopLimitTrackers.Pair = closePrice.Symbol;
+                StopLimitTrackers.Multiple = (decimal)atr.Last() * 2;//diff + (2*Symbol.Cache.Get(closePrice.Symbol).Price.Increment); ;//AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,multiple);
+                StopLimitTrackers.TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close + 2 * (decimal)atr.Last());
+                StopLimitTrackers.StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close - 1.5m * (decimal)atr.Last());
+
+                LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice, StopLimitTrackers.StopLimitPrice);
+            }
+        }
+
+        protected decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
+        {
+            //return calculateQuantity;
+            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
+            return Decimal.Round(calculateQuantity, precision, MidpointRounding.AwayFromZero);
+        }
     }
 }

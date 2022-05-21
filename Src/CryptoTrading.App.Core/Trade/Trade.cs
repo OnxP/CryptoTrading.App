@@ -43,6 +43,17 @@ namespace CryptoTrading.App.Core.Trade
                 return Math.Round(diff, 9);
             }
         }
+        public decimal FeeBnb
+        {
+            get
+            {
+                var first = Transactions.First().Fee; //is negative
+                var current = CurrentTransaction.Fee;
+                var diff = Math.Abs(current.Quantity) + Math.Abs(first.Quantity);
+
+                return Math.Round(diff, 9);
+            }
+        }
 
         public decimal Profit
         {
@@ -64,6 +75,7 @@ namespace CryptoTrading.App.Core.Trade
         public DateTime CloseDate => CurrentTransaction.TransactionDate;
 
         public IStopLimitTracker StopLimitTracker { get; set; }
+        public string Comment => $"Stop Limit Hit: {Transactions.Count==2}";
 
         public void CancelCurrentTransaction()
         {

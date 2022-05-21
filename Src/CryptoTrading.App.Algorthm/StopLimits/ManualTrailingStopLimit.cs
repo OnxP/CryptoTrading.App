@@ -1,4 +1,6 @@
-﻿using Binance;
+﻿using System;
+using System.Threading;
+using Binance;
 
 namespace CryptoTrading.App.Algorithm.StopLimits
 {
@@ -6,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
     {
         public ManualTrailingStopLimit(decimal risk, decimal increment)
         {
-            Risk = risk / 100m;
+            Risk = risk/100;
             Increment = increment / 100m;
         }
 
@@ -19,14 +21,30 @@ namespace CryptoTrading.App.Algorithm.StopLimits
 
         public override void SetLimits(decimal quoteClosePrice)
         {
-            TargetPrice = quoteClosePrice + (Multiple * Risk);
-            StopLimitPrice = quoteClosePrice - Multiple;
+            //var symbol = Symbol.Cache.Get(Symbol.Cache.Get(Pair));
+            //TargetPrice = AdjustForMinimum(symbol.Price, quoteClosePrice + (Multiple * Risk));
+            //StopLimitPrice = AdjustForMinimum(symbol.Price, quoteClosePrice - Multiple);
         }
 
         public override void MoveStopLimit()
         {
-            TargetPrice += Multiple;
-            StopLimitPrice += Multiple;
+            //TargetPrice += Multiple * Increment;
+            //StopLimitPrice += Multiple * Increment;
+            //TargetPrice *= (1+ Increment);
+            //StopLimitPrice *= (1+ Increment);
+            var symbol = Symbol.Cache.Get(Symbol.Cache.Get(Pair));
+
+            TargetPrice = AdjustForMinimum(symbol.Price,  Multiple + TargetPrice, MidpointRounding.ToPositiveInfinity);
+            var sl = AdjustForMinimum(symbol.Price, StopLimitPrice + Multiple, MidpointRounding.ToZero);
+
+            if (CurrentPrice > sl)
+                StopLimitPrice = sl;
+        }
+        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)
+        {
+            //return calculateQuantity;
+            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
+            return Decimal.Round(calculateQuantity, precision, rounding);
         }
     }
 }

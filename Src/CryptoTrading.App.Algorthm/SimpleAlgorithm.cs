@@ -65,7 +65,7 @@ namespace CryptoTrading.App.Algorithm
                 if (!candlestickEventArgs.IsFinal) return;
                 _candleSticks.Add(candlestickEventArgs.Candlestick);
                 //Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.Volume);
+                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteAssetVolume);
                 //Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
                 if (request==null) return;
                 if (request.Amount <= 0) return;

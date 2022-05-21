@@ -19,6 +19,8 @@ namespace CryptoTrading.App.Core
         public bool Ready => Count >= NumberOfCandleSticksToKeep;
         public bool HasMissing => Values.Any(x => x == null);
 
+        public IEnumerable<Candlestick> GetCandlesticks => Values.OrderByDescending(X=>X.CloseTime);
+
         public void Add(Candlestick item)
         {
             if (Count == 0)

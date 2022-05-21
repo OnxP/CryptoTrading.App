@@ -41,7 +41,8 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+            IStopLimitTracker StopLimitTrackers)
         {
             var macd = indicatorOutputs["MACD"][0].ToList();
             var signal = indicatorOutputs["MACD"][1].ToList();
@@ -75,27 +76,24 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var condition5 = adx.First() > 20;
             var condition6 = adx.First() > adx.Skip(1).First();
             var condition7 = adx.Skip(1).First() > adx.Skip(2).First();
-            if (condition1 && condition3 && condition4 )
+            if (condition1 && condition3 && condition4)
             {
                 if (condition5 && condition6 && condition7)
                 {
-                    LogResult(1);
+                    SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
                     return 1;
                 }
 
-                if(closePrice.Close > (decimal)vwap.Last() && adx.First() > 20)
+                if (closePrice.Close > (decimal)vwap.Last() && adx.First() > 20)
                 {
-                    LogResult(1);
+                    SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
                     return 1;
                 }
             }
-            //check if long is trading sideways, need more entries to determin that!
 
-            //check if long is in an uptrend.
-            LogResult(0);
+
             return 0;
         }
 
-        
     }
 }

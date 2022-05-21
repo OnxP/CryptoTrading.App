@@ -14,6 +14,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         public decimal Increment { get ; set ; }
         public decimal Risk { get ; set ; }
         public decimal Multiple { get; set; }
+        public string Pair { get; set; }
 
         public virtual void Configure(Order order)
         {

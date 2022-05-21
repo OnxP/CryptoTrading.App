@@ -69,11 +69,13 @@ namespace CryptoTrading.App.Process
                 x => x.StartDate, //FirstTransaction.TransactionDate.ToString(), 
                 x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(), 
                 x => x.Profit,
-                x=> x.BtcProfit));
+                x=> x.BtcProfit,
+                x=>x.FeeBnb,
+                x=> x.Comment));
             sb.Append(Environment.NewLine);
-            sb.Append(String.Join(',',"Symbol", "Bought Price", "Sold Price", "Quantity", "Start Date", "Close Date", "Profit","BtcProfit"));
+            sb.Append(String.Join(',',"Symbol", "Bought Price", "Sold Price", "Quantity", "Start Date", "Close Date", "Profit","BtcProfit, BnbFee, Comment"));
             sb.Append(Environment.NewLine);
-            trades.ForEach(x=>sb.Append(String.Join(',',x.Symbol, x.BoughtPrice, x.SoldPrice,x.Quantity, x.StartDate, x.CloseDate, x.Profit,x.BtcProfit,Environment.NewLine)));
+            trades.ForEach(x=>sb.Append(String.Join(',',x.Symbol, x.BoughtPrice, x.SoldPrice,x.Quantity, x.StartDate, x.CloseDate, x.Profit,x.BtcProfit, x.FeeBnb,x.Comment,Environment.NewLine)));
             return sb.ToString();
         }
 
@@ -88,6 +90,8 @@ namespace CryptoTrading.App.Process
             sb.Append($"Losing Trades: [{completedTrades.Count(x => x.Profit < 0)}] - {((double)completedTrades.Count(x => x.Profit < 0) / count) * 100}%");
             sb.Append(Environment.NewLine);
             sb.Append($"Total Profit: [{completedTrades.Sum(x => x.BtcProfit)}] BTC");
+            sb.Append(Environment.NewLine);
+            sb.Append($"Total Fee BNB: [{completedTrades.Sum(x => x.FeeBnb)}] Bnb - [{completedTrades.Sum(x => x.FeeBnb)/0.010213d}] BTC");
             sb.Append(Environment.NewLine);
             return sb.ToString();
         }

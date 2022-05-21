@@ -13,11 +13,12 @@ namespace CryptoTrading.App.Core.TradeRequest
         public IStopLimitTracker StopLimitTracker { get; set; }
         public CandlestickInterval Interval { get ; set; }
         public decimal QuoteQuantity { get; set; }
-        public decimal BaseQuantity => AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice,MidpointRounding.ToZero);
+        public decimal BaseQuantity { get; set; }
+    
         public void Validate(decimal freeAmount, decimal nonFreeAmount)
         {
             //calculate quantity and stoploss limits 
-            var q = !FixedAmount ? freeAmount * (decimal)Amount : (decimal)Amount;
+            var q = !FixedAmount ? (freeAmount +nonFreeAmount) * (decimal)Amount : (decimal)Amount;
 
             if (q > Volume * VolumeLimit)
             {
@@ -25,13 +26,14 @@ namespace CryptoTrading.App.Core.TradeRequest
             }
 
             QuoteQuantity = AdjustForMinimum(Pair.Price, q, MidpointRounding.ToZero);
-
-            StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.Price.Increment);
-            StopLimitTracker.SetLimits(QuoteClosePrice);
+            BaseQuantity = AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero);
+            //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.Price.Increment);
+            //StopLimitTracker.SetLimits(QuoteClosePrice);
         }
 
         private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)
         {
+            //return calculateQuantity;
             int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
             return Decimal.Round(calculateQuantity, precision, rounding);
         }

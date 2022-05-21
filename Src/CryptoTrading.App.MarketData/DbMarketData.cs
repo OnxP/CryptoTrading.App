@@ -148,11 +148,6 @@ SELECT DISTINCT [ID]
             //await task;
 
             _data.ClearHistoric(_mangement.CurrentTick, false);
-
-            while (DbCandleStickManagement.PauseFlow)
-            {
-                //pause the flow for execution, specific to db use only.
-            }
         }
 
         private async Task LoadNextCandleSticksTask(List<string> toList)

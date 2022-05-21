@@ -42,13 +42,13 @@ namespace CryptoTrading.App.Core.Position
         }
 
 
-        public bool CheckFunds(ITradeRequest request)
+        public bool CheckHasEnoughBalance(ITradeRequest request)
         {
             request.Validate(FreeAmount,NonFreeAmount);
-            return FreeAmount > 0 && FreeAmount > request.QuoteQuantity;
+            return FreeAmount > 0 && FreeAmount > request.QuoteQuantity && request.BaseQuantity!=0m;
         }
 
-        public bool HasOpenPosition => NonFreeAmount != 0 || IsLocked;
+        public bool HasOpenPosition => _legs.Any(x=>x.Status==TransactionLegStatus.Pending) || IsLocked;
 
         public bool IsLocked { get; set; }
 

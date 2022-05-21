@@ -6,6 +6,7 @@ using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
+using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using Microsoft.Extensions.Logging;
 
@@ -37,17 +38,22 @@ namespace CryptoTrading.App.Monitor
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
             currentCloseTime = candleStick.Candlestick.CloseTime;
-            Tracker.CurrentPrice = closePrice;
+            //Tracker.CurrentPrice = closePrice;
 
-
+            if (Tracker.RequestUpdateOfStopLimit(closePrice))
+            {
+                UpdateStopLimit();
+            }
             if (candleStick.Candlestick.Low <= Tracker.StopLimitPrice)
             {
+                DbCandleStickManagement.PauseFlow = true;
                 //check for fill order
                 if (marketMonitor.CheckOrder(Trade.CurrentTransaction))
                 {
                     Trade.CurrentTransaction.TransactionDate = currentCloseTime;
                     Tracker.EndDateTime = currentCloseTime;
                     Trade.Open = false;
+                    
                     //unsubscribe to monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Tracker.IsOpen = false;
@@ -59,6 +65,7 @@ namespace CryptoTrading.App.Monitor
                         StoreTradesToDb(trade, Config);
                     }
                     Dispose();
+                    DbCandleStickManagement.PauseFlow = false;
                     return;
                 }
                 else
@@ -68,10 +75,8 @@ namespace CryptoTrading.App.Monitor
                 
             }
 
-            if (Tracker.RequestUpdateOfStopLimit(closePrice))
-            {
-                UpdateStopLimit();
-            }
+            
+            DbCandleStickManagement.PauseFlow = false;
         }
 
         public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)

@@ -12,6 +12,6 @@ namespace CryptoTrading.App.Core.Position
 
         TransactionLeg CreatePendingTransaction(decimal quantity);
         TransactionLeg CreateTransaction(decimal quantity);
-        bool CheckFunds(ITradeRequest sellAmount);
+        bool CheckHasEnoughBalance(ITradeRequest sellAmount);
     }
 }

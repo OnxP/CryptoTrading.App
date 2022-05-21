@@ -31,21 +31,21 @@ namespace CryptoTrading.App.Core.Position
             _positions = new Dictionary<string, IPosition>();
         }
 
-        public bool CheckBalance(ITradeRequest what)
+        public bool CheckHasEnoughBalance(ITradeRequest what)
         {
             if (_positions.ContainsKey(what.QuoteSymbol))
             {
-                return _positions[what.QuoteSymbol].CheckFunds(what);
+                return _positions[what.QuoteSymbol].CheckHasEnoughBalance(what);
             }
 
             return false;
         }
 
-        public bool CheckOpenPosition(string requestBuySymbol)
+        public bool CheckHasOpenPositionAndVolume(string requestBuySymbol, ITradeRequest request)
         {
             if (_positions.ContainsKey(requestBuySymbol))
             {
-                return _positions[requestBuySymbol].HasOpenPosition;
+                return _positions[requestBuySymbol].HasOpenPosition && request.BaseQuantity < request.Volume/2;
             }
 
             return false;
@@ -65,7 +65,7 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckRequest(ITradeRequest what)
         {
-            return !CheckOpenPosition(what.BaseSymbol) && CheckBalance(what);
+            return !CheckHasOpenPositionAndVolume(what.BaseSymbol,what) && CheckHasEnoughBalance(what);
         }
 
         public void AjdustPosition(string accountPositionAsset, decimal accountPositionFree)

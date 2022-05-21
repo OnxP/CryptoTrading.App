@@ -16,6 +16,7 @@ namespace CryptoTrading.App.Core
         decimal Increment { get; set; }
         decimal Risk { get; set; }
         decimal Multiple { get; set; }
+        string Pair { get; set; }
 
         bool RequestUpdateOfStopLimit(decimal closePrice);
         void ManualChangeSL(decimal sl);

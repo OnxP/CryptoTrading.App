@@ -36,13 +36,15 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var ema50 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 50 });
             var ema25 = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 25 });
             var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14, 14, 3, 3 });
-            var atr = new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 14 });
+            var close = new IndicatorSetUp(Tulip.Indicators.close, new double[] { 10 });
+            var close1 = new IndicatorSetUp(Tulip.Indicators.close, new double[] { 10 },4);
             dict.Add("MACD", macd);
-            dict.Add("LongWma", ema100);
             dict.Add("MediumWma", ema50);
+            dict.Add("longWma", ema100);
             dict.Add("ShortWma", ema25);
             dict.Add("SRSI", srsi);
-            dict.Add("atr", atr);
+            dict.Add("close", close);
+            dict.Add("closehr", close1);
             return dict;
         }
 
@@ -52,49 +54,49 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var signal = indicatorOutputs["MACD"][1].ToList();
             var hist = indicatorOutputs["MACD"][2].ToList();
             var shortWma = indicatorOutputs["ShortWma"][0].ToList();
-            var longWma = indicatorOutputs["LongWma"][0].ToList();
             var mediumWma = indicatorOutputs["MediumWma"][0].ToList();
             var kLine = indicatorOutputs["SRSI"][0].ToList();
             var dLine = indicatorOutputs["SRSI"][1].ToList();
             var atr = indicatorOutputs["atr"][0].ToList();
+            var volume = indicatorOutputs["close"][1].ToList();
+            var volumeHr = indicatorOutputs["closehr"][1].ToList();
 
-            var condition1 = macd.Last() >= signal.Last();
-            var condition3 = mediumWma.Last() >= longWma.Last();
+            macd.Reverse();
+            signal.Reverse();
+
+            var macdCondition1 = macd.First() >= signal.First();
+            var macdCondition2 = macd.First() <= 0;
+            var volumeCondition = volumeHr.First() > volumeHr.Skip(1).First();
+
+
+            var condition3 = mediumWma.Last() <= (double)closePrice.Low;
             var condition4 = shortWma.Last() >= mediumWma.Last();
+
+
+            var volumeCondition2 = volume.First() > volume.Skip(1).First();
+
             var condition5 = kLine.Last() >= dLine.Last();
             var condition6 = kLine.Last() <= 80 && kLine.Last() >= 20;
             var condition9 = kLine.Last() >= 80 ;
-            var condition7 = (double)closePrice.Close < longWma.Last();
-            var condition8 = (double)closePrice.Close > longWma.Last();
-            var condition10 = closePrice.Volume > 2.0m && closePrice.NumberOfTrades > 10m;
+            var condition7 = (double)closePrice.Close < mediumWma.Last();
+            var condition8 = (double)closePrice.Close > mediumWma.Last();
+            var condition10 = closePrice.QuoteAssetVolume > 2.0m && closePrice.NumberOfTrades > 10m;
 
             var multiple = Convert.ToDecimal(atr.Last());
             //var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100); 
             var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
+            var condition11 = Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * multiple;
 
-            if (condition1 && condition5 && condition10 && !highvol && condition4 && ((condition7 && condition9) || (condition8  && condition6)))
+            var diff = closePrice.High - closePrice.Low;
+            var diffCondition = diff > 4 * Symbol.Cache.Get(closePrice.Symbol).Price.Increment;
+
+            if (macdCondition1 && condition11 && volumeCondition && condition10 && condition5 && !highvol && condition4 && condition3 && ((condition7 && condition9) || (condition8 && condition6)))
             {
-                if(!StopLimitTrackers.IsOpen)
-                {
-                    StopLimitTrackers.Multiple = multiple;
-                    //var symbol = Symbol.Cache.Get(closePrice.Symbol);
-                    //multiple = AdjustForMinimum(symbol.Price, multiple);
-                    //StopLimitTrackers.TargetPrice = closePrice.Close + multiple * StopLimitTrackers.Risk;
-                    //StopLimitTrackers.StopLimitPrice = closePrice.Close - multiple;
-                }
-                LogResult(closePrice.CloseTime,closePrice.Symbol,closePrice.Close, StopLimitTrackers.TargetPrice, StopLimitTrackers.StopLimitPrice);
+                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
                 return 1;
             }
-            //check if long is trading sideways, need more entries to determin that!
-
-            //check if long is in an uptrend.
-            //LogResult(0);
             return 0;
         }
-        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
-        {
-            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
-            return Decimal.Round(calculateQuantity, precision, MidpointRounding.AwayFromZero);
-        }
+
     }
 }

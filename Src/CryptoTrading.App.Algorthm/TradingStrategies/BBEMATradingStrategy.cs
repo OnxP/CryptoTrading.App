@@ -67,16 +67,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             //Fast > Slow EMA
             if (condition1 && condition2 && condition3 && condition4)
             {
-                LogResult(1);
-                StopLimitTrackers.TargetPrice = Convert.ToDecimal(longEma.Last());
-                StopLimitTrackers.CurrentPrice = closePrice.Close;
-                StopLimitTrackers.StopLimitPrice = stoploss;
-                return StrategyWeight;
+                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
+                return 1;
             }
-            //check if long is trading sideways, need more entries to determin that!
-
-            //check if long is in an uptrend.
-            LogResult(0);
             return 0;
         }
         private bool LastSixClose(double[] close)

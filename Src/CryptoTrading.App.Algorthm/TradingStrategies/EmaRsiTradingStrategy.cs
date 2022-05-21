@@ -69,15 +69,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
             if (condition1 && condition2 && condition3)
             {
-                LogResult(1);
-                StopLimitTrackers.StopLimitPrice = closePrice.Close - Convert.ToDecimal((atr.Last() * 3));
-                StopLimitTrackers.TargetPrice = closePrice.Close + Convert.ToDecimal((atr.Last()));
-                return StrategyWeight;
+                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
+                return 1;
             }
-            //check if long is trading sideways, need more entries to determin that!
-
-            //check if long is in an uptrend.
-            LogResult(0);
             return 0;
         }
         private bool LastSixClose(double[] close)

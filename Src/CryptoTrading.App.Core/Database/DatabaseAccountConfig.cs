@@ -51,7 +51,7 @@ namespace CryptoTrading.App.Core.Database
             return list;
         }
 
-        private string Symbols => @"select * from CandleStickDbs where (opentime=@p0 OR closetime=@p1) and Interval=@p2";
+        private string Symbols => @"select * from CandleStickDbs where (opentime=@p0 OR opentime=@p1) and Interval=@p2";
 
         public List<AccountBalance> LoadPositions()
         {

@@ -76,13 +76,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             //var condition4 = kLine.Last()< 0.8;
             if (condition1 && condition2 && condition3 && condition4 && condition5 && condition6)
             {
-                LogResult(1);
+                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
                 return 1;
             }
-            //check if long is trading sideways, need more entries to determin that!
-
-            //check if long is in an uptrend.
-            LogResult(0);
             return 0;
         }
 

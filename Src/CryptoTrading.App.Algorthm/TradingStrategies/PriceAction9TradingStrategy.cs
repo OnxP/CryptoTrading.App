@@ -29,9 +29,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         {
             var dict = new Dictionary<string, IndicatorSetUp>();
 
-            var atr = new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 14 });
+            
             dict.Add("close", new IndicatorSetUp(Tulip.Indicators.close, new double[] { 40 }));
-            dict.Add("atr", atr);
+            
             return dict;
         }
 
@@ -96,18 +96,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             if (uCount>=9 && _supportResistance.IsAtSupportResistance(closePrice.Close,_average))
             {
-                LogResult(1);
-                if (!StopLimitTrackers.IsOpen)
-                {
-                    StopLimitTrackers.StopLimitPrice = _supportResistance.GetNextSupportLevel(closePrice.Close, _average * 2) - Convert.ToDecimal(atr.Last());
-                    StopLimitTrackers.TargetPrice = _supportResistance.GetNextResistanceLevel(closePrice.Close, _average) + Convert.ToDecimal(atr.Last());
-                }
-                return StrategyWeight;
+                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
+                return 1;
             }
-            //check if long is trading sideways, need more entries to determin that!
-
-            //check if long is in an uptrend.
-            LogResult(0);
             return 0;
         }
         private bool LastSixClose(double[] close)

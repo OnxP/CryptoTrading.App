@@ -24,6 +24,7 @@ namespace Tulip
             double[] volume = inputs[1];
             double[] high = inputs[2];
             double[] low = inputs[3];
+            double[] open = inputs[4];
 
             for (int i = 0; i < period; i++)
             {
@@ -31,6 +32,7 @@ namespace Tulip
                 outputs[1][i] = volume[inputs[1].Length - i - 1];
                 outputs[2][i] = high[inputs[2].Length - i - 1];
                 outputs[3][i] = low[inputs[3].Length - i - 1];
+                outputs[4][i] = open[inputs[4].Length - i - 1];
             }
 
             return TI_OKAY;

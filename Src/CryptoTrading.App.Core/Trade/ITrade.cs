@@ -19,6 +19,7 @@ namespace CryptoTrading.App.Core.Trade
         DateTime StartDate { get; }
         DateTime CloseDate { get; }
         IStopLimitTracker StopLimitTracker { get; set; }
+        string Comment { get; }
 
         void CancelCurrentTransaction();
         void UpdateCurrentTransaction(Order order);
