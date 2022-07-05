@@ -38,9 +38,9 @@ namespace CryptoTrading.App.Monitor
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
             currentCloseTime = candleStick.Candlestick.CloseTime;
-            //Tracker.CurrentPrice = closePrice;
+            Tracker.CurrentPrice = closePrice;
 
-            if (Tracker.RequestUpdateOfStopLimit(closePrice))
+            if (Tracker.RequestUpdateOfStopLimit(candleStick.Candlestick.High))
             {
                 UpdateStopLimit();
             }

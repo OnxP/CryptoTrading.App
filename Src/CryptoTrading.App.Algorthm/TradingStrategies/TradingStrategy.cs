@@ -40,7 +40,13 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var nextTradeDate = CandleStickIntervalHelper.NextCandleStickTime(endDateTime, interval);
             return nextTradeDate < closeTime;
         }
-
+        public List<double> GetIndicator(Dictionary<string, double[][]> indicatorOutputs, string indicator, int index)
+        {
+            var list = indicatorOutputs[indicator][index].ToList();
+            if (indicator == "close") list.RemoveAll(x => x.Equals(0));
+            list.Reverse();
+            return list;
+        }
         protected TradingStrategy(ILogger<TradingStrategy> logger)
         {
             Logger = logger;
@@ -105,22 +111,61 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         //return +1 for buy Trade, -1 for sell, and 0 for Hold.
         protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers);
 
-        protected virtual void SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected virtual bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        {
+            if (!StopLimitTrackers.IsOpen)
+            {
+                //var diff = closePrice.Close - Last10Low;
+                var atr = indicatorOutputs["atr"][0].ToList();
+
+                //if(diff < 3* Symbol.Cache.Get(closePrice.Symbol).Price.Increment) return false;
+                StopLimitTrackers.CurrentPrice = closePrice.Close;
+                StopLimitTrackers.Pair = closePrice.Symbol;
+                StopLimitTrackers.Multiple = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, (decimal)atr.Last());//(decimal)atr.Last() * 3;//diff + (2*Symbol.Cache.Get(closePrice.Symbol).Price.Increment); ;//AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,multiple);
+                StopLimitTrackers.TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close + 4 * (decimal)atr.Last());
+                StopLimitTrackers.StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close - 2m * (decimal)atr.Last());
+
+                LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice, StopLimitTrackers.StopLimitPrice);
+                return true;
+            }
+
+
+            return false;
+        }
+        protected virtual bool SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             if (!StopLimitTrackers.IsOpen)
             {
                 var diff = closePrice.Close - Last10Low;
-                var atr = indicatorOutputs["atr"][0].ToList();
+                //var atr = indicatorOutputs["atr"][0].ToList();
+
+                if (diff < 3 * Symbol.Cache.Get(closePrice.Symbol).Price.Increment) return false;
                 StopLimitTrackers.CurrentPrice = closePrice.Close;
                 StopLimitTrackers.Pair = closePrice.Symbol;
-                StopLimitTrackers.Multiple = (decimal)atr.Last() * 2;//diff + (2*Symbol.Cache.Get(closePrice.Symbol).Price.Increment); ;//AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,multiple);
-                StopLimitTrackers.TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close + 2 * (decimal)atr.Last());
-                StopLimitTrackers.StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close - 1.5m * (decimal)atr.Last());
+                StopLimitTrackers.Multiple = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, 1.5m*diff);//(decimal)atr.Last() * 3;//diff + (2*Symbol.Cache.Get(closePrice.Symbol).Price.Increment); ;//AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,multiple);
+                StopLimitTrackers.TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close + 1.5m * (decimal)diff);
+                StopLimitTrackers.StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, closePrice.Close - (decimal)diff);
 
                 LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice, StopLimitTrackers.StopLimitPrice);
+                return true;
+            }
+
+            return false;
+        }
+        protected void SetStopLimit(Candlestick closePrice, IStopLimitTracker stopLimitTrackers, double stopLimit, double target, double trail)
+        {
+            if (!stopLimitTrackers.IsOpen)
+            {
+                var targetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, (closePrice.Close - (decimal)stopLimit) * (decimal)target)/2;
+                stopLimitTrackers.CurrentPrice = closePrice.Close;
+                stopLimitTrackers.Pair = closePrice.Symbol;
+                stopLimitTrackers.Multiple = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, (closePrice.Close - (decimal)stopLimit) * (decimal)target);
+                stopLimitTrackers.TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, targetPrice + closePrice.Close);
+                stopLimitTrackers.StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, (decimal)stopLimit);
+
+                LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, stopLimitTrackers.TargetPrice, stopLimitTrackers.StopLimitPrice);
             }
         }
-
         protected decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity)
         {
             //return calculateQuantity;

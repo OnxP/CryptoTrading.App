@@ -35,10 +35,9 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             var symbol = Symbol.Cache.Get(Symbol.Cache.Get(Pair));
 
             TargetPrice = AdjustForMinimum(symbol.Price,  Multiple + TargetPrice, MidpointRounding.ToPositiveInfinity);
-            var sl = AdjustForMinimum(symbol.Price, StopLimitPrice + Multiple, MidpointRounding.ToZero);
+            var sl = AdjustForMinimum(symbol.Price, StopLimitPrice + Multiple, MidpointRounding.ToPositiveInfinity);
 
-            if (CurrentPrice > sl)
-                StopLimitPrice = sl;
+            StopLimitPrice = CurrentPrice > sl ? sl : AdjustForMinimum(symbol.Price, CurrentPrice - Multiple, MidpointRounding.ToPositiveInfinity);
         }
         private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)
         {

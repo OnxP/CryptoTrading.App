@@ -40,7 +40,7 @@ namespace CryptoTrading.App.Core.Database
                 var count = candleSticks.Count();
                 var grouping = candleSticks.GroupBy(x => x.CloseTime);
 
-                foreach (var candleStickList in grouping)
+                foreach (var candleStickList in grouping.OrderByDescending(x=>x.Key))
                 {
                     if (data.ContainsKey(candleStickList.Key))
                     {

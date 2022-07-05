@@ -123,7 +123,7 @@ namespace CryptoTrading.App.MarketData
                 foreach (var item in subscribers)
                 {
                     var from = From;
-                    var list = SplitDates(item.Key.interval, from, DateTime.Now.ToUniversalTime());
+                    var list = SplitDates(item.Key.interval, from, To);
                     foreach (var to in list)
                     {
                         Stopwatch time = new Stopwatch();
@@ -173,7 +173,7 @@ namespace CryptoTrading.App.MarketData
 
         private DateTime CalculateFrom(DateTime dateTime, CandlestickInterval interval)
         {
-            int candleSticksToLoad = 100;
+            int candleSticksToLoad = 200;
             return interval switch
             {
                 CandlestickInterval.Minute => dateTime.AddMinutes(-1 * candleSticksToLoad),

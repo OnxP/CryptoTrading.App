@@ -4,6 +4,7 @@ using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.VisualBasic;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
@@ -95,7 +96,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         }
 
 
-        protected override void SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             if (!StopLimitTrackers.IsOpen)
@@ -121,9 +122,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 }
 
                 StopLimitTrackers.StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price, sl);
+                return true;
             }
 
-            
+            return false;
+
         }
     }
 }

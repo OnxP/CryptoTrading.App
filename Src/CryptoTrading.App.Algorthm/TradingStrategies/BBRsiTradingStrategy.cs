@@ -28,7 +28,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var dict = new Dictionary<string, IndicatorSetUp>();
 
             var bbands = new IndicatorSetUp(Tulip.Indicators.bbands, new double[] { 20,2 });
-            var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
+            var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 50 });
             var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14 , 14 ,3 ,3 });
             var rsi = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 });
             dict.Add("close", new IndicatorSetUp(Tulip.Indicators.close, new double[] { 6 }));

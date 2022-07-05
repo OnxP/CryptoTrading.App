@@ -43,7 +43,9 @@ namespace CryptoTrading.App.Core.RequestTracker
             {
                 if (!Requests.Any()) return;
 
-                foreach (var request in Requests.OrderBy(x=>x.Value.Item2.Volume))
+                var order = Requests.OrderByDescending(x => x.Value.Item2.Volume);
+
+                foreach (var request in order)
                 {
                     MessageBroker.Instance.Publish(request.Value.Item1,null,request.Value.Item2);
                 }
@@ -56,7 +58,9 @@ namespace CryptoTrading.App.Core.RequestTracker
         {
             if (!Requests.Any()) return;
 
-            foreach (var request in Requests.OrderBy(x => x.Value.Item2.Volume))
+            var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
+
+            foreach (var request in req)
             {
                 MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
             }

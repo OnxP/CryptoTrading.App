@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Binance.Client;
 using DateTime = System.DateTime;
 
@@ -17,6 +18,7 @@ namespace CryptoTrading.App.DatabaseLoad
 {
     class Program
     {
+
         static void Main(string[] args)
         {
             var Configuration = new ConfigurationBuilder()
@@ -42,24 +44,39 @@ namespace CryptoTrading.App.DatabaseLoad
             var symbols = Api.GetSymbolsAsync().Result.Where(x=> x.QuoteAsset.Symbol=="BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2021, 11, 01);
+            marketDate.From = new DateTime(2022, 06, 19,18,01,00);
+            marketDate.To = new DateTime(2022, 06, 30);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
-              CandlestickInterval.Minutes_15
-            , CandlestickInterval.Minute
+              CandlestickInterval.Minutes_15,
+              CandlestickInterval.Minutes_5
+              , CandlestickInterval.Minute
             };
         
             //subscribe to several symbols
             AddEvents(marketDate as AbstractMarketData, symbols,intervals);
 
-            var con = marketDate.GetTaskController();
-            con.Begin();
+            marketDate.StartStream();
+
+            //var res = run(marketDate).Result;
             lock (_object)
             {
                 context.Dispose();
             }
+        }
 
+        private static async Task<int> run(IMarketData marketData)
+        {
+            await RunMarketData(marketData);
+            return 1;
+        }
+
+        private static async Task RunMarketData(IMarketData marketData)
+        {
+            var con = marketData.GetTaskController();
+            con.Begin();
+            await con.Task;
         }
 
         private static void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandlestickInterval> intervals)

@@ -53,10 +53,6 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             longEma.Reverse();
             macd.Reverse();
 
-            Log($"MACD - Line: {macd.First()}");
-            Log($"MACD - Signal Line: {signal.Last()}");
-            Log($"Long Ema: {longEma.First()}");
-            Log($"Close Price: {closePrice}");
 
             // log values
 
