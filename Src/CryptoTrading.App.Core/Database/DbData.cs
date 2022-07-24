@@ -62,7 +62,6 @@ namespace CryptoTrading.App.Core.Database
                     //Check
                     //if(data[candleStickList.Key].Count() != symbols.Count) throw new Exception("Bad Data.");
                 }
-
                 return count;
             }
         }
@@ -124,10 +123,13 @@ namespace CryptoTrading.App.Core.Database
 
         public void ClearHistoric(DateTime from,bool minute)
         {
-            var data = minute ? _data_minute : _data;   
-            foreach (var kvp in data.Where(kvp => kvp.Key<=from))
+            lock (_lock)
             {
-                RemoveTick(kvp.Key,minute);
+                var data = minute ? _data_minute : _data;
+                foreach (var kvp in data.Where(kvp => kvp.Key <= from))
+                {
+                    RemoveTick(kvp.Key, minute);
+                }
             }
         }
 

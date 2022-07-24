@@ -44,8 +44,8 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckHasEnoughBalance(ITradeRequest request)
         {
-            request.Validate(FreeAmount,NonFreeAmount);
-            return FreeAmount > 0 && FreeAmount > request.QuoteQuantity && request.BaseQuantity!=0m;
+            var valid = request.Validate(FreeAmount, NonFreeAmount);
+            return valid && FreeAmount > 0 && FreeAmount > request.QuoteQuantity && request.BaseQuantity!=0m ;
         }
 
         public bool HasOpenPosition => _legs.Any(x=>x.Status==TransactionLegStatus.Pending) || IsLocked;

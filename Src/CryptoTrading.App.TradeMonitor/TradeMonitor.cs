@@ -39,10 +39,10 @@ namespace CryptoTrading.App.Monitor
             Trade.CurrentPrice = closePrice;
             currentCloseTime = candleStick.Candlestick.CloseTime;
             Tracker.CurrentPrice = closePrice;
-
+            Logger.LogInformation($"Process CandleStick {Symbol} at {currentCloseTime} - Target {Tracker.TargetPrice} : Stop Limit: {Tracker.StopLimitPrice}");
             if (Tracker.RequestUpdateOfStopLimit(candleStick.Candlestick.High))
             {
-                UpdateStopLimit();
+                UpdateStopLimit(Tracker.TargetPrice< candleStick.Candlestick.High);
             }
             if (candleStick.Candlestick.Low <= Tracker.StopLimitPrice)
             {
@@ -156,9 +156,9 @@ namespace CryptoTrading.App.Monitor
             if (!marketMonitor.IsSubscribed(order.Symbol, KeyValue)) marketMonitor.Subscribe(order.Symbol,KeyValue, ProcessCandleStick);
         }
 
-        private void UpdateStopLimit()
+        private void UpdateStopLimit(bool targetReached)
         {
-            Tracker.MoveStopLimit();
+            if(targetReached) Tracker.MoveStopLimit();
             CancelLimitOrder();
             //CreateNewStopLimitOrder();
         }

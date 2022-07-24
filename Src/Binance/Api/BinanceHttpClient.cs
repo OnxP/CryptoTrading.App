@@ -260,6 +260,7 @@ namespace Binance.Api
                     default:
                         
                         throw new BinanceHttpException(response.StatusCode, response.ReasonPhrase, errorCode, errorMessage);
+                        //C5ILSb0VCvBN3BgHMW4MlEqeNKtlif7w7Ib3Jgspl0tdefJZ3WnRn64YKaiPEkTE
                 }
             }
         }

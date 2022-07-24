@@ -27,6 +27,7 @@ namespace CryptoTrading.App.Core.Database
         public DateTime CurrentTick => _index < timeKeeper.Count() ? timeKeeper[_index] : FinalTick;
 
         public DateTime NextTick => _index < timeKeeper.Count() ? timeKeeper[_index + 1] : FinalTick;
+        public DateTime PreviousTick => _index > 0 ? timeKeeper[_index - 1] : FinalTick;
 
         public DateTime FinalTick => timeKeeper.Last().Value;
 

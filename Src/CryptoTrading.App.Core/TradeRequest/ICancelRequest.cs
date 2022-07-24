@@ -4,4 +4,9 @@
     {
         long ClientOrderId { get; set; }
     }
+
+    public interface ICancelTradeRequest : IRequest
+    {
+        long ClientOrderId { get; set; }
+    }
 }

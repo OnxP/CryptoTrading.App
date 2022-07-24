@@ -18,7 +18,7 @@ namespace CryptoTrading.App.Core.BinanceAccount
         }
         public List<Symbol> LoadCurrencies()
         {
-            var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset == Asset.BTC);
+            var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset == Asset.BTC && x.Status == SymbolStatus.Trading);
             Symbol.UpdateCacheAsync(Api).ConfigureAwait(false);
             return symbols.ToList();
         }

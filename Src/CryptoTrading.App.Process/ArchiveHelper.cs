@@ -91,7 +91,7 @@ namespace CryptoTrading.App.Process
             sb.Append(Environment.NewLine);
             sb.Append($"Total Profit: [{completedTrades.Sum(x => x.BtcProfit)}] BTC");
             sb.Append(Environment.NewLine);
-            sb.Append($"Total Fee BNB: [{completedTrades.Sum(x => x.FeeBnb)}] Bnb - [{completedTrades.Sum(x => x.FeeBnb)/0.010213d}] BTC");
+            sb.Append($"Total Fee BNB: [{completedTrades.Sum(x => x.FeeBnb)}] Bnb - [{completedTrades.Sum(x => x.FeeBnb)*0.010213d}] BTC");
             sb.Append(Environment.NewLine);
             return sb.ToString();
         }

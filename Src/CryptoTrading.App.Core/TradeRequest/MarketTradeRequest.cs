@@ -15,7 +15,7 @@ namespace CryptoTrading.App.Core.TradeRequest
         public decimal QuoteQuantity { get; set; }
         public decimal BaseQuantity { get; set; }
     
-        public void Validate(decimal freeAmount, decimal nonFreeAmount)
+        public bool Validate(decimal freeAmount, decimal nonFreeAmount)
         {
             //calculate quantity and stoploss limits 
             var q = !FixedAmount ? (freeAmount +nonFreeAmount) * (decimal)Amount : (decimal)Amount;
@@ -26,7 +26,10 @@ namespace CryptoTrading.App.Core.TradeRequest
             }
 
             QuoteQuantity = AdjustForMinimum(Pair.Price, q, MidpointRounding.ToZero);
-            BaseQuantity = AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero);
+            BaseQuantity = AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
+
+            var res = QuoteQuantity > Pair.NotionalMinimumValue;
+            return res;
             //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.Price.Increment);
             //StopLimitTracker.SetLimits(QuoteClosePrice);
         }

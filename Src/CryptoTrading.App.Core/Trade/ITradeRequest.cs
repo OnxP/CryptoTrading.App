@@ -16,6 +16,6 @@ namespace CryptoTrading.App.Core.Trade
         decimal Volume { get; set; }
         decimal BaseQuantity { get; }
         decimal QuoteQuantity { get; }
-        void Validate(decimal freeAmount, decimal nonFreeAmount);
+        bool Validate(decimal freeAmount, decimal nonFreeAmount);
     }
 }

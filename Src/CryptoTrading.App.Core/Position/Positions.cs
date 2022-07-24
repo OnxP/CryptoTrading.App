@@ -65,7 +65,7 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckRequest(ITradeRequest what)
         {
-            return !CheckHasOpenPositionAndVolume(what.BaseSymbol,what) && CheckHasEnoughBalance(what);
+            return CheckHasEnoughBalance(what) && !CheckHasOpenPositionAndVolume(what.BaseSymbol, what);
         }
 
         public void AjdustPosition(string accountPositionAsset, decimal accountPositionFree)

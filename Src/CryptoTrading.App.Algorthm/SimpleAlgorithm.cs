@@ -65,7 +65,7 @@ namespace CryptoTrading.App.Algorithm
                 if (!candlestickEventArgs.IsFinal) return;
                 _candleSticks.Add(candlestickEventArgs.Candlestick);
                 //Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteAssetVolume);
+                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteAssetVolume,candlestickEventArgs.Candlestick.NumberOfTrades);
                 //Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
                 if (request==null) return;
                 if (request.Amount <= 0) return;
@@ -78,7 +78,7 @@ namespace CryptoTrading.App.Algorithm
             }
         }
 
-        public ITradeRequest CalculateTradeStrategies(string symbol, DateTime closeTime,decimal volume )
+        public ITradeRequest CalculateTradeStrategies(string symbol, DateTime closeTime,decimal volume ,long numberOfTrades)
         {
             if (!_candleSticks.Ready)
             {
@@ -94,6 +94,8 @@ namespace CryptoTrading.App.Algorithm
             var result = TradingStrategies.Calculate(_candleSticks, StopLimitTrackers);
             
             if(result == 0) return RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers, volume , (decimal)Config.PercentDailyVolume);
+
+
             
             result = (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades;
             //need access to config here.

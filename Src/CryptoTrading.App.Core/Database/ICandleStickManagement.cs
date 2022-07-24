@@ -8,6 +8,7 @@ namespace CryptoTrading.App.Core.Database
         public DateTime CurrentTick { get; }
         public DateTime FinalTick { get; }
         public DateTime NextTick { get; }
+        public DateTime PreviousTick { get; }
         DateTime FirstTick { get; }
         int Index { get; }
 

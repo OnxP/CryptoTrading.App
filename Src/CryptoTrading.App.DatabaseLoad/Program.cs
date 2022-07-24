@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Data.Common;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +23,9 @@ namespace CryptoTrading.App.DatabaseLoad
 
         static void Main(string[] args)
         {
+
+            DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
+            Database.SetInitializer<CryptoDbContext>(null);
             var Configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", true, false)
@@ -44,8 +49,8 @@ namespace CryptoTrading.App.DatabaseLoad
             var symbols = Api.GetSymbolsAsync().Result.Where(x=> x.QuoteAsset.Symbol=="BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2022, 06, 19,18,01,00);
-            marketDate.To = new DateTime(2022, 06, 30);
+            marketDate.From = new DateTime(2022, 07, 07); 
+            marketDate.To = new DateTime(2022, 07, 16);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

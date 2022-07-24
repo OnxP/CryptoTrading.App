@@ -23,7 +23,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             //add indicators to dictionary
             //for simple ema strat, we need slow fast and long, 13 21 and 200
-            var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
+            var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 200 });
             var atr10 = new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 10 });
             dict.Add("LongEma", ema);
             dict.Add("ATR10", atr10);
@@ -52,24 +52,14 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
             var trend = Trend == false && (double)closePrice.Close > dn1 || (Trend != true || !((double)closePrice.Close < up1)) && Trend;
 
-            var condition1 = trend == true && Trend == false;
+            var condition1 = trend;// && Trend == false;
             var condition4 = (double)closePrice.Close > ema.Last();
             up1 = up;
             dn1 = dn;
             Trend = trend;
-            if (condition1 && condition4)
-            {
-                return SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers) ? 1 : 0;
-            }
 
-            if (StopLimitTrackers.IsOpen)
-            {
-                //move stoplimit
-                var currentSL = closePrice.Close - 2m * (decimal)atr.Last();
-                if(currentSL > StopLimitTrackers.StopLimitPrice)
-                    StopLimitTrackers.ManualChangeSL(currentSL);
-            }
-            return 0;
+            return StopLimitTrackers.SetStopLimit(indicatorOutputs, closePrice,  condition1 && condition4,
+                s => Logger.LogInformation(s));
         }
     }
 }

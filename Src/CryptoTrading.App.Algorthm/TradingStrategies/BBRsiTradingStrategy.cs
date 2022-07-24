@@ -74,12 +74,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
-            if (condition1 && condition2 && condition3 && condition4 && condition5)
-            {
-                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
-                return 1;
-            }
-            return 0;
+            return StopLimitTrackers.SetStopLimit(indicatorOutputs, closePrice,
+                condition1 && condition2 && condition3 && condition4 && condition5,
+                s => Logger.LogInformation(s));
         }
         private bool LastSixClose(double[] close)
         {

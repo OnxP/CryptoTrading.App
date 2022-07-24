@@ -80,22 +80,16 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var condition9 = kLine.Last() >= 80 ;
             var condition7 = (double)closePrice.Close < mediumWma.Last();
             var condition8 = (double)closePrice.Close > mediumWma.Last();
-            var condition10 = closePrice.QuoteAssetVolume > 2.0m && closePrice.NumberOfTrades > 10m;
 
             var multiple = Convert.ToDecimal(atr.Last());
             //var percentOfPrice = 100 - (((closePrice.Close - multiple) / closePrice.Close) * 100); 
             var highvol = StopLimitTrackers.Risk < 2 * (multiple / closePrice.Close);
-            var condition11 = Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * multiple;
 
-            var diff = closePrice.High - closePrice.Low;
-            var diffCondition = diff > 4 * Symbol.Cache.Get(closePrice.Symbol).Price.Increment;
 
-            if (macdCondition1 && condition11 && volumeCondition && condition10 && condition5 && !highvol && condition4 && condition3 && ((condition7 && condition9) || (condition8 && condition6)))
-            {
-                SetStopLimit(indicatorOutputs, closePrice, StopLimitTrackers);
-                return 1;
-            }
-            return 0;
+            return StopLimitTrackers.SetStopLimit(indicatorOutputs, closePrice,
+                macdCondition1 && volumeCondition && condition5 && !highvol &&
+                condition4 && condition3 && ((condition7 && condition9) || (condition8 && condition6)),
+                s => Logger.LogInformation(s));
         }
 
     }

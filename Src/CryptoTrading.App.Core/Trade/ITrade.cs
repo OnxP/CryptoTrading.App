@@ -20,6 +20,7 @@ namespace CryptoTrading.App.Core.Trade
         DateTime CloseDate { get; }
         IStopLimitTracker StopLimitTracker { get; set; }
         string Comment { get; }
+        decimal FeeBnb { get; }
 
         void CancelCurrentTransaction();
         void UpdateCurrentTransaction(Order order);

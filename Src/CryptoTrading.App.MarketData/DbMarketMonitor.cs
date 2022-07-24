@@ -89,7 +89,7 @@ namespace CryptoTrading.App.MarketData
                     }
                 }
             }
-            _data.ClearHistoric(_mangement.CurrentTick, true);
+            _data.ClearHistoric(_mangement.PreviousTick, true);
         }
 
         public void Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
@@ -104,7 +104,7 @@ namespace CryptoTrading.App.MarketData
                     actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
                 }
 
-                _data.ClearHistoric(_mangement.CurrentTick, true);
+                _data.ClearHistoric(_mangement.PreviousTick, true);
 
                 if (actions.Count >= 1) _mangement.AddStopLimitStream(InvokeCandleStick);
 

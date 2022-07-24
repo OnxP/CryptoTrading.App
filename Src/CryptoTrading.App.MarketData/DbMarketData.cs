@@ -24,15 +24,17 @@ namespace CryptoTrading.App.MarketData
             _data = data;
         }
 
-        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
+        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to,CandlestickInterval interval) : this(management, data)
         {
             From = from;
             To = to;
             Logger = logger;
+            Interval = interval;
         }
 
         public DateTime From { get; set; }
         public DateTime To { get; set; }
+        public CandlestickInterval Interval { get; set; }
 
         public int TotalNumberOfRows { get; set; }
         public int RequestRows { get; set; }
@@ -40,7 +42,7 @@ namespace CryptoTrading.App.MarketData
         private CancellationToken CancellationToken { get; set; }
 
         private string SQL_HISTORIC_QUERY = @"
-SELECT DISTINCT [ID]
+with candlestick as (SELECT [ID]
       ,[Symbol]
       ,[Interval]
       ,[OpenTime]
@@ -58,9 +60,10 @@ SELECT DISTINCT [ID]
   WHERE OpenTime >= @p0 AND OpenTime < @p1 AND Interval=@p2
   ORDER BY OpenTime
   OFFSET @p3 ROWS
-  FETCH NEXT @p4 ROWS ONLY
+  FETCH NEXT @p4 ROWS ONLY)
+select * from candlestick order by Opentime
 ";
-        private string SQL_STREAM_QUERY = @"SELECT DISTINCT [ID]
+        private string SQL_STREAM_QUERY = @"with candlestick as (SELECT [ID]
       ,[Symbol]
       ,[Interval]
       ,[OpenTime]
@@ -78,7 +81,8 @@ SELECT DISTINCT [ID]
   WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Interval=@p2
   ORDER BY OpenTime
   OFFSET @p3 ROWS
-  FETCH NEXT @p4 ROWS ONLY
+  FETCH NEXT @p4 ROWS ONLY)
+select * from candlestick order by Opentime
 ";
 
 
@@ -147,7 +151,7 @@ SELECT DISTINCT [ID]
 
             //await task;
 
-            _data.ClearHistoric(_mangement.CurrentTick, false);
+            _data.ClearHistoric(_mangement.PreviousTick, false);
         }
 
         private async Task LoadNextCandleSticksTask(List<string> toList)
@@ -164,13 +168,13 @@ SELECT DISTINCT [ID]
             {
                 throw new Exception();
             }
-            if(CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minutes_15, 1)>_mangement.FinalTick) return;
+            if(CalculateFrom(_mangement.CurrentTick, Interval, 1)>_mangement.FinalTick) return;
 
-            if (_data.CheckNextTick(CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minutes_15, 1),
+            if (_data.CheckNextTick(CalculateFrom(_mangement.CurrentTick, Interval, 1),
                     toList.First(), false)) return;
 
             var rows = _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick,_mangement.FinalTick,
-                toList, 3, RequestRows, TotalNumberOfRows);
+                toList, (int)Interval, RequestRows, TotalNumberOfRows);
             RequestRows = rows;
             TotalNumberOfRows += rows;
         }
@@ -200,8 +204,11 @@ SELECT DISTINCT [ID]
         }
         private void LoadHistoricData()
         {
-            RequestRows = _data.LoadData(SQL_HISTORIC_QUERY, CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(),-201), From,
-                historicDataSubscribers.Keys.Select(x => x.symbol).ToList(), (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 1000,0);
+            RequestRows = _data.LoadData(SQL_HISTORIC_QUERY,
+                CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(), -201), From,
+                historicDataSubscribers.Keys.Select(x => x.symbol).ToList(),
+                (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 1000,
+                0);
             foreach (var item in historicDataSubscribers)
             {
                 LoadHistoricData( item.Key, From, item.Value);

@@ -106,14 +106,14 @@ namespace CryptoTrading.App.MarketData
         {
             try
             {
-                Logger.LogInformation("Loading Historic Candlesticks");
+                //Logger.LogInformation("Loading Historic Candlesticks");
                 var tasks = new List<Task>();
-                foreach (var item in historicDataSubscribers)
-                {
-                    tasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
-                }
-                Task.WaitAll(tasks.ToArray());
-                Logger.LogInformation("Finished loading Historic Candlesticks");
+                //foreach (var item in historicDataSubscribers)
+                //{
+                //    tasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
+                //}
+                //Task.WaitAll(tasks.ToArray());
+                //Logger.LogInformation("Finished loading Historic Candlesticks");
                 tasks = new List<Task>();
                 //LoadData
 

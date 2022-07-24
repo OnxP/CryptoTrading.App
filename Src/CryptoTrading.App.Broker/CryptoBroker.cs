@@ -36,8 +36,8 @@ namespace CryptoTrading.App.Broker
             Action<MessagePayload<IMarketRequest>> NewTradeMesssage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue, NewTradeMesssage);
 
-            Action<MessagePayload<ICancelRequest>> CancelTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, CancelTradeMessage);
+            Action<MessagePayload<ICancelRequest>> CancelTransactionMessage = ProcessMessageAction;
+            messageBroker.Subscribe(KeyValue, CancelTransactionMessage);
 
             Action<MessagePayload<IStopLimitRequest>> StoplimitTradeMessage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue, StoplimitTradeMessage);
@@ -47,13 +47,12 @@ namespace CryptoTrading.App.Broker
         private async void ProcessMessageAction(MessagePayload<IMarketRequest> obj)
         {
             IMarketRequest request = obj.What;
-            
-            //set market order
-            var order = await _market.SetMarketOrder(request);
-            //confirm market order has been met
-            LogOrder(order,OrderStatus.Filled);
-            MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
-        }
+                //set market order
+                var order = await _market.SetMarketOrder(request);
+                //confirm market order has been met
+                LogOrder(order, OrderStatus.Filled);
+                MessageBroker.Instance.Publish(KeyValue, obj.Who, order);
+            }
 
         private void ProcessMessageAction(MessagePayload<ICancelRequest> obj)
         {
