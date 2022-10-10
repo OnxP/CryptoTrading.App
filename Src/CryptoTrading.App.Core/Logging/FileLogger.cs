@@ -83,6 +83,9 @@ namespace CryptoTrading.App.Core.Logging
                     FileInfo fi1 = new FileInfo(_filePath);
                     if (fi1.Exists && fi1.Length / 1000 >= _maxLogSize)
                     {
+                        var name = fi1.FullName + _logFileNumber+1;
+                        var fitemp = new FileInfo(name);
+                        if (fitemp.Exists) fitemp.Delete();
                         fi1.MoveTo(fi1.FullName+_logFileNumber++);
                         FileInfo fi2 = new FileInfo(_filePath);
                         if (fi2.Exists) fi2.Delete();

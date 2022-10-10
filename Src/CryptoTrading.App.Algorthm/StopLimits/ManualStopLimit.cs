@@ -7,8 +7,8 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         private bool _triggerUpdate = false;
         public ManualStopLimit(decimal risk, decimal increment)
         {
-            Risk = risk / 100m;
-            Increment = increment / 100m;
+            Risk = risk;
+            Increment = increment;
         }
         public override void Configure(Order order)
         {
@@ -30,6 +30,8 @@ namespace CryptoTrading.App.Algorithm.StopLimits
 
         public override bool RequestUpdateOfStopLimit(decimal closePrice)
         {
+            if (TargetPrice <= closePrice) return true;
+
             var update = _triggerUpdate;
             _triggerUpdate = false;
             return update;

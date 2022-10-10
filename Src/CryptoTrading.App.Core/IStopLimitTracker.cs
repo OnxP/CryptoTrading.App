@@ -23,5 +23,8 @@ namespace CryptoTrading.App.Core
         void ManualChangeSL(decimal sl);
         void SetLimits(decimal quoteClosePrice);
         int SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, bool conditions, Action<string> logInformation);
+
+        int SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+            bool conditions, bool closeConditions, decimal last10Low, Action<string> logInformation);
     }
 }

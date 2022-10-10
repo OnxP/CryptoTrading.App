@@ -6,19 +6,19 @@ using System.Linq;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
-    public class SimpleMacdTradingStrategy : TradingStrategy
+    public class MacdOOTradingStrategy : TradingStrategy
     {
-        public SimpleMacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public MacdOOTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
-
-        public SimpleMacdTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        public MacdOOTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }
-
         protected override double StrategyWeight => 1.0 / noOfTrades;
         private double noOfTrades = 1d;
+        //protected override double StrategyWeight => 1.0;
+
 
         //public override int OutputLength => 1000;
 
@@ -32,45 +32,42 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             double signal = 9;
             var macd = new IndicatorSetUp(Tulip.Indicators.macd, new double[] { shortPeriod, longPeriod, signal });
 
-            var ema = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 });
-            var srsi = new IndicatorSetUp(Tulip.Indicators.stochrsi2, new double[] { 14, 14, 3, 3 });
+            var sEma = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 9 },5);
+            var mEma = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 55 },5);
+            var lEma = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 100 },5);
+            var rsi = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14, 14, 3, 3 },5);
             var close = new IndicatorSetUp(Tulip.Indicators.close, new double[] { 6 });
 
             dict.Add("MACD", macd);
-            dict.Add("LongEma", ema);
+            dict.Add("ShortEma", sEma);
+            dict.Add("MediumEma", mEma);
+            dict.Add("LongEma", lEma);
             dict.Add("close", close);
-            dict.Add("sRsi", srsi);
+            dict.Add("Rsi", rsi);
             return dict;
         }
 
         protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
-            var macd = indicatorOutputs["MACD"][0].ToList();
-            var signal = indicatorOutputs["MACD"][1].ToList();
             var hist = indicatorOutputs["MACD"][2].ToList();
+            var sEma = indicatorOutputs["ShortEma"][0].ToList();
+            var mEma = indicatorOutputs["MediumEma"][0].ToList();
             var longEma = indicatorOutputs["LongEma"][0].ToList();
             var low = indicatorOutputs["close"][3].ToList();
             var atr = indicatorOutputs["atr"][0].ToList();
 
-            var kLine = indicatorOutputs["sRsi"][0].ToList();
-            var dLine = indicatorOutputs["sRsi"][1].ToList();
-            //add rsi and don't make a trade when the rsi is above 60.
-            //or remove condition4? or reduce the range
-            longEma.Reverse();
-            macd.Reverse();
-            signal.Reverse();
-            hist.Reverse();
-
+            var rsi = indicatorOutputs["Rsi"][0].ToList();
 
             // log values
 
-            var condition1 = macd.First() > signal.First();
 
             //var condition3 = kLine.First() <= 50.0 && kLine.First() >= dLine.First();
             //var condition3 = CheckMacdTail(macd,signal,hist,close);
-            var condition2 = longEma.First() < (double)closePrice.Close;
-            var condition4 = macd.First() < 0.0d;
+            var condition1 = sEma.First() < (double)closePrice.Close;
+            var condition2 = mEma.First() < sEma.First();
+            var condition3 = longEma.First() < mEma.First();
+            var condition4 = rsi.First() > 52;
 
 
 
