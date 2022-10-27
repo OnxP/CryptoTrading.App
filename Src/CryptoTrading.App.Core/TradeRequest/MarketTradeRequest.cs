@@ -28,10 +28,16 @@ namespace CryptoTrading.App.Core.TradeRequest
             QuoteQuantity = AdjustForMinimum(Pair.Price, q, MidpointRounding.ToZero);
             BaseQuantity = AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
 
-            var res = QuoteQuantity > Pair.NotionalMinimumValue;
+            var res = QuoteQuantity > Pair.NotionalMinimumValue && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
             return res;
             //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.Price.Increment);
             //StopLimitTracker.SetLimits(QuoteClosePrice);
+        }
+
+        private bool CheckFee(decimal baseQuantity, decimal priceDiff, decimal quoteQuantity)
+        {
+            return true;
+            return quoteQuantity * 0.002m < priceDiff * baseQuantity;
         }
 
         private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)

@@ -46,11 +46,12 @@ namespace CryptoTrading.App.DatabaseLoad
             HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
 
             var Api = ServiceProvider.GetService<IBinanceApi>();
-            var symbols = Api.GetSymbolsAsync().Result.Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
+            //var symbols = Api.GetSymbolsAsync().Result.Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
+            var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2022, 06, 01); 
-            marketDate.To = new DateTime(2022, 08, 19);
+            marketDate.From = new DateTime(2022, 09, 09); 
+            marketDate.To = new DateTime(2022, 10, 09);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

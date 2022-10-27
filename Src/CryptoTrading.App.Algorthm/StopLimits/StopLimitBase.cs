@@ -60,7 +60,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
 
             if (!IsOpen) return 0;
             //move stoplimit
-            //UpdateSwingLowStopLimit(indicatorOutputs, closePrice, closeConditions, logInformation);
+            UpdateSwingLowStopLimit(indicatorOutputs, closePrice, closeConditions, logInformation);
             return 0;
         }
 
@@ -83,11 +83,14 @@ namespace CryptoTrading.App.Algorithm.StopLimits
                 closePrice.Close + 1.5m * (decimal)atr.Last());
             StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
                 closePrice.Close - 1m * (decimal)atr.Last());
+
+            StopLimitPrice = closePrice.Open;
             logInformation($"DateTime: {closePrice.CloseTime:G}|Symbol: {Pair}| Close: {CurrentPrice:0.00000000}| Target: {TargetPrice:0.00000000}| Stop: {StopLimitPrice:0.00000000}");
             return true;
 
         }
 
+        private decimal tradePrice;
         protected virtual bool SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,decimal last10Low, Action<string> logInformation)
         {
             if (IsOpen) return false;
@@ -99,12 +102,13 @@ namespace CryptoTrading.App.Algorithm.StopLimits
                  Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * diff) && Math.Abs(perc) >2) return false;
 
             CurrentPrice = closePrice.Close;
+            tradePrice = closePrice.Close;
             Pair = closePrice.Symbol;
             Multiple =
                 AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
                     1.5m * diff); //(decimal)atr.Last() * 3;//diff + (2*Symbol.Cache.Get(closePrice.Symbol).Price.Increment); ;//AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,multiple);
             TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
-                closePrice.Close + diff * 1.5m);
+                closePrice.Close + diff * 15m);
             StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
                 closePrice.Close - (decimal)diff);
 
@@ -127,10 +131,11 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         protected virtual void UpdateSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,bool closeConditions, Action<string> logInformation)
         {
             var currentSl = closePrice.Close;
-            if (closeConditions && currentSl > StopLimitPrice)
+            if (closeConditions && tradePrice > StopLimitPrice)
             {
                 logInformation($"Increasing Stoplimit for {closePrice.Symbol} at {closePrice.CloseTime}- Price: {closePrice.Close}  Current Limit: {StopLimitPrice} New Limit: {currentSl}");
                 ManualChangeSL(currentSl);
+                
             }
         }
 

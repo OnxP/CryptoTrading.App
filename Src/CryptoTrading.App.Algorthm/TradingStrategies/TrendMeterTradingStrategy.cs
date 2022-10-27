@@ -82,7 +82,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var lowerLine = upperLine * -1;
 
             //take trade, SL at swing Low set target 10X price.
-            return StopLimitTrackers.SetSwingLowStopLimit(indicatorOutputs, closePrice, condition1 && condition3 &&condition4 && condition5 && condition6 && previousInvlidSignal&& condition2,!condition1 || !condition2,Last10Low,
+            return StopLimitTrackers.SetSwingLowStopLimit(indicatorOutputs, closePrice, condition1 && condition3 &&condition4 && condition5 && condition6 && previousInvlidSignal&& condition2 && upperLine>=0.00001,!condition1,Last10Low,
                 s => Logger.LogInformation(s));
             //exit trade when condition 1 and 2 are not true.
 

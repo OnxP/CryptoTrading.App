@@ -25,11 +25,11 @@ namespace CryptoTrading.App.Algorithm
 
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, IConfig config)
         {
-            services.AddTransient<ITradingStrategy, PsarMacdTradingStrategy>(provider => new PsarMacdTradingStrategy(provider.GetService<ILogger<TradingStrategy>>()));
+            services.AddTransient<ITradingStrategy, SuperTrendEMATradingStrategy>(provider => new SuperTrendEMATradingStrategy(provider.GetService<ILogger<TradingStrategy>>()));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
-            services.AddTransient<IStopLimitTracker, ManualFixedProfitStopLimit>(provider => new ManualFixedProfitStopLimit(Convert.ToDecimal(config.Risk), Convert.ToDecimal(config.Increment)));
+            services.AddTransient<IStopLimitTracker, FixedProfitStopLimit>(provider => new FixedProfitStopLimit(Convert.ToDecimal(config.Risk), Convert.ToDecimal(config.Increment)));
 
             return services;
         }

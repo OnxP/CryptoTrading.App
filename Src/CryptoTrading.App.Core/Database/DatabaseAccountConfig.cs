@@ -60,6 +60,7 @@ namespace CryptoTrading.App.Core.Database
 
             var list = new List<AccountBalance>();
             list.Add(new AccountBalance(Asset.USDT, Convert.ToDecimal(Config.StartBtcAmount*100000), 0m));
+            list.Add(new AccountBalance(Asset.BTC, Convert.ToDecimal(Config.StartBtcAmount), 0m));
 
             foreach (var symbol in res)
             {
