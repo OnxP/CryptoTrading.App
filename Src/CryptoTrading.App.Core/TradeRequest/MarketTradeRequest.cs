@@ -36,8 +36,8 @@ namespace CryptoTrading.App.Core.TradeRequest
 
         private bool CheckFee(decimal baseQuantity, decimal priceDiff, decimal quoteQuantity)
         {
-            return true;
-            return quoteQuantity * 0.002m < priceDiff * baseQuantity;
+            //return true;
+            return quoteQuantity * 0.002m < (Math.Abs(priceDiff) * baseQuantity);
         }
 
         private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)

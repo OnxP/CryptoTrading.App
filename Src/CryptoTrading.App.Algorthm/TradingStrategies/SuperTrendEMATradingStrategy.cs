@@ -47,24 +47,30 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             var directionLong = indicatorOutputs["superTrendLong"][1].ToList();
 
             //green super long super trend, only continue.
-            if (directionLong.Last() != 1)
+            if (directionLong.Last() != -1)
             {
                 Reset();
                 return 0;
             }
 
-            if (directionLong.Last() == 1) SuperTrendLongFlag = true;
+            if (directionLong.Last() == -1) SuperTrendLongFlag = true;
 
-            if (SuperTrendLongFlag && !SuperTrendShortGreenFlag && direction.Last() == 1)
+            if (SuperTrendLongFlag && !SuperTrendShortGreenFlag && direction.Last() == -1)
                 SuperTrendShortGreenFlag = true;
 
-            if (SuperTrendLongFlag && !SuperTrendShortRedFlag && direction.Last() == -1)
+            if (SuperTrendLongFlag && SuperTrendShortGreenFlag && !SuperTrendShortRedFlag && direction.Last() == 1)
                 SuperTrendShortRedFlag = true;
 
-            if (SuperTrendLongFlag && !SuperTrendShortGreen2Flag && direction.Last() == 1)
+            if (SuperTrendLongFlag && SuperTrendShortGreenFlag && SuperTrendShortRedFlag && !SuperTrendShortGreen2Flag && direction.Last() == -1)
                 SuperTrendShortGreen2Flag = true;
+            else
+            {
+                SuperTrendShortGreen2Flag = false;
+            }
 
-            var condition4 = (double)closePrice.Close > ema.Last();
+            //close > open
+
+            var condition4 = (double)closePrice.Close > ema.Last() && closePrice.Close > closePrice.Open;
 
             var res = StopLimitTrackers.SetStopLimit(indicatorOutputs, closePrice, SuperTrendShortGreen2Flag && condition4,
                 s => Logger.LogInformation(s));

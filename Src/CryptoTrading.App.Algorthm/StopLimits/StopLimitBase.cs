@@ -72,19 +72,20 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             //volume and profitability conditions.
             if (closePrice.QuoteAssetVolume <= 2.0m || closePrice.NumberOfTrades <= 10m ||
                 Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 >= 2 * (decimal)atr.Last()) return false;
-                
+
+            var sl = closePrice.Close - 1m * (decimal)atr.Last();
+            if (sl / closePrice.Close < 0.99m) sl = closePrice.Close * 0.99m;
+
             CurrentPrice = closePrice.Close;
             Pair = closePrice.Symbol;
             Multiple =
                 AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
                     (decimal)atr
                         .Last());
-            TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
-                closePrice.Close + 1.5m * (decimal)atr.Last());
-            StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,
-                closePrice.Close - 1m * (decimal)atr.Last());
+            TargetPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,1.02m *closePrice.Close);
+            StopLimitPrice = AdjustForMinimum(Symbol.Cache.Get(closePrice.Symbol).Price,sl);
 
-            StopLimitPrice = closePrice.Open;
+            //StopLimitPrice = closePrice.Low;
             logInformation($"DateTime: {closePrice.CloseTime:G}|Symbol: {Pair}| Close: {CurrentPrice:0.00000000}| Target: {TargetPrice:0.00000000}| Stop: {StopLimitPrice:0.00000000}");
             return true;
 

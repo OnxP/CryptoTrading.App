@@ -2,7 +2,7 @@
 
 namespace CryptoTrading.App.Algorithm.StopLimits
 {
-    class FixedProfitStopLimit : StopLimitBase
+    public class FixedProfitStopLimit : StopLimitBase
     {
         public FixedProfitStopLimit(decimal risk, decimal increment)
         {

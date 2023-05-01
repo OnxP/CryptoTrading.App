@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Algorithm
         public int NumberOfCandleSticksToKeep => TradingStrategies.OutputLength;
         private readonly CandleStickDictionary _candleSticks;
         public ITradingStrategy TradingStrategies;
-        public IStopLimitTracker StopLimitTrackers { get; set; } 
+        public IStopLimitTracker StopLimitTracker { get; set; } 
         public string KeyValue { get; set; }
 
         public IConfig Config { get; set; }
@@ -29,15 +29,15 @@ namespace CryptoTrading.App.Algorithm
         {
             Config = config;
         }
-        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers)
+        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTracker)
         { 
             TradingStrategies = strategies;
             _candleSticks = new CandleStickDictionary(NumberOfCandleSticksToKeep);
-            StopLimitTrackers = stopLimitTrackers;
+            StopLimitTracker = stopLimitTracker;
             Logger = logger;
             KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
         }
-        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTrackers, IKey key):this(strategies,logger,stopLimitTrackers)
+        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTracker, IKey key):this(strategies,logger,stopLimitTracker)
         {
             KeyValue = key.KeyValue;
         }
@@ -50,7 +50,7 @@ namespace CryptoTrading.App.Algorithm
 
             Logger.LogInformation(
                 $"Added {candlesticks.Count()} historic candlesticks for {candlesticks.First().Symbol}");
-            StopLimitTrackers.EndDateTime = candlesticks.First().CloseTime;
+            StopLimitTracker.EndDateTime = candlesticks.First().CloseTime;
             //var result = CalculateTradeStrategies(candlesticks.First().Symbol,
             //     candlesticks.Last().CloseTime, candlesticks.Last().Volume);
         }
@@ -91,15 +91,15 @@ namespace CryptoTrading.App.Algorithm
                 return null;
             }
 
-            var result = TradingStrategies.Calculate(_candleSticks, StopLimitTrackers);
+            var result = TradingStrategies.Calculate(_candleSticks, StopLimitTracker);
             
-            if(result == 0) return RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers, volume , (decimal)Config.PercentDailyVolume);
+            if(result == 0) return RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
 
 
             
             result = (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades;
             //need access to config here.
-            var request = RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTrackers, volume , (decimal)Config.PercentDailyVolume);
+            var request = RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
 
             return request;
         }

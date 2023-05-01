@@ -67,7 +67,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App", "Crypto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Config", "CryptoTrading.App.Config\CryptoTrading.App.Config.csproj", "{AEFBB87E-A419-4D56-9B83-2BB743B21B0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.AlgorthimTesting", "CryptoTrading.App.AlgorthimTesting\CryptoTrading.App.AlgorthimTesting.csproj", "{FDB83A98-E964-4032-B545-DE85F49F7635}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.AlgorthimTesting", "CryptoTrading.App.AlgorthimTesting\CryptoTrading.App.AlgorthimTesting.csproj", "{FDB83A98-E964-4032-B545-DE85F49F7635}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Calibration", "CryptoTrading.App.Calibration\CryptoTrading.App.Calibration.csproj", "{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.MarketDataValidation", "CryptoTrading.App.MarketDataValidation\CryptoTrading.App.MarketDataValidation.csproj", "{F9A47760-BBE4-475C-8296-4A58926A0565}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -301,6 +305,22 @@ Global
 		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|x64.ActiveCfg = Release|Any CPU
 		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|x64.Build.0 = Release|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|x64.Build.0 = Debug|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Release|x64.ActiveCfg = Release|Any CPU
+		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Release|x64.Build.0 = Release|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Debug|x64.Build.0 = Debug|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|x64.ActiveCfg = Release|Any CPU
+		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -327,6 +347,7 @@ Global
 		{3544D0F2-71C1-4D01-B01E-03C1331F5E05} = {BC6244DE-A148-4BD8-8D67-AE92C6CADA60}
 		{EFE66F3A-240D-42DB-965C-70888BB67629} = {B2181431-DFC1-43FE-9F79-82AFAD929091}
 		{AEFBB87E-A419-4D56-9B83-2BB743B21B0B} = {BC6244DE-A148-4BD8-8D67-AE92C6CADA60}
+		{F9A47760-BBE4-475C-8296-4A58926A0565} = {BC6244DE-A148-4BD8-8D67-AE92C6CADA60}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {657F2AA5-BF55-41F9-996F-48DDC1FBAA71}

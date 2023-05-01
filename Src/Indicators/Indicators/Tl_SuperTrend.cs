@@ -58,7 +58,7 @@ namespace Tulip
             double preSuperTrend = default;
             for (int i = period; i < close.Length; i++)
             {
-                var src = high[i] + low[i] / 2;
+                var src = (high[i] + low[i]) / 2;
                 var upperBand = src + factor * output[i - period];
                 var lowerBand = src - factor * output[i - period];
 
@@ -68,15 +68,16 @@ namespace Tulip
                 var directionVal = -1;
                 if (preSuperTrend == preUpperBand)
                 {
-                    directionVal = close[i] > upperBand ? -1 : 1;
+                    directionVal = close[i] > UpperBand ? -1 : 1;
                 }
                 else
                 {
-                    directionVal = close[i] < lowerBand ? 1 : -1;
+                    directionVal = close[i] < LowerBand ? 1 : -1;
                 }
 
                 direction[outputIndex2] = directionVal;
-                superTrend[outputIndex2++] = directionVal == -1 ? lowerBand : upperBand;
+                preSuperTrend = directionVal == -1 ? LowerBand : UpperBand;
+                superTrend[outputIndex2++] = preSuperTrend;
 
                 preLowerBand = LowerBand;
                 preUpperBand = UpperBand;
