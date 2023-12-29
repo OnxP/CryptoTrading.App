@@ -66,7 +66,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
         protected abstract Dictionary<string, IndicatorSetUp> GenerateIndicators();
 
+        protected CandleStickDictionary ClosePrices { get; set; }
+
         public virtual double Calculate(CandleStickDictionary closePrices, IStopLimitTracker stopLimitTrackers)
+            
         {
             Dictionary<string, double[][]> indicatorOutputs = new Dictionary<string, double[][]>();
             //load indicators
@@ -89,8 +92,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
 
             var symbol = closePrices.Current.Symbol;
-            Last10Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(10).Min(x => x.Low);
+            Last10Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(10).Min(x => x.Low); 
             Last5Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(5).Min(x => x.Low);
+            ClosePrices = closePrices;
             return Calculate(indicatorOutputs, closePrices.Current, stopLimitTrackers) * StrategyWeight;
         }
         //indicators work in reverse order, so the first item is the earliest candlestick.

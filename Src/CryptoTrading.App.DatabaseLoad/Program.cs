@@ -50,8 +50,8 @@ namespace CryptoTrading.App.DatabaseLoad
             var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2022, 12, 01); 
-            marketDate.To = new DateTime(2023, 01, 01);
+            marketDate.From = new DateTime(2023, 7, 20); 
+            marketDate.To = new DateTime(2023, 08, 27);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {

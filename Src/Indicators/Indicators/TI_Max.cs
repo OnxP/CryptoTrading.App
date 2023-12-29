@@ -20,7 +20,7 @@ namespace Tulip
                 return TI_OKAY;
             }
 
-            double[] input = inputs[0];
+            double[] input = inputs[2];
             double[] output = outputs[0];
 
             var maxi = -1;

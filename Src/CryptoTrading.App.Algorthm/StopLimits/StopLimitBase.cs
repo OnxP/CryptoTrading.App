@@ -9,7 +9,9 @@ namespace CryptoTrading.App.Algorithm.StopLimits
 {
     public class StopLimitBase : IStopLimitTracker
     {
-        public decimal StopLimitPrice { get ; set ; }
+        public decimal StopLimitPrice 
+        { get ; 
+            set ; }
         public decimal TargetPrice { get ; set ; }
         public decimal CurrentPrice { get ; set ; }
         public DateTime EndDateTime { get ; set ; }
@@ -73,7 +75,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             if (closePrice.QuoteAssetVolume <= 2.0m || closePrice.NumberOfTrades <= 10m ||
                 Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 >= 2 * (decimal)atr.Last()) return false;
 
-            var sl = closePrice.Close - 1m * (decimal)atr.Last();
+            var sl = closePrice.Close - 3m * (decimal)atr.Last();
             if (sl / closePrice.Close < 0.99m) sl = closePrice.Close * 0.99m;
 
             CurrentPrice = closePrice.Close;
