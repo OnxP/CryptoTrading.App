@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App
 {
-    internal class Program
+    class Program
     {
         static void Main(string[] args)
         {
