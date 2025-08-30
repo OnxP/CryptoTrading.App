@@ -46,12 +46,14 @@ namespace CryptoTrading.App.DatabaseLoad
             HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
 
             var Api = ServiceProvider.GetService<IBinanceApi>();
-            //var symbols = Api.GetSymbolsAsync().Result.Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
-            var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset.Symbol == "USDT").ToList();//count
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            //var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2025, 7, 01); 
-            marketDate.To = new DateTime(2025, 08,29);
+            marketDate.From = new DateTime(2025, 6, 01); 
+            marketDate.To = new DateTime(2025, 07,01);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
@@ -65,7 +67,8 @@ namespace CryptoTrading.App.DatabaseLoad
 
             marketDate.StartStream();
 
-            //var res = run(marketDate).Result;
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            //var res = await run(marketDate).ConfigureAwait(false);
             lock (_object)
             {
                 context.Dispose();
@@ -74,7 +77,7 @@ namespace CryptoTrading.App.DatabaseLoad
 
         private static async Task<int> run(IMarketData marketData)
         {
-            await RunMarketData(marketData);
+            await RunMarketData(marketData).ConfigureAwait(false);
             return 1;
         }
 
@@ -82,7 +85,7 @@ namespace CryptoTrading.App.DatabaseLoad
         {
             var con = marketData.GetTaskController();
             con.Begin();
-            await con.Task;
+            await con.Task.ConfigureAwait(false);
         }
 
         private static void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandlestickInterval> intervals)

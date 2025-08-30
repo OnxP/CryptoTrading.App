@@ -18,14 +18,16 @@ namespace CryptoTrading.App.Core.BinanceAccount
         }
         public List<Symbol> LoadCurrencies()
         {
-            var symbols = Api.GetSymbolsAsync().Result.Where(x => x.QuoteAsset == Asset.BTC && x.Status == SymbolStatus.Trading);
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x => x.QuoteAsset == Asset.BTC && x.Status == SymbolStatus.Trading);
             Symbol.UpdateCacheAsync(Api).ConfigureAwait(false);
             return symbols.ToList();
         }
 
         public List<AccountBalance> LoadPositions()
         {
-            var accountInfo = Api.GetAccountInfoAsync(User).Result.Balances.ToList();
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var accountInfo = await Api.GetAccountInfoAsync(User).ConfigureAwait(false).Balances.ToList();
             var btcAccountInfo = accountInfo.First(x => x.Asset == Asset.BTC);
             var bnbAccountInfo = accountInfo.First(x => x.Asset == Asset.BNB);
             accountInfo.Remove(btcAccountInfo);

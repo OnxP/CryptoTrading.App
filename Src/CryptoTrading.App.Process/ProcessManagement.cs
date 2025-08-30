@@ -26,7 +26,8 @@ namespace CryptoTrading.App.Process
             int i = 0;
             while (i <= retries)
             {
-                var res = Run().Result;
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+                var res = await Run().ConfigureAwait(false);
                 if (res == 0) return;
                 i++;
                 Logger.LogError($"App Failed Retrying attempt {i}");
@@ -45,7 +46,7 @@ namespace CryptoTrading.App.Process
 
                 var task = LoopProcess().ConfigureAwait(true);
                 //loops over the database checks for updates every 2 minutes.
-                await Process.StartProcessing();
+                await Process.StartProcessing().ConfigureAwait(false);
 
                 LogProcess(Process.CompleteRunningTrades);
             }
@@ -61,20 +62,20 @@ namespace CryptoTrading.App.Process
 
         private async Task LoopProcess()
         {
-            await Task.Delay(1000);
-            await Task.Delay((60 - DateTime.Now.Second) * 1000);
+            await Task.Delay(1000).ConfigureAwait(false);
+            await Task.Delay((60 - DateTime.UtcNow.Second) * 1000).ConfigureAwait(false);
             while (true)
             {
                 if (!Process.IsRunning) break;
                 //Change the sleep count to time of day. 10 minutes past the hour...etc.
-                if (DateTime.Now.Minute % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
-                if (DateTime.Now.Minute == 25) LogProcess(Process.RefreshPositionsData); //1 Hour
-                if (DateTime.Now.Hour == 21 && DateTime.Now.Minute == 17) // 24 Hours
+                if (DateTime.UtcNow.Minute % 2 == 0) LogProcess(Process.RefreshDatabaseConfig); //2 minutes
+                if (DateTime.UtcNow.Minute == 25) LogProcess(Process.RefreshPositionsData); //1 Hour
+                if (DateTime.UtcNow.Hour == 21 && DateTime.UtcNow.Minute == 17) // 24 Hours
                 {
                     LogProcess(Process.ArchiveAndReport);
                     LogProcess(Process.RefreshSymbols);
                 }
-                await Task.Delay(60 * 1000); //1 Minute
+                await Task.Delay(60 * 1000).ConfigureAwait(false); //1 Minute
             }
         }
 
@@ -103,10 +104,10 @@ namespace CryptoTrading.App.Process
         {
             var timer = new Stopwatch();
             timer.Start();
-            Logger.LogInformation($"Executing Function: {function.Method.Name} Start: {DateTime.Now}");
+            Logger.LogInformation($"Executing Function: {function.Method.Name} Start: {DateTime.UtcNow}");
             function.Invoke();
             timer.Stop();
-            Logger.LogInformation($"Completed Function: {function.Method.Name} Finish: {DateTime.Now} - {timer.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"Completed Function: {function.Method.Name} Finish: {DateTime.UtcNow} - {timer.ElapsedMilliseconds}ms");
         }
 
     }

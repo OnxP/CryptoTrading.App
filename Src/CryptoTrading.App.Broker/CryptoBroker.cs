@@ -48,7 +48,7 @@ namespace CryptoTrading.App.Broker
         {
             IMarketRequest request = obj.What;
                 //set market order
-                var order = await _market.SetMarketOrder(request);
+                var order = await _market.SetMarketOrder(request).ConfigureAwait(false);
                 //confirm market order has been met
                 LogOrder(order, OrderStatus.Filled);
                 MessageBroker.Instance.Publish(KeyValue, obj.Who, order);
@@ -58,7 +58,8 @@ namespace CryptoTrading.App.Broker
         {
             ICancelRequest request = obj.What;
             //set market order
-            var order = _market.CancelOrder(request).Result;
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var order = await _market.CancelOrder(request).ConfigureAwait(false);
             //confirm market order has been met
             MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
         }
@@ -66,7 +67,7 @@ namespace CryptoTrading.App.Broker
         {
             IStopLimitRequest request = obj.What;
             //set market order
-            var order = await _market.SetLimitOrder(request);
+            var order = await _market.SetLimitOrder(request).ConfigureAwait(false);
             //confirm market order has been met
             LogOrder(order, OrderStatus.New);
             MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
@@ -79,10 +80,10 @@ namespace CryptoTrading.App.Broker
 
         public void ClosePosition(ITrade trade)
         {
-            //IEnumerable<Order> orders = await _market.GetAllOpenOrders();
+            //IEnumerable<Order> orders = await _market.GetAllOpenOrders().ConfigureAwait(false);
             //foreach (var order in orders)
             //{
-            //    await _market.CancelOrder(order);
+            //    await _market.CancelOrder(order).ConfigureAwait(false);
             //}
         }
     }

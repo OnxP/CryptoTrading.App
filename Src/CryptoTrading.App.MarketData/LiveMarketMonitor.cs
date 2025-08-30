@@ -49,7 +49,8 @@ namespace CryptoTrading.App.MarketData
         private ITaskController Controller { get; set; }
         public virtual bool CheckOrder(ITransaction transaction)
         {
-            var newOrder = _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).Result;
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var newOrder = await _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).ConfigureAwait(false);
             transaction.UpdateOrder(newOrder);
             return newOrder.Status == OrderStatus.Filled;
         }

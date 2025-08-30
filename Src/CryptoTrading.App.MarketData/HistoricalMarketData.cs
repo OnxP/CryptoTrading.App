@@ -155,7 +155,8 @@ namespace CryptoTrading.App.MarketData
 
         private void StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-            var candleSticks = api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).Result.ToList();
+/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false).ToList();
             var action = historicDataSubscribers.First().Value.First();
             Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candleSticks.Count()}");
 
@@ -197,7 +198,7 @@ namespace CryptoTrading.App.MarketData
         private async System.Threading.Tasks.Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime());
+            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime()).ConfigureAwait(false);
             //need to drop first candle
             var sticks = candleSticks.Reverse().Skip(1);
             foreach (var action in callback)
@@ -301,6 +302,4 @@ namespace CryptoTrading.App.MarketData
 
     }
 }
-
-
 
