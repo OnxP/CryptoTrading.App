@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Binance;
 
 namespace CryptoTrading.App.Core.BinanceAccount
@@ -14,19 +15,20 @@ namespace CryptoTrading.App.Core.BinanceAccount
             Api = api;
             User = user;
         }
-        public List<Symbol> LoadCurrencies()
+        public async Task<List<Symbol>> LoadCurrencies()
         {
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x => x.QuoteAsset == Asset.BTC && x.Status == SymbolStatus.Trading);
-            Symbol.UpdateCacheAsync(Api).ConfigureAwait(false);
-            return symbols.ToList();
+            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false);
+            var sym = symbols.Where(x => x.QuoteAsset == Asset.BTC && x.Status == SymbolStatus.Trading);
+            await Symbol.UpdateCacheAsync(Api).ConfigureAwait(false);
+            return sym.ToList();
         }
 
-        public List<AccountBalance> LoadPositions()
+        public async Task<List<AccountBalance>> LoadPositions()
         {
-            var accountInfo = Api.GetAccountInfoAsync(User);
+            var accountInfo = await Api.GetAccountInfoAsync(User);
 /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            return accountInfo.Result.Balances.ToList();
+            return accountInfo.Balances.ToList();
         }
     }
 }

@@ -20,8 +20,7 @@ namespace CryptoTrading.App.DatabaseLoad
 {
     class Program
     {
-
-        static void Main(string[] args)
+        static async void Main(string[] args)
         {
 
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
@@ -46,10 +45,11 @@ namespace CryptoTrading.App.DatabaseLoad
             HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
 
             var Api = ServiceProvider.GetService<IBinanceApi>();
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             //var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
+            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var sym = await Api.GetSymbolsAsync().ConfigureAwait(false);
+            var symbols = sym.Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
 
             marketDate.Configure(Api);
             marketDate.From = new DateTime(2025, 6, 01); 

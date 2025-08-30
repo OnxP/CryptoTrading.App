@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Binance;
 
 namespace CryptoTrading.App.Core
 {
     public interface IAccountConfig
     {
-        List<Symbol> LoadCurrencies();
-        List<AccountBalance> LoadPositions();
+        Task<List<Symbol>> LoadCurrencies();
+        Task<List<AccountBalance>> LoadPositions();
     }
 }

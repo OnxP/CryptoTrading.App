@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Binance;
 using Binance.Client;
 using Binance.Utility;
@@ -35,7 +36,7 @@ namespace CryptoTrading.App.MarketData
             GetTaskController();
         }
 
-        public override bool CheckOrder(ITransaction transaction)
+        public async override Task<bool> CheckOrder(ITransaction transaction)
         {
             transaction.Complete();
             return true;

@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Process
         private ILogger Logger { get; }
         public IProcess Process { get; }
 
-        public void Run(int retries)
+        public async void Run(int retries)
         {
             int i = 0;
             while (i <= retries)

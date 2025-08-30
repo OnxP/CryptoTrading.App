@@ -54,7 +54,7 @@ namespace CryptoTrading.App.Broker
                 MessageBroker.Instance.Publish(KeyValue, obj.Who, order);
             }
 
-        private void ProcessMessageAction(MessagePayload<ICancelRequest> obj)
+        private async void ProcessMessageAction(MessagePayload<ICancelRequest> obj)
         {
             ICancelRequest request = obj.What;
             //set market order

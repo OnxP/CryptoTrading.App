@@ -28,10 +28,10 @@ namespace CryptoTrading.App.Process
         }
 
         //Load the positions dictionary and current tickers and map the events.
-        public void ReadBinanceData()
+        public async void ReadBinanceData()
         {
-            Symbols = AccountConfig.LoadCurrencies();
-            var accountPositions = AccountConfig.LoadPositions();
+            Symbols = await AccountConfig.LoadCurrencies();
+            var accountPositions = await AccountConfig.LoadPositions();
             PositionHelper.AddPositions(Symbols, accountPositions,TradeProcessor.Positions);
             ProcessHelper.WireMarketDataEvents(MarketData, Symbols, Config, Algorithm);
         }
@@ -83,9 +83,9 @@ namespace CryptoTrading.App.Process
             ArchiveAndReport();
         }
         //Reload tickers into the cashe from Binance and update the positions. Email if there are any discrepancies
-        public void RefreshSymbols()
+        public async void RefreshSymbols()
         {
-            var symbols = AccountConfig.LoadCurrencies();
+            var symbols = await AccountConfig.LoadCurrencies();
             if (ProcessHelper.HasSymbols(true,Symbols, symbols, out var newSymbols))
             {
                 newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x));
@@ -99,9 +99,9 @@ namespace CryptoTrading.App.Process
             MarketData.Configure(Config);
         }
 
-        public void RefreshPositionsData()
+        public async void RefreshPositionsData()
         {
-            var positions = AccountConfig.LoadPositions();
+            var positions = await AccountConfig.LoadPositions();
             PositionHelper.CheckDifferences(TradeProcessor.Positions, positions);
         }
         //Refresh data from the database, check what properties have changed and act on those that have.

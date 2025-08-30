@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CryptoTrading.App.Core.MarketMonitorFactory;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
@@ -58,7 +59,7 @@ namespace CryptoTrading.App.MarketData
   FETCH NEXT @p4 ROWS ONLY";
         private readonly object _lock = new object();
         private readonly object _lockAction = new object();
-        public bool CheckOrder(ITransaction transaction)
+        public async Task<bool> CheckOrder(ITransaction transaction)
         {
             transaction.Complete();
             return true;

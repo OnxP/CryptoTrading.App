@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Binance;
 using Binance.Client;
 using Binance.Utility;
@@ -47,7 +48,7 @@ namespace CryptoTrading.App.MarketData
         }
 
         private ITaskController Controller { get; set; }
-        public virtual bool CheckOrder(ITransaction transaction)
+        public async virtual Task<bool> CheckOrder(ITransaction transaction)
         {
 /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             var newOrder = await _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).ConfigureAwait(false);

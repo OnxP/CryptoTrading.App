@@ -153,10 +153,10 @@ namespace CryptoTrading.App.MarketData
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
 
-        private void StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private async void StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false).ToList();
+            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
+            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false);
             var action = historicDataSubscribers.First().Value.First();
             Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candleSticks.Count()}");
 

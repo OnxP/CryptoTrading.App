@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Binance;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Binance;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -15,7 +16,7 @@ namespace CryptoTrading.App.Core.Database
         public IConfig Config { get; }
 
         //public 
-        public List<Symbol> LoadCurrencies()
+        public async Task<List<Symbol>> LoadCurrencies()
         {
             using var context = new CryptoDbContext();
             var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x=>x.Symbol).Distinct().ToList();
@@ -53,7 +54,7 @@ namespace CryptoTrading.App.Core.Database
 
         private string Symbols => @"select * from CandleStickDbs where (opentime=@p0 OR opentime=@p1) and Interval=@p2";
 
-        public List<AccountBalance> LoadPositions()
+        public async Task<List<AccountBalance>> LoadPositions()
         {
             using var context = new CryptoDbContext();
             var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x => x.Symbol).Distinct().ToList();

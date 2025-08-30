@@ -33,7 +33,7 @@ namespace CryptoTrading.App.Monitor
 
         public DateTime currentCloseTime { get; set; }
 
-        public void ProcessCandleStick(CandlestickEventArgs candleStick)
+        public async void ProcessCandleStick(CandlestickEventArgs candleStick)
         {
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
@@ -48,7 +48,7 @@ namespace CryptoTrading.App.Monitor
             {
                 DbCandleStickManagement.PauseFlow = true;
                 //check for fill order
-                if (marketMonitor.CheckOrder(Trade.CurrentTransaction))
+                if (await marketMonitor.CheckOrder(Trade.CurrentTransaction))
                 {
                     Trade.CurrentTransaction.TransactionDate = currentCloseTime;
                     Tracker.EndDateTime = currentCloseTime;
