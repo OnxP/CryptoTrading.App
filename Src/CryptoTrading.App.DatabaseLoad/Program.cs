@@ -20,7 +20,7 @@ namespace CryptoTrading.App.DatabaseLoad
 {
     class Program
     {
-        static async void Main(string[] args)
+        public static async Task Main(string[] args)
         {
 
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", System.Data.SqlClient.SqlClientFactory.Instance);
