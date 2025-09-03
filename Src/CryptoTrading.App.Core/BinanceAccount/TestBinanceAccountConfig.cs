@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Core.BinanceAccount
         {
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false);
-            var sym = symbols.Where(x => x.QuoteAsset == Asset.BTC && x.Status == SymbolStatus.Trading);
+            var sym = symbols.Where(x => x.QuoteAsset == Asset.USDT && x.Status == SymbolStatus.Trading);
             await Symbol.UpdateCacheAsync(Api).ConfigureAwait(false);
             return sym.ToList();
         }
@@ -31,11 +31,11 @@ namespace CryptoTrading.App.Core.BinanceAccount
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             var account = await Api.GetAccountInfoAsync(User).ConfigureAwait(false);
             var accountInfo = account.Balances.ToList();
-            var btcAccountInfo = accountInfo.First(x => x.Asset == Asset.BTC);
+            var btcAccountInfo = accountInfo.First(x => x.Asset == Asset.USDT);
             var bnbAccountInfo = accountInfo.First(x => x.Asset == Asset.BNB);
             accountInfo.Remove(btcAccountInfo);
             accountInfo.Remove(bnbAccountInfo);
-            accountInfo.Add(new AccountBalance(Asset.BTC,(decimal)Config.StartBtcAmount,0m));
+            accountInfo.Add(new AccountBalance(Asset.USDT,10000.0m,0m));
             accountInfo.Add(new AccountBalance(Asset.BNB,(decimal)Config.StartBnbAmount,0m));
             return accountInfo;
         }

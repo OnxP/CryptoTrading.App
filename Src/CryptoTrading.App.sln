@@ -63,15 +63,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTraading.App.RunIndic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.ObjectTesting", "CryptoTrading.App.ObjectTesting\CryptoTrading.App.ObjectTesting.csproj", "{EFE66F3A-240D-42DB-965C-70888BB67629}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.AlgorthimTesting", "CryptoTrading.App.AlgorthimTesting\CryptoTrading.App.AlgorthimTesting.csproj", "{FDB83A98-E964-4032-B545-DE85F49F7635}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Calibration", "CryptoTrading.App.Calibration\CryptoTrading.App.Calibration.csproj", "{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.MarketDataValidation", "CryptoTrading.App.MarketDataValidation\CryptoTrading.App.MarketDataValidation.csproj", "{F9A47760-BBE4-475C-8296-4A58926A0565}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.2", "CryptoTrading.App.2\CryptoTrading.App.2.csproj", "{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App", "CryptoTrading.App\CryptoTrading.App.csproj", "{CBF5848D-51CA-497E-1654-2F1549568805}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -281,14 +277,6 @@ Global
 		{EFE66F3A-240D-42DB-965C-70888BB67629}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EFE66F3A-240D-42DB-965C-70888BB67629}.Release|x64.ActiveCfg = Release|Any CPU
 		{EFE66F3A-240D-42DB-965C-70888BB67629}.Release|x64.Build.0 = Release|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Debug|x64.Build.0 = Debug|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|x64.ActiveCfg = Release|Any CPU
-		{FDB83A98-E964-4032-B545-DE85F49F7635}.Release|x64.Build.0 = Release|Any CPU
 		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A70FB0A-9F57-494A-BBF6-B02344CDA90D}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -305,14 +293,14 @@ Global
 		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|x64.ActiveCfg = Release|Any CPU
 		{F9A47760-BBE4-475C-8296-4A58926A0565}.Release|x64.Build.0 = Release|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Debug|x64.Build.0 = Debug|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Release|x64.ActiveCfg = Release|Any CPU
-		{7E5158AC-C4C4-46BB-B808-5B6F0C5B4F0F}.Release|x64.Build.0 = Release|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Debug|x64.Build.0 = Debug|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|x64.ActiveCfg = Release|Any CPU
+		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

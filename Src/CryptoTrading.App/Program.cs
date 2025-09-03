@@ -11,7 +11,7 @@ namespace CryptoTrading.App
         {
             try
             {
-                var database = string.IsNullOrEmpty(args[0]) ? "SERVER=SQL-SERVER-2016" : args[0];
+                var database = string.IsNullOrEmpty(args[0]) ? "ANKUR-PC\\APDATASERVICE" : args[0];
                 var services = new ServiceCollection()
                     .AddCryptoService(database)
                     .AddLogging(builder => builder // configure logging.

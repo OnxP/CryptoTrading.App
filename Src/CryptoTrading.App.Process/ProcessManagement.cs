@@ -21,13 +21,13 @@ namespace CryptoTrading.App.Process
         private ILogger Logger { get; }
         public IProcess Process { get; }
 
-        public async void Run(int retries)
+        public void Run(int retries)
         {
             int i = 0;
             while (i <= retries)
             {
 /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-                var res = await Run().ConfigureAwait(false);
+                var res = Run().Result;
                 if (res == 0) return;
                 i++;
                 Logger.LogError($"App Failed Retrying attempt {i}");

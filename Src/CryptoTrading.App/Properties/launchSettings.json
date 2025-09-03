@@ -2,7 +2,7 @@
   "profiles": {
     "CryptoTrading.App": {
       "commandName": "Project",
-      "commandLineArgs": "localhost"
+      "commandLineArgs": "ANKUR-PC\\APDATASERVICE"
     }
   }
 }
