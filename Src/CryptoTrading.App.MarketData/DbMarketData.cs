@@ -207,7 +207,7 @@ select * from candlestick order by Opentime
             RequestRows = _data.LoadData(SQL_HISTORIC_QUERY,
                 CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(), -201), From,
                 historicDataSubscribers.Keys.Select(x => x.symbol).ToList(),
-                (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 1000,
+                (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 10000,
                 0);
             foreach (var item in historicDataSubscribers)
             {

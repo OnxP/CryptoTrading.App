@@ -10,6 +10,8 @@ namespace CryptoTrading.App.Core.Position
 
         private readonly Dictionary<string, IPosition> _positions;
 
+        private string FeeAsset => "USDT";
+
         public IPosition GetPosition(string asset)
         {
             if(!_positions.ContainsKey(asset))
@@ -56,7 +58,7 @@ namespace CryptoTrading.App.Core.Position
             var buyPosition = _positions[request.BaseSymbol];
             buyPosition.IsLocked = true;
             var sellPosition = _positions[request.QuoteSymbol];
-            var feePosition = _positions["BNB"];
+            var feePosition = _positions[FeeAsset];
             ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition, request);
             buyPosition.IsLocked = false;
             return trade;
