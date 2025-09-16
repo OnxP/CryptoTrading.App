@@ -91,11 +91,19 @@ namespace CryptoTrading.App.Core.Trade
 
         public ITransaction CreateNewTransaction()
         {
-            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(InitialRequest.BaseQuantity), 
-                SellPosition.CreatePendingTransaction(-InitialRequest.QuoteQuantity), 
-                FeePosition.CreatePendingTransaction(-InitialRequest.QuoteQuantity / 22.0m), InitialRequest.QuoteClosePrice, InitialRequest.RequestDateTime);
+            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(InitialRequest.BaseQuantity),
+                SellPosition.CreatePendingTransaction(-InitialRequest.QuoteQuantity),
+                CalculateFee(FeePosition, InitialRequest.QuoteSymbol, InitialRequest.QuoteQuantity), InitialRequest.QuoteClosePrice, InitialRequest.RequestDateTime);
             Transactions.Add(transaction);
             return transaction;
+        }
+
+        private TransactionLeg CalculateFee(IPosition FeePosition, string quoteSymbol, decimal quoteQuantity)
+        {
+            //for now assume fee is 0.075% of quote currency -> USDT
+            var feeAmount = -Math.Abs(InitialRequest.QuoteQuantity * 0.075m);
+            //TODO get current market price for fee calculation
+            return FeePosition.CreatePendingTransaction(feeAmount);
         }
 
 
