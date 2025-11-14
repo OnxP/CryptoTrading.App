@@ -11,5 +11,6 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         void Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick);
         bool IsSubscribed(string symbol, string keyValue);
         void UnSubscribe(string symbol, string keyValue);
+        object GetHistoricCandleSticks();
     }
 }

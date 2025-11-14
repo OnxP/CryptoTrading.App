@@ -5,6 +5,7 @@ namespace CryptoTrading.App.Core.Trade
 {
     public interface ITradeRequest
     {
+        string Symbol { get; }
         string BaseSymbol { get; }
         string QuoteSymbol { get; }
         decimal QuoteClosePrice { get; }

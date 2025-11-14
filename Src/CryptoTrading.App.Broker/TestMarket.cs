@@ -49,7 +49,7 @@ namespace CryptoTrading.App.Broker
             return Task.Run(() => "");
         }
 
-        public Task<Order> SetLimitOrder(IStopLimitRequest trade)
+        public Task<Order> SetStopLimitOrder(IStopLimitRequest trade)
         {
             trades.Add(trade);
             var order = new Order(new BinanceApiUser("Test"),

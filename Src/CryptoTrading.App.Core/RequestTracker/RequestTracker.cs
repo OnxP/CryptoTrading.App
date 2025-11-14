@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Binance;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
@@ -37,35 +38,33 @@ namespace CryptoTrading.App.Core.RequestTracker
             //if (CandleStickTracker.Instance.IsFinal) ProcessRequests();
         }
 
-        private void ProcessRequests()
+        private async Task ProcessRequests()
         {
-            lock (_lock)
+            if (!Requests.Any()) return;
+
+            var order = Requests.OrderByDescending(x => x.Value.Item2.Volume);
+
+            foreach (var request in order)
             {
-                if (!Requests.Any()) return;
+                await MessageBroker.Instance.Publish(request.Value.Item1,null,request.Value.Item2);
+            }
 
-                var order = Requests.OrderByDescending(x => x.Value.Item2.Volume);
+            Requests.Clear();            
+        }
 
-                foreach (var request in order)
+        public async Task SubmitRequests()
+        {
+            if (Requests.Any())
+            {
+                var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
+
+                foreach (var request in req)
                 {
-                    MessageBroker.Instance.Publish(request.Value.Item1,null,request.Value.Item2);
+                    await MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
                 }
 
                 Requests.Clear();
             }
-        }
-
-        public void SubmitRequests()
-        {
-            if (!Requests.Any()) return;
-
-            var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
-
-            foreach (var request in req)
-            {
-                MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
-            }
-
-            Requests.Clear();
         }
     }
 }

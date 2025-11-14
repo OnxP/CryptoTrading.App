@@ -9,6 +9,9 @@ using System;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -32,6 +35,17 @@ namespace CryptoTrading.App.Monitor
         public IStopLimitTracker Tracker => Trade.StopLimitTracker;
 
         public DateTime currentCloseTime { get; set; }
+        public ITradeRequest Request { get; set; }
+
+        public async Task SubscribetToMarketData()
+        {
+            if (!marketMonitor.IsSubscribed(Request.Symbol, KeyValue))
+            {
+                var candleSticks = await marketMonitor.GetHistoricCandleSticks();
+                Request.Strategy.LoadHistoricCandleSticks(candleSticks);
+                marketMonitor.Subscribe(Request.Symbol, KeyValue, ProcessCandleStick);
+            }
+        }
 
         public async void ProcessCandleStick(CandlestickEventArgs candleStick)
         {
@@ -93,13 +107,13 @@ namespace CryptoTrading.App.Monitor
             marketMonitor = null;
         }
 
-        private void CreateNewStopLimitOrder()
+        private async Task CreateNewStopLimitOrder()
         {
             Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice,currentCloseTime);
             
             IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
             //request.StopPrice = request.Price;
-            MessageBroker.Instance.Publish(KeyValue,Trade.CurrentTransaction, request);
+            await MessageBroker.Instance.Publish(KeyValue,Trade.CurrentTransaction, request);
         }
 
         private void CancelLimitOrder(int count = 0)
@@ -153,7 +167,7 @@ namespace CryptoTrading.App.Monitor
                 Tracker.Configure(order);
             }
             CreateNewStopLimitOrder();
-            if (!marketMonitor.IsSubscribed(order.Symbol, KeyValue)) marketMonitor.Subscribe(order.Symbol,KeyValue, ProcessCandleStick);
+            
         }
 
         private void UpdateStopLimit(bool targetReached)
@@ -168,9 +182,88 @@ namespace CryptoTrading.App.Monitor
             Trade.UpdateCurrentTransaction(order);//order not updated properly.
         }
 
-        public void AddTrade(ITrade trade)
+        public void AddRequest(ITrade trade)
         {
             Trade = trade;
         }
+
+        Task ITradeMonitor.CancelLimitOrder(string order)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddRequest(ITradeRequest request, IPositions positions)
+        {
+            Request = request;
+            IMessageBroker messageBroker = MessageBroker.Instance;
+
+            Func<MessagePayload<Order>, Task> newTradeMesssage = ProcessMessageAction;
+            messageBroker.Subscribe(Request.Symbol, newTradeMesssage);
+
+            Func<MessagePayload<string>, Task> CancelTradeMessage = ProcessMessageAction;
+            messageBroker.Subscribe(Request.Symbol, CancelTradeMessage);
+        }
+
+        private Task ProcessMessageAction(MessagePayload<Order> obj)
+        {
+            if (obj.Who is ITransaction transaction)
+            {
+                Order order = obj.What;
+                //assume that order has been filled.
+                try
+                {
+                    //error occurs here because there are not monitors set up for trade...need to find out why!
+   
+                    switch (transaction.Type)
+                    {
+                        case TransactionType.StopLimitTransaction:
+                            trade.UpdateStopLimitOrder(order);
+                            break;
+                        case TransactionType.Transaction:
+                            break;
+                        case TransactionType.MarketTransaction:
+                            trade.UpdateInitialTransaction(order);
+                            Logger.LogInformation($"Completed Trade for {order.Symbol} Q: {order.ExecutedQuantity} Price: {order.Price} originalQ: {order.OriginalQuantity} Original Price: {trade.Trade.CurrentPrice}");
+                            break;
+                    }
+                }
+                catch
+                {
+                    //if the stoploss is hit while the next order is being placed then we need to cancel and pull out of the trade
+                    //for now just skip and continue.
+
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        private async Task ProcessMessageAction(MessagePayload<string> obj)
+        {
+            if (obj.Who is ITransaction transaction)
+            {
+                string order = obj.What;
+                if (transaction.Status == TransactionStatus.Completed) return;
+                //assume that order has been filled.
+                var trade = CurrentMonitors.First(x => x.Symbol == transaction.Pair);
+                switch (transaction.Type)
+                {
+                    case TransactionType.StopLimitTransaction:
+                        await trade.CancelLimitOrder(order);
+                        break;
+                    case TransactionType.Transaction:
+                    case TransactionType.MarketTransaction:
+                        break;
+                }
+                //set market order
+                //find current transaction and cancel it.
+            }
+        }
+
+        public void CompleteTrade()
+        {
+            throw new NotImplementedException();
+        }
+
+        
     }
 }

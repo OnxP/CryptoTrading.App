@@ -1,6 +1,9 @@
-﻿using CryptoTrading.App.Core.Trade;
+﻿using Binance;
+using CryptoTrading.App.Core.Position;
+using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.MarketMonitorFactory
 {
@@ -11,10 +14,12 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         {
             _services = provider;
         }
-        public ITradeMonitor CreateMonitor(ITrade trade)
+
+        public async Task<ITradeMonitor> CreateMonitor(ITradeRequest request, IPositions positions)
         {
             ITradeMonitor monitor = _services.GetService<ITradeMonitor>();
-            monitor.AddTrade(trade);
+            monitor.AddRequest(request, positions);
+            await monitor.SubscribetToMarketData();
             return monitor;
         }
     }

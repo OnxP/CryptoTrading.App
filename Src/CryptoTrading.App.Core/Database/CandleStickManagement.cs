@@ -17,8 +17,8 @@ namespace CryptoTrading.App.Core.Database
         public ILogger<ICandleStickManagement> Logger { get; }
         DateTime Start { get; set; }
         DateTime Finish { get; set; }
-        Action _MarketDataStream { get; set; }
-        Action _StopLimitMonitor { get; set; }
+        Func<Task> _MarketDataStream { get; set; }
+        Func<Task> _StopLimitMonitor { get; set; }
 
         Dictionary<int, DateTime> timeKeeper = new Dictionary<int, DateTime>();
         int _index = 0;
@@ -51,11 +51,11 @@ namespace CryptoTrading.App.Core.Database
             //GetNextTick();
         }
 
-        public void AddMarketStream(Action invokeCandleStick)
+        public void AddMarketStream(Func<Task> invokeCandleStick)
         {
             _MarketDataStream = invokeCandleStick;
         }
-        public void AddStopLimitStream(Action invokeCandleStick)
+        public void AddStopLimitStream(Func<Task> invokeCandleStick)
         {
             _StopLimitMonitor = invokeCandleStick;
         }
@@ -64,35 +64,22 @@ namespace CryptoTrading.App.Core.Database
             _StopLimitMonitor = null;
         }
 
-        public void StartTimeKeeper(CancellationToken ct)
+        public async Task StartTimeKeeper(CancellationToken ct)
         {
             do
             {
                 Logger.LogDebug($"Processing tick :{CurrentTick}");
-                _MarketDataStream.Invoke();
-                RequestTracker.RequestTracker.Instance.SubmitRequests();
+                await _MarketDataStream();
+                await RequestTracker.RequestTracker.Instance.SubmitRequests();
 
-                //var task = new Task(_MarketDataStream);
-                //task.Start();
-                //task.Wait();
 
                 if (_StopLimitMonitor != null)
                 {
-                    _StopLimitMonitor.Invoke();
-                    //var monitorTask = new Task(_StopLimitMonitor);
-                    //monitorTask.Start();
-                    //monitorTask.Wait();
+                    await _StopLimitMonitor();
                 }
                 Logger.LogDebug($"Finished Processing tick :{CurrentTick}");
 
-                while (PauseFlow)
-                {
-                    Thread.Sleep(10);
-                }
-
                 GetNextTick();
-                //if (_StopLimitMonitor==null) 
-                //    Thread.Sleep(10);
                 if(ct.IsCancellationRequested) return;
             } while (_index < timeKeeper.Count-1);
         }

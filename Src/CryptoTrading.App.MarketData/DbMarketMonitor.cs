@@ -57,7 +57,26 @@ namespace CryptoTrading.App.MarketData
   ORDER BY OpenTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY";
-        private readonly object _lock = new object();
+        private string SQL_HISTORIC_QUERY = @"SELECT [ID]
+      ,[Symbol]
+      ,[Interval]
+      ,[OpenTime]
+      ,[Open]
+      ,[High]
+      ,[Low]
+      ,[Close]
+      ,[Volume]
+      ,[CloseTime]
+      ,[QuoteAssetVolume]
+      ,[NumberOfTrades]
+      ,[TakerBuyBaseAssetVolume]
+      ,[TakerBuyQuoteAssetVolume]
+  FROM [dbo].[CandleStickDbs]
+  WHERE OpenTime > @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  ORDER BY OpenTime
+  OFFSET @p3 ROWS
+  FETCH NEXT @p4 ROWS ONLY";
+
         private readonly object _lockAction = new object();
         public async Task<bool> CheckOrder(ITransaction transaction)
         {
@@ -71,7 +90,7 @@ namespace CryptoTrading.App.MarketData
             return;
         }
 
-        public void InvokeCandleStick()
+        public async Task InvokeCandleStick()
         {
             var candleSticks = _data.GetData(_mangement.CurrentTick, true).ToList();
             if (candleSticks.All(x => x.Value == null)) return;
@@ -86,11 +105,21 @@ namespace CryptoTrading.App.MarketData
 
                     if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key, true))
                     {
-                        _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { kvp.Key }, 0, NumberOfRows, OffSet);
+                        await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, 
+                            new List<string>() { kvp.Key }, 0, NumberOfRows, OffSet);
                     }
                 }
             }
             _data.ClearHistoric(_mangement.PreviousTick, true);
+        }
+
+        public async Task<List<Candlestick>> LoadHistoricData(string symbol)
+        {
+            var rows = await _data.LoadData(SQL_HISTORIC_QUERY,
+                DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minute, -201), _mangement.CurrentTick,
+                [symbol], 0, 200,  0);
+            
+            return _data.GetData(symbol);
         }
 
         public void Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)

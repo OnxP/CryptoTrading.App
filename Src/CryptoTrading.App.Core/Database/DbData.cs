@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
@@ -26,44 +27,43 @@ namespace CryptoTrading.App.Core.Database
         private Dictionary<DateTime, Dictionary<string, Candlestick>> _data = new Dictionary<DateTime, Dictionary<string, Candlestick>>();
         private Dictionary<DateTime, Dictionary<string, Candlestick>> _data_minute = new Dictionary<DateTime, Dictionary<string, Candlestick>>();
 
-        public int LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbols, int interval,int numberOfRows,int offSet)
+        public async Task<int> LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbols, 
+            int interval,int numberOfRows,int offSet)
         {
-            lock (_lock)
+            Dictionary<DateTime, Dictionary<string, Candlestick>> data = interval == 0 ? _data_minute : _data;
+            //if (data.ContainsKey(currentTick)) return;
+
+            var query = sQL_STREAM_QUERY.Replace("@Symbols", Format(symbols));
+            // FIX: Use ToListAsync() for async query execution
+            var candleSticks = await context.CandleSticks.SqlQuery(query, currentTick, finalTick, interval, offSet, numberOfRows).ToListAsync();
+
+            if (!candleSticks.Any()) throw new Exception("Bad Data.");
+            var count = candleSticks.Count();
+            var grouping = candleSticks.GroupBy(x => x.CloseTime);
+
+            foreach (var candleStickList in grouping.OrderByDescending(x=>x.Key))
             {
-                Dictionary<DateTime, Dictionary<string, Candlestick>> data = interval == 0 ? _data_minute : _data;
-                //if (data.ContainsKey(currentTick)) return;
-                
-                var query = sQL_STREAM_QUERY.Replace("@Symbols", Format(symbols));
-                var candleSticks = context.CandleSticks.SqlQuery(query,currentTick, finalTick, interval, offSet,numberOfRows);
-                
-                if (!candleSticks.Any()) throw new Exception("Bad Data.");
-                var count = candleSticks.Count();
-                var grouping = candleSticks.GroupBy(x => x.CloseTime);
-
-                foreach (var candleStickList in grouping.OrderByDescending(x=>x.Key))
+                if (data.ContainsKey(candleStickList.Key))
                 {
-                    if (data.ContainsKey(candleStickList.Key))
+                    foreach (var candleStick in candleStickList)
                     {
-                        foreach (var candleStick in candleStickList)
-                        {
-                            if (data[candleStickList.Key].ContainsKey(candleStick.Symbol)) continue;
+                        if (data[candleStickList.Key].ContainsKey(candleStick.Symbol)) continue;
 
-                            data[candleStickList.Key].Add(candleStick.Symbol,
-                                CandleStickDb.ConvertObject(candleStick));
-                        }
+                        data[candleStickList.Key].Add(candleStick.Symbol,
+                            CandleStickDb.ConvertObject(candleStick));
                     }
-                    else
-                    {
-                        data.Add(
-                            candleStickList
-                                .Key, //new Dictionary<string, Candlestick>() { { candlestick.Symbol, candlestick } });
-                            candleStickList.ToDictionary(x => x.Symbol, CandleStickDb.ConvertObject));
-                    }
-                    //Check
-                    //if(data[candleStickList.Key].Count() != symbols.Count) throw new Exception("Bad Data.");
                 }
-                return count;
+                else
+                {
+                    data.Add(
+                        candleStickList
+                            .Key, //new Dictionary<string, Candlestick>() { { candlestick.Symbol, candlestick } });
+                        candleStickList.ToDictionary(x => x.Symbol, CandleStickDb.ConvertObject));
+                }
+                //Check
+                //if(data[candleStickList.Key].Count() != symbols.Count) throw new Exception("Bad Data.");
             }
+            return count;            
         }
 
 

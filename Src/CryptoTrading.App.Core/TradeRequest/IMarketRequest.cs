@@ -8,4 +8,10 @@ namespace CryptoTrading.App.Core.TradeRequest
         decimal Quantity { get; }
         decimal Price { get; }
     }
+    public interface ILimitRequest : IRequest
+    {
+        OrderSide? OrderType { get; }
+        decimal Quantity { get; }
+        decimal Price { get; }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
@@ -33,44 +34,56 @@ namespace CryptoTrading.App.Broker
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Action<MessagePayload<IMarketRequest>> NewTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, NewTradeMesssage);
+            Func<MessagePayload<IMarketRequest>,Task> MarketTradeMesssage = ProcessMessageAction;
+            messageBroker.Subscribe(KeyValue, MarketTradeMesssage);
 
-            Action<MessagePayload<ICancelRequest>> CancelTransactionMessage = ProcessMessageAction;
+            Func<MessagePayload<ILimitRequest>, Task> LimitTradeMesssage = ProcessMessageAction;
+            messageBroker.Subscribe(KeyValue, LimitTradeMesssage);
+
+            Func<MessagePayload<ICancelRequest>,Task> CancelTransactionMessage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue, CancelTransactionMessage);
 
-            Action<MessagePayload<IStopLimitRequest>> StoplimitTradeMessage = ProcessMessageAction;
+            Func<MessagePayload<IStopLimitRequest>,Task> StoplimitTradeMessage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue, StoplimitTradeMessage);
 
         }
 
-        private async void ProcessMessageAction(MessagePayload<IMarketRequest> obj)
+        private async Task ProcessMessageAction(MessagePayload<IMarketRequest> obj)
         {
             IMarketRequest request = obj.What;
-                //set market order
-                var order = await _market.SetMarketOrder(request).ConfigureAwait(false);
-                //confirm market order has been met
-                LogOrder(order, OrderStatus.Filled);
-                MessageBroker.Instance.Publish(KeyValue, obj.Who, order);
-            }
-
-        private async void ProcessMessageAction(MessagePayload<ICancelRequest> obj)
-        {
-            ICancelRequest request = obj.What;
             //set market order
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var order = await _market.CancelOrder(request).ConfigureAwait(false);
+            var order = await _market.SetMarketOrder(request).ConfigureAwait(false);
             //confirm market order has been met
-            MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
+            LogOrder(order, OrderStatus.Filled);
+            await MessageBroker.Instance.Publish(order.Symbol, obj.Who, order);
         }
-        private async void ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
+
+        private async Task ProcessMessageAction(MessagePayload<ILimitRequest> obj)
         {
-            IStopLimitRequest request = obj.What;
+            ILimitRequest request = obj.What;
             //set market order
             var order = await _market.SetLimitOrder(request).ConfigureAwait(false);
             //confirm market order has been met
+            LogOrder(order, OrderStatus.Filled);
+            await MessageBroker.Instance.Publish(order.Symbol, obj.Who, order);
+        }
+
+        private async Task ProcessMessageAction(MessagePayload<ICancelRequest> obj)
+        {
+            ICancelRequest request = obj.What;
+            //set market order
+            var order = await _market.CancelOrder(request).ConfigureAwait(false);
+            //confirm market order has been met
+            await MessageBroker.Instance.Publish(request.Symbol, obj.Who, order);
+        }
+        private async Task ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
+        {
+            IStopLimitRequest request = obj.What;
+            //set market order
+            var order = await _market.SetStopLimitOrder(request).ConfigureAwait(false);
+            //confirm market order has been met
             LogOrder(order, OrderStatus.New);
-            MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
+            await MessageBroker.Instance.Publish(order.Symbol, obj.Who, order);
         }
 
         private void LogOrder(Order order, OrderStatus status)

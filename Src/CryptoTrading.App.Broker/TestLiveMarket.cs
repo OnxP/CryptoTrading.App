@@ -43,7 +43,7 @@ namespace CryptoTrading.App.Broker
             return await _api.TestPlaceAsync(clientOrder);
         }
 
-        public async Task<Order> SetLimitOrder(IStopLimitRequest trade)
+        public async Task<Order> SetStopLimitOrder(IStopLimitRequest trade)
         {
             var clientOrder = new LimitOrder(_user)
             {

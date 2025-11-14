@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Binance;
+﻿using Binance;
+using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using log4net.Config;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Broker
 {
@@ -45,7 +46,7 @@ namespace CryptoTrading.App.Broker
             return order;
         }
 
-        public async Task<Order> SetLimitOrder(IStopLimitRequest trade)
+        public async Task<Order> SetStopLimitOrder(IStopLimitRequest trade)
         {
             var clientOrder = new LimitOrder(_user)
             {
@@ -70,6 +71,20 @@ namespace CryptoTrading.App.Broker
         {
             LogOrder(order.Symbol, order.ClientOrderId.ToString(), OrderStatus.Canceled);
             return await _api.CancelOrderAsync(_user, order.Symbol, order.ClientOrderId);
+        }
+
+        public async Task<Order> SetLimitOrder(ILimitRequest trade)
+        {
+            var clientOrder = new LimitOrder(_user)
+            {
+                Symbol = trade.Symbol,
+                Side = trade.OrderType,
+                Quantity = trade.Quantity
+            };
+
+            var order = await _api.PlaceAsync(clientOrder);
+
+            return order;
         }
     }
 }

@@ -30,7 +30,7 @@ namespace CryptoTrading.App.Core
                 _keySubscribers = new Dictionary<(string,Type), List<Delegate>>();
             }
 
-            private void RunTask<T>(Action<MessagePayload<T>> handler, MessagePayload<T> payload)
+            private async Task RunTask<T>(Func<MessagePayload<T>,Task> handler, MessagePayload<T> payload)
             {
                 if(Parellel)
                 {
@@ -38,11 +38,11 @@ namespace CryptoTrading.App.Core
                 }
                 else
                 {
-                    handler?.Invoke(payload);
+                    await handler?.Invoke(payload);
                 }
             }
 
-            public void Publish<T>(object source, T message)
+            public async Task Publish<T>(object source, T message)
             {
                 if (message == null || source == null)
                     return;
@@ -54,9 +54,9 @@ namespace CryptoTrading.App.Core
                 if (delegates == null || delegates.Count == 0) return;
                 var payload = new MessagePayload<T>(message, source);
                 foreach (var handler in delegates.Select
-                (item => item as Action<MessagePayload<T>>))
+                (item => item as Func<MessagePayload<T>, Task>))
                 {
-                    RunTask(handler,payload);
+                    await RunTask(handler,payload);
                 }
             }          
 
@@ -81,7 +81,7 @@ namespace CryptoTrading.App.Core
                     _subscribers.Remove(typeof(T));
             }
 
-            public void Publish<T>(string keyValue, object source, T message)
+            public async Task Publish<T>(string keyValue, object source, T message)
             {
                 if (message == null || source == null)
                     return;
@@ -93,9 +93,9 @@ namespace CryptoTrading.App.Core
                 if (delegates == null || delegates.Count == 0) return;
                 var payload = new MessagePayload<T>(message, source);
                 foreach (var handler in delegates.Select
-                (item => item as Action<MessagePayload<T>>))
+                (item => item as Func<MessagePayload<T>, Task>))
                 {
-                    RunTask(handler, payload);
+                    await RunTask(handler, payload);
                 }
             }
 

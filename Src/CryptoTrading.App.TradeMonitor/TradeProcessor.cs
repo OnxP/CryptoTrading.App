@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -18,8 +19,6 @@ namespace CryptoTrading.App.Monitor
     {
         public IPositions Positions { get; set; }
         private IMarketMonitorFactory TradeFactory {get;}
-
-        private readonly object _lock = new object();
         public List<ITradeMonitor> OrderMonitors { get; set; }
         public IEnumerable<ITrade> LiveTrades => OrderMonitors.Where(x => x.Live).Select(x=>x.Trade);
         public string KeyValue { get; set; }
@@ -27,10 +26,7 @@ namespace CryptoTrading.App.Monitor
         {
             get
             {
-                lock (_lock)
-                {
-                    return OrderMonitors.Where(x => x.Live).ToList();
-                }
+                return OrderMonitors.Where(x => x.Live).ToList();
             }
         }
 
@@ -56,92 +52,25 @@ namespace CryptoTrading.App.Monitor
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Action<MessagePayload<Order>> newTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue,newTradeMesssage);
-
-            Action<MessagePayload<string>> CancelTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue,CancelTradeMessage);
-
-            Action<MessagePayload<ITradeRequest>> TradeRequestMessage = ProcessMessageAction;
+            Func<MessagePayload<ITradeRequest>, Task> TradeRequestMessage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue, TradeRequestMessage);
         }
 
-        private void ProcessMessageAction(MessagePayload<Order> obj)
+        private async Task ProcessMessageAction(MessagePayload<ITradeRequest> obj)
         {
-            if (obj.Who is ITransaction transaction)
+            if(CheckCurrentOrderMonitors(obj.What.BaseSymbol + obj.What.QuoteSymbol))
             {
-                Order order = obj.What;
-                //assume that order has been filled.
-                try
-                {
-                    //error occurs here because there are not monitors set up for trade...need to find out why!
-                    var trade = OrderMonitors.Last(x => x.Symbol == order.Symbol);
-                
-                    switch (transaction.Type)
-                    {
-                        case TransactionType.StopLimitTransaction:
-                            trade.UpdateStopLimitOrder(order);
-                            break;
-                        case TransactionType.Transaction:
-                            break;
-                        case TransactionType.MarketTransaction:
-                            trade.UpdateInitialTransaction(order);
-                            Logger.LogInformation($"Completed Trade for {order.Symbol} Q: {order.ExecutedQuantity} Price: {order.Price} originalQ: {order.OriginalQuantity} Original Price: {trade.Trade.CurrentPrice}");
-                            break;
-                    }
-                }
-                catch
-                {
-                    //if the stoploss is hit while the next order is being placed then we need to cancel and pull out of the trade
-                    //for now just skip and continue.
-
-                }
+                //do you want to scale in again
             }
-        }
-
-        private void ProcessMessageAction(MessagePayload<string> obj)
-        {
-            if (obj.Who is ITransaction transaction)
+            else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
             {
-                string order = obj.What;
-                if (transaction.Status == TransactionStatus.Completed) return;
-                //assume that order has been filled.
-                var trade = CurrentMonitors.First(x => x.Symbol == transaction.Pair);
-                switch (transaction.Type)
-                {
-                    case TransactionType.StopLimitTransaction:
-                        trade.CancelLimitOrder(order);
-                        break;
-                    case TransactionType.Transaction:
-                    case TransactionType.MarketTransaction:
-                        break;
-                }
-                //set market order
-                //find current transaction and cancel it.
-            }
-        }
-
-        private void ProcessMessageAction(MessagePayload<ITradeRequest> obj)
-        {
-            lock (_lock)
-            {
-                if(CheckCurrentOrderMonitors(obj.What.BaseSymbol + obj.What.QuoteSymbol))
-                {
-                    //do you want to scale in again
-                }
-                else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
-                {
-                    DbCandleStickManagement.PauseFlow = true;
-                    //need to pause the data stream.
-                    var trade = Positions.CreateTrade(obj.What);
-                    var tradeMonitor = TradeFactory.CreateMonitor(trade);
-                    tradeMonitor.KeyValue = KeyValue;
-                    OrderMonitors.Add(tradeMonitor);
-                    //create Market Order
-                    var marketOrder = new MarketRequest(trade.CurrentTransaction);
-                    MessageBroker.Instance.Publish<IMarketRequest>(KeyValue,trade.CurrentTransaction, marketOrder);
-                    Logger.LogInformation($"Place Trade for {trade.Pair} Q: {trade.Quantity} BTC amt: {trade.CurrentTransaction.Quote.Quantity}");
-                }
+                var tradeMonitor = await TradeFactory.CreateMonitor(obj.What, Positions);
+                tradeMonitor.KeyValue = KeyValue;
+                OrderMonitors.Add(tradeMonitor);
+                //create Market Order
+                //var marketOrder = new MarketRequest(trade.CurrentTransaction);
+                //await MessageBroker.Instance.Publish<IMarketRequest>(KeyValue,trade.CurrentTransaction, marketOrder);
+                //Logger.LogInformation($"Place Trade for {trade.Pair} Q: {trade.Quantity} BTC amt: {trade.CurrentTransaction.Quote.Quantity}");
             }
         }
 
@@ -153,17 +82,12 @@ namespace CryptoTrading.App.Monitor
 
         public void CompleteAllTransactions()
         {
-            LiveTrades.ToList().ForEach(x=>x.CompleteTrade());
-            //Trades.Where(x=>x.CurrentTransaction.Status==TransactionStatus.Pending).ToList().ForEach(x=>x.CompleteTrade());
-            //convert all positions to BTC.
+            OrderMonitors.ToList().ForEach(x=>x.CompleteTrade());
         }
 
         public void ClearInactiveTrades()
         {
-            lock (_lock)
-            {
-                OrderMonitors.RemoveAll(x => !x.Live);
-            }
+            OrderMonitors.RemoveAll(x => !x.Live);
         }
 
         public List<ITrade> GetCompletedTrades()
