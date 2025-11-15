@@ -2,14 +2,11 @@
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
-using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using CryptoTrading.App.Core.RequestTracker;
 

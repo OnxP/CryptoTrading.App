@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Binance;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Core.RequestTracker
 {
@@ -58,10 +54,17 @@ namespace CryptoTrading.App.Core.RequestTracker
             {
                 var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
 
-                foreach (var request in req)
-                {
-                    await MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
-                }
+                //should submit request at in parrellel.
+                //foreach (var request in req)
+                //{
+                //    await MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
+                //}
+                await Task.WhenAll(
+                                req.Select(r =>
+                                    MessageBroker.Instance.Publish(
+                                        r.Value.Item1,
+                                        this,
+                                        r.Value.Item2)));
 
                 Requests.Clear();
             }

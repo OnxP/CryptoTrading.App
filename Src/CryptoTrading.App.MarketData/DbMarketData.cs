@@ -2,7 +2,6 @@
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
-using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;

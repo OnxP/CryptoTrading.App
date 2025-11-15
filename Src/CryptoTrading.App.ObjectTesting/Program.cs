@@ -1,9 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Net.Mail;
 using Binance;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Trade;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 

@@ -10,7 +10,6 @@ using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.Monitor
@@ -43,7 +42,7 @@ namespace CryptoTrading.App.Monitor
             {
                 var candleSticks = await marketMonitor.GetHistoricCandleSticks();
                 Request.Strategy.LoadHistoricCandleSticks(candleSticks);
-                marketMonitor.Subscribe(Request.Symbol, KeyValue, ProcessCandleStick);
+                await marketMonitor.Subscribe(Request.Symbol, KeyValue, ProcessCandleStick);
             }
         }
 
@@ -79,7 +78,7 @@ namespace CryptoTrading.App.Monitor
                         StoreTradesToDb(trade, Config);
                     }
                     Dispose();
-                    DbCandleStickManagement.PauseFlow = false;
+                    //DbCandleStickManagement.PauseFlow = false;
                     return;
                 }
                 else
@@ -90,7 +89,7 @@ namespace CryptoTrading.App.Monitor
             }
 
             
-            DbCandleStickManagement.PauseFlow = false;
+            //DbCandleStickManagement.PauseFlow = false;
         }
 
         public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)

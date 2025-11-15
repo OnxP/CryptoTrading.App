@@ -1,7 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using IndicatorSetUp = CryptoTrading.App.Core.IndicatorSetUp;

@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
-using Binance;
-using Binance.Client;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.Trade;
 using MailKit.Net.Smtp;

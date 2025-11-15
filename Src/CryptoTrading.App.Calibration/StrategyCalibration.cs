@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;

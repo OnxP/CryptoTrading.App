@@ -8,7 +8,6 @@ using CryptoTrading.App.Core.TradeRequest;
 using System.Threading;
 using Trade = CryptoTrading.App.Core.Trade.Trade;
 using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.Monitor;
 
 namespace CryptoTrading.App.BrokerTesting
 {

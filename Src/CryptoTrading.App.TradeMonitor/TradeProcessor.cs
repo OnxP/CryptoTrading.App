@@ -1,12 +1,9 @@
-﻿using Binance;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database;
+﻿using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;

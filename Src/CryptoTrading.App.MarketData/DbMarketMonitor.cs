@@ -1,6 +1,5 @@
 ﻿using Binance;
 using Binance.Client;
-using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Trade;
 using System;
@@ -122,24 +121,19 @@ namespace CryptoTrading.App.MarketData
             return _data.GetData(symbol);
         }
 
-        public void Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
+        public async Task Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
         {
-            lock (_lockAction)
+            if (actions.ContainsKey(symbol))
+                actions[symbol].Add(keyValue,processCandleStick);
+            else
             {
-                if (actions.ContainsKey(symbol))
-                    actions[symbol].Add(keyValue,processCandleStick);
-                else
-                {
-                    _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0,NumberOfRows, OffSet);
-                    actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
-                }
-
-                _data.ClearHistoric(_mangement.PreviousTick, true);
-
-                if (actions.Count >= 1) _mangement.AddStopLimitStream(InvokeCandleStick);
-
-                DbCandleStickManagement.PauseFlow = false;
+                var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0,NumberOfRows, OffSet);
+                actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
             }
+
+            _data.ClearHistoric(_mangement.PreviousTick, true);
+
+            if (actions.Count >= 1) _mangement.AddStopLimitStream(InvokeCandleStick);
         }
 
         public bool IsSubscribed(string symbol, string keyValue)
@@ -149,19 +143,16 @@ namespace CryptoTrading.App.MarketData
 
         public void UnSubscribe(string symbol, string keyValue)
         {
-            lock (_lockAction)
+            if (actions[symbol].Count == 1)
             {
-                if (actions[symbol].Count == 1)
-                {
-                    actions.Remove(symbol);
-                }
-                else
-                {
-                    actions[symbol].Remove(keyValue);
-                }
-
-                if (actions.Count == 0) _mangement.RemoveStopLimitStream();
+                actions.Remove(symbol);
             }
+            else
+            {
+                actions[symbol].Remove(keyValue);
+            }
+
+            if (actions.Count == 0) _mangement.RemoveStopLimitStream();
         }
     }
 

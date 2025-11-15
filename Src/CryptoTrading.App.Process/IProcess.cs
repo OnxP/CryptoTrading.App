@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Binance.Utility;
+﻿using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Process
 {

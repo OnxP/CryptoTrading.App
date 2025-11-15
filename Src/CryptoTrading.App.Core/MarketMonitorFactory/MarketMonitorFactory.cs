@@ -1,5 +1,4 @@
-﻿using Binance;
-using CryptoTrading.App.Core.Position;
+﻿using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.DependencyInjection;
 using System;

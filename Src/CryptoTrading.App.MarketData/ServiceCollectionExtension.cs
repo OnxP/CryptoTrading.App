@@ -1,7 +1,6 @@
 ﻿using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.MarketMonitorFactory;
-using CryptoTrading.App.Monitor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Binance;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core;
@@ -11,7 +10,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Binance.Client;
 using DateTime = System.DateTime;

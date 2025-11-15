@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Binance;
 using CryptoTrading.App.Core.TradeRequest;
-using log4net.Config;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Broker

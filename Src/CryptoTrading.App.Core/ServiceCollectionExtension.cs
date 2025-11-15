@@ -5,7 +5,6 @@ using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Core
 {
