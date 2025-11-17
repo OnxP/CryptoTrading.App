@@ -13,6 +13,6 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick);
         bool IsSubscribed(string symbol, string keyValue);
         void UnSubscribe(string symbol, string keyValue);
-        Task<List<Candlestick>> GetHistoricCandleSticks();
+        Task<List<Candlestick>> GetHistoricCandleSticks(string symbol);
     }
 }

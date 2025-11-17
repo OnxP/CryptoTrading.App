@@ -8,15 +8,15 @@ namespace CryptoTrading.App.Core.Trade
 {
     public class Trade : ITrade
     {
-        public Trade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
+        public Trade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition)
         {
             BuyPosition = buyPosition;
             SellPosition = sellPosition;
             FeePosition = feePosition;
             Transactions = new List<ITransaction>();
-            InitialRequest = request;
-            StopLimitTracker = request.StopLimitTracker;
-            CreateNewTransaction();
+            //InitialRequest = request;
+            //StopLimitTracker = request.StopLimitTracker;
+            //CreateNewTransaction();
         }
 
         public ITradeRequest InitialRequest { get; set; }
@@ -74,7 +74,6 @@ namespace CryptoTrading.App.Core.Trade
 
         public DateTime CloseDate => CurrentTransaction.TransactionDate;
 
-        public IStopLimitTracker StopLimitTracker { get; set; }
         public string Comment => $"Stop Limit Hit: {Transactions.Count==2}";
 
         public void CancelCurrentTransaction()

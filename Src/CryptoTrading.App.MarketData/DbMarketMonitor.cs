@@ -76,7 +76,6 @@ namespace CryptoTrading.App.MarketData
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY";
 
-        private readonly object _lockAction = new object();
         public async Task<bool> CheckOrder(ITransaction transaction)
         {
             transaction.Complete();
@@ -112,7 +111,7 @@ namespace CryptoTrading.App.MarketData
             _data.ClearHistoric(_mangement.PreviousTick, true);
         }
 
-        public async Task<List<Candlestick>> LoadHistoricData(string symbol)
+        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
         {
             var rows = await _data.LoadData(SQL_HISTORIC_QUERY,
                 DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minute, -201), _mangement.CurrentTick,
@@ -155,6 +154,4 @@ namespace CryptoTrading.App.MarketData
             if (actions.Count == 0) _mangement.RemoveStopLimitStream();
         }
     }
-
-
 }

@@ -4,6 +4,6 @@ namespace CryptoTrading.App.Core.Trade
 {
     public interface ITradeFactory
     {
-        ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request);
+        ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition);
     }
 }

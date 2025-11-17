@@ -29,10 +29,8 @@ namespace CryptoTrading.App.Monitor
         }
 
         public ITrade Trade { get; set; }
-        public decimal CurrentStopLimit { get; set; }
+        public decimal CurrentStopLimit { get; set; } 
         public IMarketMonitor marketMonitor { get; set; }
-        public IStopLimitTracker Tracker => Trade.StopLimitTracker;
-
         public DateTime currentCloseTime { get; set; }
         public ITradeRequest Request { get; set; }
 
@@ -40,14 +38,54 @@ namespace CryptoTrading.App.Monitor
         {
             if (!marketMonitor.IsSubscribed(Request.Symbol, KeyValue))
             {
-                var candleSticks = await marketMonitor.GetHistoricCandleSticks();
+                var candleSticks = await marketMonitor.GetHistoricCandleSticks(Request.Symbol);
                 Request.Strategy.LoadHistoricCandleSticks(candleSticks);
                 await marketMonitor.Subscribe(Request.Symbol, KeyValue, ProcessCandleStick);
             }
         }
 
+        //for the database it is 1m candles but for live trading it is the live market price.
+        //so the candle needs to be final before processing.
         public async void ProcessCandleStick(CandlestickEventArgs candleStick)
         {
+            if (!candleStick.IsFinal) return;
+            var result = Request.Strategy.ProcessCandleStick(candleStick);
+            //3 options Open/Move position, Exit position, Hold position.
+
+            ///several options or flows here
+            ///strategy want to open a new position
+            ///strategy wants to open a new position but there is already one open.-> move limit order (assume that its partially filled)
+            ///Strategy wants to close position -> cancel limit order and exit position.
+            ///Strategy wants to hold position -> do nothing.
+            ///Strategy changed what to do then??
+            /// - and there is no position -> open position
+            /// - and there is a un filled position -> cancel and open a new one.
+            /// - and there is a filled position -> we may need to exit depending on the strategy
+            ///     need the best way to decide what to do here 
+            ///         - leave it alone
+            ///         - exit position at profit then open a new one.
+            ///         - exit position at a loss then open a new one. (assuming long short filp) do we wait for it to go into profit first? 
+            ///             leave it open for now and close once the open order is ready, hopefully this situation does not arise often.
+
+
+            // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
+            switch (result.StrategyAction)
+            {
+                case StrategyAction.OpenTrade:
+                    // Logic to open/move position
+                    // Example: await CreateNewStopLimitOrder();
+                    break;
+                case StrategyAction.CloseTrade:
+                    // Logic to exit position
+                    // Example: CancelLimitOrder();
+                    break;
+                case StrategyAction.NoAction:
+                    // Hold position, do nothing
+                    break;
+            }
+            
+
+
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
             currentCloseTime = candleStick.Candlestick.CloseTime;
@@ -194,6 +232,7 @@ namespace CryptoTrading.App.Monitor
         public void AddRequest(ITradeRequest request, IPositions positions)
         {
             Request = request;
+            Trade = positions.CreateTrade(Request);
             IMessageBroker messageBroker = MessageBroker.Instance;
 
             Func<MessagePayload<Order>, Task> newTradeMesssage = ProcessMessageAction;

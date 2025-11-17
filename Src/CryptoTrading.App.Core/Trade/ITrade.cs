@@ -18,7 +18,6 @@ namespace CryptoTrading.App.Core.Trade
         decimal StartPrice { get; }
         DateTime StartDate { get; }
         DateTime CloseDate { get; }
-        IStopLimitTracker StopLimitTracker { get; set; }
         string Comment { get; }
         decimal FeeBnb { get; }
 

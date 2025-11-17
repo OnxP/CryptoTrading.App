@@ -60,7 +60,7 @@ namespace CryptoTrading.App.Core
                 }
             }          
 
-            public void Subscribe<T>(Action<MessagePayload<T>> subscription)
+            public void Subscribe<T>(Func<MessagePayload<T>, Task> subscription)
             {
                 var delegates = _subscribers.ContainsKey(typeof(T)) ?
                                 _subscribers[typeof(T)] : new List<Delegate>();
@@ -71,7 +71,7 @@ namespace CryptoTrading.App.Core
                 _subscribers[typeof(T)] = delegates;
             }
 
-            public void Unsubscribe<T>(Action<MessagePayload<T>> subscription)
+            public void Unsubscribe<T>(Func<MessagePayload<T>, Task> subscription)
             {
                 if (!_subscribers.ContainsKey(typeof(T))) return;
                 var delegates = _subscribers[typeof(T)];
@@ -99,7 +99,7 @@ namespace CryptoTrading.App.Core
                 }
             }
 
-            public void Subscribe<T>(string keyValue, Action<MessagePayload<T>> subscription)
+            public void Subscribe<T>(string keyValue, Func<MessagePayload<T>, Task> subscription)
             {
                 var delegates = _keySubscribers.ContainsKey((keyValue, typeof(T))) ?
                                 _keySubscribers[(keyValue, typeof(T))] : new List<Delegate>();
@@ -110,7 +110,7 @@ namespace CryptoTrading.App.Core
                 _keySubscribers[(keyValue, typeof(T))] = delegates;
             }
 
-            public void Unsubscribe<T>(string keyValue, Action<MessagePayload<T>> subscription)
+            public void Unsubscribe<T>(string keyValue, Func<MessagePayload<T>,Task> subscription)
             {
                 if (!_keySubscribers.ContainsKey((keyValue, typeof(T)))) return;
                 var delegates = _keySubscribers[(keyValue, typeof(T))];

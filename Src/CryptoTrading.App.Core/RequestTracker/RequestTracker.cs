@@ -34,20 +34,6 @@ namespace CryptoTrading.App.Core.RequestTracker
             //if (CandleStickTracker.Instance.IsFinal) ProcessRequests();
         }
 
-        private async Task ProcessRequests()
-        {
-            if (!Requests.Any()) return;
-
-            var order = Requests.OrderByDescending(x => x.Value.Item2.Volume);
-
-            foreach (var request in order)
-            {
-                await MessageBroker.Instance.Publish(request.Value.Item1,null,request.Value.Item2);
-            }
-
-            Requests.Clear();            
-        }
-
         public async Task SubmitRequests()
         {
             if (Requests.Any())

@@ -59,7 +59,7 @@ namespace CryptoTrading.App.Core.Position
             buyPosition.IsLocked = true;
             var sellPosition = _positions[request.QuoteSymbol];
             var feePosition = _positions[FeeAsset];
-            ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition, request);
+            ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition);
             buyPosition.IsLocked = false;
             return trade;
         }

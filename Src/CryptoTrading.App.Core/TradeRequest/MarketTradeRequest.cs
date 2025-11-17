@@ -53,5 +53,9 @@ namespace CryptoTrading.App.Core.TradeRequest
         
         public decimal VolumeLimit { get; set; }
         public Symbol Pair { get; set; }
+
+        public string Symbol => BaseSymbol + QuoteSymbol;
+
+        public object Strategy { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }
