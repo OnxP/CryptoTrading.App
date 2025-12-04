@@ -6,12 +6,11 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public class MarketTradeRequest : ITradeRequest
     {
-        public string BaseSymbol => Pair.BaseAsset;
-        public string QuoteSymbol => Pair.QuoteAsset;
+        public string BaseSymbol => Symbol.BaseAsset;
+        public string QuoteSymbol => Symbol.QuoteAsset;
         public decimal QuoteClosePrice { get; internal set; }
         public DateTime? RequestDateTime { get; set; }
         public IStopLimitTracker StopLimitTracker { get; set; }
-        public CandlestickInterval Interval { get ; set; }
         public decimal QuoteQuantity { get; set; }
         public decimal BaseQuantity { get; set; }
     
@@ -25,10 +24,10 @@ namespace CryptoTrading.App.Core.TradeRequest
                 q = Volume * VolumeLimit;
             }
 
-            QuoteQuantity = AdjustForMinimum(Pair.Price, q, MidpointRounding.ToZero);
-            BaseQuantity = AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
+            QuoteQuantity = AdjustForMinimum(Symbol.Price, q, MidpointRounding.ToZero);
+            BaseQuantity = AdjustForMinimum(Symbol.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
 
-            var res = QuoteQuantity > Pair.NotionalMinimumValue && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
+            var res = QuoteQuantity > Symbol.NotionalMinimumValue && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
             return res;
             //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.Price.Increment);
             //StopLimitTracker.SetLimits(QuoteClosePrice);
@@ -48,14 +47,13 @@ namespace CryptoTrading.App.Core.TradeRequest
         }
 
         public bool FixedAmount { get; set; }
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         public decimal Volume { get; set; }
         
         public decimal VolumeLimit { get; set; }
-        public Symbol Pair { get; set; }
-
-        public string Symbol => BaseSymbol + QuoteSymbol;
-
-        public object Strategy { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Symbol Symbol { get; set; }
+        public IExecutionStrategy Strategy { get; set; }
+        public int Leverage { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public OrderSide OrderSide { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }

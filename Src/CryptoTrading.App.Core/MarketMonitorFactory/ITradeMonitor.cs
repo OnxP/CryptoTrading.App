@@ -9,13 +9,10 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         bool Live { get; }
         string Symbol { get;}
         string KeyValue { get; set; }
-
         ITrade Trade { get; }
-        void UpdateInitialTransaction(Order order);
-        Task CancelLimitOrder(string order);
-        void UpdateStopLimitOrder(Order order);
         void AddRequest(ITradeRequest trade, Position.IPositions positions);
         void CompleteTrade();
+        void SetNewRequest(ITradeRequest what);
         Task SubscribetToMarketData();
     }
 }

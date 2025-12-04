@@ -5,20 +5,14 @@ namespace CryptoTrading.App.Core.Trade
 {
     public interface ITradeRequest
     {
-        string Symbol { get; }
+        Symbol Symbol { get; }
         string BaseSymbol { get; }
         string QuoteSymbol { get; }
-        decimal QuoteClosePrice { get; }
-        public bool FixedAmount { get; set; }
-        public double Amount { get; set; }
-        DateTime? RequestDateTime { get; set; }
-        IStopLimitTracker StopLimitTracker { get; set; }
-        CandlestickInterval Interval { get; set; }
-        decimal Volume { get; set; }
-        decimal BaseQuantity { get; }
-        decimal QuoteQuantity { get; }
+        public decimal Amount { get; }
+        public int Leverage { get; }
+        public OrderSide OrderSide { get; }
+        DateTime? RequestDateTime { get; }
         IExecutionStrategy Strategy { get; set; }
-
         bool Validate(decimal freeAmount, decimal nonFreeAmount);
     }
 }

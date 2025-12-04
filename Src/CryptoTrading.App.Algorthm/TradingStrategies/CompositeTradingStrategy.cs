@@ -14,10 +14,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         }
         public int OutputLength => tradingStrategies.Max(x => x.OutputLength);
 
-        public double Calculate(CandleStickDictionary candleSticks,IStopLimitTracker stopLimitTrackers)
-        {
-            return tradingStrategies.Sum(x => x.Calculate(candleSticks, stopLimitTrackers));
-        }
+        public double Calculate(CandleStickDictionary candleSticks, IStopLimitTracker stopLimitTrackers) => tradingStrategies.Sum(x => x.Calculate(candleSticks, stopLimitTrackers));
 
         public void Log(string v)
         {

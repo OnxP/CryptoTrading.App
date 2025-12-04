@@ -37,8 +37,7 @@ namespace CryptoTrading.App.Calibration
                 //need to create a unique instance of algo
                 var algorithm = Algorithm.Invoke();
                 algorithm.Configure(Config);
-                MarketData.InitialDataLoadSubscribe(symbol, interval, algorithm.ProcessHistoricMarketData);
-                MarketData.InitialDataStreamSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
+                algorithm.Subscribe(symbol, MarketData);
             }
         }
         public void RemoveMarketDataEvents(List<Symbol> removeSymbols)

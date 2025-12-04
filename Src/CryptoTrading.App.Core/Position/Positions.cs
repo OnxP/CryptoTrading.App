@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using CryptoTrading.App.Core.Trade;
+﻿using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace CryptoTrading.App.Core.Position
 {
@@ -35,19 +35,37 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckHasEnoughBalance(ITradeRequest what)
         {
-            if (_positions.ContainsKey(what.QuoteSymbol))
+            // Decide which symbol we need to check based on side
+            var balanceSymbol = what.OrderSide == Binance.OrderSide.Buy
+                ? what.QuoteSymbol
+                : what.BaseSymbol;
+
+            if (!_positions.TryGetValue(balanceSymbol, out var position))
+                return false;
+
+            // Check main balance, including fee if fee asset is the same
+            bool hasEnoughBalance = balanceSymbol == FeeAsset
+                ? position.CheckHasEnoughBalanceIncludingFee(what.Amount)
+                : position.CheckHasEnoughBalance(what.Amount);
+
+            // If fee asset is *not* one of the legs, check separate fee balance on base symbol
+            //need to convert symbol to fee asset using the latest price.(the broker will confirm the actual fee.)
+            if (FeeAsset != what.QuoteSymbol &&
+                FeeAsset != what.BaseSymbol &&
+                _positions.TryGetValue(what.BaseSymbol, out var basePosition))
             {
-                return _positions[what.QuoteSymbol].CheckHasEnoughBalance(what);
+                hasEnoughBalance = hasEnoughBalance &&
+                                   _positions[FeeAsset].CheckHasEnoughBalanceFee(what);
             }
 
-            return false;
+            return hasEnoughBalance;
         }
 
         public bool CheckHasOpenPositionAndVolume(string requestBuySymbol, ITradeRequest request)
         {
             if (_positions.ContainsKey(requestBuySymbol))
             {
-                return _positions[requestBuySymbol].HasOpenPosition && request.BaseQuantity < request.Volume/2;
+                return _positions[requestBuySymbol].HasOpenPosition;
             }
 
             return false;

@@ -15,6 +15,8 @@ namespace CryptoTrading.App.Core.Trade
         public DateTime TransactionDate { get; set; }
         public Order Order { get; private set; }
 
+        public bool IsFilled => Order?.Status == OrderStatus.Filled;
+
         internal void SetTransactionStatus(TransactionLegStatus status)
         {
             Quote.Status = status;

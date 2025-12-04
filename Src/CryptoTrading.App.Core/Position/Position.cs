@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Binance;
+using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Core.TradeRequest;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CryptoTrading.App.Core.Position
 {
@@ -40,15 +44,28 @@ namespace CryptoTrading.App.Core.Position
         }
 
 
-        public bool CheckHasEnoughBalance(ITradeRequest request)
+        public bool CheckHasEnoughBalance(decimal amount)
         {
-            var valid = request.Validate(FreeAmount, NonFreeAmount);
-            return valid && FreeAmount > 0 && FreeAmount > request.QuoteQuantity && request.BaseQuantity!=0m ;
+            return FreeAmount > 0 && FreeAmount > amount;
+        }
+
+        public bool CheckHasEnoughBalanceIncludingFee(decimal amount)
+        {
+            return FreeAmount > 0 && FreeAmount > (amount + (amount * 0.02m));
+        }
+
+        public bool CheckHasEnoughBalanceFee(ITradeRequest request)
+        {
+            var closePrice = CandleStickTracker.GetClosePrice(request.BaseSymbol + Symbol);
+            if(closePrice.HasValue)
+                return FreeAmount > 0 && FreeAmount > (request.Amount * closePrice.Value * 0.02m);
+            return false;
         }
 
         public bool HasOpenPosition => _legs.Any(x=>x.Status==TransactionLegStatus.Pending) || IsLocked;
 
         public bool IsLocked { get; set; }
+        public int PctVolumeTradingLimit { get; private set; }
 
         public TransactionLeg CreatePendingTransaction(decimal quantity)
         {

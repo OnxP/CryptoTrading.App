@@ -410,8 +410,7 @@ Symbol.SOL_BTC
                 foreach (var interval in intervals)
                 {
                     var algo = services.GetService<IAlgorithm>();
-                    marketDate.InitialDataLoadSubscribe(symbol, interval, algo.ProcessHistoricMarketData);
-                    marketDate.InitialDataStreamSubscribe(symbol, interval, algo.ProcessLiveCandleStick);
+                    algo.Subscribe(symbol, marketDate);
                 }
             }
         }

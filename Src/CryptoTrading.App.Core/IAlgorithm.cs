@@ -6,8 +6,7 @@ namespace CryptoTrading.App.Core
 {
     public interface IAlgorithm
     {
-        public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks);
-        public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs);
         void Configure(IConfig config);
+        void Subscribe(Symbol symbol, IMarketDataEvents marketData);
     }
 }

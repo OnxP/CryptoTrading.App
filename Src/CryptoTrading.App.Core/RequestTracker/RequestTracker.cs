@@ -38,7 +38,7 @@ namespace CryptoTrading.App.Core.RequestTracker
         {
             if (Requests.Any())
             {
-                var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
+                //var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
 
                 //should submit request at in parrellel.
                 //foreach (var request in req)
@@ -46,7 +46,7 @@ namespace CryptoTrading.App.Core.RequestTracker
                 //    await MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
                 //}
                 await Task.WhenAll(
-                                req.Select(r =>
+                                Requests.Select(r =>
                                     MessageBroker.Instance.Publish(
                                         r.Value.Item1,
                                         this,

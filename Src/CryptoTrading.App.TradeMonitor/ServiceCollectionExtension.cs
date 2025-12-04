@@ -40,9 +40,6 @@ namespace CryptoTrading.App.Monitor
             services.AddTransient<ITradeMonitor, TradeMonitor>(x=> new TradeMonitor(x.GetService<ILogger<TradeMonitor>>(), x.GetService<IMarketMonitor>(),config));
             services.AddTransient<IMarketMonitorFactory, MarketMonitorFactory>(provider => new MarketMonitorFactory(provider));
             return services;
-
-            
-            return services;
         }
     }
 }

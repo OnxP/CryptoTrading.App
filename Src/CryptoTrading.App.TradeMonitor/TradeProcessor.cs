@@ -1,13 +1,14 @@
-﻿using CryptoTrading.App.Core;
+﻿using Binance;
+using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Monitor
@@ -57,7 +58,12 @@ namespace CryptoTrading.App.Monitor
         {
             if(CheckCurrentOrderMonitors(obj.What.BaseSymbol + obj.What.QuoteSymbol))
             {
-                //do you want to scale in again
+                //Need to update the execution strategy
+                var monitor = CurrentMonitors.LastOrDefault(x => x.Symbol == obj.What.BaseSymbol + obj.What.QuoteSymbol);
+                if (monitor != null)
+                {
+                    monitor.SetNewRequest(obj.What);
+                }
             }
             else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
             {

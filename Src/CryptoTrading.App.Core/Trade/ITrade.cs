@@ -25,5 +25,6 @@ namespace CryptoTrading.App.Core.Trade
         void UpdateCurrentTransaction(Order order);
         ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null);
         void CompleteTrade();
+        ITransaction CreateNewTransaction(decimal price, DateTime closeTime, IExecutionStrategy strategy);
     }
 }
