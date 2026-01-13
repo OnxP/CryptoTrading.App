@@ -113,9 +113,9 @@ namespace CryptoTrading.App.Algorithm
                     Close = candlestickEventArgs.Candlestick.Close,
                     Volume = candlestickEventArgs.Candlestick.Volume
                 });
-                var strategyResult = TradingStrategy.Calculate(MarketStructure,out IExecutionStrategy ExecutionStrategy);
-                if (strategyResult.PostTrade)
-                    RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, new TradeRequest(strategyResult,ExecutionStrategy,_symbol,candlestickEventArgs.Candlestick.CloseTime), KeyValue);
+                var strategyResult = TradingStrategy.Calculate(MarketStructure);
+                if (strategyResult.Item1.PostTrade)
+                    RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, new TradeRequest(strategyResult.Item1,strategyResult.Item2,_symbol,candlestickEventArgs.Candlestick.CloseTime), KeyValue);
             }
             catch(Exception e)
             {

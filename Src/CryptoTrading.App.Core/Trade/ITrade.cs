@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Core.Trade
         string Pair { get; }
         OrderSide OrderType { get; }
         decimal Quantity { get; }
-        ITransaction CurrentTransaction { get; }
+        ITransaction? CurrentTransaction { get; }
         
         bool Open { get; set; }
         decimal CurrentPrice { get; set; }
@@ -24,7 +24,7 @@ namespace CryptoTrading.App.Core.Trade
         void CancelCurrentTransaction();
         void UpdateCurrentTransaction(Order order);
         ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null);
-        void CompleteTrade();
-        ITransaction CreateNewTransaction(decimal price, DateTime closeTime, IExecutionStrategy strategy);
+        ITransaction CompleteTrade();
+        ITransaction CreateNewTransaction(decimal price, DateTime closeTime, decimal amount);
     }
 }

@@ -62,7 +62,7 @@ namespace CryptoTrading.App.Monitor
                 var monitor = CurrentMonitors.LastOrDefault(x => x.Symbol == obj.What.BaseSymbol + obj.What.QuoteSymbol);
                 if (monitor != null)
                 {
-                    monitor.SetNewRequest(obj.What);
+                    await monitor.SetNewRequest(obj.What);
                 }
             }
             else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)

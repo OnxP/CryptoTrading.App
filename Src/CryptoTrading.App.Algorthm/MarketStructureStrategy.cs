@@ -82,8 +82,13 @@ namespace CryptoTrading.App.Algorithm
                 else if (aroonLast.AroonDown > 70 && aroonLast.AroonUp < 30)
                     result.MarketRegime = MarketRegime.BearMarket;
                 else
-                    result.MarketRegime = MarketRegime.RangingMarket;
+                    result.MarketRegime = MarketRegime.RangingMarket; 
             }
+
+            //additional details to consider
+            //when the market is in a range then highlight the high and low of the last candlestick
+            //and look for opportunities to trade the range
+            //if the market breaks out of the range but not the Bollinger bands then look for a retest of the breakout level
 
             //pull back or ranging market?
             //if the price is between the 9ema then the market is ranging 
@@ -118,6 +123,8 @@ namespace CryptoTrading.App.Algorithm
             //we can use the atr to determine high and low volatility periods
             //when the atr is above its moving average we can consider it high volatility
 
+
+            //volatility in the market can have an impact on how likely the next candlestick is going to break out of a range of the current candle stick
             return result;
         }
 

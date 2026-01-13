@@ -1,5 +1,6 @@
 ﻿using Binance;
 using Binance.Client;
+using Skender.Stock.Indicators;
 using System.Collections.Generic;
 
 namespace CryptoTrading.App.Core
@@ -9,8 +10,8 @@ namespace CryptoTrading.App.Core
         IEntryStrategy EntryStrategy { get; set; }
         IExitStrategy ExitStrategy { get; set; }
         decimal Quantity {get;set;}
-        decimal GetEntryPrice(CandlestickEventArgs candleStick);
-        void LoadHistoricCandleSticks(List<Candlestick> candleSticks);
-        StrategyState ProcessCandleStick(CandlestickEventArgs candleStick);
+        decimal GetEntryPrice();
+        StrategyStatus ProcessStrategy(Trade.ITrade trade);
+        void SetQuotes(QuoteHub<IQuote> quoteHub);
     }
 }

@@ -22,13 +22,13 @@ namespace CryptoTrading.App.Core
 
         public IEnumerable<IQuote> CandleSticks => Values.Where(x=>x!=null).Select(x=>new Quote
         {
-            Date = x.OpenTime,
+            Timestamp = x.OpenTime,
             Open = x.Open,
             High = x.High,
             Low = x.Low,
             Close = x.Close,
             Volume = x.Volume
-        }).OrderByDescending(X=>X.Date);
+        }).OrderByDescending(X=>X.Timestamp);
 
         public IEnumerable<Candlestick> GetCandlesticks => Values.OrderByDescending(X=>X.CloseTime);
 

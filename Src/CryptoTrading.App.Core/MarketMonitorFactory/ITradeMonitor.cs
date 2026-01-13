@@ -12,7 +12,7 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         ITrade Trade { get; }
         void AddRequest(ITradeRequest trade, Position.IPositions positions);
         void CompleteTrade();
-        void SetNewRequest(ITradeRequest what);
+        Task SetNewRequest(ITradeRequest what);
         Task SubscribetToMarketData();
     }
 }

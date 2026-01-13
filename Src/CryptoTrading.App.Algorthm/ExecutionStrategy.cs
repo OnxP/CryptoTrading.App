@@ -1,29 +1,34 @@
-﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Core;
-using System.Collections.Generic;
+﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Trade;
+using Skender.Stock.Indicators;
 
 namespace CryptoTrading.App.Algorithm
 {
     public class ExecutionStrategy : IExecutionStrategy
     {
-        public IEntryStrategy EntryStrategy { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public IExitStrategy ExitStrategy { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public IEntryStrategy EntryStrategy { get; set; }
+        public IExitStrategy ExitStrategy { get; set; }
         public decimal Quantity { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
-        public decimal GetEntryPrice(CandlestickEventArgs candleStick)
+        public StrategyStatus ProcessStrategy(ITrade trade)
+        {
+            //checks the trade to see the current status then runs the entry or exit stratgy accordingly
+            throw new System.NotImplementedException();
+        }
+
+        public decimal GetEntryPrice()
         {
             throw new System.NotImplementedException();
         }
 
-        public void LoadHistoricCandleSticks(List<Candlestick> candleSticks)
+        
+
+        public void SetQuotes(QuoteHub<IQuote> quoteHub)
         {
-            throw new System.NotImplementedException();
+            EntryStrategy.SetQuotes(quoteHub);
+            ExitStrategy.SetQuotes(quoteHub);
         }
 
-        public StrategyState ProcessCandleStick(CandlestickEventArgs candleStick)
-        {
-            throw new System.NotImplementedException();
-        }
+        
     }
 }

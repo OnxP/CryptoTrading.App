@@ -81,11 +81,12 @@ namespace CryptoTrading.App.Core.Trade
             CurrentTransaction.Cancel();
         }
 
-        public void CompleteTrade()
+        public ITransaction CompleteTrade()
         {
             CurrentTransaction.Cancel();
             var closeTransaction = CreateStopLimitTransaction(CurrentPrice);
             closeTransaction.Complete();
+            return closeTransaction;
         }
 
         //public ITransaction CreateNewTransaction()
@@ -137,14 +138,22 @@ namespace CryptoTrading.App.Core.Trade
             }
         }
 
-        public ITransaction CreateNewTransaction(decimal price, DateTime closeTime, IExecutionStrategy strategy)
+        public ITransaction CreateNewTransaction(decimal price, DateTime closeTime, decimal amount)
         {
-            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(strategy.Quantity),
-                SellPosition.CreatePendingTransaction(-strategy.Quantity * price),
-                CalculateFee(FeePosition, BuyPosition.Symbol, strategy.Quantity), price, closeTime);
+            var transaction = CreateTransaction<MarketTransaction>(BuyPosition.CreatePendingTransaction(amount),
+                SellPosition.CreatePendingTransaction(-amount * price),
+                CalculateFee(FeePosition, BuyPosition.Symbol, amount), price, closeTime);
             Transactions.Add(transaction);
             return transaction;
         }
     }
 }
- 
+public sealed class TradePlan
+{
+    // “How much exposure do we want?”
+    public decimal TargetBaseQty { get; init; }      // e.g. +0.01 BTC for long, -0.01 BTC for short
+    public decimal EntrySliceQty { get; init; }      // optional: how much each entry order adds
+    public decimal ExitSliceQty { get; init; }      // optional: how much each exit order removes
+    public decimal? EntryLimitPrice { get; init; }   // optional: if using limit placement
+    public decimal? ExitLimitPrice { get; init; }   // optional
+}

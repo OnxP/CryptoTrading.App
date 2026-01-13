@@ -16,6 +16,7 @@ namespace CryptoTrading.App.Core.Trade
         public Order Order { get; private set; }
 
         public bool IsFilled => Order?.Status == OrderStatus.Filled;
+        public bool IsPartiallyFilled => Order?.Status == OrderStatus.PartiallyFilled;
 
         internal void SetTransactionStatus(TransactionLegStatus status)
         {

@@ -1,7 +1,8 @@
 ﻿namespace CryptoTrading.App.Core
 {
-    public class StrategyState
+    public class StrategyStatus
     {
         public StrategyAction StrategyAction { get; set; }
+        public StrategyState StrategyState { get; set; }
     }
 }

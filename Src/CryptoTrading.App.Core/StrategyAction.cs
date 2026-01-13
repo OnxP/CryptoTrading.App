@@ -6,4 +6,13 @@
         CloseTrade,
         NoAction,
     }
+    public enum StrategyState
+    {
+        WaitingForEntry,
+        EntrySubmitted,
+        EntryPartiallyFilled,
+        EntryFilled,
+        WaitingForExit,
+        ExitSubmitted, ExitPartiallyFilled, ExitFilled
+    }
 }

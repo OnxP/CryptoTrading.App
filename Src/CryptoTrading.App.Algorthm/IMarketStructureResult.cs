@@ -2,6 +2,7 @@
 {
     public interface IMarketStructureResult
     {
+        public MarketRegime MarketRegime { get; }
     }
     public class MarketStructureResult : IMarketStructureResult
     {
