@@ -6,6 +6,7 @@ using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Extensions;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.MarketData;
 using CryptoTrading.App.Process;
 using Microsoft.Extensions.Configuration;

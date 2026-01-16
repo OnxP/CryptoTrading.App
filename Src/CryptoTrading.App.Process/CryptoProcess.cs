@@ -6,6 +6,7 @@ using Binance;
 using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
+using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Process

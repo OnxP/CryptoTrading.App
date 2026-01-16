@@ -1,6 +1,7 @@
 ﻿using CryptoTrading.App.Algorithm.StopLimits;
 using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;

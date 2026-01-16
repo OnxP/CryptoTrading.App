@@ -1,9 +1,11 @@
 ﻿using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
@@ -18,7 +20,7 @@ namespace CryptoTrading.App.Monitor
     //Monitors a Trade, and manages transactions.
     //Each transaction is linked to an order.
     //The trade is considered to be live if there are open transactions
-    class TradeMonitor : ITradeMonitor
+    public class TradeMonitor : ITradeMonitor
     {
         private ILogger<TradeMonitor> Logger { get; set; }
         private IConfig Config { get; set; }
@@ -30,7 +32,9 @@ namespace CryptoTrading.App.Monitor
             _quoteHub = new QuoteHub<IQuote>();
         }
 
-        public ITrade Trade { get; set; }
+        public ITrade Trade => HistoricTrades.Last();
+
+        public List<ITrade> HistoricTrades { get; set; } = new List<ITrade>();
         public decimal CurrentStopLimit { get; set; } 
         public IMarketMonitor marketMonitor { get; set; }
         public DateTime currentCloseTime { get; set; }
@@ -70,14 +74,14 @@ namespace CryptoTrading.App.Monitor
                     break;
                 case CompareResults.ChangeDirection:
                     //need to exit out of the existing one.
-                    if(Trade.CurrentTransaction != null)
+                    if(Trade.GetCurrentTransaction() != null)
                     {
-                        await marketMonitor.CheckOrder(Trade.CurrentTransaction);
-                        if(!Trade.CurrentTransaction.IsFilled)
+                        await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
+                        if(!Trade.GetCurrentTransaction().IsFilled)
                         {
-                            await CancelOrder(Trade.CurrentTransaction);
+                            await CancelOrder(Trade.GetCurrentTransaction());
                         }
-                        if (Trade.CurrentTransaction.IsFilled || Trade.CurrentTransaction.IsPartiallyFilled)
+                        if (Trade.GetCurrentTransaction().IsFilled || Trade.GetCurrentTransaction().IsPartiallyFilled)
                         {
                             //close existing trade
                             var transaction = Trade.CompleteTrade();
@@ -119,8 +123,8 @@ namespace CryptoTrading.App.Monitor
                 Volume = candleStick.Candlestick.Volume
             });
 
-            if(Trade.CurrentTransaction != null && !Trade.CurrentTransaction.IsFilled)
-                await marketMonitor.CheckOrder(Trade.CurrentTransaction);
+            if (Trade.GetCurrentTransaction() != null && !Trade.GetCurrentTransaction().IsFilled)
+                await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
 
             var strategyResult = Request.Strategy.ProcessStrategy(Trade);
 
@@ -166,51 +170,6 @@ namespace CryptoTrading.App.Monitor
 
 
             // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
-                        
-
-
-            //var closePrice = candleStick.Candlestick.Close;
-            //Trade.CurrentPrice = closePrice;
-            //currentCloseTime = candleStick.Candlestick.CloseTime;
-            //Tracker.CurrentPrice = closePrice;
-            ////Logger.LogInformation($"Process CandleStick {Symbol} at {currentCloseTime} PRICE: {closePrice} - Target {Tracker.TargetPrice} : Stop Limit: {Tracker.StopLimitPrice}");
-            //if (Tracker.RequestUpdateOfStopLimit(candleStick.Candlestick.High))
-            //{
-            //    UpdateStopLimit(Tracker.TargetPrice< candleStick.Candlestick.High);
-            //}
-            //if (candleStick.Candlestick.Low <= Tracker.StopLimitPrice)
-            //{
-            //    DbCandleStickManagement.PauseFlow = true;
-            //    //check for fill order
-            //    if (await marketMonitor.CheckOrder(Trade.CurrentTransaction))
-            //    {
-            //        Trade.CurrentTransaction.TransactionDate = currentCloseTime;
-            //        Tracker.EndDateTime = currentCloseTime;
-            //        Trade.Open = false;
-                    
-            //        //unsubscribe to monitor
-            //        marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
-            //        Tracker.IsOpen = false;
-            //        Logger.LogInformation($"Completed Trade {Trade.Pair} finalPrice {Trade.CurrentTransaction.Price} profit {(Trade.Profit/100):P}");
-            //        if(Config != null)
-            //        {
-            //            var factory = new ArchiveTradeFactory(Config);
-            //            var trade = factory.CreateHistoricTrades(Trade);
-            //            StoreTradesToDb(trade, Config);
-            //        }
-            //        Dispose();
-                    //DbCandleStickManagement.PauseFlow = false;
-            //        return;
-            //    }
-            //    else
-            //    {
-            //        //partial fill of the order. should just continue...
-            //    }
-                
-            //}
-
-            
-            //DbCandleStickManagement.PauseFlow = false;
         }
 
         private async Task HandleNoPosition(StrategyStatus result, CandlestickEventArgs candleStick)
@@ -368,38 +327,24 @@ namespace CryptoTrading.App.Monitor
             switch(transaction.Type)
             {
                 case TransactionType.MarketTransaction:
-                    IMarketRequest marketRequest = new MarketRequest(Trade.CurrentTransaction);
-                    await MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, marketRequest);
+                    IMarketRequest marketRequest = new MarketRequest(Trade.GetCurrentTransaction());
+                    await MessageBroker.Instance.Publish(KeyValue, Trade.GetCurrentTransaction(), marketRequest);
                     break;
                 case TransactionType.LimitTransaction:
-                    ILimitRequest limitRequest = new LimitRequest(Trade.CurrentTransaction);
-                    await MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, limitRequest);
+                    ILimitRequest limitRequest = new LimitRequest(Trade.GetCurrentTransaction());
+                    await MessageBroker.Instance.Publish(KeyValue, Trade.GetCurrentTransaction(), limitRequest);
                     break;
                 case TransactionType.StopLimitTransaction:
-                    IStopLimitRequest stopLimitRequest = new StopLimitRequest(Trade.CurrentTransaction);
-                    await MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, stopLimitRequest);
+                    IStopLimitRequest stopLimitRequest = new StopLimitRequest(Trade.GetCurrentTransaction());
+                    await MessageBroker.Instance.Publish(KeyValue, Trade.GetCurrentTransaction(), stopLimitRequest);
                     break;
             }
         }
 
-        //public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)
-        //{
-        //    using var context = new HistoricTradeContext(config.StoreTradesConnectionString);
-        //    context.HistoricTrades.Add(completedTrade);
-        //    context.SaveChanges();
-        //}
-
-        private void Dispose()
-        {
-            Trade.CurrentTransaction.Complete();
-            marketMonitor = null;
-        }
-
-
         private async Task CancelOrder(ITransaction transaction)
         {
             // FIX: Remove null check for long, just check if Order is not null
-            if (Trade.CurrentTransaction.Order != null)
+            if (Trade.GetCurrentTransaction().Order != null)
             {
                 var orderId = transaction.Order.Id;
                 ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
@@ -416,11 +361,14 @@ namespace CryptoTrading.App.Monitor
         public string Symbol => Trade.Pair;
 
         public string KeyValue { get; set; } = "1";
+        private IPositions _positions;
 
         public void AddRequest(ITradeRequest request, IPositions positions)
         {
             Request = request;
-            Trade = positions.CreateTrade(Request);
+            _positions = positions;
+            var trade = _positions.CreateTrade(Request);
+            HistoricTrades.Add(trade);
             IMessageBroker messageBroker = MessageBroker.Instance;
 
             Func<MessagePayload<Order>, Task> newTradeMesssage = ProcessMessageAction;
@@ -454,11 +402,25 @@ namespace CryptoTrading.App.Monitor
 
         public void CompleteTrade()
         {
-            Trade.CurrentTransaction.Complete();
-            Trade.CompleteTrade();
             marketMonitor = null;
+            if (Config != null)
+            {
+                var factory = new ArchiveTradeFactory(Config);
+                var trade = factory.CreateHistoricTrades(Trade);
+                StoreTradesToDb(trade, Config);
+            }
+            var newTrade = _positions.CreateTrade(Request);
+            HistoricTrades.Add(newTrade);
         }
-
+        public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)
+        {
+            if (config != null)
+            {
+                using var context = new HistoricTradeContext(config.StoreTradesConnectionString);
+                context.HistoricTrades.Add(completedTrade);
+                context.SaveChanges();
+            }
+        }
 
     }
     public enum PositionState

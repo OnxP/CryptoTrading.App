@@ -18,7 +18,7 @@ namespace CryptoTrading.App.Monitor
         public IPositions Positions { get; set; }
         private IMarketMonitorFactory TradeFactory {get;}
         public List<ITradeMonitor> OrderMonitors { get; set; }
-        public IEnumerable<ITrade> LiveTrades => OrderMonitors.Where(x => x.Live).Select(x=>x.Trade);
+        public IEnumerable<ITrade> LiveTrades => OrderMonitors.Where(x => x.Live).Select(x=>x.HistoricTrades.Last());
         public string KeyValue { get; set; }
         public IEnumerable<ITradeMonitor> CurrentMonitors
         {
@@ -95,7 +95,7 @@ namespace CryptoTrading.App.Monitor
 
         public List<ITrade> GetCompletedTrades()
         {
-            return OrderMonitors.Where(x => !x.Live).Select(x=>x.Trade).ToList();
+            return OrderMonitors.SelectMany(x=>x.HistoricTrades).ToList();
         }
         public IConfig Config { get; set; }
         public void Configure(IConfig config)

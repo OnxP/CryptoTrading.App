@@ -3,14 +3,12 @@ using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
-using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
+using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace CryptoTrading.App.Algorithm
 {

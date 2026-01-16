@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Process

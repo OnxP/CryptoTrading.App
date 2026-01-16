@@ -1,4 +1,5 @@
 ﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Strategy;
 using System.Collections.Generic;
 using System.Linq;
 

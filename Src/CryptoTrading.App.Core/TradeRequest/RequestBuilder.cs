@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using System;
 

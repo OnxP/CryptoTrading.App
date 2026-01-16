@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Core", "CryptoTrading.App.Core\CryptoTrading.App.Core.csproj", "{298A7C95-7AA3-458F-B664-14E6E0A5335A}"
 EndProject
@@ -68,6 +68,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.MarketDataValidation", "CryptoTrading.App.MarketDataValidation\CryptoTrading.App.MarketDataValidation.csproj", "{F9A47760-BBE4-475C-8296-4A58926A0565}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App", "CryptoTrading.App\CryptoTrading.App.csproj", "{CBF5848D-51CA-497E-1654-2F1549568805}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.Monitor.Tests", "CryptoTrading.App.Monitor.Tests\CryptoTrading.App.Monitor.Tests.csproj", "{8D3C5E13-6075-4576-8971-B2639EAF8E17}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -301,6 +303,14 @@ Global
 		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|x64.ActiveCfg = Release|Any CPU
 		{CBF5848D-51CA-497E-1654-2F1549568805}.Release|x64.Build.0 = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|x64.Build.0 = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|x64.ActiveCfg = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

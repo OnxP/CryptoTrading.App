@@ -1,4 +1,4 @@
-﻿using CryptoTrading.App.Core;
+﻿using CryptoTrading.App.Core.Strategy;
 using Skender.Stock.Indicators;
 
 namespace CryptoTrading.App.Algorithm

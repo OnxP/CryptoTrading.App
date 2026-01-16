@@ -9,8 +9,9 @@ namespace CryptoTrading.App.Core.Trade
         string Pair { get; }
         OrderSide OrderType { get; }
         decimal Quantity { get; }
-        ITransaction? CurrentTransaction { get; }
-        
+
+        ITransaction GetCurrentTransaction();
+
         bool Open { get; set; }
         decimal CurrentPrice { get; set; }
         decimal Profit { get; }

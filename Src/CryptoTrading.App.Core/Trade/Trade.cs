@@ -14,18 +14,19 @@ namespace CryptoTrading.App.Core.Trade
             SellPosition = sellPosition;
             FeePosition = feePosition;
             Transactions = new List<ITransaction>();
-            //InitialRequest = request;
-            //StopLimitTracker = request.StopLimitTracker;
-            //CreateNewTransaction();
         }
 
         public ITradeRequest InitialRequest { get; set; }
-        public ITransaction CurrentTransaction => Transactions.Last();
+        public ITransaction GetCurrentTransaction()
+        {
+            return Transactions.Last();
+        }
+
         public List<ITransaction> Transactions { get; set; }
-        public decimal Price => CurrentTransaction.Price;
-        public string Pair => CurrentTransaction.Pair;
-        public OrderSide OrderType => Math.Sign(CurrentTransaction.Base.Quantity) > 0 ? OrderSide.Buy : OrderSide.Sell;
-        public decimal Quantity => CurrentTransaction.Base.Quantity;
+        public decimal Price => GetCurrentTransaction().Price;
+        public string Pair => GetCurrentTransaction().Pair;
+        public OrderSide OrderType => Math.Sign(GetCurrentTransaction().Base.Quantity) > 0 ? OrderSide.Buy : OrderSide.Sell;
+        public decimal Quantity => GetCurrentTransaction().Base.Quantity;
         public bool Open { get; set; }
         public IPosition BuyPosition { get; }
         public IPosition SellPosition { get; }
@@ -37,7 +38,7 @@ namespace CryptoTrading.App.Core.Trade
             get
             {
                 var first = Transactions.First().Quote; //is negative
-                var current = CurrentTransaction.Quote;
+                var current = GetCurrentTransaction().Quote;
                 var diff = current.Quantity - Math.Abs(first.Quantity);
 
                 return Math.Round(diff, 9);
@@ -48,7 +49,7 @@ namespace CryptoTrading.App.Core.Trade
             get
             {
                 var first = Transactions.First().Fee; //is negative
-                var current = CurrentTransaction.Fee;
+                var current = GetCurrentTransaction().Fee;
                 var diff = Math.Abs(current.Quantity) + Math.Abs(first.Quantity);
 
                 return Math.Round(diff, 9);
@@ -60,7 +61,7 @@ namespace CryptoTrading.App.Core.Trade
             get
             {
                 var first = Transactions.First().Quote;//is negative
-                var current = CurrentTransaction.Quote;
+                var current = GetCurrentTransaction().Quote;
 
                 var percentDiff = ((current.Quantity - Math.Abs(first.Quantity)) / Math.Abs(first.Quantity)) * 100;
 
@@ -72,18 +73,18 @@ namespace CryptoTrading.App.Core.Trade
 
         public DateTime StartDate => Transactions.First().TransactionDate;
 
-        public DateTime CloseDate => CurrentTransaction.TransactionDate;
+        public DateTime CloseDate => GetCurrentTransaction().TransactionDate;
 
         public string Comment => $"Stop Limit Hit: {Transactions.Count==2}";
 
         public void CancelCurrentTransaction()
         {
-            CurrentTransaction.Cancel();
+            GetCurrentTransaction().Cancel();
         }
 
         public ITransaction CompleteTrade()
         {
-            CurrentTransaction.Cancel();
+            GetCurrentTransaction().Cancel();
             var closeTransaction = CreateStopLimitTransaction(CurrentPrice);
             closeTransaction.Complete();
             return closeTransaction;
@@ -132,9 +133,9 @@ namespace CryptoTrading.App.Core.Trade
         }
         public void UpdateCurrentTransaction(Order order)
         {
-            if (CurrentTransaction != null)
+            if (GetCurrentTransaction() != null)
             {
-                CurrentTransaction.UpdateOrder(order);
+                GetCurrentTransaction().UpdateOrder(order);
             }
         }
 
