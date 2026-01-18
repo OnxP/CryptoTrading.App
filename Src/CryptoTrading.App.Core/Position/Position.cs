@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Core.Position
 {
     public class Position : IPosition
     {
-        public static readonly object _lock = new object();
+        public readonly object _lock = new object();
         public string Symbol { get; }
         public List<TransactionLeg> _legs;
 

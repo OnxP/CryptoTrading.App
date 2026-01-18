@@ -10,19 +10,13 @@ namespace CryptoTrading.App.Core
         public class MessageBroker : IMessageBroker
         {
 
-            private static MessageBroker _instance;
+            //private static MessageBroker _instance;
             private readonly Dictionary<Type, List<Delegate>> _subscribers;
             private readonly Dictionary<(string,Type), List<Delegate>> _keySubscribers;
-            public bool Parellel { get; set; } = false;
-            public static MessageBroker Instance
-            {
-                get
-                {
-                    if (_instance == null)
-                        _instance = new MessageBroker();
-                    return _instance;
-                }
-            }
+            public bool Parallel { get; set; } = false;
+
+            private static readonly Lazy<MessageBroker> _instance = new Lazy<MessageBroker>(() => new MessageBroker());
+            public static MessageBroker Instance => _instance.Value;
 
             private MessageBroker()
             {
@@ -32,7 +26,7 @@ namespace CryptoTrading.App.Core
 
             private async Task RunTask<T>(Func<MessagePayload<T>,Task> handler, MessagePayload<T> payload)
             {
-                if(Parellel)
+                if(Parallel)
                 {
                     Task.Factory.StartNew(() => handler?.Invoke(payload));
                 }

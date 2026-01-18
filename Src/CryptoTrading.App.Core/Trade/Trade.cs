@@ -19,7 +19,7 @@ namespace CryptoTrading.App.Core.Trade
         public ITradeRequest InitialRequest { get; set; }
         public ITransaction GetCurrentTransaction()
         {
-            return Transactions.Last();
+            return Transactions.LastOrDefault();
         }
 
         public List<ITransaction> Transactions { get; set; }
@@ -149,12 +149,10 @@ namespace CryptoTrading.App.Core.Trade
         }
     }
 }
-public sealed class TradePlan
-{
-    // “How much exposure do we want?”
-    public decimal TargetBaseQty { get; init; }      // e.g. +0.01 BTC for long, -0.01 BTC for short
-    public decimal EntrySliceQty { get; init; }      // optional: how much each entry order adds
-    public decimal ExitSliceQty { get; init; }      // optional: how much each exit order removes
-    public decimal? EntryLimitPrice { get; init; }   // optional: if using limit placement
-    public decimal? ExitLimitPrice { get; init; }   // optional
-}
+public sealed record TradePlan(
+    decimal TargetBaseQty,
+    decimal EntrySliceQty,
+    decimal ExitSliceQty,
+    decimal? EntryLimitPrice = null,
+    decimal? ExitLimitPrice = null
+);

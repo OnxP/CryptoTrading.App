@@ -383,9 +383,7 @@ namespace CryptoTrading.App.Monitor
         {
             if (obj.Who is ITransaction transaction)
             {
-                Order order = obj.What;
-                transaction.UpdateOrder(order);
-
+                transaction.UpdateOrder(obj.What);
             }
             return Task.CompletedTask;
         }
