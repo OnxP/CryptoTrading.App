@@ -33,7 +33,7 @@ namespace CryptoTrading.App.MarketData
             switch (config.RunType)
             {
                 case RunTypeEnum.BackTesting:
-                    services.AddTransient<IMarketData, DbMarketData>(p=> new DbMarketData(p.GetService<ILogger<DbMarketData>>(),p.GetService<ICandleStickManagement>(),p.GetService<IDbData>(),config.From,config.To,config.Interval));
+                    services.AddTransient<IMarketData, DbMarketData>(p=> new DbMarketData(p.GetService<ILogger<DbMarketData>>(),p.GetService<ICandleStickManagement>(),p.GetService<IDbData>(),config.From,config.To));
                     services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
                     break;
                 case RunTypeEnum.LiveTesting:

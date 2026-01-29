@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Algorithm.StopLimits;
+﻿using CryptoTrading.App.Algorithm.RegimeBased;
+using CryptoTrading.App.Algorithm.StopLimits;
 using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Strategy;
@@ -31,6 +32,23 @@ namespace CryptoTrading.App.Algorithm
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
             services.AddTransient<IStopLimitTracker, ManualTrailingStopLimit>(provider => new ManualTrailingStopLimit(Convert.ToDecimal(config.Risk), Convert.ToDecimal(config.Increment)));
+
+            return services;
+        }
+
+        public static IServiceCollection AddRegimeBasedAlgorithm(this IServiceCollection services)
+        {
+            // Register regime detection strategy (4H)
+            services.AddTransient<IMarketStructureStrategy, RegimeBasedMarketStructureStrategy>();
+
+            // Register setup detection strategy (15M)
+            services.AddTransient<IStrategy, RegimeBasedSetupStrategy>();
+
+            // Register multi-timeframe algorithm
+            services.AddTransient<IAlgorithm, RegimeBasedMultiTimeFrameAlgorithm>();
+
+            // Use trailing stop limit
+            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
 
             return services;
         }
