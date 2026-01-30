@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Core.Database
         Func<Task> _StopLimitMonitor { get; set; }
 
         Dictionary<int, DateTime> timeKeeper = new Dictionary<int, DateTime>();
-        int _index = 0;
+        int _index = 1;
         public static bool PauseFlow { get; set; } = false;
 
         public DateTime CurrentTick => _index < timeKeeper.Count() ? timeKeeper[_index] : FinalTick;
@@ -42,7 +42,7 @@ namespace CryptoTrading.App.Core.Database
         public void BuildTimeKeeper (DateTime From, DateTime Finish)
         {
             int i = 0;
-            var currentTime = From;
+            var currentTime = From.AddMinutes(-1);
             while (currentTime < Finish)
             {
                 currentTime = From.AddMinutes(i);

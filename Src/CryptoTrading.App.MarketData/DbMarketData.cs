@@ -131,10 +131,9 @@ select * from candlestick order by Opentime
             if (candleSticks.Any())
             {
 
-                foreach (var interval in subscribers.Keys.Select(x => x.interval).Distinct())
+                foreach (var interval in candleSticks.Select(x => x.Interval).Distinct())
                 {
-                    candleSticks.Where(x=>x.Interval==interval).OrderBy(x => x.Volume).ToList().ForEach
-                    //c.AsParallel().WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0))).ForAll
+                    candleSticks.Where(x=>x.Interval==interval).OrderByDescending(x=>x.Interval).OrderBy(x => x.Volume).ToList().ForEach
                     (x =>
                     {
                         if (!subscribers.TryGetValue((x.Symbol, x.Interval), out var list)) return;
@@ -145,11 +144,6 @@ select * from candlestick order by Opentime
                     });
                     await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(),interval);
                 }
-                //var task = LoadNextCandleSticksTask(candleSticks.Select(x => x.Key).ToList());
-
-                
-
-                //await task;
 
                 _data.ClearHistoric(_mangement.PreviousTick);
             }
