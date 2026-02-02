@@ -73,12 +73,12 @@ namespace CryptoTrading.App.Core.Position
 
         public ITrade CreateTrade(ITradeRequest request)
         {
-            var buyPosition = _positions[request.BaseSymbol];
-            buyPosition.IsLocked = true;
-            var sellPosition = _positions[request.QuoteSymbol];
+            var basePosition = _positions[request.BaseSymbol];
+            basePosition.IsLocked = true;
+            var quotePosition = _positions[request.QuoteSymbol];
             var feePosition = _positions[FeeAsset];
-            ITrade trade = _factory.CreateTrade(buyPosition, sellPosition, feePosition);
-            buyPosition.IsLocked = false;
+            ITrade trade = _factory.CreateTrade(basePosition, quotePosition, feePosition);
+            basePosition.IsLocked = false;
             return trade;
         }
         //

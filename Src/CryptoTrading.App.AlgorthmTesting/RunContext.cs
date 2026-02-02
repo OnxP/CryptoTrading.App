@@ -106,11 +106,11 @@ namespace CryptoTrading.App.AlgorithmTesting
             var sb = new StringBuilder();
             sb.Append($"Total Number of Trades: [{count}]");
             sb.Append(Environment.NewLine);
-            sb.Append($"Winning Trades: [{completedTrades.Count(x => x.Profit > 0)}] - {((double)completedTrades.Count(x => x.Profit > 0) / count) * 100}%");
+            sb.Append($"Winning Trades: [{completedTrades.Count(x => x.ProfitPct > 0)}] - {((double)completedTrades.Count(x => x.ProfitPct > 0) / count) * 100}%");
             sb.Append(Environment.NewLine);
-            sb.Append($"Losing Trades: [{completedTrades.Count(x => x.Profit < 0)}] - {((double)completedTrades.Count(x => x.Profit < 0) / count) * 100}%");
+            sb.Append($"Losing Trades: [{completedTrades.Count(x => x.ProfitPct < 0)}] - {((double)completedTrades.Count(x => x.ProfitPct < 0) / count) * 100}%");
             sb.Append(Environment.NewLine);
-            sb.Append($"Total Profit: [{completedTrades.Sum(x => x.Profit)}]%");
+            sb.Append($"Total Profit: [{completedTrades.Sum(x => x.ProfitPct)}]%");
             sb.Append(Environment.NewLine);
             sb.Append($"Total BTC: {Math.Round(processor.Positions.GetPosition("BTC").FreeAmount,4)} : {Math.Round((processor.Positions.GetPosition("BTC").FreeAmount-1) * 100,4)}%");
             sb.Append(Environment.NewLine);
@@ -120,12 +120,12 @@ namespace CryptoTrading.App.AlgorithmTesting
         private string PrintTrades(List<ITrade> trades)
         {
             return trades.ToStringTable(x => x.Pair,
-                x => x.StartPrice, //.FirstTransaction.Price.ToString("0.#########"), 
-                x => x.Price,//.CurrentTransaction.Price.ToString("0.#########"), 
-                x => x.Quantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 
+                x => x.OpenPrice, //.FirstTransaction.Price.ToString("0.#########"), 
+                x => x.OpenPrice,//.CurrentTransaction.Price.ToString("0.#########"), 
+                x => x.TotalOpenBaseQuantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 
                 x => x.StartDate, //FirstTransaction.TransactionDate.ToString(), 
                 x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(), 
-                x => x.Profit);
+                x => x.ProfitPct);
         }
 
         List<Symbol> symbols

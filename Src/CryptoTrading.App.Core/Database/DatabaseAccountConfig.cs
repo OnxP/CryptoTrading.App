@@ -21,7 +21,7 @@ namespace CryptoTrading.App.Core.Database
             using var context = new CryptoDbContext();
             var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x=>x.Symbol).Distinct().ToList();
             var list = new List<Symbol>();
-            foreach (var symbol in res)
+            foreach (var symbol in res.Where(x=>x=="BTCUSDT"))
             {
                 var symbolObject = Symbol.Cache.Get(symbol);
                 if (symbolObject == null)

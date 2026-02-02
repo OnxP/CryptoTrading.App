@@ -133,6 +133,7 @@ select * from candlestick order by Opentime
 
                 foreach (var interval in candleSticks.Select(x => x.Interval).Distinct())
                 {
+                    if (interval == CandlestickInterval.Minute) continue;
                     candleSticks.Where(x=>x.Interval==interval).OrderByDescending(x=>x.Interval).OrderBy(x => x.Volume).ToList().ForEach
                     (x =>
                     {

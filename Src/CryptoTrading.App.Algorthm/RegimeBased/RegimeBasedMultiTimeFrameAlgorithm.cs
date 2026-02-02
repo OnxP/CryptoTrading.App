@@ -252,7 +252,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     var regimeResult = strategyResult as RegimeBasedStrategyResult;
                     _activeSetup = regimeResult?.Setup;
                     _activeExecutionStrategy = executionStrategy;
-                    _activeExecutionStrategy.SetQuotes(_quoteHub1M);
+
+                    var request = new TradeRequest(strategyResult, _activeExecutionStrategy, _symbol, args.Candlestick.CloseTime);
+                    RequestTracker.Instance.Add(args.Candlestick.Symbol, request, KeyValue);
 
                     if (_activeSetup != null)
                     {

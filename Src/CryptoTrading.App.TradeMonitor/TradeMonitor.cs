@@ -41,9 +41,6 @@ namespace CryptoTrading.App.Monitor
         public ITradeRequest Request { get; set; }
         private readonly QuoteHub<IQuote> _quoteHub;
         private PositionState _positionState = PositionState.NoPosition;
-        private decimal _targetPositionSize = 0;
-        private decimal _currentPositionSize = 0;
-        private List<ITransaction> _pendingEntryTransactions = new List<ITransaction>();
 
         public async Task SubscribetToMarketData()
         {
@@ -123,7 +120,8 @@ namespace CryptoTrading.App.Monitor
                 Volume = candleStick.Candlestick.Volume
             });
 
-            if (Trade.GetCurrentTransaction() != null && !Trade.GetCurrentTransaction().IsFilled)
+            //only get pending transactions
+            if (Trade.PendingEntryTransactions.Count >0  && Trade.PendingExitTransactions.Count >0)
                 await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
 
             var strategyResult = Request.Strategy.ProcessStrategy(Trade);
@@ -177,7 +175,6 @@ namespace CryptoTrading.App.Monitor
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
                 Logger.LogInformation($"Starting new position for {Symbol}");
-                _targetPositionSize = Request.Amount;
                 _positionState = PositionState.Building;
 
                 await ExecuteEntryStrategy(candleStick);
@@ -201,9 +198,9 @@ namespace CryptoTrading.App.Monitor
             }
 
             // Check if position is fully built
-            if (_currentPositionSize >= _targetPositionSize && _pendingEntryTransactions.Count == 0)
+            if (Trade.RemainingQuantity >= Trade.RemainingQuantity && Trade.PendingEntryTransactions.Count == 0)
             {
-                Logger.LogInformation($"Position fully built for {Symbol}. Size: {_currentPositionSize}");
+                Logger.LogInformation($"Position fully built for {Symbol}. Size: {Trade.RemainingQuantity}");
                 _positionState = PositionState.FullyOpen;
             }
         }
@@ -211,9 +208,9 @@ namespace CryptoTrading.App.Monitor
         private async Task HandleFullyOpenPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
             // Check if position is in profit
-            if (Trade.Profit > 0)
+            if (Trade.ProfitPct > 0)
             {
-                Logger.LogInformation($"Position in profit for {Symbol}. Profit: {Trade.Profit}%");
+                Logger.LogInformation($"Position in profit for {Symbol}. Profit: {Trade.ProfitPct}%");
                 _positionState = PositionState.InProfit;
             }
 
@@ -231,11 +228,11 @@ namespace CryptoTrading.App.Monitor
             // Once in profit, use exit strategy
             if (result.StrategyAction == StrategyAction.CloseTrade)
             {
-                Logger.LogInformation($"Closing profitable position for {Symbol}. Profit: {Trade.Profit}%");
+                Logger.LogInformation($"Closing profitable position for {Symbol}. Profit: {Trade.ProfitPct}%");
                 _positionState = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick);
             }
-            else if (Trade.Profit <= 0)
+            else if (Trade.ProfitPct <= 0)
             {
                 // Went back below breakeven
                 _positionState = PositionState.FullyOpen;
@@ -245,7 +242,7 @@ namespace CryptoTrading.App.Monitor
         private async Task HandleClosingPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
             // Continue executing exit strategy until position is fully closed
-            if (_currentPositionSize > 0)
+            if (Trade.RemainingQuantity > 0)
             {
                 await ExecuteExitStrategy(candleStick);
             }
@@ -259,34 +256,31 @@ namespace CryptoTrading.App.Monitor
 
         private async Task CancelAllPendingEntries()
         {
-            foreach (var transaction in _pendingEntryTransactions.ToList())
+            foreach (var transaction in Trade.PendingEntryTransactions.ToList())
             {
                 if (!transaction.IsFilled && !transaction.IsPartiallyFilled)
                 {
                     await CancelOrder(transaction);
                 }
             }
-            _pendingEntryTransactions.Clear();
         }
 
         private async Task ExecuteEntryStrategy(CandlestickEventArgs candleStick)
         {
             // Entry strategy determines how to build the position
             var entryDecision = Request.Strategy.EntryStrategy.GetNextEntry(
-                _currentPositionSize,
-                _targetPositionSize,
+                Trade.RemainingQuantity,
+                1,
                 candleStick.Candlestick.Close
             );
 
             if (entryDecision.ShouldTrade)
             {
-                var transaction = Trade.CreateNewTransaction(
+                var transaction = Trade.CreateOpenTransaction(
                     entryDecision.Price,
                     candleStick.Candlestick.CloseTime,
-                    entryDecision.Quantity
+                    entryDecision.Quantity//Quote Quantity
                 );
-
-                _pendingEntryTransactions.Add(transaction);
                 await SubmitOrder(transaction);
 
                 Logger.LogInformation(
@@ -300,17 +294,17 @@ namespace CryptoTrading.App.Monitor
         {
             // Exit strategy determines how to close the position
             var exitDecision = Request.Strategy.ExitStrategy.GetNextExit(
-                _currentPositionSize,
+                Trade.RemainingQuantity,
                 candleStick.Candlestick.Close,
-                Trade.Profit
+                Trade.ProfitPct
             );
 
             if (exitDecision.ShouldTrade)
             {
-                var transaction = Trade.CreateNewTransaction(
+                var transaction = Trade.CreateCloseTransaction(
                     exitDecision.Price,
                     candleStick.Candlestick.CloseTime,
-                    exitDecision.Quantity
+                    Trade.TotalOpenBaseQuantity
                 );
 
                 await SubmitOrder(transaction);
@@ -344,7 +338,7 @@ namespace CryptoTrading.App.Monitor
         private async Task CancelOrder(ITransaction transaction)
         {
             // FIX: Remove null check for long, just check if Order is not null
-            if (Trade.GetCurrentTransaction().Order != null)
+            if (transaction.Order != null)
             {
                 var orderId = transaction.Order.Id;
                 ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
@@ -405,7 +399,7 @@ namespace CryptoTrading.App.Monitor
             {
                 var factory = new ArchiveTradeFactory(Config);
                 var trade = factory.CreateHistoricTrades(Trade);
-                StoreTradesToDb(trade, Config);
+                //StoreTradesToDb(trade, Config);
             }
             var newTrade = _positions.CreateTrade(Request);
             HistoricTrades.Add(newTrade);
