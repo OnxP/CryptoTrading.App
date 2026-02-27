@@ -23,5 +23,13 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         public decimal CurrentAtr { get; set; }
         public decimal CurrentRsi { get; set; }
         public decimal TrendStrength { get; set; }
+
+        // Supply/demand zones detected on 4H for downstream use
+        public List<SupplyDemandZone> ActiveZones { get; set; } = new List<SupplyDemandZone>();
+
+        // EMA gradient data for regime classification and prediction
+        public decimal EmaGradient { get; set; }
+        public decimal EmaGradientNormalized { get; set; }
+        public decimal PredictedNextDirection { get; set; }
     }
 }

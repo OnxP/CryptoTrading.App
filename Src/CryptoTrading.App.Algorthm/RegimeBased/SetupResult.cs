@@ -28,6 +28,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         // Recommended strategies for execution layer
         public EntryStrategyType RecommendedEntryStrategy { get; set; }
         public ExitStrategyType RecommendedExitStrategy { get; set; }
+
+        // Supply/demand zone context for 1M entry strategies
+        public SupplyDemandZone NearestZone { get; set; }
+        public bool IsZoneTrade { get; set; }
     }
 
     /// <summary>

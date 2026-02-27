@@ -34,7 +34,11 @@
         BreakoutLong,            // Break above consolidation
         BreakoutShort,           // Break below consolidation
         FadeExtremeLong,         // Extreme oversold in uptrend (buy the dip)
-        FadeExtremeShort         // Extreme overbought in downtrend (sell the rally)
+        FadeExtremeShort,        // Extreme overbought in downtrend (sell the rally)
+        MacdTrendLong,           // MACD-based trending setup (long)
+        MacdTrendShort,          // MACD-based trending setup (short)
+        BbMeanRevLong,           // Bollinger band mean reversion (long) - ranging + high vol
+        BbMeanRevShort           // Bollinger band mean reversion (short) - ranging + high vol
     }
 
     /// <summary>
@@ -43,11 +47,13 @@
     public enum EntryStrategyType
     {
         None,
-        LimitAtSupport,      // Place limit at support level, wait for fill
-        LimitAtResistance,   // Place limit at resistance level, wait for fill
+        LimitAtSupport,       // Place limit at support level, wait for fill
+        LimitAtResistance,    // Place limit at resistance level, wait for fill
         MarketOnConfirmation, // Market order after N confirming bars
-        ScaleIn,             // Enter in portions at multiple levels
-        BreakoutEntry        // Enter on break of level with volume confirmation
+        ScaleIn,              // Enter in portions at multiple levels
+        BreakoutEntry,        // Enter on break of level with volume confirmation
+        StochRsiEntry,        // Stochastic RSI crossover timing for trending entries
+        LimitAtZoneEdge       // Limit order at supply/demand zone boundary
     }
 
     /// <summary>
