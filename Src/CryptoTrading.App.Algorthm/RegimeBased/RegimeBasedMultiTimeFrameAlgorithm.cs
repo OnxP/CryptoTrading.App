@@ -1,5 +1,6 @@
 ﻿using Binance;
 using Binance.Client;
+using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
@@ -192,7 +193,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
                 if (regimeResult != null)
                 {
-                    _logger.LogInformation($"[4H] Setups: {string.Join(", ", regimeResult.AllowedSetups)}");
+                    _logger.LogInformation(
+                        $"[4H] EMA Grad: {regimeResult.EmaGradientNormalized:F3} | " +
+                        $"Zones: {regimeResult.ActiveZones?.Count ?? 0} | " +
+                        $"Setups: {string.Join(", ", regimeResult.AllowedSetups)}");
                     _logger.LogDebug($"[4H] {regimeResult.Reasoning}");
                 }
 
@@ -261,11 +265,13 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                         _logger.LogInformation(
                             $"[15M] SETUP: {_activeSetup.SetupType} {_activeSetup.Direction}");
                         _logger.LogInformation(
-                            $"[15M] Zone: [{_activeSetup.EntryZoneLow:F2} - {_activeSetup.EntryZoneHigh:F2}]");
+                            $"[15M] Entry Zone: [{_activeSetup.EntryZoneLow:F2} - {_activeSetup.EntryZoneHigh:F2}] | " +
+                            $"ZoneTrade: {_activeSetup.IsZoneTrade}");
                         _logger.LogInformation(
                             $"[15M] Stop: {_activeSetup.StopLoss:F2} | TP: {_activeSetup.TakeProfit:F2} | R:R: {_activeSetup.RiskRewardRatio:F2}");
                         _logger.LogInformation(
-                            $"[15M] Entry: {_activeSetup.RecommendedEntryStrategy} | Exit: {_activeSetup.RecommendedExitStrategy}");
+                            $"[15M] Entry: {_activeSetup.RecommendedEntryStrategy} | Exit: {_activeSetup.RecommendedExitStrategy} | " +
+                            $"Conf: {_activeSetup.Confidence:P0}");
                     }
                 }
             }
@@ -320,7 +326,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                         _isInPosition = true;
 
                         // Initialize exit tracking
-                        if (_activeExecutionStrategy.ExitStrategy is RegimeBasedExitStrategy exitStrategy)
+                        if (_activeExecutionStrategy.ExitStrategy is RegimeBasedExitStrategyBase exitStrategy)
                         {
                             exitStrategy.InitializePosition(entryDetails.Price);
                         }

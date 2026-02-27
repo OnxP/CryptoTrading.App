@@ -1,4 +1,6 @@
-﻿using CryptoTrading.App.Core.Strategy;
+﻿using CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies;
+using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using Skender.Stock.Indicators;
 using System.Linq;
@@ -8,8 +10,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
     /// <summary>
     /// 1-minute timeframe execution strategy.
     /// Implements IExecutionStrategy from Core.
-    /// 
+    ///
     /// Handles precise entry timing and active position management.
+    /// Uses polymorphic entry/exit strategies created via factory methods
+    /// based on the setup's recommended strategy types.
     /// </summary>
     public class RegimeBasedExecutionStrategy : IExecutionStrategy
     {
@@ -25,8 +29,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             _setup = setup;
             Quantity = 0.1m; // Default, will be set by caller
 
-            EntryStrategy = new RegimeBasedEntryStrategy(setup);
-            ExitStrategy = new RegimeBasedExitStrategy(setup);
+            EntryStrategy = RegimeBasedEntryStrategyBase.Create(setup);
+            ExitStrategy = RegimeBasedExitStrategyBase.Create(setup);
 
             SetQuotes(quoteHub);
         }
