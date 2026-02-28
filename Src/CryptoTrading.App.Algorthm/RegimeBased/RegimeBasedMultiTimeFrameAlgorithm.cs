@@ -92,6 +92,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricData15M);
             marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandle15M);
 
+            // 1M for execution (entry timing and exit management)
+            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_1, ProcessHistoricData1M);
+            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_1, ProcessLiveCandle1M);
+
             _logger.LogInformation($"Subscribed to {symbol} on 4H, 15M, and 1M timeframes");
         }
 
@@ -185,8 +189,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
                 var regimeResult = _currentRegime as RegimeBasedMarketStructureResult;
 
+                var ts4H = args.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
                 _logger.LogInformation(
-                    $"[4H] Regime: {_currentRegime.MarketRegime} | " +
+                    $"[4H {ts4H}] Regime: {_currentRegime.MarketRegime} | " +
                     $"Vol: {regimeResult?.VolatilityRegime} | " +
                     $"Dir: {regimeResult?.AllowedDirection} | " +
                     $"Conf: {regimeResult?.Confidence:P0}");
@@ -194,10 +199,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 if (regimeResult != null)
                 {
                     _logger.LogInformation(
-                        $"[4H] EMA Grad: {regimeResult.EmaGradientNormalized:F3} | " +
+                        $"[4H {ts4H}] EMA Grad: {regimeResult.EmaGradientNormalized:F3} | " +
                         $"Zones: {regimeResult.ActiveZones?.Count ?? 0} | " +
                         $"Setups: {string.Join(", ", regimeResult.AllowedSetups)}");
-                    _logger.LogDebug($"[4H] {regimeResult.Reasoning}");
+                    _logger.LogDebug($"[4H {ts4H}] {regimeResult.Reasoning}");
                 }
 
                 // Invalidate setup if regime changed
@@ -205,7 +210,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 {
                     if (regimeResult != null && !regimeResult.AllowedSetups.Contains(_activeSetup.SetupType))
                     {
-                        _logger.LogInformation("[4H] Setup invalidated by regime change");
+                        _logger.LogInformation($"[4H {ts4H}] Setup invalidated by regime change");
                         _activeSetup = null;
                         _activeExecutionStrategy = null;
                     }
@@ -213,7 +218,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error processing 4H candle");
+                _logger.LogError(e, $"Error processing 4H candle at {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}");
             }
         }
 
@@ -236,16 +241,18 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     Volume = args.Candlestick.Volume
                 });
 
+                var ts15M = args.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
+
                 if (_currentRegime == null)
                 {
-                    _logger.LogWarning("[15M] No regime, skipping");
+                    _logger.LogWarning($"[15M {ts15M}] No regime, skipping");
                     return;
                 }
 
                 // Don't look for new setups if in position
                 if (_isInPosition)
                 {
-                    _logger.LogDebug("[15M] In position, skipping setup eval");
+                    _logger.LogDebug($"[15M {ts15M}] In position, skipping setup eval");
                     return;
                 }
 
@@ -257,27 +264,25 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     _activeSetup = regimeResult?.Setup;
                     _activeExecutionStrategy = executionStrategy;
 
-                    var request = new TradeRequest(strategyResult, _activeExecutionStrategy, _symbol, args.Candlestick.CloseTime);
-                    RequestTracker.Instance.Add(args.Candlestick.Symbol, request, KeyValue);
-
+                    // Setup detected — 1M execution layer will handle precise entry and trade submission
                     if (_activeSetup != null)
                     {
                         _logger.LogInformation(
-                            $"[15M] SETUP: {_activeSetup.SetupType} {_activeSetup.Direction}");
+                            $"[15M {ts15M}] SETUP: {_activeSetup.SetupType} {_activeSetup.Direction}");
                         _logger.LogInformation(
-                            $"[15M] Entry Zone: [{_activeSetup.EntryZoneLow:F2} - {_activeSetup.EntryZoneHigh:F2}] | " +
+                            $"[15M {ts15M}] Entry Zone: [{_activeSetup.EntryZoneLow:F2} - {_activeSetup.EntryZoneHigh:F2}] | " +
                             $"ZoneTrade: {_activeSetup.IsZoneTrade}");
                         _logger.LogInformation(
-                            $"[15M] Stop: {_activeSetup.StopLoss:F2} | TP: {_activeSetup.TakeProfit:F2} | R:R: {_activeSetup.RiskRewardRatio:F2}");
+                            $"[15M {ts15M}] Stop: {_activeSetup.StopLoss:F2} | TP: {_activeSetup.TakeProfit:F2} | R:R: {_activeSetup.RiskRewardRatio:F2}");
                         _logger.LogInformation(
-                            $"[15M] Entry: {_activeSetup.RecommendedEntryStrategy} | Exit: {_activeSetup.RecommendedExitStrategy} | " +
+                            $"[15M {ts15M}] Entry: {_activeSetup.RecommendedEntryStrategy} | Exit: {_activeSetup.RecommendedExitStrategy} | " +
                             $"Conf: {_activeSetup.Confidence:P0}");
                     }
                 }
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error processing 15M candle");
+                _logger.LogError(e, $"Error processing 15M candle at {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}");
             }
         }
 
@@ -300,16 +305,21 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     Volume = args.Candlestick.Volume
                 });
 
+                var ts1M = args.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
+
                 // Check for entry
                 if (_activeSetup != null && _activeExecutionStrategy != null && !_isInPosition)
                 {
+                    // Update execution strategy to use the 1M quotes for precise timing
+                    _activeExecutionStrategy.SetQuotes(_quoteHub1M);
+
                     var currentPrice = args.Candlestick.Close;
                     var entryDetails = _activeExecutionStrategy.EntryStrategy?.GetNextEntry(0, 0.1m, currentPrice);
 
                     if (entryDetails != null && entryDetails.ShouldTrade)
                     {
                         _logger.LogInformation(
-                            $"[1M] === ENTRY === Price: {entryDetails.Price:F2} Qty: {entryDetails.Quantity:F4}");
+                            $"[1M {ts1M}] === ENTRY === Price: {entryDetails.Price:F2} Qty: {entryDetails.Quantity:F4}");
 
                         var strategyResult = new RegimeBasedStrategyResult
                         {
@@ -342,7 +352,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     if (exitDetails != null && exitDetails.ShouldTrade)
                     {
                         _logger.LogInformation(
-                            $"[1M] === EXIT === Price: {exitDetails.Price:F2}");
+                            $"[1M {ts1M}] === EXIT === Price: {exitDetails.Price:F2}");
 
                         var exitResult = new RegimeBasedStrategyResult
                         {
@@ -364,7 +374,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error processing 1M candle");
+                _logger.LogError(e, $"Error processing 1M candle at {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}");
             }
         }
 
