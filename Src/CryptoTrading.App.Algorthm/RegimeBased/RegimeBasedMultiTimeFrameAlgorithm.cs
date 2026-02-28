@@ -92,9 +92,6 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricData15M);
             marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandle15M);
 
-            // 1M for execution (entry timing and exit management)
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_1, ProcessHistoricData1M);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_1, ProcessLiveCandle1M);
 
             _logger.LogInformation($"Subscribed to {symbol} on 4H, 15M, and 1M timeframes");
         }
@@ -141,24 +138,6 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
             _setupStrategy.SetQuotes(_quoteHub15M);
             _logger.LogInformation($"Loaded {candlesticks.Count()} 15M candles");
-        }
-
-        private void ProcessHistoricData1M(IEnumerable<Candlestick> candlesticks)
-        {
-            foreach (var candle in candlesticks)
-            {
-                _quoteHub1M.Add(new Quote
-                {
-                    Timestamp = candle.CloseTime,
-                    Open = candle.Open,
-                    High = candle.High,
-                    Low = candle.Low,
-                    Close = candle.Close,
-                    Volume = candle.Volume
-                });
-            }
-
-            _logger.LogInformation($"Loaded {candlesticks.Count()} 1M candles");
         }
 
         #endregion
@@ -283,98 +262,6 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             catch (Exception e)
             {
                 _logger.LogError(e, $"Error processing 15M candle at {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}");
-            }
-        }
-
-        /// <summary>
-        /// Process 1M candle - Execute trades
-        /// </summary>
-        private void ProcessLiveCandle1M(CandlestickEventArgs args)
-        {
-            try
-            {
-                if (!args.IsFinal) return;
-
-                _quoteHub1M.Add(new Quote
-                {
-                    Timestamp = args.Candlestick.CloseTime,
-                    Open = args.Candlestick.Open,
-                    High = args.Candlestick.High,
-                    Low = args.Candlestick.Low,
-                    Close = args.Candlestick.Close,
-                    Volume = args.Candlestick.Volume
-                });
-
-                var ts1M = args.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
-
-                // Check for entry
-                if (_activeSetup != null && _activeExecutionStrategy != null && !_isInPosition)
-                {
-                    // Update execution strategy to use the 1M quotes for precise timing
-                    _activeExecutionStrategy.SetQuotes(_quoteHub1M);
-
-                    var currentPrice = args.Candlestick.Close;
-                    var entryDetails = _activeExecutionStrategy.EntryStrategy?.GetNextEntry(0, 0.1m, currentPrice);
-
-                    if (entryDetails != null && entryDetails.ShouldTrade)
-                    {
-                        _logger.LogInformation(
-                            $"[1M {ts1M}] === ENTRY === Price: {entryDetails.Price:F2} Qty: {entryDetails.Quantity:F4}");
-
-                        var strategyResult = new RegimeBasedStrategyResult
-                        {
-                            PostTrade = true,
-                            Amount = entryDetails.Quantity,
-                            Leverage = 3,
-                            OrderSide = _activeSetup.Direction == TradeDirection.Long ? OrderSide.Buy : OrderSide.Sell,
-                            Setup = _activeSetup
-                        };
-
-                        var request = new TradeRequest(strategyResult, _activeExecutionStrategy, _symbol, args.Candlestick.CloseTime);
-                        RequestTracker.Instance.Add(args.Candlestick.Symbol, request, KeyValue);
-
-                        _isInPosition = true;
-
-                        // Initialize exit tracking
-                        if (_activeExecutionStrategy.ExitStrategy is RegimeBasedExitStrategyBase exitStrategy)
-                        {
-                            exitStrategy.InitializePosition(entryDetails.Price);
-                        }
-                    }
-                }
-
-                // Check for exit
-                if (_isInPosition && _activeExecutionStrategy != null)
-                {
-                    var currentPrice = args.Candlestick.Close;
-                    var exitDetails = _activeExecutionStrategy.ExitStrategy?.GetNextExit(0.1m, currentPrice, 0);
-
-                    if (exitDetails != null && exitDetails.ShouldTrade)
-                    {
-                        _logger.LogInformation(
-                            $"[1M {ts1M}] === EXIT === Price: {exitDetails.Price:F2}");
-
-                        var exitResult = new RegimeBasedStrategyResult
-                        {
-                            PostTrade = true,
-                            Amount = -exitDetails.Quantity,
-                            Leverage = 1,
-                            OrderSide = _activeSetup.Direction == TradeDirection.Long ? OrderSide.Sell : OrderSide.Buy,
-                            Setup = _activeSetup
-                        };
-
-                        var request = new TradeRequest(exitResult, _activeExecutionStrategy, _symbol, args.Candlestick.CloseTime);
-                        RequestTracker.Instance.Add(args.Candlestick.Symbol, request, KeyValue);
-
-                        _isInPosition = false;
-                        _activeSetup = null;
-                        _activeExecutionStrategy = null;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Error processing 1M candle at {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}");
             }
         }
 

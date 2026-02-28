@@ -50,8 +50,8 @@ namespace CryptoTrading.App.DatabaseLoad
             var symbols = sym.Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2025, 6, 01); 
-            marketDate.To = new DateTime(2025, 07,01);
+            marketDate.From = new DateTime(2025, 07, 01); 
+            marketDate.To = new DateTime(2026, 02, 27);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
@@ -109,7 +109,7 @@ namespace CryptoTrading.App.DatabaseLoad
         public static int i = 0;
         private static void Check()
         {
-            if(i == 1000)
+            if(i == 10000)
             {
                 context.BulkSaveChangesAsync();
                 i = 0;
