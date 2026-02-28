@@ -50,7 +50,7 @@ namespace CryptoTrading.App.DatabaseLoad
             var symbols = sym.Where(x => x.QuoteAsset.Symbol == "BTC").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2025, 6, 01); 
+            marketDate.From = new DateTime(2025, 6, 01);
             marketDate.To = new DateTime(2025, 07,01);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
@@ -59,7 +59,15 @@ namespace CryptoTrading.App.DatabaseLoad
               CandlestickInterval.Minutes_5
               , CandlestickInterval.Minute
             };
-        
+
+            // --- Gap fill: check the DB and download only the missing candles ---
+            var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
+            var detector = new MissingCandleDetector(Api, gapLogger);
+            var symbolNames = symbols.Select(s => s.ToString()).ToList();
+            await detector.FillMissingCandlesAsync(symbolNames, intervals, marketDate.From, marketDate.To)
+                          .ConfigureAwait(false);
+
+            // --- Full download for anything outside the gap-fill scope ---
             //subscribe to several symbols
             AddEvents(marketDate as AbstractMarketData, symbols,intervals);
 
