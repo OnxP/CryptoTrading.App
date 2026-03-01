@@ -64,16 +64,22 @@ namespace CryptoTrading.App.DatabaseLoad
               , CandlestickInterval.Minute
             };
 
-            // --- Gap fill: check the DB and download only the missing candles ---
-            //var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
-            //var detector = new MissingCandleDetector(Api, gapLogger);
-            //var symbolNames = symbols.Select(s => s.ToString()).ToList();
-            //await detector.FillMissingCandlesAsync(symbolNames, intervals, marketDate.From, marketDate.To)
-            //              .ConfigureAwait(false);
+            // --- Gap fill: check the DB per symbol and download only what is missing ---
+            var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
+            var detector = new MissingCandleDetector(Api, gapLogger);
+            var symbolNames = symbols.Select(s => s.ToString()).ToList();
+
+            foreach (var symbolName in symbolNames)
+            {
+                // For each symbol: check the DB for missing candles across all intervals,
+                // then download and insert only those gaps before moving to the next symbol.
+                await detector.FillMissingForSymbolAsync(symbolName, intervals, marketDate.From, marketDate.To)
+                              .ConfigureAwait(false);
+            }
 
             // --- Full download for anything outside the gap-fill scope ---
             //subscribe to several symbols
-            AddEvents(marketDate as AbstractMarketData, symbols,intervals);
+            AddEvents(marketDate as AbstractMarketData, symbols, intervals);
 
             await marketDate.StartStream();
 

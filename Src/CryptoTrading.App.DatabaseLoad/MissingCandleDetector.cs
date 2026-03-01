@@ -33,6 +33,7 @@ namespace CryptoTrading.App.DatabaseLoad
 
         /// <summary>
         /// Checks every (symbol, interval) combination and fills any missing candles.
+        /// Delegates to FillMissingForSymbolAsync for each symbol.
         /// </summary>
         public async Task FillMissingCandlesAsync(
             IEnumerable<string> symbols,
@@ -42,10 +43,24 @@ namespace CryptoTrading.App.DatabaseLoad
         {
             foreach (var symbol in symbols)
             {
-                foreach (var interval in intervals)
-                {
-                    await FillMissingForSymbolIntervalAsync(symbol, interval, from, to);
-                }
+                await FillMissingForSymbolAsync(symbol, intervals, from, to);
+            }
+        }
+
+        /// <summary>
+        /// Checks all intervals for a single symbol and fills any missing candles.
+        /// Call this directly from Program.cs when you want to handle each symbol
+        /// individually (check → load → move on to the next symbol).
+        /// </summary>
+        public async Task FillMissingForSymbolAsync(
+            string symbol,
+            IEnumerable<CandlestickInterval> intervals,
+            DateTime from,
+            DateTime to)
+        {
+            foreach (var interval in intervals)
+            {
+                await FillMissingForSymbolIntervalAsync(symbol, interval, from, to);
             }
         }
 
