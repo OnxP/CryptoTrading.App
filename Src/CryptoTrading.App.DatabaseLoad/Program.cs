@@ -69,13 +69,12 @@ namespace CryptoTrading.App.DatabaseLoad
             var detector = new MissingCandleDetector(Api, gapLogger);
             var symbolNames = symbols.Select(s => s.ToString()).ToList();
 
-            foreach (var symbolName in symbolNames)
-            {
-                // For each symbol: check the DB for missing candles across all intervals,
-                // then download and insert only those gaps before moving to the next symbol.
-                await detector.FillMissingForSymbolAsync(symbolName, intervals, marketDate.From, marketDate.To)
-                              .ConfigureAwait(false);
-            }
+            // Process all symbols concurrently — each symbol checks all its intervals in
+            // parallel too.  Concurrency towards the Binance API is capped by the
+            // semaphore inside MissingCandleDetector (default: 10 simultaneous calls).
+            var gapTasks = symbolNames.Select(symbolName =>
+                detector.FillMissingForSymbolAsync(symbolName, intervals, marketDate.From, marketDate.To));
+            await Task.WhenAll(gapTasks).ConfigureAwait(false);
 
             // --- Full download for anything outside the gap-fill scope ---
             //subscribe to several symbols

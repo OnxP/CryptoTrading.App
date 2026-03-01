@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.DatabaseLoad
@@ -23,45 +24,53 @@ namespace CryptoTrading.App.DatabaseLoad
     {
         private readonly IBinanceApi _api;
         private readonly ILogger<MissingCandleDetector> _logger;
+        private readonly SemaphoreSlim _apiSemaphore;
         private const int BinanceMaxLimit = 1000;
 
-        public MissingCandleDetector(IBinanceApi api, ILogger<MissingCandleDetector> logger)
+        /// <param name="maxConcurrency">
+        /// Maximum number of simultaneous Binance API calls.
+        /// Binance allows up to 1 200 requests/min; 10 concurrent callers
+        /// is a safe default that keeps well inside that limit.
+        /// </param>
+        public MissingCandleDetector(IBinanceApi api, ILogger<MissingCandleDetector> logger,
+            int maxConcurrency = 10)
         {
             _api = api;
             _logger = logger;
+            _apiSemaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
         }
 
         /// <summary>
         /// Checks every (symbol, interval) combination and fills any missing candles.
-        /// Delegates to FillMissingForSymbolAsync for each symbol.
+        /// All symbols are processed concurrently; API calls are gated by the semaphore.
         /// </summary>
-        public async Task FillMissingCandlesAsync(
+        public Task FillMissingCandlesAsync(
             IEnumerable<string> symbols,
             IEnumerable<CandlestickInterval> intervals,
             DateTime from,
             DateTime to)
         {
-            foreach (var symbol in symbols)
-            {
-                await FillMissingForSymbolAsync(symbol, intervals, from, to);
-            }
+            var intervalList = intervals.ToList(); // materialise once — shared across tasks
+            var tasks = symbols.Select(symbol =>
+                FillMissingForSymbolAsync(symbol, intervalList, from, to));
+            return Task.WhenAll(tasks);
         }
 
         /// <summary>
         /// Checks all intervals for a single symbol and fills any missing candles.
+        /// All intervals are processed concurrently; API calls are gated by the semaphore.
         /// Call this directly from Program.cs when you want to handle each symbol
         /// individually (check → load → move on to the next symbol).
         /// </summary>
-        public async Task FillMissingForSymbolAsync(
+        public Task FillMissingForSymbolAsync(
             string symbol,
             IEnumerable<CandlestickInterval> intervals,
             DateTime from,
             DateTime to)
         {
-            foreach (var interval in intervals)
-            {
-                await FillMissingForSymbolIntervalAsync(symbol, interval, from, to);
-            }
+            var tasks = intervals.Select(interval =>
+                FillMissingForSymbolIntervalAsync(symbol, interval, from, to));
+            return Task.WhenAll(tasks);
         }
 
         // -------------------------------------------------------------------------
@@ -167,6 +176,7 @@ namespace CryptoTrading.App.DatabaseLoad
                     $"Batch {current:yyyy-MM-dd HH:mm} – {batchEnd:yyyy-MM-dd HH:mm}");
 
                 IEnumerable<Candlestick> candles;
+                await _apiSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
                     candles = await _api.GetCandlesticksAsync(
@@ -179,6 +189,10 @@ namespace CryptoTrading.App.DatabaseLoad
                     _logger.LogError(ex,
                         $"[Download] API error for {symbol} {interval} at {current:yyyy-MM-dd HH:mm}");
                     break;
+                }
+                finally
+                {
+                    _apiSemaphore.Release();
                 }
 
                 var candleList = candles?.ToList() ?? new List<Candlestick>();
