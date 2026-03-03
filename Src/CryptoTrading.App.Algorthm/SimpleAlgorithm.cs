@@ -2,16 +2,14 @@
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
-using CryptoTrading.App.Core.Message_Broker;
+using CryptoTrading.App.Core.RequestTracker;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using CryptoTrading.App.Core.RequestTracker;
 
 namespace CryptoTrading.App.Algorithm
 {
@@ -97,12 +95,17 @@ namespace CryptoTrading.App.Algorithm
 
 
             
-            result = (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades;
+            result = ( (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades);
             //need access to config here.
             var request = RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
 
             return request;
         }
 
+        public void Subscribe(Symbol symbol, IMarketDataEvents marketData)
+        {
+            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricMarketData);
+            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandleStick);
+        }
     }
 }

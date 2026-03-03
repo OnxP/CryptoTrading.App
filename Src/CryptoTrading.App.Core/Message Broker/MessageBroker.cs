@@ -10,19 +10,13 @@ namespace CryptoTrading.App.Core
         public class MessageBroker : IMessageBroker
         {
 
-            private static MessageBroker _instance;
+            //private static MessageBroker _instance;
             private readonly Dictionary<Type, List<Delegate>> _subscribers;
             private readonly Dictionary<(string,Type), List<Delegate>> _keySubscribers;
-            public bool Parellel { get; set; } = false;
-            public static MessageBroker Instance
-            {
-                get
-                {
-                    if (_instance == null)
-                        _instance = new MessageBroker();
-                    return _instance;
-                }
-            }
+            public bool Parallel { get; set; } = false;
+
+            private static readonly Lazy<MessageBroker> _instance = new Lazy<MessageBroker>(() => new MessageBroker());
+            public static MessageBroker Instance => _instance.Value;
 
             private MessageBroker()
             {
@@ -30,19 +24,19 @@ namespace CryptoTrading.App.Core
                 _keySubscribers = new Dictionary<(string,Type), List<Delegate>>();
             }
 
-            private void RunTask<T>(Action<MessagePayload<T>> handler, MessagePayload<T> payload)
+            private async Task RunTask<T>(Func<MessagePayload<T>,Task> handler, MessagePayload<T> payload)
             {
-                if(Parellel)
+                if(Parallel)
                 {
                     Task.Factory.StartNew(() => handler?.Invoke(payload));
                 }
                 else
                 {
-                    handler?.Invoke(payload);
+                    await handler?.Invoke(payload);
                 }
             }
 
-            public void Publish<T>(object source, T message)
+            public async Task Publish<T>(object source, T message)
             {
                 if (message == null || source == null)
                     return;
@@ -54,13 +48,13 @@ namespace CryptoTrading.App.Core
                 if (delegates == null || delegates.Count == 0) return;
                 var payload = new MessagePayload<T>(message, source);
                 foreach (var handler in delegates.Select
-                (item => item as Action<MessagePayload<T>>))
+                (item => item as Func<MessagePayload<T>, Task>))
                 {
-                    RunTask(handler,payload);
+                    await RunTask(handler,payload);
                 }
             }          
 
-            public void Subscribe<T>(Action<MessagePayload<T>> subscription)
+            public void Subscribe<T>(Func<MessagePayload<T>, Task> subscription)
             {
                 var delegates = _subscribers.ContainsKey(typeof(T)) ?
                                 _subscribers[typeof(T)] : new List<Delegate>();
@@ -71,7 +65,7 @@ namespace CryptoTrading.App.Core
                 _subscribers[typeof(T)] = delegates;
             }
 
-            public void Unsubscribe<T>(Action<MessagePayload<T>> subscription)
+            public void Unsubscribe<T>(Func<MessagePayload<T>, Task> subscription)
             {
                 if (!_subscribers.ContainsKey(typeof(T))) return;
                 var delegates = _subscribers[typeof(T)];
@@ -81,7 +75,7 @@ namespace CryptoTrading.App.Core
                     _subscribers.Remove(typeof(T));
             }
 
-            public void Publish<T>(string keyValue, object source, T message)
+            public async Task Publish<T>(string keyValue, object source, T message)
             {
                 if (message == null || source == null)
                     return;
@@ -93,13 +87,13 @@ namespace CryptoTrading.App.Core
                 if (delegates == null || delegates.Count == 0) return;
                 var payload = new MessagePayload<T>(message, source);
                 foreach (var handler in delegates.Select
-                (item => item as Action<MessagePayload<T>>))
+                (item => item as Func<MessagePayload<T>, Task>))
                 {
-                    RunTask(handler, payload);
+                    await RunTask(handler, payload);
                 }
             }
 
-            public void Subscribe<T>(string keyValue, Action<MessagePayload<T>> subscription)
+            public void Subscribe<T>(string keyValue, Func<MessagePayload<T>, Task> subscription)
             {
                 var delegates = _keySubscribers.ContainsKey((keyValue, typeof(T))) ?
                                 _keySubscribers[(keyValue, typeof(T))] : new List<Delegate>();
@@ -110,7 +104,7 @@ namespace CryptoTrading.App.Core
                 _keySubscribers[(keyValue, typeof(T))] = delegates;
             }
 
-            public void Unsubscribe<T>(string keyValue, Action<MessagePayload<T>> subscription)
+            public void Unsubscribe<T>(string keyValue, Func<MessagePayload<T>,Task> subscription)
             {
                 if (!_keySubscribers.ContainsKey((keyValue, typeof(T)))) return;
                 var delegates = _keySubscribers[(keyValue, typeof(T))];

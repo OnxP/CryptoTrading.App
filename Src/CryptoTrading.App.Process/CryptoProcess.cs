@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Binance;
 using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
-using CryptoTrading.App.Core.RequestTracker;
+using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoTrading.App.Process

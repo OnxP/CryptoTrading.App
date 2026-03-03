@@ -2,18 +2,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
     public interface IDbData
     {
-        int LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbol, int interval,int numberOfRows,int offSet);
-        Dictionary<string, Candlestick> GetData(DateTime currentTick, bool minute);
-        IOrderedQueryable<CandleStickDb> GetQuerableData(DateTime currentTick, bool minute);
-        List<Candlestick> GetData(string symbol);
-        bool CheckNextTick(DateTime nextTick, string symbol, bool minute);
-        void ClearHistoric(DateTime from,bool minute);
-        int Count(bool minute);
+        Task<int> LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbol, 
+            int interval,int pageNumber);
+        Dictionary<(string, CandlestickInterval), Candlestick> GetData(DateTime currentTick);
+        IOrderedQueryable<CandleStickDb> GetQuerableData(DateTime currentTick);
+        List<Candlestick> GetData(string symbol, CandlestickInterval interval);
+        bool CheckNextTick(DateTime nextTick, string symbol, CandlestickInterval interval);
+        void ClearHistoric(DateTime from);
+        int Count();
         void Initialise(DateTime from, DateTime to, List<string> symbols, CandlestickInterval interval);
     }
 }

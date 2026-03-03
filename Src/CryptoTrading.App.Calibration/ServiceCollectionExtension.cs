@@ -12,6 +12,7 @@ using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Process;
+using CryptoTrading.App.Core.Strategy;
 
 namespace CryptoTrading.App.Calibration
 {

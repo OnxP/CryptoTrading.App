@@ -1,5 +1,7 @@
 ﻿using Binance;
 using CryptoTrading.App.Core.Trade;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.MarketMonitorFactory
 {
@@ -8,11 +10,10 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         bool Live { get; }
         string Symbol { get;}
         string KeyValue { get; set; }
-
-        ITrade Trade { get; }
-        void UpdateInitialTransaction(Order order);
-        void CancelLimitOrder(string order);
-        void UpdateStopLimitOrder(Order order);
-        void AddTrade(ITrade trade);
+        List<ITrade> HistoricTrades { get; }
+        void AddRequest(ITradeRequest trade, Position.IPositions positions);
+        void CompleteTrade();
+        Task SetNewRequest(ITradeRequest what);
+        Task SubscribetToMarketData();
     }
 }

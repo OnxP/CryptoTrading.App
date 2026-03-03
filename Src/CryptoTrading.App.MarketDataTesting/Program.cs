@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;

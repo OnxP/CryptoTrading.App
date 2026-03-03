@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
+using System.Linq;
 using System.Threading.Tasks;
 using Binance;
 using Binance.Client;
@@ -56,12 +55,13 @@ namespace CryptoTrading.App.MarketData
             return newOrder.Status == OrderStatus.Filled;
         }
         
-        public void Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
+        public Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
         {
             symbols.Add(symbol);
             _client.Subscribe(symbol, CandlestickInterval.Minute, processCandleStick);
             Configure();
             if(!Controller.IsActive) Controller.Begin();
+            return Task.CompletedTask;
         }
 
         public void Configure()
@@ -89,6 +89,16 @@ namespace CryptoTrading.App.MarketData
         public override void Configure(IConfig request)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
+        {
+            var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, 0, 200).
+                ToUniversalTime();
+            var candleSticks = await _api.GetCandlesticksAsync(symbol, CandlestickInterval.Minute, 0, calculatedFrom, DateTime.Now.ToUniversalTime());
+
+            candleSticks.Reverse();
+            return candleSticks.ToList();
         }
     }
 }

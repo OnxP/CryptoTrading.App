@@ -2,9 +2,7 @@
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Data.Entity.Core.Metadata.Edm;
 using System.Linq;
-using System.Threading;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {

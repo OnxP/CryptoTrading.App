@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Binance;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;

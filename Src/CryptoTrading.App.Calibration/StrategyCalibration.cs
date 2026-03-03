@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Binance;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Extensions;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.MarketData;
 using CryptoTrading.App.Process;
 using Microsoft.Extensions.Configuration;
@@ -38,8 +38,7 @@ namespace CryptoTrading.App.Calibration
                 //need to create a unique instance of algo
                 var algorithm = Algorithm.Invoke();
                 algorithm.Configure(Config);
-                MarketData.InitialDataLoadSubscribe(symbol, interval, algorithm.ProcessHistoricMarketData);
-                MarketData.InitialDataStreamSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
+                algorithm.Subscribe(symbol, MarketData);
             }
         }
         public void RemoveMarketDataEvents(List<Symbol> removeSymbols)

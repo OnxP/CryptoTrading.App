@@ -2,7 +2,6 @@
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
-using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,20 +23,16 @@ namespace CryptoTrading.App.MarketData
             _data = data;
         }
 
-        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to,CandlestickInterval interval) : this(management, data)
+        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
         {
             From = from;
             To = to;
             Logger = logger;
-            Interval = interval;
         }
 
         public DateTime From { get; set; }
         public DateTime To { get; set; }
-        public CandlestickInterval Interval { get; set; }
-
-        public int TotalNumberOfRows { get; set; }
-        public int RequestRows { get; set; }
+        public Dictionary<CandlestickInterval, int> pageNumber { get; set; } = new Dictionary<CandlestickInterval, int>();
 
         private CancellationToken CancellationToken { get; set; }
 
@@ -91,8 +86,8 @@ select * from candlestick order by Opentime
             try
             {
                 CancellationToken = ct;
-                LoadHistoricData();
-                StreamData();
+                await LoadHistoricData();
+                await StreamData();
             }
             catch (Exception e)
             {
@@ -113,117 +108,88 @@ select * from candlestick order by Opentime
             return controller;
         }
 
-        private void StreamData()
+        private async Task StreamData()
         {
             _mangement.BuildTimeKeeper(From, To);
 
             _mangement.AddMarketStream(InvokeCandleStick);
-            var rows = _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
-                subscribers.Keys.Select(x => x.symbol).ToList(), (int)subscribers.Keys.Select(x => x.interval).First(), RequestRows*2, 0);
-            RequestRows = rows;
-            TotalNumberOfRows = rows;
+            foreach (var interval in subscribers.Keys.Select(x => x.interval).Distinct())
+            {                
+                var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
+                subscribers.Keys.Select(x => x.symbol).ToList(), (int)interval, 0);
 
-            _mangement.StartTimeKeeper(CancellationToken);
-        }
-
-        public void InvokeCandleStick()
-        {
-            Logger.LogDebug($"Finished Processing tick :{_mangement.CurrentTick}");
-            var candleSticks = _data.GetData(_mangement.CurrentTick, false).ToList();
-            if (candleSticks.All(x => x.Value == null))
-            {
-                return;
+                pageNumber.TryAdd(interval, 0);
             }
 
-            //var task = LoadNextCandleSticksTask(candleSticks.Select(x => x.Key).ToList());
-
-            candleSticks.OrderBy(x => x.Value.Volume).ToList().ForEach
-                //c.AsParallel().WithDegreeOfParallelism(Convert.ToInt32(Math.Ceiling((Environment.ProcessorCount * 0.75) * 2.0))).ForAll
-                (x =>
-                {
-                    if (!subscribers.TryGetValue((x.Value.Symbol, x.Value.Interval), out var list)) return;
-                    foreach (var action in list)
-                    {
-                        action.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, x.Value, 0, 0, true));
-                    }
-                });
-            LoadNextCandleSticks(candleSticks.Select(x => x.Key).ToList());
-
-            //await task;
-
-            _data.ClearHistoric(_mangement.PreviousTick, false);
+            await _mangement.StartTimeKeeper(CancellationToken);
         }
 
-        private async Task LoadNextCandleSticksTask(List<string> toList)
+        public async Task InvokeCandleStick()
         {
-            await Task.Run(() =>
+            Logger.LogDebug($"Finished Processing tick :{_mangement.CurrentTick}");
+            var candleSticks = _data.GetData(_mangement.CurrentTick).Values.ToList();//gets all the data for the current tick
+            if (candleSticks.Any())
             {
-                LoadNextCandleSticks(toList);
-            });
+
+                foreach (var interval in candleSticks.Select(x => x.Interval).Distinct())
+                {
+                    if (interval == CandlestickInterval.Minute) continue;
+                    candleSticks.Where(x=>x.Interval==interval).OrderByDescending(x=>x.Interval).OrderBy(x => x.Volume).ToList().ForEach
+                    (x =>
+                    {
+                        if (!subscribers.TryGetValue((x.Symbol, x.Interval), out var list)) return;
+                        foreach (var action in list)
+                        {
+                            action.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, x, 0, 0, true));
+                        }
+                    });
+                    await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(),interval);
+                }
+
+                _data.ClearHistoric(_mangement.PreviousTick);
+            }
         }
 
-        private void LoadNextCandleSticks(List<string> toList)
+
+        private async Task LoadNextCandleSticks(List<string> toList,CandlestickInterval interval)
         {
-            if (_data.Count(false) == 0)
+            if (_data.Count() == 0)
             {
                 throw new Exception();
             }
-            if(CalculateFrom(_mangement.CurrentTick, Interval, 1)>_mangement.FinalTick) return;
+            if(DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, interval, 1)>_mangement.FinalTick) return;
 
-            if (_data.CheckNextTick(CalculateFrom(_mangement.CurrentTick, Interval, 1),
-                    toList.First(), false)) return;
+            if (_data.CheckNextTick(DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, interval, 1),
+                    toList.FirstOrDefault(),interval)) return;
 
-            var rows = _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick,_mangement.FinalTick,
-                toList, (int)Interval, RequestRows, TotalNumberOfRows);
-            RequestRows = rows;
-            TotalNumberOfRows += rows;
+            var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick,_mangement.FinalTick,
+                toList, (int)interval, pageNumber[interval]);
+            pageNumber[interval] += 1;
         }
 
-        private DateTime CalculateFrom(DateTime dateTime, CandlestickInterval interval,int NoOfCandleSticks)
+        private async Task LoadHistoricData()
         {
-            int candleSticksToLoad = -1 * NoOfCandleSticks;
-            return interval switch
+            foreach (var sub in historicDataSubscribers.Keys.Select(x => x.interval).Distinct())
             {
-                CandlestickInterval.Minute => dateTime.AddMinutes(-1 * candleSticksToLoad),
-                CandlestickInterval.Minutes_3 => dateTime.AddMinutes(-3 * candleSticksToLoad),
-                CandlestickInterval.Minutes_5 => dateTime.AddMinutes(-5 * candleSticksToLoad),
-                CandlestickInterval.Minutes_15 => dateTime.AddMinutes(-15 * candleSticksToLoad),
-                CandlestickInterval.Minutes_30 => dateTime.AddMinutes(-30 * candleSticksToLoad),
-                CandlestickInterval.Hour => dateTime.AddHours(-1 * candleSticksToLoad),
-                CandlestickInterval.Hours_2 => dateTime.AddHours(-2 * candleSticksToLoad),
-                CandlestickInterval.Hours_4 => dateTime.AddHours(-4 * candleSticksToLoad),
-                CandlestickInterval.Hours_6 => dateTime.AddHours(-6 * candleSticksToLoad),
-                CandlestickInterval.Hours_8 => dateTime.AddHours(-8 * candleSticksToLoad),
-                CandlestickInterval.Hours_12 => dateTime.AddHours(-12 * candleSticksToLoad),
-                CandlestickInterval.Day => dateTime.AddDays(-1 * candleSticksToLoad),
-                CandlestickInterval.Days_3 => dateTime.AddDays(-3 * candleSticksToLoad),
-                CandlestickInterval.Week => dateTime.AddDays(-7 * candleSticksToLoad),
-                CandlestickInterval.Month => dateTime.AddMonths(-1 * candleSticksToLoad),
-                _ => dateTime,
-            };
-        }
-        private void LoadHistoricData()
-        {
-            RequestRows = _data.LoadData(SQL_HISTORIC_QUERY,
-                CalculateFrom(From, historicDataSubscribers.Keys.Select(x => x.interval).First(), -201), From,
-                historicDataSubscribers.Keys.Select(x => x.symbol).ToList(),
-                (int)historicDataSubscribers.Keys.Select(x => x.interval).First(), historicDataSubscribers.Count * 10000,
-                0);
+                await _data.LoadData(SQL_HISTORIC_QUERY,
+                DbMarketDataHelpers.CalculateFrom(From, sub, -201), From,
+                historicDataSubscribers.Keys.Select(x => x.symbol).Distinct().ToList(),
+                (int)sub, -1);
+            }
+           
             foreach (var item in historicDataSubscribers)
             {
                 LoadHistoricData( item.Key, From, item.Value);
             }
 
-            _data.ClearHistoric(From, false);
+            _data.ClearHistoric(From);
 
         }
         private void LoadHistoricData((string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             try
             {
-                //_data.LoadData(SQL_HISTORIC_QUERY, From, _mangement.FinalTick, symbol.symbol, (int)symbol.interval);
-
-                var candleSticks = _data.GetData(symbol.symbol);
+                var candleSticks = _data.GetData(symbol.symbol,symbol.interval);
                 if (!candleSticks.Any()) return;
                 foreach (var action in callback)
                 {

@@ -3,9 +3,7 @@ using Binance;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection.Metadata;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {

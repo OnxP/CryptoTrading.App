@@ -8,12 +8,15 @@ using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Metadata.Edm;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
@@ -93,7 +96,7 @@ namespace CryptoTrading.App.MarketData
 
         public Task StartStream(CancellationToken ct)
         {
-            return new Task(StartStream);
+            return StartStream();
         }
 
         public ITaskController GetTaskController()
@@ -101,22 +104,26 @@ namespace CryptoTrading.App.MarketData
             var controller = new TaskController(StartStream);
             return controller;
         }
-
-        public void StartStream()
+        
+        public async Task StartStream()
         {
             try
             {
                 //Logger.LogInformation("Loading Historic Candlesticks");
-                var tasks = new List<Task>();
+                var histtasks = new List<Task<IEnumerable<Candlestick>>>();
+                var action = historicDataSubscribers.First().Value.First();
                 //foreach (var item in historicDataSubscribers)
                 //{
-                //    tasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
+                //    histtasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
                 //}
-                //Task.WaitAll(tasks.ToArray());
+                //Task.WaitAll(histtasks.ToArray());
+                //var hisSticks = histtasks.SelectMany(x => x.Result).ToList();
+                //action.Invoke(hisSticks);
                 //Logger.LogInformation("Finished loading Historic Candlesticks");
-                tasks = new List<Task>();
-                //LoadData
+                var tasks = new List<Task>();
 
+                //LoadData
+                var semaphore = new SemaphoreSlim(10);
                 Logger.LogInformation("Loading Candlesticks");
 
                 //StreamHistoricData
@@ -124,11 +131,25 @@ namespace CryptoTrading.App.MarketData
                 {
                     var from = From;
                     var list = SplitDates(item.Key.interval, from, To);
+                    var localItem = item;
                     foreach (var to in list)
                     {
-                        Stopwatch time = new Stopwatch();
-                        time.Start();
-                        StreamData(_api, item.Key, from, to);
+                        var localFrom = from;  // Capture current value
+                        var localTo = to;      // Capture current value
+                        tasks.Add(Task.Run(async () =>
+                        {
+                            await semaphore.WaitAsync();
+                            try
+                            {
+                                var candlesticks = await StreamData(_api, localItem.Key, localFrom, localTo);
+                                action.Invoke(candlesticks.ToList());                                
+                            }
+                            finally
+                            {
+                                semaphore.Release();
+                            }
+                        }));                        
+
                         from = to;
                         //while (time.ElapsedMilliseconds <= 1000)
                         //{ }
@@ -138,7 +159,7 @@ namespace CryptoTrading.App.MarketData
                 Logger.LogInformation("Finished Loading Candlesticks");
 
                 //sort the list
-
+                await Task.WhenAll(tasks);
 
 
             }
@@ -153,14 +174,12 @@ namespace CryptoTrading.App.MarketData
 
         List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
 
-        private async void StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private async Task<IEnumerable<Candlestick>> StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false);
-            var action = historicDataSubscribers.First().Value.First();
-            Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candleSticks.Count()}");
-
-            action.Invoke(candleSticks);
+            var candlesticks =  await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false);
+            Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candlesticks.Count()}");
+            return candlesticks;
         }
 
         void liveStream()
@@ -195,17 +214,17 @@ namespace CryptoTrading.App.MarketData
                 _ => dateTime,
             };
         }
-        private async System.Threading.Tasks.Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
+        private async Task<IEnumerable<Candlestick>> LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime()).ConfigureAwait(false);
             //need to drop first candle
             var sticks = candleSticks.Reverse().Skip(1);
+            return sticks;
             foreach (var action in callback)
             {
                 action.Invoke(sticks);
             }
-
         }
 
         protected IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)

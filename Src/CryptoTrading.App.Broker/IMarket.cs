@@ -10,7 +10,8 @@ namespace CryptoTrading.App.Broker
         Task<IEnumerable<AccountBalance>> GetAccountBalances();
         Task<IEnumerable<Order>> GetAllOpenOrders();
         Task<Order> SetMarketOrder(IMarketRequest request);
+        Task<Order> SetLimitOrder(ILimitRequest request);
         Task<string> CancelOrder(ICancelRequest request);
-        Task<Order> SetLimitOrder(IStopLimitRequest request);
+        Task<Order> SetStopLimitOrder(IStopLimitRequest request);
     }
 }

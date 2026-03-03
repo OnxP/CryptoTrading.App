@@ -1,9 +1,7 @@
 ﻿using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Binance;
 using Binance.Client;
@@ -75,7 +73,7 @@ namespace CryptoTrading.App.MarketData
             Logger.LogInformation("Loading Candlesticks");
         }
 
-        private async System.Threading.Tasks.Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, int numberOfCandleSticks, IList<Action<IEnumerable<Candlestick>>> callback)
+        private async Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, int numberOfCandleSticks, IList<Action<IEnumerable<Candlestick>>> callback)
         {
             var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, symbol.interval, numberOfCandleSticks).ToUniversalTime();
             var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, DateTime.Now.ToUniversalTime());
@@ -85,7 +83,6 @@ namespace CryptoTrading.App.MarketData
             {
                 action.Invoke(sticks);
             }
-
         }
     }
 }

@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Binance;
+using System.Threading.Tasks;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Core.RequestTracker
 {
@@ -37,35 +34,26 @@ namespace CryptoTrading.App.Core.RequestTracker
             //if (CandleStickTracker.Instance.IsFinal) ProcessRequests();
         }
 
-        private void ProcessRequests()
+        public async Task SubmitRequests()
         {
-            lock (_lock)
+            if (Requests.Any())
             {
-                if (!Requests.Any()) return;
+                //var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
 
-                var order = Requests.OrderByDescending(x => x.Value.Item2.Volume);
-
-                foreach (var request in order)
-                {
-                    MessageBroker.Instance.Publish(request.Value.Item1,null,request.Value.Item2);
-                }
+                //should submit request at in parrellel.
+                //foreach (var request in req)
+                //{
+                //    await MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
+                //}
+                await Task.WhenAll(
+                                Requests.Select(r =>
+                                    MessageBroker.Instance.Publish(
+                                        r.Value.Item1,
+                                        this,
+                                        r.Value.Item2)));
 
                 Requests.Clear();
             }
-        }
-
-        public void SubmitRequests()
-        {
-            if (!Requests.Any()) return;
-
-            var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
-
-            foreach (var request in req)
-            {
-                MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
-            }
-
-            Requests.Clear();
         }
     }
 }

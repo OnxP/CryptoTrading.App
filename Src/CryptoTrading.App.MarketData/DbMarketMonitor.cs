@@ -1,6 +1,5 @@
 ﻿using Binance;
 using Binance.Client;
-using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Trade;
 using System;
@@ -35,8 +34,7 @@ namespace CryptoTrading.App.MarketData
         }
 
         public CandlestickInterval Interval { get; set; }
-        public int NumberOfRows { get; set; } = 30;
-        public int OffSet => 0 ;
+        public int pageNumber { get; set; } = 0;
 
         private string SQL_STREAM_QUERY = @"SELECT [ID]
       ,[Symbol]
@@ -57,8 +55,26 @@ namespace CryptoTrading.App.MarketData
   ORDER BY OpenTime
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY";
-        private readonly object _lock = new object();
-        private readonly object _lockAction = new object();
+        private string SQL_HISTORIC_QUERY = @"SELECT [ID]
+      ,[Symbol]
+      ,[Interval]
+      ,[OpenTime]
+      ,[Open]
+      ,[High]
+      ,[Low]
+      ,[Close]
+      ,[Volume]
+      ,[CloseTime]
+      ,[QuoteAssetVolume]
+      ,[NumberOfTrades]
+      ,[TakerBuyBaseAssetVolume]
+      ,[TakerBuyQuoteAssetVolume]
+  FROM [dbo].[CandleStickDbs]
+  WHERE OpenTime > @p0 AND OpenTime <= @p1 AND Symbol in ('@Symbols') AND Interval=@p2
+  ORDER BY OpenTime
+  OFFSET @p3 ROWS
+  FETCH NEXT @p4 ROWS ONLY";
+
         public async Task<bool> CheckOrder(ITransaction transaction)
         {
             transaction.Complete();
@@ -71,46 +87,51 @@ namespace CryptoTrading.App.MarketData
             return;
         }
 
-        public void InvokeCandleStick()
+        public async Task InvokeCandleStick()
         {
-            var candleSticks = _data.GetData(_mangement.CurrentTick, true).ToList();
+            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x=>x.Key.Item2==CandlestickInterval.Minute).ToList();
             if (candleSticks.All(x => x.Value == null)) return;
 
             foreach (var kvp in candleSticks)
             {
-                if (!actions.ContainsKey(kvp.Key)) continue;
-                foreach (var action in actions[kvp.Key])
+                if (!actions.ContainsKey(kvp.Key.Item1)) continue;
+                foreach (var action in actions[kvp.Key.Item1])
                 {
                     action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0,
                         true));
 
-                    if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key, true))
+                    if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key.Item1,kvp.Key.Item2))
                     {
-                        _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { kvp.Key }, 0, NumberOfRows, OffSet);
+                        await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, 
+                            new List<string>() { kvp.Key.Item1 }, 0,0);
                     }
                 }
             }
-            _data.ClearHistoric(_mangement.PreviousTick, true);
+            _data.ClearHistoric(_mangement.PreviousTick);
         }
 
-        public void Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
+        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
         {
-            lock (_lockAction)
+            var rows = await _data.LoadData(SQL_HISTORIC_QUERY,
+                DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minute, -201), _mangement.CurrentTick,
+                [symbol], 0, -1);
+            return _data.GetData(symbol,CandlestickInterval.Minute);
+        }
+
+        public async Task Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
+        {
+            if (actions.ContainsKey(symbol))
+                actions[symbol].Add(keyValue,processCandleStick);
+            else
             {
-                if (actions.ContainsKey(symbol))
-                    actions[symbol].Add(keyValue,processCandleStick);
-                else
-                {
-                    _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0,NumberOfRows, OffSet);
-                    actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
-                }
-
-                _data.ClearHistoric(_mangement.PreviousTick, true);
-
-                if (actions.Count >= 1) _mangement.AddStopLimitStream(InvokeCandleStick);
-
-                DbCandleStickManagement.PauseFlow = false;
+                var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0, pageNumber);
+                pageNumber++;
+                actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
             }
+
+            _data.ClearHistoric(_mangement.PreviousTick);
+
+            if (actions.Count >= 1) _mangement.AddStopLimitStream(InvokeCandleStick);
         }
 
         public bool IsSubscribed(string symbol, string keyValue)
@@ -120,21 +141,16 @@ namespace CryptoTrading.App.MarketData
 
         public void UnSubscribe(string symbol, string keyValue)
         {
-            lock (_lockAction)
+            if (actions[symbol].Count == 1)
             {
-                if (actions[symbol].Count == 1)
-                {
-                    actions.Remove(symbol);
-                }
-                else
-                {
-                    actions[symbol].Remove(keyValue);
-                }
-
-                if (actions.Count == 0) _mangement.RemoveStopLimitStream();
+                actions.Remove(symbol);
             }
+            else
+            {
+                actions[symbol].Remove(keyValue);
+            }
+
+            if (actions.Count == 0) _mangement.RemoveStopLimitStream();
         }
     }
-
-
 }

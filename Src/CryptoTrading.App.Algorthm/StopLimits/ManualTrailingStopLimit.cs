@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using Binance;
 
 namespace CryptoTrading.App.Algorithm.StopLimits

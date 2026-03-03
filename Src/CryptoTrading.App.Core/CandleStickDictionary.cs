@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Binance;
+using Skender.Stock.Indicators;
 
 namespace CryptoTrading.App.Core
 {
@@ -18,6 +19,16 @@ namespace CryptoTrading.App.Core
         public CandlestickInterval Interval => Values.First(x => x != null).Interval;
         public bool Ready => Count >= NumberOfCandleSticksToKeep;
         public bool HasMissing => Values.Any(x => x == null);
+
+        public IEnumerable<IQuote> CandleSticks => Values.Where(x=>x!=null).Select(x=>new Quote
+        {
+            Timestamp = x.OpenTime,
+            Open = x.Open,
+            High = x.High,
+            Low = x.Low,
+            Close = x.Close,
+            Volume = x.Volume
+        }).OrderByDescending(X=>X.Timestamp);
 
         public IEnumerable<Candlestick> GetCandlesticks => Values.OrderByDescending(X=>X.CloseTime);
 

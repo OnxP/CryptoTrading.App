@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Binance;
+﻿using Binance;
 using Binance.Client;
-using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
+using System.Collections.Concurrent;
+using System.Linq;
 
 namespace CryptoTrading.App.Core.RequestTracker
 {
@@ -21,6 +16,15 @@ namespace CryptoTrading.App.Core.RequestTracker
                 if (_instance == null) CandleSticks = new ConcurrentDictionary<string, CandlestickEventArgs>();
                 return _instance ??= new CandleStickTracker();
             }
+        }
+
+        public static decimal? GetClosePrice(string symbol)
+        {
+            if (CandleSticks.TryGetValue(symbol, out var candleStick))
+            {
+                return candleStick.Candlestick.Close;
+            }
+            return null;
         }
 
         //store up the request here.

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Binance;
+using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Core.TradeRequest;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Binance;
-using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Broker
 {
@@ -49,7 +50,7 @@ namespace CryptoTrading.App.Broker
             return Task.Run(() => "");
         }
 
-        public Task<Order> SetLimitOrder(IStopLimitRequest trade)
+        public Task<Order> SetStopLimitOrder(IStopLimitRequest trade)
         {
             trades.Add(trade);
             var order = new Order(new BinanceApiUser("Test"),
@@ -65,6 +66,31 @@ namespace CryptoTrading.App.Broker
                              OrderType.StopLossLimit,
                              OrderSide.Sell,
                              trade.StopPrice,
+                             0,
+                             DateTime.Now,
+                             DateTime.Now,
+                             true);
+            Task<Order> task = new Task<Order>(() => order);
+            task.Start();
+            return task;
+        }
+
+        public Task<Order> SetLimitOrder(ILimitRequest trade)
+        {
+            trades.Add(trade);
+            var order = new Order(new BinanceApiUser("Test"),
+                             trade.Symbol,
+                             1,
+                             "",
+                             trade.Price,
+                             trade.Quantity,
+                             trade.Quantity,
+                             trade.Quantity * trade.Price,
+                             OrderStatus.Filled,
+                             TimeInForce.IOC,
+                             OrderType.Limit,
+                             OrderSide.Buy,
+                             0,
                              0,
                              DateTime.Now,
                              DateTime.Now,
