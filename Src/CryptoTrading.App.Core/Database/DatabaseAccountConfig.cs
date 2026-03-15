@@ -61,11 +61,12 @@ namespace CryptoTrading.App.Core.Database
 
             var list = new List<AccountBalance>();
             list.Add(new AccountBalance(Asset.USDT, Convert.ToDecimal(Config.StartBtcAmount*100000), 0m));
-            list.Add(new AccountBalance(Asset.BTC, Convert.ToDecimal(Config.StartBtcAmount), 0m));
+            //list.Add(new AccountBalance(Asset.BTC, Convert.ToDecimal(Config.StartBtcAmount), 0m));
 
             foreach (var symbol in res)
             {
-                var asset = Symbol.Cache.Get(symbol).BaseAsset;
+                var asset = Symbol.Cache?.Get(symbol)?.BaseAsset;
+                if (asset == null) continue;
                 decimal free = 0m;
                 if (asset.Symbol == "BNB") free = Convert.ToDecimal(Config.StartBnbAmount);
 

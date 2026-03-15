@@ -78,9 +78,9 @@ namespace CryptoTrading.App.DatabaseLoad
 
             // --- Full download for anything outside the gap-fill scope ---
             //subscribe to several symbols
-            AddEvents(marketDate as AbstractMarketData, symbols, intervals);
+            //AddEvents(marketDate as AbstractMarketData, symbols, intervals);
 
-            await marketDate.StartStream();
+            //await marketDate.StartStream();
 
 /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             //var res = await run(marketDate).ConfigureAwait(false);
