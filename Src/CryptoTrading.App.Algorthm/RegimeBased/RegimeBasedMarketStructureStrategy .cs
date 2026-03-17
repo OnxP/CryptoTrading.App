@@ -93,6 +93,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             // 7. Confidence and metadata
             result.Confidence = CalculateConfidence(gradient, volatility);
             result.CurrentAtr = (decimal)(_atr?.Results?.LastOrDefault()?.Atr ?? 0);
+            result.AtrPercentile = volatility.AtrPercentile;
             result.TrendStrength = Math.Abs(gradient.Normalized);
             result.Reasoning = BuildReasoning(gradient, volatility, result.ActiveZones.Count);
 

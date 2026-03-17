@@ -20,6 +20,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         public string Reasoning { get; set; } = string.Empty;
 
         // Data passed to downstream strategies
+        public decimal AtrPercentile { get; set; }
         public decimal CurrentAtr { get; set; }
         public decimal CurrentRsi { get; set; }
         public decimal TrendStrength { get; set; }
