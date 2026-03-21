@@ -7,6 +7,8 @@ using System.Data.Common;
 using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net.Sockets;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 
 namespace CryptoTrading.App.MarketDataValidation

@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System.Collections.Generic;
 
 namespace CryptoTrading.App.Algorithm.CustomIndicators
@@ -24,9 +24,9 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
             _extDeviation = extDeviation;
             _extBackstep = extBackstep;
 }
-        public Candlestick Lowest(int count, int startBar, List<Candlestick> Candles)
+        public ExchangeCandlestick Lowest(int count, int startBar, List<ExchangeCandlestick> Candles)
         {
-            Candlestick minCandle = null;
+            ExchangeCandlestick minCandle = null;
             for (int i = 0; i < count; ++i)
             {
                 var candle = Candles[i + startBar];
@@ -41,9 +41,9 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
             }
             return minCandle;
         }
-        public Candlestick Highest(int count, int startBar, List<Candlestick> Candles)
+        public ExchangeCandlestick Highest(int count, int startBar, List<ExchangeCandlestick> Candles)
         {
-            Candlestick maxCandle = null;
+            ExchangeCandlestick maxCandle = null;
             for (int i = 0; i < count; ++i)
             {
                 var candle = Candles[i + startBar];
@@ -59,7 +59,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
             return maxCandle;
         }
         //order is most recent first.
-        public void Refresh(List<Candlestick> Candles, int startBar = 0)
+        public void Refresh(List<ExchangeCandlestick> Candles, int startBar = 0)
         {
             int shift, back, lasthighpos, lastlowpos;
             decimal val, res;

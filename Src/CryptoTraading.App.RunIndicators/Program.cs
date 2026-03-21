@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using CryptoTrading.App.Core.Database.Indicators;
 using System.Linq;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Database.RunIndicators.Indicators;
 
 namespace CryptoTraading.App.RunIndicators
@@ -21,7 +21,7 @@ namespace CryptoTraading.App.RunIndicators
 
             foreach (var symbol in symbols)
             {
-                List<CandlestickInterval> intervals;
+                List<CandleInterval> intervals;
                 //load candlesticks from database...maybe stream them into the system.
                 using (var context = new CryptoDbContext())
                 {

@@ -1,8 +1,8 @@
 ﻿using System.IO;
-using Binance;
 using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Extensions;
 using CryptoTrading.App.MarketData;
 using CryptoTrading.App.Monitor;
@@ -24,7 +24,6 @@ namespace CryptoTrading.App.Process
 
             var services = new ServiceCollection()
                 .AddMarketData(config)
-                .AddBinance()
                 .AddTradingCore(config)
                 .AddTradeMonitor(config)
                 .AddBroker(config)

@@ -1,5 +1,5 @@
-﻿using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Trade;
 using System;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
-    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data 
+    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data
     //Input(Initial) - Trade details.
     //Input(continuous) - CandleStick Processing.
     //StaticInput - Stop loss type and limit.
@@ -24,16 +24,18 @@ namespace CryptoTrading.App.MarketData
     {
         ICandleStickManagement _mangement;
         IDbData _data;
-        private Dictionary<string, Dictionary<string, Action<CandlestickEventArgs>>> actions;
+        private Dictionary<string, Dictionary<string, Action<ExchangeCandlestickEvent>>> actions;
         public DbMarketMonitor(ICandleStickManagement management, IDbData data)
         {
             _mangement = management;
             _data = data;
-            actions = new Dictionary<string, Dictionary<string,Action<CandlestickEventArgs>>>();
+            actions = new Dictionary<string, Dictionary<string,Action<ExchangeCandlestickEvent>>>();
             //_mangement.AddMonitor(this);
         }
 
-        public CandlestickInterval Interval { get; set; }
+        public CandleInterval Interval { get; set; }
+        public int NumberOfRows { get; set; } = 30;
+        public int OffSet => 0 ;
         public int pageNumber { get; set; } = 0;
 
         private string SQL_STREAM_QUERY = @"SELECT [ID]
@@ -89,7 +91,7 @@ namespace CryptoTrading.App.MarketData
 
         public async Task InvokeCandleStick()
         {
-            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x=>x.Key.Item2==CandlestickInterval.Minute).ToList();
+            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x=>x.Key.Item2==CandleInterval.Minute_1).ToList();
             if (candleSticks.All(x => x.Value == null)) return;
 
             foreach (var kvp in candleSticks)
@@ -97,8 +99,7 @@ namespace CryptoTrading.App.MarketData
                 if (!actions.ContainsKey(kvp.Key.Item1)) continue;
                 foreach (var action in actions[kvp.Key.Item1])
                 {
-                    action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0,
-                        true));
+                    action.Value.Invoke(new ExchangeCandlestickEvent { EventTime = _mangement.CurrentTick, Candlestick = kvp.Value, FirstTradeId = 0, LastTradeId = 0, IsFinal = true });
 
                     if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key.Item1,kvp.Key.Item2))
                     {
@@ -110,15 +111,15 @@ namespace CryptoTrading.App.MarketData
             _data.ClearHistoric(_mangement.PreviousTick);
         }
 
-        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
+        public async Task<List<ExchangeCandlestick>> GetHistoricCandleSticks(string symbol)
         {
             var rows = await _data.LoadData(SQL_HISTORIC_QUERY,
-                DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minute, -201), _mangement.CurrentTick,
+                DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandleInterval.Minute_1, -201), _mangement.CurrentTick,
                 [symbol], 0, -1);
-            return _data.GetData(symbol,CandlestickInterval.Minute);
+            return _data.GetData(symbol,CandleInterval.Minute_1);
         }
 
-        public async Task Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
+        public async Task Subscribe(string symbol, string keyValue,Action<ExchangeCandlestickEvent> processCandleStick)
         {
             if (actions.ContainsKey(symbol))
                 actions[symbol].Add(keyValue,processCandleStick);
@@ -126,7 +127,7 @@ namespace CryptoTrading.App.MarketData
             {
                 var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0, pageNumber);
                 pageNumber++;
-                actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
+                actions.Add(symbol, new Dictionary<string, Action<ExchangeCandlestickEvent>>() { { keyValue, processCandleStick } });
             }
 
             _data.ClearHistoric(_mangement.PreviousTick);

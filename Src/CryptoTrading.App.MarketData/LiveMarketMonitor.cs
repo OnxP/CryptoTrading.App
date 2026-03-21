@@ -1,19 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Binance;
-using Binance.Client;
-using Binance.Utility;
-using Binance.WebSocket;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
 {
-    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data 
+    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data
     //Input(Initial) - Trade details.
     //Input(continuous) - CandleStick Processing.
     //StaticInput - Stop loss type and limit.
@@ -22,22 +19,15 @@ namespace CryptoTrading.App.MarketData
     //Processing logic
     //Initial - Configure Stoploss Monitor from Open trade. and set a stop limit order.
     //Continuous - Monitor price and once it hits a threshold reset stoploss to limit order X% below threshold then adjust threshold
-    
+
 
     //this needs to send a signal back to Trade Processor with a ready. then the trade processor can decide on which order to execute the trades.
     public class LiveMarketMonitor : AbstractMarketData, IMarketMonitor
     {
-        protected ICandlestickClient _client;
-        protected IBinanceWebSocketStream _webSocket;
-        protected IBinanceApi _api;
-        protected IBinanceApiUser _user;
-        public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger,IBinanceApi api, ICandlestickClient candlestickClient, IBinanceWebSocketStream webSocket)
+        protected IExchangeProvider _provider;
+        public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger, IExchangeProvider provider)
         {
-            _api = api;
-            _client = candlestickClient;
-            _webSocket = webSocket;
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
-            GetTaskController();
+            _provider = provider;
         }
 
         private List<string> symbols = new List<string>();
@@ -46,27 +36,28 @@ namespace CryptoTrading.App.MarketData
         {
         }
 
-        private ITaskController Controller { get; set; }
         public async virtual Task<bool> CheckOrder(ITransaction transaction)
         {
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var newOrder = await _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).ConfigureAwait(false);
+            var newOrder = await _provider.GetOrderAsync(transaction.Pair, transaction.Order.ClientOrderId).ConfigureAwait(false);
             transaction.UpdateOrder(newOrder);
-            return newOrder.Status == OrderStatus.Filled;
-        }
-        
-        public Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
-        {
-            symbols.Add(symbol);
-            _client.Subscribe(symbol, CandlestickInterval.Minute, processCandleStick);
-            Configure();
-            if(!Controller.IsActive) Controller.Begin();
-            return Task.CompletedTask;
+            return newOrder.Status == ExchangeOrderStatus.Filled;
         }
 
-        public void Configure()
+        public async Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)
         {
-            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
+            symbols.Add(symbol);
+            await _provider.SubscribeCandlestickAsync(symbol, CandleInterval.Minute_1, candle =>
+            {
+                var evt = new ExchangeCandlestickEvent
+                {
+                    EventTime = DateTime.UtcNow,
+                    Candlestick = candle,
+                    FirstTradeId = 0,
+                    LastTradeId = 0,
+                    IsFinal = true
+                };
+                processCandleStick(evt);
+            });
         }
 
         public bool IsSubscribed(string symbol, string keyValue)
@@ -77,13 +68,7 @@ namespace CryptoTrading.App.MarketData
         public void UnSubscribe(string symbol, string keyValue)
         {
             symbols.Remove(symbol);
-            _client.Unsubscribe(symbol, CandlestickInterval.Minute);
-        }
-
-        public void GetTaskController()
-        {
-            Controller = new RetryTaskController(_webSocket.StreamAsync);
-            Controller.Error += (s, e) => HandleError(e.Exception);
+            // Unsubscription is handled by the provider
         }
 
         public override void Configure(IConfig request)
@@ -91,14 +76,13 @@ namespace CryptoTrading.App.MarketData
             throw new NotImplementedException();
         }
 
-        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
+        public async Task<List<ExchangeCandlestick>> GetHistoricCandleSticks(string symbol)
         {
-            var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, 0, 200).
+            var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, CandleInterval.Minute_1, 200).
                 ToUniversalTime();
-            var candleSticks = await _api.GetCandlesticksAsync(symbol, CandlestickInterval.Minute, 0, calculatedFrom, DateTime.Now.ToUniversalTime());
+            var candleSticks = await _provider.GetCandlesticksAsync(symbol, CandleInterval.Minute_1, calculatedFrom, DateTime.Now.ToUniversalTime());
 
-            candleSticks.Reverse();
-            return candleSticks.ToList();
+            return candleSticks.Reverse().ToList();
         }
     }
 }

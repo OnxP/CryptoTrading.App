@@ -1,5 +1,4 @@
-﻿using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using System;
@@ -7,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Utility;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
@@ -23,7 +21,7 @@ namespace CryptoTrading.App.MarketData
             _data = data;
         }
 
-        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
+        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to,CandleInterval interval) : this(management, data)
         {
             From = from;
             To = to;
@@ -32,7 +30,11 @@ namespace CryptoTrading.App.MarketData
 
         public DateTime From { get; set; }
         public DateTime To { get; set; }
-        public Dictionary<CandlestickInterval, int> pageNumber { get; set; } = new Dictionary<CandlestickInterval, int>();
+        public CandleInterval Interval { get; set; }
+
+        public int TotalNumberOfRows { get; set; }
+        public int RequestRows { get; set; }
+        public Dictionary<CandleInterval, int> pageNumber { get; set; } = new Dictionary<CandleInterval, int>();
 
         private CancellationToken CancellationToken { get; set; }
 
@@ -50,7 +52,7 @@ with candlestick as (SELECT [ID]
       ,[QuoteAssetVolume]
       ,[NumberOfTrades]
       ,[TakerBuyBaseAssetVolume]
-      ,[TakerBuyQuoteAssetVolume]	
+      ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
   WHERE OpenTime >= @p0 AND OpenTime < @p1 AND Interval=@p2
   ORDER BY OpenTime
@@ -71,7 +73,7 @@ select * from candlestick order by Opentime
       ,[QuoteAssetVolume]
       ,[NumberOfTrades]
       ,[TakerBuyBaseAssetVolume]
-      ,[TakerBuyQuoteAssetVolume]	
+      ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
   WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Interval=@p2
   ORDER BY OpenTime
@@ -133,14 +135,14 @@ select * from candlestick order by Opentime
 
                 foreach (var interval in candleSticks.Select(x => x.Interval).Distinct())
                 {
-                    if (interval == CandlestickInterval.Minute) continue;
+                    if (interval == CandleInterval.Minute_1) continue;
                     candleSticks.Where(x=>x.Interval==interval).OrderByDescending(x=>x.Interval).OrderBy(x => x.Volume).ToList().ForEach
                     (x =>
                     {
                         if (!subscribers.TryGetValue((x.Symbol, x.Interval), out var list)) return;
                         foreach (var action in list)
                         {
-                            action.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, x, 0, 0, true));
+                            action.Invoke(new ExchangeCandlestickEvent { EventTime = _mangement.CurrentTick, Candlestick = x, FirstTradeId = 0, LastTradeId = 0, IsFinal = true });
                         }
                     });
                     await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(),interval);
@@ -151,7 +153,7 @@ select * from candlestick order by Opentime
         }
 
 
-        private async Task LoadNextCandleSticks(List<string> toList,CandlestickInterval interval)
+        private async Task LoadNextCandleSticks(List<string> toList,CandleInterval interval)
         {
             if (_data.Count() == 0)
             {
@@ -176,7 +178,7 @@ select * from candlestick order by Opentime
                 historicDataSubscribers.Keys.Select(x => x.symbol).Distinct().ToList(),
                 (int)sub, -1);
             }
-           
+
             foreach (var item in historicDataSubscribers)
             {
                 LoadHistoricData( item.Key, From, item.Value);
@@ -185,7 +187,7 @@ select * from candlestick order by Opentime
             _data.ClearHistoric(From);
 
         }
-        private void LoadHistoricData((string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
+        private void LoadHistoricData((string symbol, CandleInterval interval) symbol, DateTime from, IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
             try
             {
@@ -202,7 +204,7 @@ select * from candlestick order by Opentime
 
         public override void Configure(IConfig request)
         {
-            
+
         }
     }
 }

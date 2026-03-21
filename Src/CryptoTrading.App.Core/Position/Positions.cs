@@ -1,6 +1,7 @@
-﻿using CryptoTrading.App.Core.Trade;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Core.Position
 {
@@ -36,7 +37,7 @@ namespace CryptoTrading.App.Core.Position
         public bool CheckHasEnoughBalance(ITradeRequest what)
         {
             // Decide which symbol we need to check based on side
-            var balanceSymbol = what.OrderSide == Binance.OrderSide.Buy
+            var balanceSymbol = what.OrderSide == ExchangeOrderSide.Buy
                 ? what.QuoteSymbol
                 : what.BaseSymbol;
 
@@ -90,7 +91,7 @@ namespace CryptoTrading.App.Core.Position
 
         public void AjdustPosition(string accountPositionAsset, decimal accountPositionFree)
         {
-            Logger.LogInformation($"Ajusting Position from Binance {accountPositionAsset} - {accountPositionFree}");
+            Logger.LogInformation($"Ajusting Position from Exchange {accountPositionAsset} - {accountPositionFree}");
 
             var pos = GetPosition(accountPositionAsset);
             pos.CreateTransaction(accountPositionFree);

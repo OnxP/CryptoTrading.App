@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 
@@ -7,6 +7,9 @@ namespace CryptoTrading.App.Core.Trade
     public interface ITrade
     {
         string Pair { get; }
+        ExchangeOrderSide OrderType { get; }
+        decimal Quantity { get; }
+        ITransaction CurrentTransaction { get; }
 
         ITransaction GetCurrentTransaction();
         public decimal TotalOpenBaseQuantity { get; }
@@ -24,7 +27,8 @@ namespace CryptoTrading.App.Core.Trade
         decimal FeeBnb { get; }
 
         void CancelCurrentTransaction();
-        void UpdateCurrentTransaction(Order order);
+        void UpdateCurrentTransaction(ExchangeOrder order);
+        ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null);
         ITransaction CompleteTrade();
         ITransaction CreateOpenTransaction(decimal price, DateTime closeTime, decimal amount);
         ITransaction CreateCloseTransaction(decimal price, DateTime closeTime, decimal amount);

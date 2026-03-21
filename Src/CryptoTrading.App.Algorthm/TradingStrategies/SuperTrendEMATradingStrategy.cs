@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -36,7 +36,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         private bool SuperTrendShortGreenFlag = false;
         private bool SuperTrendShortRedFlag = false;
         private bool SuperTrendShortGreen2Flag = false;
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var ema = indicatorOutputs["LongEma"][0].ToList();
             var superTrend = indicatorOutputs["superTrend"][0].ToList();

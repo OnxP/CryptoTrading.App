@@ -1,5 +1,5 @@
 ﻿using System;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
         public bool lastMinima { get; set; } = false;
         public double err_allowed = 10d/100d;
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             var maxima = indicatorOutputs["maxima"][0].ToList();
@@ -178,10 +178,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return false;
         }
 
-        private bool LastMaxCalc(Candlestick closePrice, IEnumerable<Candlestick> take)
+        private bool LastMaxCalc(ExchangeCandlestick closePrice, IEnumerable<ExchangeCandlestick> take)
         {
-            Candlestick max = closePrice;
-            Candlestick min = closePrice;
+            ExchangeCandlestick max = closePrice;
+            ExchangeCandlestick min = closePrice;
             foreach (var stick in take)
             {
                 if (max.High > stick.High) max = stick;

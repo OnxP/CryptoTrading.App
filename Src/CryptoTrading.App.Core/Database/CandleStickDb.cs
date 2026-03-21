@@ -1,15 +1,15 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 
 namespace CryptoTrading.App.Core.Database
 {
     public class CandleStickDb
-    { 
+    {
         public CandleStickDb()
         {
 
         }
-        public CandleStickDb(Candlestick candlestick)
+        public CandleStickDb(ExchangeCandlestick candlestick)
         {
             Symbol = candlestick.Symbol;
             Interval = candlestick.Interval;
@@ -20,30 +20,30 @@ namespace CryptoTrading.App.Core.Database
             Close = Convert.ToDouble(candlestick.Close);
             Volume = candlestick.Volume;
             CloseTime = candlestick.CloseTime;
-            QuoteAssetVolume = candlestick.QuoteAssetVolume;
+            QuoteAssetVolume = candlestick.QuoteVolume;
             NumberOfTrades = candlestick.NumberOfTrades;
             TakerBuyBaseAssetVolume = candlestick.TakerBuyBaseAssetVolume;
             TakerBuyQuoteAssetVolume = candlestick.TakerBuyQuoteAssetVolume;
         }
 
-        public static Candlestick ConvertObject(CandleStickDb stick)
+        public static ExchangeCandlestick ConvertObject(CandleStickDb stick)
         {
-            return new Candlestick(
-                
-                stick.Symbol,
-                stick.Interval,
-                stick.OpenTime,
-                Convert.ToDecimal(stick.Open),
-                Convert.ToDecimal(stick.High),
-                Convert.ToDecimal(stick.Low),
-                Convert.ToDecimal(stick.Close),
-                stick.Volume,
-                stick.CloseTime,
-                stick.QuoteAssetVolume,
-                stick.NumberOfTrades,
-                stick.TakerBuyBaseAssetVolume,
-                stick.TakerBuyQuoteAssetVolume
-            );
+            return new ExchangeCandlestick
+            {
+                Symbol = stick.Symbol,
+                Interval = stick.Interval,
+                OpenTime = stick.OpenTime,
+                Open = Convert.ToDecimal(stick.Open),
+                High = Convert.ToDecimal(stick.High),
+                Low = Convert.ToDecimal(stick.Low),
+                Close = Convert.ToDecimal(stick.Close),
+                Volume = stick.Volume,
+                CloseTime = stick.CloseTime,
+                QuoteVolume = stick.QuoteAssetVolume,
+                NumberOfTrades = stick.NumberOfTrades,
+                TakerBuyBaseAssetVolume = stick.TakerBuyBaseAssetVolume,
+                TakerBuyQuoteAssetVolume = stick.TakerBuyQuoteAssetVolume
+            };
         }
 
         public int ID { get; set; }
@@ -52,7 +52,7 @@ namespace CryptoTrading.App.Core.Database
         /// <summary>
         /// Get the interval.
         /// </summary>
-        public CandlestickInterval Interval { get; set; }
+        public CandleInterval Interval { get; set; }
 
         /// <summary>
         /// Get the open time.

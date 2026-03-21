@@ -1,6 +1,5 @@
-﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Core;
+﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
@@ -11,12 +10,17 @@ using CryptoTrading.App.Monitor;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Skender.Stock.Indicators;
+using ExchangeOrder = CryptoTrading.App.Core.Exchange.ExchangeOrder;
+using ExchangeOrderSide = CryptoTrading.App.Core.Exchange.ExchangeOrderSide;
+using ExchangeOrderStatus = CryptoTrading.App.Core.Exchange.ExchangeOrderStatus;
+using ExchangeCandlestickEvent = CryptoTrading.App.Core.Exchange.ExchangeCandlestickEvent;
 
 namespace CryptoTrading.App.Tests.Monitor
 {
     [TestClass]
     public class TradeMonitorTests
     {
+        private static readonly ExchangeSymbol BTC_USDT = new ExchangeSymbol { Ticker = "BTCUSDT", BaseAsset = "BTC", QuoteAsset = "USDT" };
         private Mock<ILogger<TradeMonitor>> _mockLogger = new();
         private Mock<IMarketMonitor> _mockMarketMonitor= new();
         private Mock<IConfig> _mockConfig = new();
@@ -44,7 +48,7 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockTradeRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
             _mockStrategy.Setup(s => s.EntryStrategy).Returns(_mockEntryStrategy.Object);
             _mockStrategy.Setup(s => s.ExitStrategy).Returns(_mockExitStrategy.Object);
-            _mockTradeRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
+            _mockTradeRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
             _mockTradeRequest.Setup(r => r.Amount).Returns(100);
         }
 
@@ -179,7 +183,7 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockPositions.Setup(p => p.CreateTrade(It.IsAny<ITradeRequest>())).Returns(_mockTrade.Object);
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
-            var candleSticks = new List<Candlestick>
+            var candleSticks = new List<ExchangeCandlestick>
             {
                 CandleStickHelper.CreateCandlestick(DateTime.Now, 50000, 51000, 49000, 50500, 100)
             };
@@ -192,7 +196,7 @@ namespace CryptoTrading.App.Tests.Monitor
 
             // Assert
             _mockMarketMonitor.Verify(m => m.GetHistoricCandleSticks("BTCUSDT"), Times.Once);
-            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<CandlestickEventArgs>>()), Times.Once);
+            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<ExchangeCandlestickEvent>>()), Times.Once);
             _mockStrategy.Verify(s => s.SetQuotes(It.IsAny<QuoteHub<IQuote>>()), Times.Once);
         }
 
@@ -211,7 +215,7 @@ namespace CryptoTrading.App.Tests.Monitor
 
             // Assert
             _mockMarketMonitor.Verify(m => m.GetHistoricCandleSticks(It.IsAny<string>()), Times.Never);
-            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<CandlestickEventArgs>>()), Times.Never);
+            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<ExchangeCandlestickEvent>>()), Times.Never);
         }
 
         //commented out as this method is void and has limited testable outcomes and context is required.
@@ -245,7 +249,7 @@ namespace CryptoTrading.App.Tests.Monitor
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
             newRequest.Setup(r => r.OrderSide).Returns(_mockTradeRequest.Object.OrderSide);
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -268,15 +272,15 @@ namespace CryptoTrading.App.Tests.Monitor
             mockTransaction.Setup(t => t.Order).Returns(OrderHelper.CreateOrder(12345));
 
             _mockTrade.Setup(t => t.GetCurrentTransaction()).Returns(mockTransaction.Object);
-            _mockTrade.Setup(t => t.Pair).Returns(Symbol.BTC_USDT);
+            _mockTrade.Setup(t => t.Pair).Returns("BTCUSDT");
 
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell); // Different from original
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell); // Different from original
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -295,14 +299,14 @@ namespace CryptoTrading.App.Tests.Monitor
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
             var mockTransaction = new Mock<ITransaction>();
-            var order = OrderHelper.CreateOrder(12345, OrderStatus.Filled);
-            var payload = new MessagePayload<Order>(order, mockTransaction.Object);
+            var order = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.Filled);
+            var payload = new MessagePayload<ExchangeOrder>(order, mockTransaction.Object);
 
             // Act
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
             method?.Invoke(monitor, new[] { payload });
 
@@ -404,7 +408,7 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockPositions.Setup(p => p.CreateTrade(It.IsAny<ITradeRequest>())).Returns(_mockTrade.Object);
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
-            var candleSticks = new List<Candlestick>
+            var candleSticks = new List<ExchangeCandlestick>
             {
                 CandleStickHelper.CreateCandlestick(DateTime.Now.AddMinutes(-2), 50000, 51000, 49000, 50500, 100),
                 CandleStickHelper.CreateCandlestick(DateTime.Now.AddMinutes(-1), 50500, 51500, 50000, 51000, 100)
@@ -444,9 +448,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -478,9 +482,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -503,9 +507,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -533,7 +537,7 @@ namespace CryptoTrading.App.Tests.Monitor
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
             newRequest.Setup(r => r.OrderSide).Returns(_mockTradeRequest.Object.OrderSide); // Same direction
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -556,15 +560,15 @@ namespace CryptoTrading.App.Tests.Monitor
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
             var mockTransaction = new Mock<ITransaction>();
-            var partialOrder = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled,0,0.5m,1.0m,25000);
+            var partialOrder = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled,0,0.5m,1.0m,25000);
 
-            var payload = new MessagePayload<Order>(partialOrder, mockTransaction.Object);
+            var payload = new MessagePayload<ExchangeOrder>(partialOrder, mockTransaction.Object);
 
             // Act
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
             method?.Invoke(monitor, new[] { payload });
 
@@ -582,32 +586,32 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var mockTransaction = new Mock<ITransaction>();
 
-            var partialFill1 = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 0, 0.3m, 1.0m, 50000);
+            var partialFill1 = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 0, 0.3m, 1.0m, 50000);
 
-            var partialFill2 = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 0, 0.7m, 1.0m, 50050);
+            var partialFill2 = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 0, 0.7m, 1.0m, 50050);
 
-            var fullyFilled = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 0, 1.0m, 1.0m, 50050);
+            var fullyFilled = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 0, 1.0m, 1.0m, 50050);
 
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
 
             // Act - First partial fill
-            var payload1 = new MessagePayload<Order>(partialFill1, mockTransaction.Object);
+            var payload1 = new MessagePayload<ExchangeOrder>(partialFill1, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload1 });
 
             // Act - Second partial fill
-            var payload2 = new MessagePayload<Order>(partialFill2, mockTransaction.Object);
+            var payload2 = new MessagePayload<ExchangeOrder>(partialFill2, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload2 });
 
             // Act - Full fill
-            var payload3 = new MessagePayload<Order>(fullyFilled, mockTransaction.Object);
+            var payload3 = new MessagePayload<ExchangeOrder>(fullyFilled, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload3 });
 
             // Assert
-            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<Order>()), Times.Exactly(3));
+            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<ExchangeOrder>()), Times.Exactly(3));
             mockTransaction.Verify(t => t.UpdateOrder(partialFill1), Times.Once);
             mockTransaction.Verify(t => t.UpdateOrder(partialFill2), Times.Once);
             mockTransaction.Verify(t => t.UpdateOrder(fullyFilled), Times.Once);
@@ -624,7 +628,7 @@ namespace CryptoTrading.App.Tests.Monitor
             var mockTransaction1 = new Mock<ITransaction>();
             mockTransaction1.Setup(t => t.IsFilled).Returns(false);
             mockTransaction1.Setup(t => t.IsPartiallyFilled).Returns(true);
-            mockTransaction1.Setup(t => t.Order).Returns(OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50000, 0.3m, 0m, 50050));
+            mockTransaction1.Setup(t => t.Order).Returns(OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50000, 0.3m, 0m, 50050));
 
             var mockCompletedTransaction = new Mock<ITransaction>();
             _mockTrade.Setup(t => t.GetCurrentTransaction()).Returns(mockTransaction1.Object);
@@ -635,9 +639,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -658,22 +662,22 @@ namespace CryptoTrading.App.Tests.Monitor
             var mockTransaction = new Mock<ITransaction>();
 
             // First fill at 50000
-            var firstFill = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50000, 0.4m, 1.0m, 2000);
+            var firstFill = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50000, 0.4m, 1.0m, 2000);
 
             // Second fill at 50500 (price moved)
-            var secondFill = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50250, 0.8m, 1.0m, 40200);
+            var secondFill = OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50250, 0.8m, 1.0m, 40200);
 
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
 
             // Act
-            var payload1 = new MessagePayload<Order>(firstFill, mockTransaction.Object);
+            var payload1 = new MessagePayload<ExchangeOrder>(firstFill, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload1 });
 
-            var payload2 = new MessagePayload<Order>(secondFill, mockTransaction.Object);
+            var payload2 = new MessagePayload<ExchangeOrder>(secondFill, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload2 });
 
             // Assert
@@ -692,7 +696,7 @@ namespace CryptoTrading.App.Tests.Monitor
             var mockTransaction = new Mock<ITransaction>();
             mockTransaction.Setup(t => t.IsFilled).Returns(false);
             mockTransaction.Setup(t => t.IsPartiallyFilled).Returns(true);
-            mockTransaction.Setup(t => t.Order).Returns(OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50000, 0.5m, 1.0m, 50000));
+            mockTransaction.Setup(t => t.Order).Returns(OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50000, 0.5m, 1.0m, 50000));
 
             var mockCompletedTransaction = new Mock<ITransaction>();
             mockCompletedTransaction.Setup(t => t.Type).Returns(TransactionType.MarketTransaction);
@@ -702,13 +706,13 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockTrade.Setup(t => t.Pair).Returns("BTCUSDT");
 
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Create new sell request (strategy flip)
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
-            newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
+            newRequest.Setup(r => r.Symbol).Returns(BTC_USDT);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -728,54 +732,50 @@ namespace CryptoTrading.App.Tests.Monitor
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
             var mockTransaction = new Mock<ITransaction>();
-            var fillSequence = new List<Order>
+            var fillSequence = new List<ExchangeOrder>
             {
-                OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50000, 0.2m),
-                OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50100, 0.5m),
-                OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50150, 0.8m),
-                OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50125, 1.0m)
+                OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50000, 0.2m),
+                OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50100, 0.5m),
+                OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50150, 0.8m),
+                OrderHelper.CreateOrder(12345, ExchangeOrderStatus.PartiallyFilled, 50125, 1.0m)
             };
 
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
 
             // Act
             foreach (var order in fillSequence)
             {
-                var payload = new MessagePayload<Order>(order, mockTransaction.Object);
+                var payload = new MessagePayload<ExchangeOrder>(order, mockTransaction.Object);
                 method?.Invoke(monitor, new[] { payload });
             }
 
             // Assert
-            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<Order>()), Times.Exactly(4));
+            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<ExchangeOrder>()), Times.Exactly(4));
         }
 
         #endregion
     }
     class OrderHelper
     {
-        public static Order CreateOrder(long id, OrderStatus filled = OrderStatus.Filled,decimal price = 0, decimal executingQuantity = 0, decimal originalQuantity = 0, int cumulativeQuoteQuantity = 0)
+        public static ExchangeOrder CreateOrder(long id, ExchangeOrderStatus filled = ExchangeOrderStatus.Filled, decimal price = 0, decimal executingQuantity = 0, decimal originalQuantity = 0, int cumulativeQuoteQuantity = 0)
         {
-            return new Order(new BinanceApiUser("Test"),
-                             "BTC_USDT",
-                             id,
-                             "",
-                             price,
-                             executingQuantity,
-                             originalQuantity,
-                             cumulativeQuoteQuantity,
-                             filled,
-                             TimeInForce.IOC,
-                             OrderType.Market,
-                             OrderSide.Buy,
-                             0,
-                             0,
-                             DateTime.Now,
-                             DateTime.Now,
-                             true);
+            return new ExchangeOrder
+            {
+                OrderId = id.ToString(),
+                Symbol = "BTC_USDT",
+                Price = price,
+                FilledQuantity = executingQuantity,
+                Quantity = originalQuantity,
+                QuoteQuantity = cumulativeQuoteQuantity,
+                Status = filled,
+                Type = ExchangeOrderType.Market,
+                Side = ExchangeOrderSide.Buy,
+                Timestamp = DateTime.Now
+            };
         }
     }
     class CandleStickHelper
@@ -787,23 +787,20 @@ namespace CryptoTrading.App.Tests.Monitor
         public int Close { get; internal set; }
         public int Volume { get; internal set; }
 
-        public static Candlestick CreateCandlestick(DateTime closeTime, decimal open, decimal high, decimal low, decimal close, decimal volume)
+        public static ExchangeCandlestick CreateCandlestick(DateTime closeTime, decimal open, decimal high, decimal low, decimal close, decimal volume)
         {
-            return new Candlestick(
-
-                "BTC_USDT",
-                CandlestickInterval.Minute,
-                closeTime.AddMinutes(-1),
-                open,
-                high,
-                low,
-                close,
-                volume,
-                closeTime,
-                0,
-                0,
-                0,
-                0);
+            return new ExchangeCandlestick
+            {
+                Symbol = "BTC_USDT",
+                Interval = CandleInterval.Minute_1,
+                OpenTime = closeTime.AddMinutes(-1),
+                Open = open,
+                High = high,
+                Low = low,
+                Close = close,
+                Volume = volume,
+                CloseTime = closeTime
+            };
         }
     }
 }

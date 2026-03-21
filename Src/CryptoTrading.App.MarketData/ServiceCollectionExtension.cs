@@ -1,5 +1,6 @@
-﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,7 @@ namespace CryptoTrading.App.MarketData
         public static IServiceCollection AddHistoricMarketData(this IServiceCollection services)
         {
             services.AddTransient<IMarketData, HistoricalMarketData>();
-            
+
             return services;
         }
         public static IServiceCollection AddMarketData(this IServiceCollection services,IConfig config)
@@ -33,15 +34,15 @@ namespace CryptoTrading.App.MarketData
             switch (config.RunType)
             {
                 case RunTypeEnum.BackTesting:
-                    services.AddTransient<IMarketData, DbMarketData>(p=> new DbMarketData(p.GetService<ILogger<DbMarketData>>(),p.GetService<ICandleStickManagement>(),p.GetService<IDbData>(),config.From,config.To));
+                    services.AddTransient<IMarketData, DbMarketData>(p=> new DbMarketData(p.GetService<ILogger<DbMarketData>>(),p.GetService<ICandleStickManagement>(),p.GetService<IDbData>(),config.From,config.To,config.Interval));
                     services.AddSingleton<ICandleStickManagement, DbCandleStickManagement>();
                     break;
                 case RunTypeEnum.LiveTesting:
                 case RunTypeEnum.Live:
-                    services.AddTransient<IMarketData, LiveMarketData>();
+                    services.AddTransient<IMarketData, LiveMarketData>(p => new LiveMarketData(p.GetService<ILogger<LiveMarketData>>(), p.GetService<IExchangeProvider>()));
                     break;
             }
-            
+
 
             return services;
         }
@@ -54,10 +55,10 @@ namespace CryptoTrading.App.MarketData
                     services.AddSingleton<IMarketMonitor, DbMarketMonitor>();
                     break;
                 case RunTypeEnum.LiveTesting:
-                    services.AddTransient<IMarketMonitor, TestLiveMarketMonitor>();
+                    services.AddTransient<IMarketMonitor, TestLiveMarketMonitor>(p => new TestLiveMarketMonitor(p.GetService<ILogger<TestLiveMarketMonitor>>(), p.GetService<IExchangeProvider>()));
                     break;
                 case RunTypeEnum.Live:
-                    services.AddTransient<IMarketMonitor, LiveMarketMonitor>();
+                    services.AddTransient<IMarketMonitor, LiveMarketMonitor>(p => new LiveMarketMonitor(p.GetService<ILogger<LiveMarketMonitor>>(), p.GetService<IExchangeProvider>()));
                     break;
             }
 

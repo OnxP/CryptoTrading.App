@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Algorithm.StopLimits
 {
@@ -11,7 +11,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         {
             StopLimitPrice = TargetPrice;
         }
-        public override void Configure(Order order)
+        public override void Configure(ExchangeOrder order)
         {
             var price = order.Price;
             IsOpen = true;

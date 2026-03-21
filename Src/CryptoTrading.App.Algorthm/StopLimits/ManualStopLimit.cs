@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Algorithm.StopLimits
 {
@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             Risk = risk;
             Increment = increment;
         }
-        public override void Configure(Order order)
+        public override void Configure(ExchangeOrder order)
         {
             base.Configure(order);
             _triggerUpdate = false;

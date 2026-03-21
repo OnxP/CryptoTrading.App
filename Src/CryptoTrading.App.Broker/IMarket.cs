@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Broker
 {
     public interface IMarket
     {
-        Task<IEnumerable<AccountBalance>> GetAccountBalances();
-        Task<IEnumerable<Order>> GetAllOpenOrders();
-        Task<Order> SetMarketOrder(IMarketRequest request);
-        Task<Order> SetLimitOrder(ILimitRequest request);
+        Task<IEnumerable<ExchangeBalance>> GetAccountBalances();
+        Task<IEnumerable<ExchangeOrder>> GetAllOpenOrders();
+        Task<ExchangeOrder> SetMarketOrder(IMarketRequest request);
+        Task<ExchangeOrder> SetLimitOrder(ILimitRequest request);
         Task<string> CancelOrder(ICancelRequest request);
-        Task<Order> SetStopLimitOrder(IStopLimitRequest request);
+        Task<ExchangeOrder> SetStopLimitOrder(IStopLimitRequest request);
     }
 }

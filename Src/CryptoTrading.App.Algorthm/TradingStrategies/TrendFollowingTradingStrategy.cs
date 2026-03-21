@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             var macd = indicatorOutputs["MACD"][0].ToList();
@@ -65,7 +65,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             //stop loss check
             var slCheck = (closePrice.Close * (1-StopLimitTrackers.Risk)) >
-                          Symbol.Cache.Get(closePrice.Symbol).Price.Increment*2;
+                          ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize*2;
 
 
             return StopLimitTrackers.SetStopLimit(indicatorOutputs, closePrice, condition2 && condition1 && condition3 && condition4 && slCheck,

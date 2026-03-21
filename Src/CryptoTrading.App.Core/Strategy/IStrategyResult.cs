@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core.Strategy
 {
@@ -7,13 +7,13 @@ namespace CryptoTrading.App.Core.Strategy
         bool PostTrade { get; }
         decimal Amount { get; set; }
         int Leverage { get; set; }
-        OrderSide OrderSide { get; set; }
+        ExchangeOrderSide OrderSide { get; set; }
     }
     public class StrategyResult : IStrategyResult
     {
         public bool PostTrade { get; set; }
         public decimal Amount { get; set; }
         public int Leverage { get; set; }
-        public OrderSide OrderSide { get; set; }
+        public ExchangeOrderSide OrderSide { get; set; }
     }
 }

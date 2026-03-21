@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 
@@ -22,7 +24,7 @@ namespace CryptoTrading.App.Core.RequestTracker
 
         private readonly object _lock = new object();
         //store up the request here.
-        public static ConcurrentDictionary<string,Tuple<string,ITradeRequest>> Requests 
+        public static ConcurrentDictionary<string,Tuple<string,ITradeRequest>> Requests
         {
             get;
             set;

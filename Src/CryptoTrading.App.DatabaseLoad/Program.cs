@@ -1,7 +1,8 @@
-﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Core;
+using System;
+using System.IO;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,6 @@ namespace CryptoTrading.App.DatabaseLoad
 
             // Configure services.
             var ServiceProvider = new ServiceCollection()
-                .AddBinance(useSingleCombinedStream: true)
                 .AddHistoricMarketData()
                 // Configure logging.
                 .AddLogging(builder => builder // configure logging.
@@ -44,29 +44,29 @@ namespace CryptoTrading.App.DatabaseLoad
             //context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
             HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
 
-            var Api = ServiceProvider.GetService<IBinanceApi>();
+            var _provider = ServiceProvider.GetService<IExchangeProvider>();
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            //var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
+            //var symbols = await _provider.GetSymbolsAsync().ConfigureAwait(false).Where(x=> x.QuoteAsset == "USD").ToList();//count
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var sym = await Api.GetSymbolsAsync().ConfigureAwait(false);
-            var symbols = sym.Where(x => x.QuoteAsset.Symbol == "USDT").ToList();//count
+            var sym = await _provider.GetSymbolsAsync().ConfigureAwait(false);
+            var symbols = sym.Where(x => x.QuoteAsset == "USDT").ToList();//count
 
-            marketDate.Configure(Api);
-            marketDate.From = new DateTime(2025, 07, 01); 
+            marketDate.Configure(_provider);
+            marketDate.From = new DateTime(2025, 07, 01);
             marketDate.To = new DateTime(2026, 02, 28);
 
-            List<CandlestickInterval> intervals = new List<CandlestickInterval>()
+            List<CandleInterval> intervals = new List<CandleInterval>()
             {
-              CandlestickInterval.Hours_4,
-              CandlestickInterval.Hour,
-              CandlestickInterval.Minutes_15,
-              CandlestickInterval.Minutes_5
-              , CandlestickInterval.Minute
+              CandleInterval.Hour_4,
+              CandleInterval.Hour_1,
+              CandleInterval.Minute_15,
+              CandleInterval.Minute_5
+              , CandleInterval.Minute_1
             };
 
             // --- Gap fill: check the DB per symbol and download only what is missing ---
             var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
-            var detector = new MissingCandleDetector(Api, gapLogger);
+            var detector = new MissingCandleDetector(_provider, gapLogger);
             var symbolNames = symbols.Select(s => s.ToString()).ToList();
 
             // Process all symbols concurrently — each symbol checks all its intervals in
@@ -103,19 +103,19 @@ namespace CryptoTrading.App.DatabaseLoad
             await con.Task.ConfigureAwait(false);
         }
 
-        private static void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandlestickInterval> intervals)
+        private static void AddEvents(AbstractMarketData marketDate, List<ExchangeSymbol> symbols, List<CandleInterval> intervals)
         {
             foreach (var symbol in symbols)
             {
                 foreach (var interval in intervals)
                 {
-                    marketDate.InitialDataLoadSubscribe(symbol, interval, SaveHistoricCandleStick);
-                    marketDate.InitialDataStreamSubscribe(symbol, interval, AddCandleStick);
+                    marketDate.InitialDataLoadSubscribe(symbol.Ticker, interval, SaveHistoricCandleStick);
+                    marketDate.InitialDataStreamSubscribe(symbol.Ticker, interval, AddCandleStick);
                 }
             }
         }
         public static CryptoDbContext context = new CryptoDbContext();
-        private static void AddCandleStick(CandlestickEventArgs obj)
+        private static void AddCandleStick(ExchangeCandlestickEvent obj)
         {
             lock (_object)
             {
@@ -150,7 +150,7 @@ namespace CryptoTrading.App.DatabaseLoad
         }
 
         static object _object = new object();
-        private static void SaveHistoricCandleStick(IEnumerable<Candlestick> obj)
+        private static void SaveHistoricCandleStick(IEnumerable<ExchangeCandlestick> obj)
         {
             lock (_object)
             {

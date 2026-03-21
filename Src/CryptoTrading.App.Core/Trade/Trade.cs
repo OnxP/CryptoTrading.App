@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Position;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ namespace CryptoTrading.App.Core.Trade
             OpenTransactions = new List<ITransaction>();
             CloseTransactions = new List<ITransaction>();
         }
-        
+
         // Separate collections for open and close transactions
         public List<ITransaction> OpenTransactions { get; set; }
         public List<ITransaction> CloseTransactions { get; set; }
@@ -41,18 +41,22 @@ namespace CryptoTrading.App.Core.Trade
             return lastClose.TransactionDate >= lastOpen.TransactionDate ? lastClose : lastOpen;
         }
 
+        public ITransaction CurrentTransaction => GetCurrentTransaction();
+
         public string Pair => BasePosition.Symbol + QuotePosition.Symbol;
 
-        public OrderSide OrderType
+        public ExchangeOrderSide OrderType
         {
             get
             {
                 var currentTx = GetCurrentTransaction();
                 return currentTx != null && Math.Sign(currentTx.Base.Quantity) > 0
-                    ? OrderSide.Buy
-                    : OrderSide.Sell;
+                    ? ExchangeOrderSide.Buy
+                    : ExchangeOrderSide.Sell;
             }
         }
+
+        public decimal Quantity => GetCurrentTransaction()?.Base.Quantity ?? 0;
 
         public bool Open { get; set; } = false;
         public IPosition BasePosition { get; }
@@ -179,6 +183,13 @@ namespace CryptoTrading.App.Core.Trade
             return closeTransaction;
         }
 
+        public ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null)
+        {
+            var baseQty = TotalOpenBaseQuantity;
+            var closeTransaction = CreateCloseTransaction(currentStopLimit, closeTime ?? DateTime.Now, -baseQty);
+            return closeTransaction;
+        }
+
         private TransactionLeg CalculateFee(IPosition feePosition, string quoteSymbol, decimal quoteQuantity)
         {
             var feeAmount = -Math.Abs(quoteQuantity * 0.075m);
@@ -198,7 +209,7 @@ namespace CryptoTrading.App.Core.Trade
 
             OpenTransactions.Add(transaction);
             Open = true;
-            return transaction; 
+            return transaction;
         }
 
         // Create a close (exit) transaction - closes remaining position by default
@@ -233,17 +244,17 @@ namespace CryptoTrading.App.Core.Trade
             return t;
         }
 
-        public void UpdateCurrentTransaction(Order order)
+        public void UpdateCurrentTransaction(ExchangeOrder order)
         {
             GetCurrentTransaction()?.UpdateOrder(order);
         }
 
-        public void UpdateCurrentOpenTransaction(Order order)
+        public void UpdateCurrentOpenTransaction(ExchangeOrder order)
         {
             GetCurrentOpenTransaction()?.UpdateOrder(order);
         }
 
-        public void UpdateCurrentCloseTransaction(Order order)
+        public void UpdateCurrentCloseTransaction(ExchangeOrder order)
         {
             GetCurrentCloseTransaction()?.UpdateOrder(order);
         }

@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 
@@ -24,7 +24,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
 
     public static class MovingAverage
 {
-        public static decimal Get(List<Candlestick> Candles, int bar, int period, MaMethod method = MaMethod.Sma, AppliedPrice appliedPrice = AppliedPrice.Close)
+        public static decimal Get(List<ExchangeCandlestick> Candles, int bar, int period, MaMethod method = MaMethod.Sma, AppliedPrice appliedPrice = AppliedPrice.Close)
         {
             decimal price = 0M;
             for (int i = 0; i < period; ++i)

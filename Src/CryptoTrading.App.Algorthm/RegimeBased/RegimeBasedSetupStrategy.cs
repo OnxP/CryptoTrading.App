@@ -1,4 +1,4 @@
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using Skender.Stock.Indicators;
 using System;
@@ -109,7 +109,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 PostTrade = true,
                 Amount = 0.1m,
                 Leverage = leverageRec.ActualLeverage,
-                OrderSide = bestSetup.Direction == TradeDirection.Long ? OrderSide.Buy : OrderSide.Sell,
+                OrderSide = bestSetup.Direction == TradeDirection.Long ? ExchangeOrderSide.Buy : ExchangeOrderSide.Sell,
                 Setup = bestSetup,
                 LeverageRecommendation = leverageRec
             };

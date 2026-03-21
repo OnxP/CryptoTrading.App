@@ -1,5 +1,4 @@
-﻿using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.MarketMonitorFactory;
@@ -44,9 +43,9 @@ namespace CryptoTrading.App.Monitor
 
         public async Task SubscribetToMarketData()
         {
-            if (!marketMonitor.IsSubscribed(Request.Symbol, KeyValue))
+            if (!marketMonitor.IsSubscribed(Request.Symbol.Ticker, KeyValue))
             {
-                var candleSticks = await marketMonitor.GetHistoricCandleSticks(Request.Symbol);
+                var candleSticks = await marketMonitor.GetHistoricCandleSticks(Request.Symbol.Ticker);
                 foreach (var candle in candleSticks)
                     _quoteHub.Add(new Quote
                     {
@@ -58,7 +57,7 @@ namespace CryptoTrading.App.Monitor
                         Volume = candle.Volume
                     });
                 Request.Strategy.SetQuotes(_quoteHub);
-                await marketMonitor.Subscribe(Request.Symbol, KeyValue, ProcessCandleStick);
+                await marketMonitor.Subscribe(Request.Symbol.Ticker, KeyValue, ProcessCandleStick);
             }
         }
         public async Task SetNewRequest(ITradeRequest what)
@@ -91,23 +90,17 @@ namespace CryptoTrading.App.Monitor
             }
             Request = what;
             Request.Strategy.SetQuotes(_quoteHub);
-            //need to decide what to do here. if some clean up is needed Process next candle stick should take care of this,
-            //but cancelling an open order when the trade needs to flip or exiting out of an existing Buy due to a new sell order.
-
         }
 
         private CompareResults CompareRequests(ITradeRequest request, ITradeRequest what)
         {
             if(request.OrderSide == what.OrderSide)
-                //if(request.Is)
                 return CompareResults.SameDirection;
             else
                 return CompareResults.ChangeDirection;
         }
 
-        //for the database it is 1m candles but for live trading it is the live market price.
-        //so the candle needs to be final before processing.
-        public async void ProcessCandleStick(CandlestickEventArgs candleStick)
+        public async void ProcessCandleStick(ExchangeCandlestickEvent candleStick)
         {
             if (!candleStick.IsFinal) return;
             _quoteHub.Add(new Quote
@@ -148,29 +141,9 @@ namespace CryptoTrading.App.Monitor
                     await HandleClosingPosition(strategyResult, candleStick);
                     break;
             }
-
-            //3 options Open/Move position, Exit position, Hold position.
-
-            ///several options or flows here
-            ///strategy want to open a new position
-            ///strategy wants to open a new position but there is already one open.-> move limit order (assume that its partially filled)
-            ///Strategy wants to close position -> cancel limit order and exit position.
-            ///Strategy wants to hold position -> do nothing.
-            ///Strategy changed what to do then??
-            /// - and there is no position -> open position
-            /// - and there is a un filled position -> cancel and open a new one.
-            /// - and there is a filled position -> we may need to exit depending on the strategy
-            ///     need the best way to decide what to do here 
-            ///         - leave it alone
-            ///         - exit position at profit then open a new one.
-            ///         - exit position at a loss then open a new one. (assuming long short filp) do we wait for it to go into profit first? 
-            ///             leave it open for now and close once the open order is ready, hopefully this situation does not arise often.
-
-
-            // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
         }
 
-        private async Task HandleNoPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleNoPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
@@ -181,7 +154,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleBuildingPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleBuildingPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Continue building position using entry strategy
             if (result.StrategyAction == StrategyAction.OpenTrade)
@@ -205,7 +178,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleFullyOpenPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleFullyOpenPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Check if position is in profit
             if (Trade.ProfitPct > 0)
@@ -223,7 +196,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleInProfitPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleInProfitPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Once in profit, use exit strategy
             if (result.StrategyAction == StrategyAction.CloseTrade)
@@ -239,7 +212,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleClosingPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleClosingPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Continue executing exit strategy until position is fully closed
             if (Trade.RemainingQuantity > 0)
@@ -265,7 +238,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task ExecuteEntryStrategy(CandlestickEventArgs candleStick)
+        private async Task ExecuteEntryStrategy(ExchangeCandlestickEvent candleStick)
         {
             // Entry strategy determines how to build the position
             var entryDecision = Request.Strategy.EntryStrategy.GetNextEntry(
@@ -290,7 +263,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task ExecuteExitStrategy(CandlestickEventArgs candleStick)
+        private async Task ExecuteExitStrategy(ExchangeCandlestickEvent candleStick)
         {
             // Exit strategy determines how to close the position
             var exitDecision = Request.Strategy.ExitStrategy.GetNextExit(
@@ -340,7 +313,7 @@ namespace CryptoTrading.App.Monitor
             // FIX: Remove null check for long, just check if Order is not null
             if (transaction.Order != null)
             {
-                var orderId = transaction.Order.Id;
+                var orderId = transaction.Order.OrderId;
                 ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
                 await MessageBroker.Instance.Publish(KeyValue, transaction, request);
             }
@@ -365,15 +338,15 @@ namespace CryptoTrading.App.Monitor
             HistoricTrades.Add(trade);
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Func<MessagePayload<Order>, Task> newTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(Request.Symbol, newTradeMesssage);
+            Func<MessagePayload<ExchangeOrder>, Task> newTradeMesssage = ProcessMessageAction;
+            messageBroker.Subscribe(Request.Symbol.Ticker, newTradeMesssage);
 
             Func<MessagePayload<string>, Task> CancelTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(Request.Symbol, CancelTradeMessage);
+            messageBroker.Subscribe(Request.Symbol.Ticker, CancelTradeMessage);
         }
 
         //Order Placed Message
-        private Task ProcessMessageAction(MessagePayload<Order> obj)
+        private Task ProcessMessageAction(MessagePayload<ExchangeOrder> obj)
         {
             if (obj.Who is ITransaction transaction)
             {
@@ -403,6 +376,26 @@ namespace CryptoTrading.App.Monitor
             }
             var newTrade = _positions.CreateTrade(Request);
             HistoricTrades.Add(newTrade);
+        }
+
+        public void AddTrade(ITrade trade)
+        {
+            HistoricTrades.Add(trade);
+        }
+
+        public void CancelLimitOrder(string order)
+        {
+            Trade.GetCurrentTransaction()?.Cancel();
+        }
+
+        public void UpdateInitialTransaction(ExchangeOrder order)
+        {
+            Trade.UpdateCurrentTransaction(order);
+        }
+
+        public void UpdateStopLimitOrder(ExchangeOrder order)
+        {
+            Trade.UpdateCurrentTransaction(order);
         }
         public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)
         {

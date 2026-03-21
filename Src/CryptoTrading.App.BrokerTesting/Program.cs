@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using CryptoTrading.App.Broker;
@@ -16,8 +16,8 @@ namespace CryptoTrading.App.BrokerTesting
         public static void Main(string[] args)
         {
             //first test is to go off to the server and get the current positions in the account.
-            var api = new BinanceApi();
-            var apiUser = new BinanceApiUser("C5ILSb0VCvBN3BgHMW4MlEqeNKtlif7w7Ib3Jgspl0tdefJZ3WnRn64YKaiPEkTE", "7guaW7iFbPwKqT3dgpL7Tht2L6xPNAxkIk41teMzjxD6G4qn5KaGCi4rCqLc8vW3");
+            // TODO: Replace with IExchangeProvider from DI
+            // var provider = new BinanceExchangeProvider(apiKey, apiSecret);
 
             //bindings for the test broker (algo testing)
             IMarket  market = new TestMarket();

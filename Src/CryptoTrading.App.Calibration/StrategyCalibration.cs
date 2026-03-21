@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Binance;
+using System.Text;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Extensions;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.MarketData;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 using CryptoTrading.App.Process;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +31,7 @@ namespace CryptoTrading.App.Calibration
         private IConfig Config { get; }
         private IMarketData MarketData { get; }
 
-        public void WireMarketDataEvents(List<Symbol> symbols)
+        public void WireMarketDataEvents(List<ExchangeSymbol> symbols)
         {
             var interval = Config.Interval;
 
@@ -41,13 +43,13 @@ namespace CryptoTrading.App.Calibration
                 algorithm.Subscribe(symbol, MarketData);
             }
         }
-        public void RemoveMarketDataEvents(List<Symbol> removeSymbols)
+        public void RemoveMarketDataEvents(List<ExchangeSymbol> removeSymbols)
         {
             var interval = Config.Interval;
             foreach (var symbol in removeSymbols)
             {
-                MarketData.InitialDataLoadUnSubscribe(symbol, interval);
-                MarketData.InitialDataStreamUnSubscribe(symbol, interval);
+                MarketData.InitialDataLoadUnSubscribe(symbol.Ticker, interval);
+                MarketData.InitialDataStreamUnSubscribe(symbol.Ticker, interval);
             }
         }
         public static ServiceProvider BuildServices(IConfig config)

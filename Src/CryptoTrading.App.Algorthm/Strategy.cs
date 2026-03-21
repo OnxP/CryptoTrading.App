@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using Skender.Stock.Indicators;
 
@@ -17,23 +17,23 @@ namespace CryptoTrading.App.Algorithm
             switch (marketStructure.MarketRegime)
             {
                 case MarketRegime.BullMarket:
-                    executionStrategy = new BollingerBandBreakoutStrategy(_quoteHub,OrderSide.Buy);
+                    executionStrategy = new BollingerBandBreakoutStrategy(_quoteHub,ExchangeOrderSide.Buy);
                     strategyResult=  new StrategyResult
                     {
                         PostTrade = true,
                         Amount = 0.1m,
                         Leverage = 3,
-                        OrderSide = OrderSide.Buy
+                        OrderSide = ExchangeOrderSide.Buy
                     };
                     break;
                 case MarketRegime.BearMarket:
-                    executionStrategy = new BollingerBandBreakoutStrategy(_quoteHub,OrderSide.Sell);
+                    executionStrategy = new BollingerBandBreakoutStrategy(_quoteHub,ExchangeOrderSide.Sell);
                     strategyResult = new StrategyResult
                     {
                         PostTrade = true,
                         Amount = -0.1m,
                         Leverage = 3,
-                        OrderSide = OrderSide.Sell
+                        OrderSide = ExchangeOrderSide.Sell
                     };
                     break;
                 default:

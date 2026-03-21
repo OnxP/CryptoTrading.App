@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Binance;
-using Binance.Client;
+using System.Threading;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,27 +22,12 @@ namespace CryptoTrading.App.MarketDataTesting
 
             // Configure services.
             var ServiceProvider = new ServiceCollection()
-                // ReSharper disable once ArgumentsStyleLiteral
-                .AddBinance(useSingleCombinedStream: true) // add default Binance services.
-
-                // Use alternative, low-level, web socket client implementation.
-                //.AddTransient<IWebSocketClient, WebSocket4NetClient>()
-                //.AddTransient<IWebSocketClient, WebSocketSharpClient>()
-
                 .AddOptions()
-                .Configure<BinanceApiOptions>(Configuration.GetSection("ApiOptions"))
-
-
                 .BuildServiceProvider();
-            var api = ServiceProvider.GetService<IBinanceApi>();
 
-            //// Check connectivity.
-            //System.Threading.Tasks.Task task = PingAsync(api);
-            //task.Wait();
+            // TODO: Register IExchangeProvider via DI instead of direct instantiation
+            var provider = ServiceProvider.GetService<IExchangeProvider>();
 
-            //LiveStream.StreamData();
-            //LoadHistoricData(api);
-            //var logger = ServiceProvider.
             writer = new StreamWriter(File.Open(@"C:\temp\MarketDataTest.csv",FileMode.OpenOrCreate));
             writer.WriteLine($"Historic,Symbol,Open,High,Low,Close,Open Time ,Close Time");
             IMarketData marketDate = ServiceProvider.GetService<IMarketData>();
@@ -60,7 +45,7 @@ namespace CryptoTrading.App.MarketDataTesting
         static StreamWriter writer;
         private static readonly object _sync = new object();
 
-        private static void DisplayCandleStick(CandlestickEventArgs obj)
+        private static void DisplayCandleStick(ExchangeCandlestickEvent obj)
         {
             lock (_sync)
             {
@@ -70,7 +55,7 @@ namespace CryptoTrading.App.MarketDataTesting
             }
         }
 
-        private static void DisplayHistoricCandleStick(IEnumerable<Candlestick> obj)
+        private static void DisplayHistoricCandleStick(IEnumerable<ExchangeCandlestick> obj)
         {
             lock (_sync)
             {
@@ -82,23 +67,23 @@ namespace CryptoTrading.App.MarketDataTesting
             }
         }
 
-        private static void LoadHistoricData(BinanceApi api)
+        private static void LoadHistoricData(IExchangeProvider provider)
         {
             var from = new DateTime(2020, 01, 29);
             var to = new DateTime(2020, 07, 29);
-            var interval = CandlestickInterval.Hour;
+            var interval = CandleInterval.Hour_1;
 
             foreach (DateTime dt in SplitDates(interval, from, to))
             {
-                var task = LoadHistoricData(api, "BNBBTC", from, dt);
+                var task = LoadHistoricData(provider, "BNBBTC", from, dt);
                 from = dt;
                 task.Wait();
             }
         }
 
-        private static async System.Threading.Tasks.Task LoadHistoricData(BinanceApi api, string symbol, DateTime from, DateTime to)
+        private static async System.Threading.Tasks.Task LoadHistoricData(IExchangeProvider provider, string symbol, DateTime from, DateTime to)
         {
-            var test = await api.GetCandlesticksAsync(symbol, CandlestickInterval.Hour, 500, from.ToUniversalTime(), to.ToUniversalTime());
+            var test = await provider.GetCandlesticksAsync(symbol, CandleInterval.Hour_1, from.ToUniversalTime(), to.ToUniversalTime());
 
             foreach (var item in test)
             {
@@ -106,21 +91,21 @@ namespace CryptoTrading.App.MarketDataTesting
             }
         }
 
-        protected static IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)
+        protected static IEnumerable<DateTime> SplitDates(CandleInterval interval, DateTime from, DateTime to)
         {
             switch (interval)
             {
-                case CandlestickInterval.Minutes_3:
-                case CandlestickInterval.Minutes_5:
-                case CandlestickInterval.Minutes_15:
-                case CandlestickInterval.Minutes_30:
+                case CandleInterval.Minute_3:
+                case CandleInterval.Minute_5:
+                case CandleInterval.Minute_15:
+                case CandleInterval.Minute_30:
                     return SplitByDay(from, to);
-                case CandlestickInterval.Hour:
-                case CandlestickInterval.Hours_2:
-                case CandlestickInterval.Hours_4:
-                case CandlestickInterval.Hours_6:
-                case CandlestickInterval.Hours_8:
-                case CandlestickInterval.Hours_12:
+                case CandleInterval.Hour_1:
+                case CandleInterval.Hour_2:
+                case CandleInterval.Hour_4:
+                case CandleInterval.Hour_6:
+                case CandleInterval.Hour_8:
+                case CandleInterval.Hour_12:
                     return SplitByWeek(from, to);
                 default:
                     return new List<DateTime> { to };
@@ -145,33 +130,10 @@ namespace CryptoTrading.App.MarketDataTesting
             }
         }
 
-        public static async System.Threading.Tasks.Task PingAsync(BinanceApi api)
-        {
-            if (await api.PingAsync())
-            {
-                Console.WriteLine("Successful!");
-            }
-        }
-
         private static void AddEvents(IMarketDataEvents marketDate)
         {
-            marketDate.InitialDataLoadSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
-            //marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
-
-            marketDate.InitialDataStreamSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hour, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayCandleStick);
-            //marketDate.InitialDataStreamSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayCandleStick);
+            marketDate.InitialDataLoadSubscribe("ETHBTC", CandleInterval.Minute_15, DisplayHistoricCandleStick);
+            marketDate.InitialDataStreamSubscribe("ETHBTC", CandleInterval.Minute_15, DisplayCandleStick);
         }
 
     }

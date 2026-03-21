@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Data.Entity;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
     public interface IConfig
     {
         void Load();
-        CandlestickInterval Interval { get; set; }
+        CandleInterval Interval { get; set; }
         bool EndProcess { get; set; }
         RunTypeEnum RunType { get; set; }
         string StoreTradesConnectionString { get; set; }

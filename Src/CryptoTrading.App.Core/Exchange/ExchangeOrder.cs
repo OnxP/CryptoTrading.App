@@ -2,10 +2,6 @@ using System;
 
 namespace CryptoTrading.App.Core.Exchange
 {
-    /// <summary>
-    /// Exchange-agnostic order representation (replaces Binance.Order).
-    /// Used across all exchange providers for a unified order model.
-    /// </summary>
     public class ExchangeOrder
     {
         public string ExchangeId { get; set; }
@@ -22,20 +18,11 @@ namespace CryptoTrading.App.Core.Exchange
         public decimal QuoteQuantity { get; set; }
         public DateTime Timestamp { get; set; }
 
-        /// <summary>
-        /// Whether this order has been fully executed
-        /// </summary>
         public bool IsFilled => Status == ExchangeOrderStatus.Filled;
 
-        /// <summary>
-        /// Whether this order is still active (not terminal)
-        /// </summary>
         public bool IsActive => Status == ExchangeOrderStatus.New
                              || Status == ExchangeOrderStatus.PartiallyFilled;
 
-        /// <summary>
-        /// Creates a mock filled order for backtesting
-        /// </summary>
         public static ExchangeOrder CreateFilledOrder(
             string exchangeId, string symbol, ExchangeOrderSide side,
             decimal price, decimal quantity, DateTime timestamp)

@@ -1,39 +1,10 @@
-using System;
-using System.Collections.Generic;
-using Binance;
+using Binance.Net.Enums;
 using CryptoTrading.App.Core.Exchange;
 
-namespace CryptoTrading.App.Exchange.BinanceAdapter
+namespace CryptoTrading.App.Exchange.Binance
 {
-    /// <summary>
-    /// Maps between Binance SDK types and exchange-agnostic domain types.
-    /// </summary>
     public static class BinanceMapper
     {
-        public const string ExchangeName = "Binance";
-
-        #region Order Mapping
-
-        public static ExchangeOrder ToExchangeOrder(Order order)
-        {
-            return new ExchangeOrder
-            {
-                ExchangeId = ExchangeName,
-                OrderId = order.Id.ToString(),
-                ClientOrderId = order.ClientOrderId,
-                Symbol = order.Symbol,
-                Side = MapOrderSide(order.Side),
-                Type = MapOrderType(order.Type),
-                Status = MapOrderStatus(order.Status),
-                Price = order.Price,
-                StopPrice = order.StopPrice,
-                Quantity = order.OriginalQuantity,
-                FilledQuantity = order.ExecutedQuantity,
-                QuoteQuantity = order.CummulativeQuoteAssetQuantity,
-                Timestamp = order.Time
-            };
-        }
-
         public static ExchangeOrderSide MapOrderSide(OrderSide side)
         {
             return side == OrderSide.Buy ? ExchangeOrderSide.Buy : ExchangeOrderSide.Sell;
@@ -44,144 +15,76 @@ namespace CryptoTrading.App.Exchange.BinanceAdapter
             return side == ExchangeOrderSide.Buy ? OrderSide.Buy : OrderSide.Sell;
         }
 
-        public static ExchangeOrderType MapOrderType(OrderType type)
-        {
-            switch (type)
-            {
-                case OrderType.Market:
-                    return ExchangeOrderType.Market;
-                case OrderType.Limit:
-                case OrderType.LimitMaker:
-                    return ExchangeOrderType.Limit;
-                case OrderType.StopLossLimit:
-                case OrderType.TakeProfitLimit:
-                    return ExchangeOrderType.StopLimit;
-                default:
-                    return ExchangeOrderType.Market;
-            }
-        }
-
         public static ExchangeOrderStatus MapOrderStatus(OrderStatus status)
         {
-            switch (status)
+            return status switch
             {
-                case OrderStatus.New:
-                    return ExchangeOrderStatus.New;
-                case OrderStatus.PartiallyFilled:
-                    return ExchangeOrderStatus.PartiallyFilled;
-                case OrderStatus.Filled:
-                    return ExchangeOrderStatus.Filled;
-                case OrderStatus.Canceled:
-                case OrderStatus.PendingCancel:
-                    return ExchangeOrderStatus.Cancelled;
-                case OrderStatus.Rejected:
-                    return ExchangeOrderStatus.Rejected;
-                case OrderStatus.Expired:
-                    return ExchangeOrderStatus.Expired;
-                default:
-                    return ExchangeOrderStatus.New;
-            }
-        }
-
-        #endregion
-
-        #region Balance Mapping
-
-        public static ExchangeBalance ToExchangeBalance(AccountBalance balance)
-        {
-            return new ExchangeBalance(ExchangeName, balance.Asset, balance.Free, balance.Locked);
-        }
-
-        #endregion
-
-        #region Symbol Mapping
-
-        public static ExchangeSymbol ToExchangeSymbol(Symbol symbol)
-        {
-            return new ExchangeSymbol(
-                ExchangeName,
-                $"{symbol.BaseAsset}{symbol.QuoteAsset}",
-                symbol.BaseAsset.ToString(),
-                symbol.QuoteAsset.ToString())
-            {
-                MinQuantity = symbol.Quantity.Minimum,
-                MaxQuantity = symbol.Quantity.Maximum,
-                StepSize = symbol.Quantity.Increment,
-                MinNotional = symbol.NotionalMinimumValue,
-                TickSize = symbol.Price.Increment,
-                IsActive = symbol.Status == SymbolStatus.Trading
+                OrderStatus.New => ExchangeOrderStatus.New,
+                OrderStatus.PartiallyFilled => ExchangeOrderStatus.PartiallyFilled,
+                OrderStatus.Filled => ExchangeOrderStatus.Filled,
+                OrderStatus.Canceled => ExchangeOrderStatus.Cancelled,
+                OrderStatus.PendingCancel => ExchangeOrderStatus.Cancelled,
+                OrderStatus.Rejected => ExchangeOrderStatus.Rejected,
+                OrderStatus.Expired => ExchangeOrderStatus.Expired,
+                _ => ExchangeOrderStatus.New
             };
         }
 
-        #endregion
-
-        #region Candlestick Mapping
-
-        public static ExchangeCandlestick ToExchangeCandlestick(Candlestick candle)
+        public static ExchangeOrderType MapOrderType(SpotOrderType type)
         {
-            return new ExchangeCandlestick(
-                ExchangeName,
-                candle.Symbol,
-                MapCandleInterval(candle.Interval),
-                candle.OpenTime,
-                candle.CloseTime,
-                candle.Open,
-                candle.High,
-                candle.Low,
-                candle.Close,
-                candle.Volume)
+            return type switch
             {
-                QuoteVolume = candle.QuoteAssetVolume,
-                NumberOfTrades = candle.NumberOfTrades
+                SpotOrderType.Market => ExchangeOrderType.Market,
+                SpotOrderType.Limit => ExchangeOrderType.Limit,
+                SpotOrderType.StopLossLimit => ExchangeOrderType.StopLimit,
+                _ => ExchangeOrderType.Market
             };
         }
 
-        public static CandleInterval MapCandleInterval(CandlestickInterval interval)
+        public static KlineInterval MapToBinanceCandleInterval(CandleInterval interval)
         {
-            switch (interval)
+            return interval switch
             {
-                case CandlestickInterval.Minute: return CandleInterval.Minute_1;
-                case CandlestickInterval.Minutes_3: return CandleInterval.Minute_3;
-                case CandlestickInterval.Minutes_5: return CandleInterval.Minute_5;
-                case CandlestickInterval.Minutes_15: return CandleInterval.Minute_15;
-                case CandlestickInterval.Minutes_30: return CandleInterval.Minute_30;
-                case CandlestickInterval.Hour: return CandleInterval.Hour_1;
-                case CandlestickInterval.Hours_2: return CandleInterval.Hour_2;
-                case CandlestickInterval.Hours_4: return CandleInterval.Hour_4;
-                case CandlestickInterval.Hours_6: return CandleInterval.Hour_6;
-                case CandlestickInterval.Hours_8: return CandleInterval.Hour_8;
-                case CandlestickInterval.Hours_12: return CandleInterval.Hour_12;
-                case CandlestickInterval.Day: return CandleInterval.Day_1;
-                case CandlestickInterval.Days_3: return CandleInterval.Day_3;
-                case CandlestickInterval.Week: return CandleInterval.Week_1;
-                case CandlestickInterval.Month: return CandleInterval.Month_1;
-                default: return CandleInterval.Hour_1;
-            }
+                CandleInterval.Minute_1 => KlineInterval.OneMinute,
+                CandleInterval.Minute_3 => KlineInterval.ThreeMinutes,
+                CandleInterval.Minute_5 => KlineInterval.FiveMinutes,
+                CandleInterval.Minute_15 => KlineInterval.FifteenMinutes,
+                CandleInterval.Minute_30 => KlineInterval.ThirtyMinutes,
+                CandleInterval.Hour_1 => KlineInterval.OneHour,
+                CandleInterval.Hour_2 => KlineInterval.TwoHour,
+                CandleInterval.Hour_4 => KlineInterval.FourHour,
+                CandleInterval.Hour_6 => KlineInterval.SixHour,
+                CandleInterval.Hour_8 => KlineInterval.EightHour,
+                CandleInterval.Hour_12 => KlineInterval.TwelveHour,
+                CandleInterval.Day_1 => KlineInterval.OneDay,
+                CandleInterval.Day_3 => KlineInterval.ThreeDay,
+                CandleInterval.Week_1 => KlineInterval.OneWeek,
+                CandleInterval.Month_1 => KlineInterval.OneMonth,
+                _ => KlineInterval.OneMinute
+            };
         }
 
-        public static CandlestickInterval MapToBinanceCandleInterval(CandleInterval interval)
+        public static CandleInterval MapCandleInterval(KlineInterval interval)
         {
-            switch (interval)
+            return interval switch
             {
-                case CandleInterval.Minute_1: return CandlestickInterval.Minute;
-                case CandleInterval.Minute_3: return CandlestickInterval.Minutes_3;
-                case CandleInterval.Minute_5: return CandlestickInterval.Minutes_5;
-                case CandleInterval.Minute_15: return CandlestickInterval.Minutes_15;
-                case CandleInterval.Minute_30: return CandlestickInterval.Minutes_30;
-                case CandleInterval.Hour_1: return CandlestickInterval.Hour;
-                case CandleInterval.Hour_2: return CandlestickInterval.Hours_2;
-                case CandleInterval.Hour_4: return CandlestickInterval.Hours_4;
-                case CandleInterval.Hour_6: return CandlestickInterval.Hours_6;
-                case CandleInterval.Hour_8: return CandlestickInterval.Hours_8;
-                case CandleInterval.Hour_12: return CandlestickInterval.Hours_12;
-                case CandleInterval.Day_1: return CandlestickInterval.Day;
-                case CandleInterval.Day_3: return CandlestickInterval.Days_3;
-                case CandleInterval.Week_1: return CandlestickInterval.Week;
-                case CandleInterval.Month_1: return CandlestickInterval.Month;
-                default: return CandlestickInterval.Hour;
-            }
+                KlineInterval.OneMinute => CandleInterval.Minute_1,
+                KlineInterval.ThreeMinutes => CandleInterval.Minute_3,
+                KlineInterval.FiveMinutes => CandleInterval.Minute_5,
+                KlineInterval.FifteenMinutes => CandleInterval.Minute_15,
+                KlineInterval.ThirtyMinutes => CandleInterval.Minute_30,
+                KlineInterval.OneHour => CandleInterval.Hour_1,
+                KlineInterval.TwoHour => CandleInterval.Hour_2,
+                KlineInterval.FourHour => CandleInterval.Hour_4,
+                KlineInterval.SixHour => CandleInterval.Hour_6,
+                KlineInterval.EightHour => CandleInterval.Hour_8,
+                KlineInterval.TwelveHour => CandleInterval.Hour_12,
+                KlineInterval.OneDay => CandleInterval.Day_1,
+                KlineInterval.ThreeDay => CandleInterval.Day_3,
+                KlineInterval.OneWeek => CandleInterval.Week_1,
+                KlineInterval.OneMonth => CandleInterval.Month_1,
+                _ => CandleInterval.Minute_1
+            };
         }
-
-        #endregion
     }
 }

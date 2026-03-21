@@ -1,5 +1,4 @@
-﻿using Binance;
-using CryptoTrading.App.Core;
+﻿using CryptoTrading.App.Core;
 using Skender.Stock.Indicators;
 using System;
 

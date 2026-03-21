@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 
 namespace CryptoTrading.App.Core.Trade
@@ -11,12 +11,12 @@ namespace CryptoTrading.App.Core.Trade
         TransactionLeg Quote { get; }
         TransactionLeg Base { get; }
         TransactionLeg Fee { get; }
-        Order Order { get; }
+        ExchangeOrder Order { get; }
         TransactionStatus Status { get; set; }
         DateTime TransactionDate { get; set; }
         bool IsFilled { get; }
         bool IsPartiallyFilled { get; }
-        void UpdateOrder(Order order);
+        void UpdateOrder(ExchangeOrder order);
         void Cancel();
         void Complete();
     }

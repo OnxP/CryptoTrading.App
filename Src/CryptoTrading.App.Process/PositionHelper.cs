@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.Process
 {
     internal class PositionHelper
     {
-        public static void CheckDifferences(IPositions tradeProcessorPositions, List<AccountBalance> positions)
+        public static void CheckDifferences(IPositions tradeProcessorPositions, List<ExchangeBalance> positions)
         {
             foreach (var positionBinance in positions.Where(x=>x.Free!= 0.0m))
             {
@@ -23,7 +23,7 @@ namespace CryptoTrading.App.Process
             }
         }
 
-        public static void AddPositions(List<Symbol> symbols, List<AccountBalance> accountPositions, IPositions tradeProcessorPositions)
+        public static void AddPositions(List<ExchangeSymbol> symbols, List<ExchangeBalance> accountPositions, IPositions tradeProcessorPositions)
         {
             foreach (var symbol in symbols)
             {

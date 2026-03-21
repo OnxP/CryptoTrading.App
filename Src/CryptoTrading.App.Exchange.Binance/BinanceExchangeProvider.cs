@@ -1,169 +1,283 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Binance;
+using Binance.Net.Clients;
+using Binance.Net.Enums;
+using Binance.Net.Interfaces.Clients;
+using CryptoExchange.Net.Authentication;
 using CryptoTrading.App.Core.Exchange;
 
-namespace CryptoTrading.App.Exchange.BinanceAdapter
+namespace CryptoTrading.App.Exchange.Binance
 {
-    /// <summary>
-    /// Binance implementation of IExchangeProvider.
-    /// Wraps the existing Binance SDK behind the exchange-agnostic interface.
-    /// </summary>
-    public class BinanceExchangeProvider : IExchangeProvider
+    public class BinanceExchangeProvider : IExchangeProvider, IDisposable
     {
-        private readonly IBinanceApi _api;
-        private readonly IBinanceApiUser _user;
+        private readonly IBinanceRestClient _restClient;
+        private readonly IBinanceSocketClient _socketClient;
 
-        public string ExchangeId => BinanceMapper.ExchangeName;
+        public string ExchangeId => "Binance";
 
-        public BinanceExchangeProvider(IBinanceApi api, IBinanceApiUser user)
+        public BinanceExchangeProvider(string apiKey, string apiSecret)
         {
-            _api = api ?? throw new ArgumentNullException(nameof(api));
-            _user = user ?? throw new ArgumentNullException(nameof(user));
+            _restClient = new BinanceRestClient(options =>
+            {
+                if (!string.IsNullOrEmpty(apiKey))
+                    options.ApiCredentials = new ApiCredentials(apiKey, apiSecret);
+            });
+            _socketClient = new BinanceSocketClient(options =>
+            {
+                if (!string.IsNullOrEmpty(apiKey))
+                    options.ApiCredentials = new ApiCredentials(apiKey, apiSecret);
+            });
         }
-
-        #region Account
 
         public async Task<IEnumerable<ExchangeBalance>> GetBalancesAsync()
         {
-            var accountInfo = await _api.GetAccountInfoAsync(_user);
-            return accountInfo.Balances
-                .Where(b => b.Free > 0 || b.Locked > 0)
-                .Select(BinanceMapper.ToExchangeBalance);
+            var result = await _restClient.SpotApi.Account.GetAccountInfoAsync();
+            if (!result.Success) throw new Exception($"Binance GetAccountInfo failed: {result.Error}");
+            return result.Data.Balances.Select(b => new ExchangeBalance
+            {
+                ExchangeId = ExchangeId,
+                Asset = b.Asset,
+                Free = b.Available,
+                Locked = b.Locked
+            });
         }
 
         public async Task<IEnumerable<ExchangeSymbol>> GetSymbolsAsync()
         {
-            var symbols = await _api.GetSymbolsAsync();
-            return symbols.Select(BinanceMapper.ToExchangeSymbol);
+            var result = await _restClient.SpotApi.ExchangeData.GetExchangeInfoAsync();
+            if (!result.Success) throw new Exception($"Binance GetExchangeInfo failed: {result.Error}");
+            return result.Data.Symbols.Where(s => s.Status == SymbolStatus.Trading).Select(s => new ExchangeSymbol
+            {
+                ExchangeId = ExchangeId,
+                Ticker = s.Name,
+                BaseAsset = s.BaseAsset,
+                QuoteAsset = s.QuoteAsset,
+                TickSize = s.PriceFilter?.TickSize ?? 0.00000001m,
+                StepSize = s.LotSizeFilter?.StepSize ?? 0.00000001m,
+                MinQuantity = s.LotSizeFilter?.MinQuantity ?? 0,
+                MaxQuantity = s.LotSizeFilter?.MaxQuantity ?? 0,
+                MinNotional = s.MinNotionalFilter?.MinNotional ?? 0,
+                IsActive = true
+            });
         }
 
         public Task<ExchangeFeeSchedule> GetFeeScheduleAsync()
         {
-            // Binance standard fees: 0.1% maker/taker
-            // BNB discount: 25% off when paying fees with BNB
-            var schedule = new ExchangeFeeSchedule(ExchangeId, 0.001m, 0.001m, "BNB")
+            return Task.FromResult(new ExchangeFeeSchedule
             {
-                HasFeeDiscount = true,
-                DiscountRate = 0.25m
-            };
-            return Task.FromResult(schedule);
+                ExchangeId = ExchangeId,
+                MakerFeeRate = 0.001m,
+                TakerFeeRate = 0.001m,
+                FeeAsset = "BNB",
+                FeeDiscount = 0.25m
+            });
         }
-
-        #endregion
-
-        #region Orders
 
         public async Task<ExchangeOrder> PlaceMarketOrderAsync(string symbol, ExchangeOrderSide side, decimal quantity)
         {
-            var binanceSide = BinanceMapper.MapToBinanceOrderSide(side);
-            var clientOrder = new MarketOrder(_user)
+            var result = await _restClient.SpotApi.Trading.PlaceOrderAsync(
+                symbol,
+                BinanceMapper.MapToBinanceOrderSide(side),
+                SpotOrderType.Market,
+                quantity: quantity);
+            if (!result.Success) throw new Exception($"Binance PlaceOrder failed: {result.Error}");
+            return new ExchangeOrder
             {
-                Symbol = symbol,
-                Side = binanceSide,
-                Quantity = quantity
+                ExchangeId = ExchangeId,
+                OrderId = result.Data.Id.ToString(),
+                ClientOrderId = result.Data.ClientOrderId,
+                Symbol = result.Data.Symbol,
+                Side = BinanceMapper.MapOrderSide(result.Data.Side),
+                Type = ExchangeOrderType.Market,
+                Status = BinanceMapper.MapOrderStatus(result.Data.Status),
+                Price = result.Data.Price,
+                Quantity = result.Data.Quantity,
+                FilledQuantity = result.Data.QuantityFilled,
+                QuoteQuantity = result.Data.QuoteQuantityFilled,
+                Timestamp = result.Data.CreateTime
             };
-
-            var order = await _api.PlaceAsync(clientOrder);
-            return BinanceMapper.ToExchangeOrder(order);
         }
 
         public async Task<ExchangeOrder> PlaceLimitOrderAsync(string symbol, ExchangeOrderSide side, decimal price, decimal quantity)
         {
-            var binanceSide = BinanceMapper.MapToBinanceOrderSide(side);
-            var clientOrder = new LimitOrder(_user)
+            var result = await _restClient.SpotApi.Trading.PlaceOrderAsync(
+                symbol,
+                BinanceMapper.MapToBinanceOrderSide(side),
+                SpotOrderType.Limit,
+                quantity: quantity,
+                price: price,
+                timeInForce: TimeInForce.GoodTillCanceled);
+            if (!result.Success) throw new Exception($"Binance PlaceOrder failed: {result.Error}");
+            return new ExchangeOrder
             {
-                Symbol = symbol,
-                Side = binanceSide,
-                Price = price,
-                Quantity = quantity
+                ExchangeId = ExchangeId,
+                OrderId = result.Data.Id.ToString(),
+                ClientOrderId = result.Data.ClientOrderId,
+                Symbol = result.Data.Symbol,
+                Side = BinanceMapper.MapOrderSide(result.Data.Side),
+                Type = ExchangeOrderType.Limit,
+                Status = BinanceMapper.MapOrderStatus(result.Data.Status),
+                Price = result.Data.Price,
+                Quantity = result.Data.Quantity,
+                FilledQuantity = result.Data.QuantityFilled,
+                QuoteQuantity = result.Data.QuoteQuantityFilled,
+                Timestamp = result.Data.CreateTime
             };
-
-            var order = await _api.PlaceAsync(clientOrder);
-            return BinanceMapper.ToExchangeOrder(order);
         }
 
         public async Task<ExchangeOrder> PlaceStopLimitOrderAsync(string symbol, ExchangeOrderSide side, decimal stopPrice, decimal limitPrice, decimal quantity)
         {
-            var binanceSide = BinanceMapper.MapToBinanceOrderSide(side);
-            var clientOrder = new StopLossLimitOrder(_user)
+            var result = await _restClient.SpotApi.Trading.PlaceOrderAsync(
+                symbol,
+                BinanceMapper.MapToBinanceOrderSide(side),
+                SpotOrderType.StopLossLimit,
+                quantity: quantity,
+                price: limitPrice,
+                stopPrice: stopPrice,
+                timeInForce: TimeInForce.GoodTillCanceled);
+            if (!result.Success) throw new Exception($"Binance PlaceOrder failed: {result.Error}");
+            return new ExchangeOrder
             {
-                Symbol = symbol,
-                Side = binanceSide,
+                ExchangeId = ExchangeId,
+                OrderId = result.Data.Id.ToString(),
+                ClientOrderId = result.Data.ClientOrderId,
+                Symbol = result.Data.Symbol,
+                Side = BinanceMapper.MapOrderSide(result.Data.Side),
+                Type = ExchangeOrderType.StopLimit,
+                Status = BinanceMapper.MapOrderStatus(result.Data.Status),
+                Price = result.Data.Price,
                 StopPrice = stopPrice,
-                Price = limitPrice,
-                Quantity = quantity
+                Quantity = result.Data.Quantity,
+                FilledQuantity = result.Data.QuantityFilled,
+                QuoteQuantity = result.Data.QuoteQuantityFilled,
+                Timestamp = result.Data.CreateTime
             };
-
-            var order = await _api.PlaceAsync(clientOrder);
-            return BinanceMapper.ToExchangeOrder(order);
         }
 
         public async Task<ExchangeOrder> GetOrderAsync(string symbol, string orderId)
         {
-            if (long.TryParse(orderId, out var id))
+            var result = await _restClient.SpotApi.Trading.GetOrderAsync(symbol, long.Parse(orderId));
+            if (!result.Success) throw new Exception($"Binance GetOrder failed: {result.Error}");
+            return new ExchangeOrder
             {
-                var order = await _api.GetOrderAsync(_user, symbol, id);
-                return BinanceMapper.ToExchangeOrder(order);
-            }
-
-            // Try as client order ID
-            var orderByClient = await _api.GetOrderAsync(_user, symbol, orderId);
-            return BinanceMapper.ToExchangeOrder(orderByClient);
+                ExchangeId = ExchangeId,
+                OrderId = result.Data.Id.ToString(),
+                ClientOrderId = result.Data.ClientOrderId,
+                Symbol = result.Data.Symbol,
+                Side = BinanceMapper.MapOrderSide(result.Data.Side),
+                Type = BinanceMapper.MapOrderType(result.Data.Type),
+                Status = BinanceMapper.MapOrderStatus(result.Data.Status),
+                Price = result.Data.Price,
+                StopPrice = result.Data.StopPrice ?? 0,
+                Quantity = result.Data.Quantity,
+                FilledQuantity = result.Data.QuantityFilled,
+                QuoteQuantity = result.Data.QuoteQuantityFilled,
+                Timestamp = result.Data.CreateTime
+            };
         }
 
         public async Task<ExchangeOrder> CancelOrderAsync(string symbol, string orderId)
         {
-            if (long.TryParse(orderId, out var id))
+            var result = await _restClient.SpotApi.Trading.CancelOrderAsync(symbol, long.Parse(orderId));
+            if (!result.Success) throw new Exception($"Binance CancelOrder failed: {result.Error}");
+            return new ExchangeOrder
             {
-                await _api.CancelOrderAsync(_user, symbol, id);
-            }
-            else
-            {
-                await _api.CancelOrderAsync(_user, symbol, orderId);
-            }
-
-            // Return the cancelled order state
-            return await GetOrderAsync(symbol, orderId);
+                ExchangeId = ExchangeId,
+                OrderId = result.Data.Id.ToString(),
+                ClientOrderId = result.Data.ClientOrderId,
+                Symbol = result.Data.Symbol,
+                Status = BinanceMapper.MapOrderStatus(result.Data.Status)
+            };
         }
 
         public async Task<IEnumerable<ExchangeOrder>> GetOpenOrdersAsync()
         {
-            var orders = await _api.GetOpenOrdersAsync(_user);
-            return orders.Select(BinanceMapper.ToExchangeOrder);
+            var result = await _restClient.SpotApi.Trading.GetOpenOrdersAsync();
+            if (!result.Success) throw new Exception($"Binance GetOpenOrders failed: {result.Error}");
+            return result.Data.Select(o => new ExchangeOrder
+            {
+                ExchangeId = ExchangeId,
+                OrderId = o.Id.ToString(),
+                ClientOrderId = o.ClientOrderId,
+                Symbol = o.Symbol,
+                Side = BinanceMapper.MapOrderSide(o.Side),
+                Type = BinanceMapper.MapOrderType(o.Type),
+                Status = BinanceMapper.MapOrderStatus(o.Status),
+                Price = o.Price,
+                StopPrice = o.StopPrice ?? 0,
+                Quantity = o.Quantity,
+                FilledQuantity = o.QuantityFilled,
+                QuoteQuantity = o.QuoteQuantityFilled,
+                Timestamp = o.CreateTime
+            });
         }
-
-        #endregion
-
-        #region Market Data
 
         public async Task<IEnumerable<ExchangeCandlestick>> GetCandlesticksAsync(string symbol, CandleInterval interval, DateTime from, DateTime to)
         {
-            var binanceInterval = BinanceMapper.MapToBinanceCandleInterval(interval);
-            var candles = await _api.GetCandlesticksAsync(symbol, binanceInterval, startTime: from, endTime: to);
-            return candles.Select(BinanceMapper.ToExchangeCandlestick);
+            var result = await _restClient.SpotApi.ExchangeData.GetKlinesAsync(
+                symbol,
+                BinanceMapper.MapToBinanceCandleInterval(interval),
+                from,
+                to,
+                limit: 1000);
+            if (!result.Success) throw new Exception($"Binance GetKlines failed: {result.Error}");
+            return result.Data.Select(k => new ExchangeCandlestick
+            {
+                ExchangeId = ExchangeId,
+                Symbol = symbol,
+                Interval = interval,
+                OpenTime = k.OpenTime,
+                CloseTime = k.CloseTime,
+                Open = k.OpenPrice,
+                High = k.HighPrice,
+                Low = k.LowPrice,
+                Close = k.ClosePrice,
+                Volume = k.Volume,
+                QuoteVolume = k.QuoteVolume,
+                NumberOfTrades = k.TradeCount,
+                TakerBuyBaseAssetVolume = k.TakerBuyBaseVolume,
+                TakerBuyQuoteAssetVolume = k.TakerBuyQuoteVolume
+            });
         }
 
-        public Task SubscribeCandlestickAsync(string symbol, CandleInterval interval, Action<ExchangeCandlestick> onCandle)
+        public async Task SubscribeCandlestickAsync(string symbol, CandleInterval interval, Action<ExchangeCandlestick> onCandle)
         {
-            // WebSocket subscription will be wired through the existing
-            // CandlestickWebSocketClient infrastructure.
-            // This is a placeholder - the actual implementation will use
-            // ICandlestickWebSocketClient from the Binance SDK.
-            throw new NotImplementedException(
-                "WebSocket candlestick streaming requires ICandlestickWebSocketClient integration. " +
-                "Use the existing LiveMarketData infrastructure for now.");
+            await _socketClient.SpotApi.ExchangeData.SubscribeToKlineUpdatesAsync(
+                symbol,
+                BinanceMapper.MapToBinanceCandleInterval(interval),
+                data =>
+                {
+                    onCandle(new ExchangeCandlestick
+                    {
+                        ExchangeId = ExchangeId,
+                        Symbol = data.Data.Symbol,
+                        Interval = interval,
+                        OpenTime = data.Data.Data.OpenTime,
+                        CloseTime = data.Data.Data.CloseTime,
+                        Open = data.Data.Data.OpenPrice,
+                        High = data.Data.Data.HighPrice,
+                        Low = data.Data.Data.LowPrice,
+                        Close = data.Data.Data.ClosePrice,
+                        Volume = data.Data.Data.Volume,
+                        QuoteVolume = data.Data.Data.QuoteVolume,
+                        NumberOfTrades = data.Data.Data.TradeCount,
+                        TakerBuyBaseAssetVolume = data.Data.Data.TakerBuyBaseVolume,
+                        TakerBuyQuoteAssetVolume = data.Data.Data.TakerBuyQuoteVolume
+                    });
+                });
         }
 
-        public Task UnsubscribeAllAsync()
+        public async Task UnsubscribeAllAsync()
         {
-            // Will be implemented with WebSocket client cleanup
-            return Task.CompletedTask;
+            await _socketClient.UnsubscribeAllAsync();
         }
 
-        #endregion
+        public void Dispose()
+        {
+            _restClient?.Dispose();
+            _socketClient?.Dispose();
+        }
     }
 }

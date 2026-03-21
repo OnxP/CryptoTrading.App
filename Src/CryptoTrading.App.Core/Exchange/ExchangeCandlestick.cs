@@ -20,6 +20,8 @@ namespace CryptoTrading.App.Core.Exchange
         public decimal Volume { get; set; }
         public decimal QuoteVolume { get; set; }
         public long NumberOfTrades { get; set; }
+        public decimal TakerBuyBaseAssetVolume { get; set; }
+        public decimal TakerBuyQuoteAssetVolume { get; set; }
 
         public ExchangeCandlestick() { }
 
@@ -27,7 +29,8 @@ namespace CryptoTrading.App.Core.Exchange
             string exchangeId, string symbol, CandleInterval interval,
             DateTime openTime, DateTime closeTime,
             decimal open, decimal high, decimal low, decimal close,
-            decimal volume)
+            decimal volume, decimal quoteVolume = 0, long numberOfTrades = 0,
+            decimal takerBuyBaseAssetVolume = 0, decimal takerBuyQuoteAssetVolume = 0)
         {
             ExchangeId = exchangeId;
             Symbol = symbol;
@@ -39,6 +42,10 @@ namespace CryptoTrading.App.Core.Exchange
             Low = low;
             Close = close;
             Volume = volume;
+            QuoteVolume = quoteVolume;
+            NumberOfTrades = numberOfTrades;
+            TakerBuyBaseAssetVolume = takerBuyBaseAssetVolume;
+            TakerBuyQuoteAssetVolume = takerBuyQuoteAssetVolume;
         }
 
         /// <summary>

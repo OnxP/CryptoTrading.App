@@ -1,9 +1,11 @@
-﻿using CryptoTrading.App.Algorithm.RegimeBased;
+using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Algorithm.StopLimits;
 using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.DependencyInjection;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -56,7 +58,7 @@ namespace CryptoTrading.App.Algorithm
 
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
         {
-            services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>( provider => 
+            services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>( provider =>
             new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), NoOfTrades));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();

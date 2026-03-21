@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.MarketMonitorFactory;
@@ -104,4 +104,3 @@ namespace CryptoTrading.App.Monitor
         }
     }
 }
-

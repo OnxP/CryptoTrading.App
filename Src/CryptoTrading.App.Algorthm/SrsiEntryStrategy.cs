@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using Skender.Stock.Indicators;
 
@@ -6,7 +6,7 @@ namespace CryptoTrading.App.Algorithm
 {
     internal class SrsiEntryStrategy : IEntryStrategy
     {
-        public SrsiEntryStrategy(QuoteHub<IQuote> quoteHub, OrderSide buy)
+        public SrsiEntryStrategy(QuoteHub<IQuote> quoteHub, ExchangeOrderSide buy)
         {
         }
 

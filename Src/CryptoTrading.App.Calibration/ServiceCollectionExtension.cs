@@ -9,10 +9,12 @@ using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
 using CryptoTrading.App.Algorithm;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Process;
 using CryptoTrading.App.Core.Strategy;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 
 namespace CryptoTrading.App.Calibration
 {

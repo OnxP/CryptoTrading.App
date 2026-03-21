@@ -1,48 +1,35 @@
-﻿using Binance;
-using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.TradeRequest;
 
 namespace CryptoTrading.App.Broker
 {
-    public class TestMarket :IMarket
+    public class TestMarket : IMarket
     {
         List<IRequest> trades = new List<IRequest>();
-        public Task<IEnumerable<AccountBalance>> GetAccountBalances()
+        public Task<IEnumerable<ExchangeBalance>> GetAccountBalances()
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Order>> GetAllOpenOrders()
+        public Task<IEnumerable<ExchangeOrder>> GetAllOpenOrders()
         {
             throw new NotImplementedException();
         }
 
-        public Task<Order> SetMarketOrder(IMarketRequest trade)
+        public Task<ExchangeOrder> SetMarketOrder(IMarketRequest trade)
         {
             trades.Add(trade);
-            var order = new Order(new BinanceApiUser("Test"),
-                             trade.Symbol,
-                             1,
-                             "",
-                             trade.Price,
-                             trade.Quantity,
-                             trade.Quantity,
-                             trade.Quantity * trade.Price,
-                             OrderStatus.Filled,
-                             TimeInForce.IOC,
-                             OrderType.Market,
-                             OrderSide.Buy,
-                             0,
-                             0,
-                             DateTime.Now,
-                             DateTime.Now,
-                             true);
-            Task<Order> task = new Task<Order>(()=> order);
-            task.Start();
-            return task;
+            var order = ExchangeOrder.CreateFilledOrder(
+                "test",
+                trade.Symbol,
+                ExchangeOrderSide.Buy,
+                trade.Price,
+                trade.Quantity,
+                DateTime.Now);
+            return Task.FromResult(order);
         }
 
         public Task<string> CancelOrder(ICancelRequest request)
@@ -50,54 +37,39 @@ namespace CryptoTrading.App.Broker
             return Task.Run(() => "");
         }
 
-        public Task<Order> SetStopLimitOrder(IStopLimitRequest trade)
+        public Task<ExchangeOrder> SetStopLimitOrder(IStopLimitRequest trade)
         {
             trades.Add(trade);
-            var order = new Order(new BinanceApiUser("Test"),
-                             trade.Symbol,
-                             1,
-                             "",
-                             trade.StopPrice,
-                             trade.Quantity,
-                             trade.Quantity,
-                             trade.Quantity * trade.StopPrice,
-                             OrderStatus.New,
-                             TimeInForce.IOC,
-                             OrderType.StopLossLimit,
-                             OrderSide.Sell,
-                             trade.StopPrice,
-                             0,
-                             DateTime.Now,
-                             DateTime.Now,
-                             true);
-            Task<Order> task = new Task<Order>(() => order);
-            task.Start();
-            return task;
+            var order = new ExchangeOrder
+            {
+                ExchangeId = "test",
+                OrderId = Guid.NewGuid().ToString(),
+                ClientOrderId = Guid.NewGuid().ToString(),
+                Symbol = trade.Symbol,
+                Side = ExchangeOrderSide.Sell,
+                Type = ExchangeOrderType.StopLimit,
+                Status = ExchangeOrderStatus.New,
+                Price = trade.StopPrice,
+                StopPrice = trade.StopPrice,
+                Quantity = trade.Quantity,
+                FilledQuantity = 0,
+                QuoteQuantity = trade.Quantity * trade.StopPrice,
+                Timestamp = DateTime.Now
+            };
+            return Task.FromResult(order);
         }
 
-        public Task<Order> SetLimitOrder(ILimitRequest trade)
+        public Task<ExchangeOrder> SetLimitOrder(ILimitRequest trade)
         {
             trades.Add(trade);
-            var order = new Order(new BinanceApiUser("Test"),
-                             trade.Symbol,
-                             1,
-                             "",
-                             trade.Price,
-                             trade.Quantity,
-                             trade.Quantity,
-                             trade.Quantity * trade.Price,
-                             OrderStatus.Filled,
-                             TimeInForce.IOC,
-                             OrderType.Limit,
-                             OrderSide.Buy,
-                             0,
-                             0,
-                             DateTime.Now,
-                             DateTime.Now,
-                             true);
-            Task<Order> task = new Task<Order>(() => order);
-            task.Start();
-            return task;
+            var order = ExchangeOrder.CreateFilledOrder(
+                "test",
+                trade.Symbol,
+                ExchangeOrderSide.Buy,
+                trade.Price,
+                trade.Quantity,
+                DateTime.Now);
+            return Task.FromResult(order);
         }
     }
 }

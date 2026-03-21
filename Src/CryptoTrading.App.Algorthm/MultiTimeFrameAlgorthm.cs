@@ -1,6 +1,5 @@
-﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Core;
+﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
@@ -9,6 +8,7 @@ using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 
 namespace CryptoTrading.App.Algorithm
 {
@@ -18,7 +18,7 @@ namespace CryptoTrading.App.Algorithm
         public int NumberOfCandleSticksToKeep => 200;
         private readonly QuoteHub<IQuote> _quoteHub;
         private readonly QuoteHub<IQuote> _quoteHubHigh;
-        private Symbol _symbol;
+        private ExchangeSymbol _symbol;
         public IMarketStructureStrategy HighLevelStrategy { get; set; }
         public IStrategy TradingStrategy;
         public string KeyValue { get; set; }
@@ -44,7 +44,7 @@ namespace CryptoTrading.App.Algorithm
             KeyValue = key.KeyValue;
         }
 
-        public void ProcessHistoricMarketDataHigh(IEnumerable<Candlestick> candlesticks)
+        public void ProcessHistoricMarketDataHigh(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             foreach (var candle in candlesticks)
              _quoteHubHigh.Add(new Quote
@@ -60,7 +60,7 @@ namespace CryptoTrading.App.Algorithm
             Logger.LogInformation(
                 $"Added {candlesticks.Count()} historic candlesticks Higher Timeframe for {candlesticks.First().Symbol}");
         }
-        public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
+        public void ProcessHistoricMarketData(IEnumerable<ExchangeCandlestick> candlesticks)
         {
              foreach (var candle in candlesticks)
                 _quoteHub.Add(new Quote
@@ -76,7 +76,7 @@ namespace CryptoTrading.App.Algorithm
             Logger.LogInformation(
                 $"Added {candlesticks.Count()} historic candlesticks Medium Timeframe for {candlesticks.First().Symbol}");
         }
-        public void ProcessLiveCandleStickHigh(CandlestickEventArgs candlestickEventArgs)
+        public void ProcessLiveCandleStickHigh(ExchangeCandlestickEvent candlestickEventArgs)
         {
             try
             {
@@ -97,7 +97,7 @@ namespace CryptoTrading.App.Algorithm
                 Logger.LogError(0, e, "Algo Error Occurred");
             }
         }
-        public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
+        public void ProcessLiveCandleStick(ExchangeCandlestickEvent candlestickEventArgs)
         {
             try
             {
@@ -121,13 +121,13 @@ namespace CryptoTrading.App.Algorithm
             }
         }
 
-        public void Subscribe(Symbol symbol, IMarketDataEvents marketData)
+        public void Subscribe(ExchangeSymbol symbol, IMarketDataEvents marketData)
         {
             _symbol = symbol;
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Hours_4, ProcessHistoricMarketDataHigh);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Hours_4, ProcessLiveCandleStickHigh);
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricMarketData);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandleStick);
+            marketData.InitialDataLoadSubscribe(symbol.Ticker, CandleInterval.Hour_4, ProcessHistoricMarketDataHigh);
+            marketData.InitialDataStreamSubscribe(symbol.Ticker, CandleInterval.Hour_4, ProcessLiveCandleStickHigh);
+            marketData.InitialDataLoadSubscribe(symbol.Ticker, CandleInterval.Minute_15, ProcessHistoricMarketData);
+            marketData.InitialDataStreamSubscribe(symbol.Ticker, CandleInterval.Minute_15, ProcessLiveCandleStick);
         }
     }
 }

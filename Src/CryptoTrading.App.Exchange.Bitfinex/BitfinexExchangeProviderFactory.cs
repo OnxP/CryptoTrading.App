@@ -1,27 +1,18 @@
-using System;
-using System.Net.Http;
+using System.Collections.Generic;
 using CryptoTrading.App.Core.Exchange;
 
-namespace CryptoTrading.App.Exchange.BitfinexAdapter
+namespace CryptoTrading.App.Exchange.Bitfinex
 {
-    /// <summary>
-    /// Factory for creating Bitfinex exchange providers from configuration.
-    /// </summary>
-    public class BitfinexExchangeProviderFactory
+    public class BitfinexExchangeProviderFactory : IExchangeProviderFactory
     {
-        private readonly HttpClient _httpClient;
-
-        public BitfinexExchangeProviderFactory(HttpClient httpClient = null)
-        {
-            _httpClient = httpClient;
-        }
-
         public IExchangeProvider Create(ExchangeConfig config)
         {
-            if (!string.Equals(config.ExchangeId, BitfinexMapper.ExchangeName, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Expected Bitfinex config, got {config.ExchangeId}");
+            return new BitfinexExchangeProvider(config.ApiKey, config.ApiSecret);
+        }
 
-            return new BitfinexExchangeProvider(config.ApiKey, config.ApiSecret, _httpClient);
+        public IEnumerable<string> GetSupportedExchanges()
+        {
+            return new[] { "Bitfinex" };
         }
     }
 }

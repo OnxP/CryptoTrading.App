@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Binance.Net" Version="12.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
-    <ProjectReference Include="..\Binance\Binance.csproj" />
   </ItemGroup>
 
 </Project>

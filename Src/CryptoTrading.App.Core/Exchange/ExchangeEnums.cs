@@ -1,17 +1,11 @@
 namespace CryptoTrading.App.Core.Exchange
 {
-    /// <summary>
-    /// Exchange-agnostic order side (replaces Binance.OrderSide)
-    /// </summary>
     public enum ExchangeOrderSide
     {
         Buy,
         Sell
     }
 
-    /// <summary>
-    /// Exchange-agnostic order type (replaces Binance.OrderType)
-    /// </summary>
     public enum ExchangeOrderType
     {
         Market,
@@ -19,9 +13,6 @@ namespace CryptoTrading.App.Core.Exchange
         StopLimit
     }
 
-    /// <summary>
-    /// Exchange-agnostic order status (replaces Binance.OrderStatus)
-    /// </summary>
     public enum ExchangeOrderStatus
     {
         New,
@@ -32,9 +23,6 @@ namespace CryptoTrading.App.Core.Exchange
         Expired
     }
 
-    /// <summary>
-    /// Exchange-agnostic candle interval (replaces Binance.CandlestickInterval)
-    /// </summary>
     public enum CandleInterval
     {
         Minute_1,

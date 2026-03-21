@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         }
         private int HLV { get; set; }
         private bool initial = true;
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var high = indicatorOutputs["FastEma"][2].ToList();
             var low = indicatorOutputs["FastEma"][3].ToList();

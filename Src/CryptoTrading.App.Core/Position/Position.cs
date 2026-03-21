@@ -1,5 +1,4 @@
-﻿using Binance;
-using CryptoTrading.App.Core.RequestTracker;
+﻿using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
@@ -56,9 +55,12 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckHasEnoughBalanceFee(ITradeRequest request)
         {
-            var closePrice = CandleStickTracker.GetClosePrice(request.BaseSymbol + Symbol);
-            if(closePrice.HasValue)
-                return FreeAmount > 0 && FreeAmount > (request.Amount * closePrice.Value * 0.02m);
+            var key = request.BaseSymbol + Symbol;
+            if (CandleStickTracker.CandleSticks != null && CandleStickTracker.CandleSticks.TryGetValue(key, out var evt))
+            {
+                var closePrice = evt.Candlestick.Close;
+                return FreeAmount > 0 && FreeAmount > (request.Amount * closePrice * 0.02m);
+            }
             return false;
         }
 

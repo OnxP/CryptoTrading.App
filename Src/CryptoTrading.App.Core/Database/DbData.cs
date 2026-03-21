@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -18,22 +18,22 @@ namespace CryptoTrading.App.Core.Database
         private CryptoDbContext context = new CryptoDbContext();
 
         private IQueryable<CandleStickDb> data;
-        public void Initialise(DateTime from, DateTime to, List<string> symbols, CandlestickInterval interval)
+        public void Initialise(DateTime from, DateTime to, List<string> symbols, CandleInterval interval)
         {
 
             data = context.CandleSticks.Where(
-                x => x.CloseTime >= from && x.CloseTime <= to && symbols.Contains(x.Symbol) && (x.Interval == interval || x.Interval == CandlestickInterval.Minute)).AsNoTracking();
+                x => x.CloseTime >= from && x.CloseTime <= to && symbols.Contains(x.Symbol) && (x.Interval == interval || x.Interval == CandleInterval.Minute_1)).AsNoTracking();
         }
 
-        private Dictionary<DateTime, Dictionary<(string,CandlestickInterval), Candlestick>> _data = new Dictionary<DateTime, Dictionary<(string, CandlestickInterval), Candlestick>>();
+        private Dictionary<DateTime, Dictionary<(string,CandleInterval), ExchangeCandlestick>> _data = new Dictionary<DateTime, Dictionary<(string, CandleInterval), ExchangeCandlestick>>();
 
-        public async Task<int> LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbols, 
+        public async Task<int> LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbols,
             int interval,int pageNumber)
         {
             var query = context.CandleSticks
                 .Where(p => p.CloseTime >= currentTick &&
                             (pageNumber == -1 ? p.CloseTime < finalTick : p.CloseTime <= finalTick) &&
-                            p.Interval == (CandlestickInterval)interval &&
+                            p.Interval == (CandleInterval)interval &&
                             symbols.Contains(p.Symbol))
                 .OrderBy(p => p.CloseTime)
                 .AsNoTracking();
@@ -43,7 +43,7 @@ namespace CryptoTrading.App.Core.Database
                     : await query.Skip(pageNumber * 20000).Take(20000).ToListAsync();
 
 
-            if (!candleSticks.Any()) 
+            if (!candleSticks.Any())
                 throw new Exception(string.Format("Bad Data. {0} - {1} - {2} - {3} - {4}",query, currentTick, finalTick, interval, pageNumber));
             var count = candleSticks.Count();
             var grouping = candleSticks.GroupBy(x => x.CloseTime);
@@ -66,7 +66,7 @@ namespace CryptoTrading.App.Core.Database
                         candleStickList.ToDictionary(x => (x.Symbol,x.Interval), CandleStickDb.ConvertObject));
                 }
             }
-            return count;            
+            return count;
         }
 
 
@@ -76,11 +76,11 @@ namespace CryptoTrading.App.Core.Database
             return str;
         }
 
-        public Dictionary<(string,CandlestickInterval),Candlestick> GetData(DateTime currentTick)
+        public Dictionary<(string,CandleInterval),ExchangeCandlestick> GetData(DateTime currentTick)
         {
             return _data.TryGetValue(currentTick, out var listMinute)
                 ? listMinute
-                : new Dictionary<(string, CandlestickInterval), Candlestick>();
+                : new Dictionary<(string, CandleInterval), ExchangeCandlestick>();
         }
 
         public IOrderedQueryable<CandleStickDb> GetQuerableData(DateTime currentTick)
@@ -88,7 +88,7 @@ namespace CryptoTrading.App.Core.Database
             return data.Where(x => x.CloseTime == currentTick).OrderByDescending(x => x.Volume);
         }
 
-        public bool CheckNextTick(DateTime nextTick, string symbol, CandlestickInterval interval)
+        public bool CheckNextTick(DateTime nextTick, string symbol, CandleInterval interval)
         {
             var candlesticks = GetData(nextTick);
             return candlesticks.Any() && candlesticks.ContainsKey((symbol,interval));
@@ -99,9 +99,9 @@ namespace CryptoTrading.App.Core.Database
             var test = _data.Remove(currentTick);
         }
 
-        public List<Candlestick> GetData(string symbol,CandlestickInterval interval)
+        public List<ExchangeCandlestick> GetData(string symbol, CandleInterval interval)
         {
-            var list = new List<Candlestick>();
+            var list = new List<ExchangeCandlestick>();
             foreach (var dict in _data)
             {
                 if (dict.Value.TryGetValue((symbol,interval), out var item))
@@ -129,6 +129,6 @@ namespace CryptoTrading.App.Core.Database
             return _data.Count();
         }
 
-        
+
     }
 }

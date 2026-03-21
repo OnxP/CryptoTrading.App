@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
@@ -44,7 +44,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             _signal.Indicators.Add(new CustomIndicators.Indicator("S&R"));
             return dict;
         }
-        public Signal Process(List<Candlestick> Candles)
+        public Signal Process(List<ExchangeCandlestick> Candles)
         {
             if (Candles == null) return _signal;
             if (Candles.Count == 0) return _signal;
@@ -177,7 +177,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return _signal;
         }
 
-        public decimal AverageCandleSize(List<Candlestick> Candles)
+        public decimal AverageCandleSize(List<ExchangeCandlestick> Candles)
         {
             decimal AverageCandleSize = 0.0m;
             for (int i = 1; i < Candles.Count; ++i)
@@ -214,7 +214,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var pSar = indicatorOutputs["PSAR"][0].ToList();
             return pSar.Last();//does nothing
