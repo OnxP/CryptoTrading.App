@@ -2,6 +2,10 @@ using System;
 
 namespace CryptoTrading.App.Core.Exchange
 {
+    /// <summary>
+    /// Exchange-agnostic candlestick/OHLCV data (replaces Binance.Candlestick).
+    /// Represents a single candle from any exchange.
+    /// </summary>
     public class ExchangeCandlestick
     {
         public string ExchangeId { get; set; }
@@ -44,8 +48,19 @@ namespace CryptoTrading.App.Core.Exchange
             TakerBuyQuoteAssetVolume = takerBuyQuoteAssetVolume;
         }
 
+        /// <summary>
+        /// Whether this is a bullish candle (close >= open)
+        /// </summary>
         public bool IsBullish => Close >= Open;
+
+        /// <summary>
+        /// The body size of the candle (absolute difference between open and close)
+        /// </summary>
         public decimal BodySize => Math.Abs(Close - Open);
+
+        /// <summary>
+        /// The full range of the candle (high - low)
+        /// </summary>
         public decimal Range => High - Low;
     }
 }

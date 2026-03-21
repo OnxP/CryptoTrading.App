@@ -1,5 +1,6 @@
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

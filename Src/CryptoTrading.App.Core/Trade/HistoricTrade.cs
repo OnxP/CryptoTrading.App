@@ -19,13 +19,13 @@ namespace CryptoTrading.App.Core.Trade
 
         public HistoricTrades(ITrade trade)
         {
-            SoldPrice = Convert.ToDouble(trade.Price);
-            BoughtPrice = Convert.ToDouble(trade.StartPrice);
+            SoldPrice = Convert.ToDouble(trade.ClosePrice);
+            BoughtPrice = Convert.ToDouble(trade.OpenPrice);
             Symbol = trade.Pair;
-            Quantity = Convert.ToDouble(trade.Quantity);
-            Profit = Convert.ToDouble(trade.Profit);
-            BtcProfit = Convert.ToDouble(trade.BtcProfit);
-            BtcProfit = Convert.ToDouble(trade.BtcProfit);
+            Quantity = Convert.ToDouble(trade.TotalOpenBaseQuantity);
+            Profit = Convert.ToDouble(trade.ProfitPct);
+            BtcProfit = Convert.ToDouble(trade.Profit);
+            BtcProfit = Convert.ToDouble(trade.Profit);
             FeeBnb = Convert.ToDouble(trade.FeeBnb);
             StartDate = trade.StartDate;
             CloseDate = trade.CloseDate;

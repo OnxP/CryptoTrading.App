@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core;
-using Microsoft.Extensions.Options;
 using MailKit.Net.Smtp;
 using MimeKit;
 using MimeKit.Text;

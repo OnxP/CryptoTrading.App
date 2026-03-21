@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
+using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.DependencyInjection;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 
 namespace CryptoTrading.App.Process
 {

@@ -36,7 +36,7 @@ namespace CryptoTrading.App.Broker
                 trade.Quantity);
         }
 
-        public async Task<ExchangeOrder> SetLimitOrder(IStopLimitRequest trade)
+        public async Task<ExchangeOrder> SetStopLimitOrder(IStopLimitRequest trade)
         {
             return await _provider.PlaceLimitOrderAsync(
                 trade.Symbol,
@@ -54,6 +54,17 @@ namespace CryptoTrading.App.Broker
         {
             LogOrder(order.Symbol, order.ClientOrderId.ToString(), ExchangeOrderStatus.Cancelled);
             return await Task.Run(() => "");
+        }
+
+        public async Task<ExchangeOrder> SetLimitOrder(ILimitRequest trade)
+        {
+            var order = await _provider.PlaceLimitOrderAsync(
+                trade.Symbol,
+                trade.OrderType ?? ExchangeOrderSide.Buy,
+                trade.Price,
+                trade.Quantity);
+
+            return order;
         }
     }
 }

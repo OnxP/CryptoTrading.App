@@ -19,11 +19,11 @@ namespace CryptoTrading.App.Core.Database.StoreTrades
             Risk = Convert.ToDouble(risk);
             Increment = Convert.ToDouble(increment);
 
-            Price = Convert.ToDouble(trade.Price);
+            Price = Convert.ToDouble(trade.ClosePrice);
             Symbol = trade.Pair;
-            Quantity = Convert.ToDouble(trade.Quantity);
-            Profit = Convert.ToDouble(trade.Profit);
-            StartPrice = Convert.ToDouble(trade.StartPrice);
+            Quantity = Convert.ToDouble(trade.TotalOpenBaseQuantity);
+            Profit = Convert.ToDouble(trade.ProfitPct);
+            StartPrice = Convert.ToDouble(trade.OpenPrice);
             StartDate = trade.StartDate;
             CloseDate = trade.CloseDate;
         }

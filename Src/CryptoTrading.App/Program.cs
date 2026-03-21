@@ -25,10 +25,15 @@ namespace CryptoTrading.App
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Fatal error: {e.Message}");
                 Console.WriteLine();
-                Console.WriteLine("  ...press any key to close window.");
+                Console.WriteLine($"Details: {e}");
+                Console.ResetColor();
+
+                Console.WriteLine("Press any key to close window.");
                 Console.ReadKey(true);
+                Environment.Exit(1);
             }
         }
     }

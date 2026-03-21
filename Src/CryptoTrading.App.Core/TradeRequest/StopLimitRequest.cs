@@ -22,4 +22,20 @@ namespace CryptoTrading.App.Core.TradeRequest
         public decimal StopPrice => currentTransaction.Price;
 
     }
+
+    public class LimitRequest : ILimitRequest
+    {
+        private ITransaction currentTransaction;
+
+        public LimitRequest(ITransaction currentTransaction)
+        {
+            if (currentTransaction == null) throw new Exception();
+            this.currentTransaction = currentTransaction;
+        }
+
+        public ExchangeOrderSide? OrderType => currentTransaction.Base.Quantity < 0 ? ExchangeOrderSide.Sell : ExchangeOrderSide.Buy;
+        public decimal Quantity => Math.Abs(currentTransaction.Base.Quantity);
+        public decimal Price => currentTransaction.Price;
+        public string Symbol => currentTransaction.Pair;
+    }
 }

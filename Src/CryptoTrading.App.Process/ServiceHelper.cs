@@ -27,7 +27,8 @@ namespace CryptoTrading.App.Process
                 .AddTradingCore(config)
                 .AddTradeMonitor(config)
                 .AddBroker(config)
-                .AddAlgorithm(config)
+                //.AddAlgorithm(config)
+                .AddRegimeBasedAlgorithm()
                 .AddMarketMonitor(config)
                 .AddAccountService(config)
                 .AddLogging(builder => builder // configure logging.

@@ -4,7 +4,6 @@ using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
 {

@@ -2,11 +2,11 @@
 {
     public interface ICancelRequest : IRequest
     {
-        long ClientOrderId { get; set; }
+        string ClientOrderId { get; set; }
     }
 
     public interface ICancelTradeRequest : IRequest
     {
-        long ClientOrderId { get; set; }
+        string ClientOrderId { get; set; }
     }
 }

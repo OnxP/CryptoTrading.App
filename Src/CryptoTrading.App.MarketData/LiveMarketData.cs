@@ -4,7 +4,6 @@ using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core.RequestTracker;
 using Microsoft.Extensions.Logging;
@@ -74,7 +73,7 @@ namespace CryptoTrading.App.MarketData
             Logger.LogInformation("Loading Candlesticks");
         }
 
-        private async System.Threading.Tasks.Task LoadHistoricData(IExchangeProvider provider, (string symbol, CandleInterval interval) symbol, int numberOfCandleSticks, IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
+        private async Task LoadHistoricData(IExchangeProvider provider, (string symbol, CandleInterval interval) symbol, int numberOfCandleSticks, IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
             var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, symbol.interval, numberOfCandleSticks).ToUniversalTime();
             var candleSticks = await provider.GetCandlesticksAsync(symbol.symbol, symbol.interval, calculatedFrom, DateTime.Now.ToUniversalTime());
@@ -84,7 +83,6 @@ namespace CryptoTrading.App.MarketData
             {
                 action.Invoke(sticks);
             }
-
         }
     }
 }

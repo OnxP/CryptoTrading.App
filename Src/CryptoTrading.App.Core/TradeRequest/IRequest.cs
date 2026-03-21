@@ -2,6 +2,6 @@
 {
     public interface IRequest
     {
-        string Symbol { get; }
+        public string Symbol { get; }
     }
 }

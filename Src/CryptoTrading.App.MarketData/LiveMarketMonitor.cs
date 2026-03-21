@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
+using System.Linq;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
@@ -44,10 +43,10 @@ namespace CryptoTrading.App.MarketData
             return newOrder.Status == ExchangeOrderStatus.Filled;
         }
 
-        public void Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)
+        public async Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)
         {
             symbols.Add(symbol);
-            _provider.SubscribeCandlestickAsync(symbol, CandleInterval.Minute_1, candle =>
+            await _provider.SubscribeCandlestickAsync(symbol, CandleInterval.Minute_1, candle =>
             {
                 var evt = new ExchangeCandlestickEvent
                 {
@@ -58,7 +57,7 @@ namespace CryptoTrading.App.MarketData
                     IsFinal = true
                 };
                 processCandleStick(evt);
-            }).Wait();
+            });
         }
 
         public bool IsSubscribed(string symbol, string keyValue)
@@ -75,6 +74,15 @@ namespace CryptoTrading.App.MarketData
         public override void Configure(IConfig request)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<List<ExchangeCandlestick>> GetHistoricCandleSticks(string symbol)
+        {
+            var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, CandleInterval.Minute_1, 200).
+                ToUniversalTime();
+            var candleSticks = await _provider.GetCandlesticksAsync(symbol, CandleInterval.Minute_1, calculatedFrom, DateTime.Now.ToUniversalTime());
+
+            return candleSticks.Reverse().ToList();
         }
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 
 namespace CryptoTrading.App.Process
 {
@@ -18,8 +20,7 @@ namespace CryptoTrading.App.Process
                 //need to create a unique instance of algo
                 var algorithm = getAlgorithm.Invoke();
                 algorithm.Configure(config);
-                marketData.InitialDataLoadSubscribe(symbol.Ticker, interval, algorithm.ProcessHistoricMarketData);
-                marketData.InitialDataStreamSubscribe(symbol.Ticker, interval, algorithm.ProcessLiveCandleStick);
+                algorithm.Subscribe(symbol,marketData);
             }
         }
         public static void RemoveMarketDataEvents(IMarketDataEvents marketData, List<ExchangeSymbol> removeSymbols, IConfig config)

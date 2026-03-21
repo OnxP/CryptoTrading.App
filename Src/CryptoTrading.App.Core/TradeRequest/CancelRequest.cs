@@ -2,13 +2,13 @@
 {
     public class CancelRequest : ICancelRequest
     {
-        public CancelRequest(long clientOrderId, string symbol)
+        public CancelRequest(string clientOrderId, string symbol)
         {
             Symbol = symbol;
             ClientOrderId = clientOrderId;
         }
 
-        public long ClientOrderId { get; set; }
+        public string ClientOrderId { get; set; }
 
         public string Symbol { get; set; }
     }

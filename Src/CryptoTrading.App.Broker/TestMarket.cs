@@ -37,7 +37,7 @@ namespace CryptoTrading.App.Broker
             return Task.Run(() => "");
         }
 
-        public Task<ExchangeOrder> SetLimitOrder(IStopLimitRequest trade)
+        public Task<ExchangeOrder> SetStopLimitOrder(IStopLimitRequest trade)
         {
             trades.Add(trade);
             var order = new ExchangeOrder
@@ -56,6 +56,19 @@ namespace CryptoTrading.App.Broker
                 QuoteQuantity = trade.Quantity * trade.StopPrice,
                 Timestamp = DateTime.Now
             };
+            return Task.FromResult(order);
+        }
+
+        public Task<ExchangeOrder> SetLimitOrder(ILimitRequest trade)
+        {
+            trades.Add(trade);
+            var order = ExchangeOrder.CreateFilledOrder(
+                "test",
+                trade.Symbol,
+                ExchangeOrderSide.Buy,
+                trade.Price,
+                trade.Quantity,
+                DateTime.Now);
             return Task.FromResult(order);
         }
     }

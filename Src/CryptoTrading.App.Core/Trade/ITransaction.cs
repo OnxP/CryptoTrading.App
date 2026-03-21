@@ -14,7 +14,8 @@ namespace CryptoTrading.App.Core.Trade
         ExchangeOrder Order { get; }
         TransactionStatus Status { get; set; }
         DateTime TransactionDate { get; set; }
-
+        bool IsFilled { get; }
+        bool IsPartiallyFilled { get; }
         void UpdateOrder(ExchangeOrder order);
         void Cancel();
         void Complete();

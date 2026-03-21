@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using System;
 
@@ -6,8 +7,8 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public class MarketTradeRequest : ITradeRequest
     {
-        public string BaseSymbol => Pair.BaseAsset;
-        public string QuoteSymbol => Pair.QuoteAsset;
+        public string BaseSymbol => Symbol.BaseAsset;
+        public string QuoteSymbol => Symbol.QuoteAsset;
         public decimal QuoteClosePrice { get; internal set; }
         public DateTime? RequestDateTime { get; set; }
         public IStopLimitTracker StopLimitTracker { get; set; }
@@ -18,19 +19,19 @@ namespace CryptoTrading.App.Core.TradeRequest
         public bool Validate(decimal freeAmount, decimal nonFreeAmount)
         {
             //calculate quantity and stoploss limits
-            var q = !FixedAmount ? (freeAmount +nonFreeAmount) * (decimal)Amount : (decimal)Amount;
+            var q = !FixedAmount ? (freeAmount +nonFreeAmount) * Amount : Amount;
 
             if (q > Volume * VolumeLimit)
             {
                 q = Volume * VolumeLimit;
             }
 
-            QuoteQuantity = AdjustForMinimum(Pair.TickSize, q, MidpointRounding.ToZero);
-            BaseQuantity = AdjustForMinimum(Pair.StepSize, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
+            QuoteQuantity = AdjustForMinimum(Symbol.TickSize, q, MidpointRounding.ToZero);
+            BaseQuantity = AdjustForMinimum(Symbol.StepSize, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
 
-            var res = QuoteQuantity > Pair.MinNotional && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
+            var res = QuoteQuantity > Symbol.MinNotional && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
             return res;
-            //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.TickSize);
+            //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Symbol.TickSize);
             //StopLimitTracker.SetLimits(QuoteClosePrice);
         }
 
@@ -48,10 +49,13 @@ namespace CryptoTrading.App.Core.TradeRequest
         }
 
         public bool FixedAmount { get; set; }
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         public decimal Volume { get; set; }
 
         public decimal VolumeLimit { get; set; }
-        public ExchangeSymbol Pair { get; set; }
+        public ExchangeSymbol Symbol { get; set; }
+        public IExecutionStrategy Strategy { get; set; }
+        public int Leverage { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public ExchangeOrderSide OrderSide { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }

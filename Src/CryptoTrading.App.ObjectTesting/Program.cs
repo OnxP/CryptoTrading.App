@@ -3,7 +3,6 @@
 using System.Net.Mail;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Trade;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 

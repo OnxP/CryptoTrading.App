@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoTrading.App.Core", "CryptoTrading.App.Core\CryptoTrading.App.Core.csproj", "{298A7C95-7AA3-458F-B664-14E6E0A5335A}"
 EndProject
@@ -72,6 +72,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.Exchange.Binance", "CryptoTrading.App.Exchange.Binance\CryptoTrading.App.Exchange.Binance.csproj", "{1AC3E37E-DD76-46CE-8916-3F85EE6AD9EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.Exchange.Bitfinex", "CryptoTrading.App.Exchange.Bitfinex\CryptoTrading.App.Exchange.Bitfinex.csproj", "{05723CE5-0121-439C-A469-427F917E7A70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrading.App.Monitor.Tests", "CryptoTrading.App.Monitor.Tests\CryptoTrading.App.Monitor.Tests.csproj", "{8D3C5E13-6075-4576-8971-B2639EAF8E17}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -443,6 +445,14 @@ Global
 		{05723CE5-0121-439C-A469-427F917E7A70}.Release|x64.Build.0 = Release|x64
 		{05723CE5-0121-439C-A469-427F917E7A70}.Release|x86.ActiveCfg = Release|Any CPU
 		{05723CE5-0121-439C-A469-427F917E7A70}.Release|x86.Build.0 = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Debug|x64.Build.0 = Debug|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|x64.ActiveCfg = Release|Any CPU
+		{8D3C5E13-6075-4576-8971-B2639EAF8E17}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

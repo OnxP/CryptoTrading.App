@@ -7,11 +7,13 @@ using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using DateTime = System.DateTime;
 
@@ -47,23 +49,38 @@ namespace CryptoTrading.App.DatabaseLoad
             //var symbols = await _provider.GetSymbolsAsync().ConfigureAwait(false).Where(x=> x.QuoteAsset == "USD").ToList();//count
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             var sym = await _provider.GetSymbolsAsync().ConfigureAwait(false);
-            var symbols = sym.Where(x => x.QuoteAsset == "BTC").ToList();//count
+            var symbols = sym.Where(x => x.QuoteAsset == "USDT").ToList();//count
 
             marketDate.Configure(_provider);
-            marketDate.From = new DateTime(2025, 6, 01);
-            marketDate.To = new DateTime(2025, 07,01);
+            marketDate.From = new DateTime(2025, 07, 01);
+            marketDate.To = new DateTime(2026, 02, 28);
 
             List<CandleInterval> intervals = new List<CandleInterval>()
             {
+              CandleInterval.Hour_4,
+              CandleInterval.Hour_1,
               CandleInterval.Minute_15,
               CandleInterval.Minute_5
               , CandleInterval.Minute_1
             };
 
-            //subscribe to several symbols
-            AddEvents(marketDate as AbstractMarketData, symbols,intervals);
+            // --- Gap fill: check the DB per symbol and download only what is missing ---
+            var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
+            var detector = new MissingCandleDetector(_provider, gapLogger);
+            var symbolNames = symbols.Select(s => s.ToString()).ToList();
 
-            marketDate.StartStream();
+            // Process all symbols concurrently — each symbol checks all its intervals in
+            // parallel too.  Concurrency towards the Binance API is capped by the
+            // semaphore inside MissingCandleDetector (default: 10 simultaneous calls).
+            var gapTasks = symbolNames.Select(symbolName =>
+                detector.FillMissingForSymbolAsync(symbolName, intervals, marketDate.From, marketDate.To));
+            await Task.WhenAll(gapTasks).ConfigureAwait(false);
+
+            // --- Full download for anything outside the gap-fill scope ---
+            //subscribe to several symbols
+            //AddEvents(marketDate as AbstractMarketData, symbols, intervals);
+
+            //await marketDate.StartStream();
 
 /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             //var res = await run(marketDate).ConfigureAwait(false);
@@ -107,9 +124,10 @@ namespace CryptoTrading.App.DatabaseLoad
             }
         }
         public static int i = 0;
+        public static int j = 0;
         private static void Check()
         {
-            if(i == 1000)
+            if(i == 10000)
             {
                 context.BulkSaveChangesAsync();
                 i = 0;
@@ -120,22 +138,24 @@ namespace CryptoTrading.App.DatabaseLoad
             }
         }
 
+        static List<CandleStickDb> list = new List<CandleStickDb>();
+        private static void Check(List<CandleStickDb> sticks)
+        {
+            list.AddRange(sticks);
+            if (list.Count >= 10000)
+            {
+                context.BulkInsert(list);
+                list.Clear();
+            }
+        }
+
         static object _object = new object();
         private static void SaveHistoricCandleStick(IEnumerable<ExchangeCandlestick> obj)
         {
             lock (_object)
             {
-
-                var list = new List<CandleStickDb>();
-
-                foreach (var candlestick in obj)
-                {
-
-                    list.Add(new CandleStickDb(candlestick));
-                    //Check();
-                }
-
-                context.BulkInsert(list);
+                var sticks = obj.Select(x => new CandleStickDb(x)).ToList();
+                Check(sticks);
             }
         }
     }

@@ -8,7 +8,6 @@ using CryptoTrading.App.Core.TradeRequest;
 using System.Threading;
 using Trade = CryptoTrading.App.Core.Trade.Trade;
 using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.Monitor;
 
 namespace CryptoTrading.App.BrokerTesting
 {
@@ -43,9 +42,9 @@ namespace CryptoTrading.App.BrokerTesting
 
     internal class TestTradeFactory : ITradeFactory
     {
-        public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition, ITradeRequest request)
+        public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition)
         {
-            var trade = new Trade(buyPosition, sellPosition, feePosition, request);
+            var trade = new Trade(buyPosition, sellPosition, feePosition);
             trade.Open = true;
             return trade;
             //should add a transaction for each ccy, seperate one for the fee.

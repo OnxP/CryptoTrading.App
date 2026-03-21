@@ -7,7 +7,9 @@ using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Extensions;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.MarketData;
+using IAlgorithm = CryptoTrading.App.Core.Strategy.IAlgorithm;
 using CryptoTrading.App.Process;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,8 +40,7 @@ namespace CryptoTrading.App.Calibration
                 //need to create a unique instance of algo
                 var algorithm = Algorithm.Invoke();
                 algorithm.Configure(Config);
-                MarketData.InitialDataLoadSubscribe(symbol.Ticker, interval, algorithm.ProcessHistoricMarketData);
-                MarketData.InitialDataStreamSubscribe(symbol.Ticker, interval, algorithm.ProcessLiveCandleStick);
+                algorithm.Subscribe(symbol, MarketData);
             }
         }
         public void RemoveMarketDataEvents(List<ExchangeSymbol> removeSymbols)
