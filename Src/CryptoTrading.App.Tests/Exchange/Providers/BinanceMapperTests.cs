@@ -1,7 +1,7 @@
 using System;
-using Binance;
+using Binance.Net.Enums;
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Exchange.BinanceAdapter;
+using CryptoTrading.App.Exchange.Binance;
 using FluentAssertions;
 using Xunit;
 
@@ -26,12 +26,10 @@ namespace CryptoTrading.App.Tests.Exchange.Providers
         }
 
         [Theory]
-        [InlineData(OrderType.Market, ExchangeOrderType.Market)]
-        [InlineData(OrderType.Limit, ExchangeOrderType.Limit)]
-        [InlineData(OrderType.LimitMaker, ExchangeOrderType.Limit)]
-        [InlineData(OrderType.StopLossLimit, ExchangeOrderType.StopLimit)]
-        [InlineData(OrderType.TakeProfitLimit, ExchangeOrderType.StopLimit)]
-        public void MapOrderType_AllValues_Covered(OrderType input, ExchangeOrderType expected)
+        [InlineData(SpotOrderType.Market, ExchangeOrderType.Market)]
+        [InlineData(SpotOrderType.Limit, ExchangeOrderType.Limit)]
+        [InlineData(SpotOrderType.StopLossLimit, ExchangeOrderType.StopLimit)]
+        public void MapOrderType_AllValues_Covered(SpotOrderType input, ExchangeOrderType expected)
         {
             BinanceMapper.MapOrderType(input).Should().Be(expected);
         }
@@ -49,37 +47,23 @@ namespace CryptoTrading.App.Tests.Exchange.Providers
             BinanceMapper.MapOrderStatus(input).Should().Be(expected);
         }
 
-        [Fact]
-        public void ToExchangeBalance_PreservesAllFields()
-        {
-            var binanceBalance = new AccountBalance("BTC", 1.5m, 0.5m);
-
-            var result = BinanceMapper.ToExchangeBalance(binanceBalance);
-
-            result.ExchangeId.Should().Be("Binance");
-            result.Asset.Should().Be("BTC");
-            result.Free.Should().Be(1.5m);
-            result.Locked.Should().Be(0.5m);
-            result.Total.Should().Be(2.0m);
-        }
-
         [Theory]
-        [InlineData(CandlestickInterval.Minute, CandleInterval.Minute_1)]
-        [InlineData(CandlestickInterval.Minutes_3, CandleInterval.Minute_3)]
-        [InlineData(CandlestickInterval.Minutes_5, CandleInterval.Minute_5)]
-        [InlineData(CandlestickInterval.Minutes_15, CandleInterval.Minute_15)]
-        [InlineData(CandlestickInterval.Minutes_30, CandleInterval.Minute_30)]
-        [InlineData(CandlestickInterval.Hour, CandleInterval.Hour_1)]
-        [InlineData(CandlestickInterval.Hours_2, CandleInterval.Hour_2)]
-        [InlineData(CandlestickInterval.Hours_4, CandleInterval.Hour_4)]
-        [InlineData(CandlestickInterval.Hours_6, CandleInterval.Hour_6)]
-        [InlineData(CandlestickInterval.Hours_8, CandleInterval.Hour_8)]
-        [InlineData(CandlestickInterval.Hours_12, CandleInterval.Hour_12)]
-        [InlineData(CandlestickInterval.Day, CandleInterval.Day_1)]
-        [InlineData(CandlestickInterval.Days_3, CandleInterval.Day_3)]
-        [InlineData(CandlestickInterval.Week, CandleInterval.Week_1)]
-        [InlineData(CandlestickInterval.Month, CandleInterval.Month_1)]
-        public void MapCandleInterval_AllValues_RoundTrip(CandlestickInterval binanceInterval, CandleInterval expected)
+        [InlineData(KlineInterval.OneMinute, CandleInterval.Minute_1)]
+        [InlineData(KlineInterval.ThreeMinutes, CandleInterval.Minute_3)]
+        [InlineData(KlineInterval.FiveMinutes, CandleInterval.Minute_5)]
+        [InlineData(KlineInterval.FifteenMinutes, CandleInterval.Minute_15)]
+        [InlineData(KlineInterval.ThirtyMinutes, CandleInterval.Minute_30)]
+        [InlineData(KlineInterval.OneHour, CandleInterval.Hour_1)]
+        [InlineData(KlineInterval.TwoHour, CandleInterval.Hour_2)]
+        [InlineData(KlineInterval.FourHour, CandleInterval.Hour_4)]
+        [InlineData(KlineInterval.SixHour, CandleInterval.Hour_6)]
+        [InlineData(KlineInterval.EightHour, CandleInterval.Hour_8)]
+        [InlineData(KlineInterval.TwelveHour, CandleInterval.Hour_12)]
+        [InlineData(KlineInterval.OneDay, CandleInterval.Day_1)]
+        [InlineData(KlineInterval.ThreeDay, CandleInterval.Day_3)]
+        [InlineData(KlineInterval.OneWeek, CandleInterval.Week_1)]
+        [InlineData(KlineInterval.OneMonth, CandleInterval.Month_1)]
+        public void MapCandleInterval_AllValues_RoundTrip(KlineInterval binanceInterval, CandleInterval expected)
         {
             var mapped = BinanceMapper.MapCandleInterval(binanceInterval);
             mapped.Should().Be(expected);

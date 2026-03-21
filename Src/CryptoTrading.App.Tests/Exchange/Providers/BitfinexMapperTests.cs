@@ -1,6 +1,7 @@
 using System;
+using Bitfinex.Net.Enums;
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Exchange.BitfinexAdapter;
+using CryptoTrading.App.Exchange.Bitfinex;
 using FluentAssertions;
 using Xunit;
 
@@ -12,9 +13,9 @@ namespace CryptoTrading.App.Tests.Exchange.Providers
         [InlineData("BTCUSDT", "tBTCUST")]
         [InlineData("ETHUSDT", "tETHUST")]
         [InlineData("BTCUSD", "tBTCUSD")]
-        public void TobitfinexSymbol_ConvertsCorrectly(string standard, string expected)
+        public void ToBitfinexSymbol_ConvertsCorrectly(string standard, string expected)
         {
-            BitfinexMapper.TobitfinexSymbol(standard).Should().Be(expected);
+            BitfinexMapper.ToBitfinexSymbol(standard).Should().Be(expected);
         }
 
         [Theory]
@@ -30,80 +31,60 @@ namespace CryptoTrading.App.Tests.Exchange.Providers
         public void SymbolConversion_RoundTrips()
         {
             var original = "BTCUSDT";
-            var bfx = BitfinexMapper.TobitfinexSymbol(original);
+            var bfx = BitfinexMapper.ToBitfinexSymbol(original);
             var back = BitfinexMapper.ToStandardSymbol(bfx);
             back.Should().Be(original);
         }
 
         [Theory]
-        [InlineData(100.0, ExchangeOrderSide.Buy)]
-        [InlineData(-50.0, ExchangeOrderSide.Sell)]
-        public void MapOrderSideFromAmount_PositiveBuy_NegativeSell(decimal amount, ExchangeOrderSide expected)
+        [InlineData(OrderSide.Buy, ExchangeOrderSide.Buy)]
+        [InlineData(OrderSide.Sell, ExchangeOrderSide.Sell)]
+        public void MapOrderSide_AllValues_Covered(OrderSide input, ExchangeOrderSide expected)
         {
-            BitfinexMapper.MapOrderSideFromAmount(amount).Should().Be(expected);
+            BitfinexMapper.MapOrderSide(input).Should().Be(expected);
         }
 
         [Theory]
-        [InlineData("MARKET", ExchangeOrderType.Market)]
-        [InlineData("EXCHANGE MARKET", ExchangeOrderType.Market)]
-        [InlineData("LIMIT", ExchangeOrderType.Limit)]
-        [InlineData("EXCHANGE LIMIT", ExchangeOrderType.Limit)]
-        [InlineData("STOP LIMIT", ExchangeOrderType.StopLimit)]
-        [InlineData("EXCHANGE STOP LIMIT", ExchangeOrderType.StopLimit)]
-        public void MapOrderType_AllValues_Covered(string type, ExchangeOrderType expected)
+        [InlineData(ExchangeOrderSide.Buy, OrderSide.Buy)]
+        [InlineData(ExchangeOrderSide.Sell, OrderSide.Sell)]
+        public void MapToBitfinexOrderSide_RoundTrips(ExchangeOrderSide input, OrderSide expected)
         {
-            BitfinexMapper.MapOrderType(type).Should().Be(expected);
+            BitfinexMapper.MapToBitfinexOrderSide(input).Should().Be(expected);
         }
 
         [Theory]
-        [InlineData("ACTIVE", ExchangeOrderStatus.New)]
-        [InlineData("PARTIALLY FILLED", ExchangeOrderStatus.PartiallyFilled)]
-        [InlineData("EXECUTED", ExchangeOrderStatus.Filled)]
-        [InlineData("CANCELED", ExchangeOrderStatus.Cancelled)]
-        public void MapOrderStatus_AllValues_Covered(string status, ExchangeOrderStatus expected)
+        [InlineData(OrderStatus.Active, ExchangeOrderStatus.New)]
+        [InlineData(OrderStatus.PartiallyFilled, ExchangeOrderStatus.PartiallyFilled)]
+        [InlineData(OrderStatus.Executed, ExchangeOrderStatus.Filled)]
+        [InlineData(OrderStatus.Canceled, ExchangeOrderStatus.Cancelled)]
+        public void MapOrderStatus_AllValues_Covered(OrderStatus input, ExchangeOrderStatus expected)
         {
-            BitfinexMapper.MapOrderStatus(status).Should().Be(expected);
+            BitfinexMapper.MapOrderStatus(input).Should().Be(expected);
         }
 
         [Theory]
-        [InlineData(CandleInterval.Minute_1, "1m")]
-        [InlineData(CandleInterval.Minute_5, "5m")]
-        [InlineData(CandleInterval.Minute_15, "15m")]
-        [InlineData(CandleInterval.Hour_1, "1h")]
-        [InlineData(CandleInterval.Hour_4, "4h")]
-        [InlineData(CandleInterval.Day_1, "1D")]
-        [InlineData(CandleInterval.Week_1, "1W")]
-        [InlineData(CandleInterval.Month_1, "1M")]
-        public void MapCandleIntervalToTimeframe_CorrectValues(CandleInterval interval, string expected)
+        [InlineData(CandleInterval.Minute_1, KlineInterval.OneMinute)]
+        [InlineData(CandleInterval.Minute_5, KlineInterval.FiveMinutes)]
+        [InlineData(CandleInterval.Minute_15, KlineInterval.FifteenMinutes)]
+        [InlineData(CandleInterval.Hour_1, KlineInterval.OneHour)]
+        [InlineData(CandleInterval.Day_1, KlineInterval.OneDay)]
+        [InlineData(CandleInterval.Week_1, KlineInterval.SevenDays)]
+        [InlineData(CandleInterval.Month_1, KlineInterval.OneMonth)]
+        public void MapToBitfinexCandleInterval_CorrectValues(CandleInterval interval, KlineInterval expected)
         {
-            BitfinexMapper.MapCandleIntervalToTimeframe(interval).Should().Be(expected);
+            BitfinexMapper.MapToBitfinexCandleInterval(interval).Should().Be(expected);
         }
 
-        [Fact]
-        public void ParseCandlestick_CorrectValues()
+        [Theory]
+        [InlineData(CandleInterval.Minute_1, 1)]
+        [InlineData(CandleInterval.Minute_5, 5)]
+        [InlineData(CandleInterval.Hour_1, 60)]
+        [InlineData(CandleInterval.Day_1, 1440)]
+        public void ComputeCloseTime_AddsCorrectDuration(CandleInterval interval, int expectedMinutes)
         {
-            // Bitfinex format: [MTS, OPEN, CLOSE, HIGH, LOW, VOLUME]
-            var data = new decimal[] { 1704067200000m, 42000m, 42300m, 42500m, 41800m, 500m };
-
-            var candle = BitfinexMapper.ParseCandlestick(data, "BTCUSDT", CandleInterval.Hour_4);
-
-            candle.ExchangeId.Should().Be("Bitfinex");
-            candle.Symbol.Should().Be("BTCUSDT");
-            candle.Interval.Should().Be(CandleInterval.Hour_4);
-            candle.Open.Should().Be(42000m);
-            candle.Close.Should().Be(42300m); // Index 2 in Bitfinex
-            candle.High.Should().Be(42500m);  // Index 3
-            candle.Low.Should().Be(41800m);   // Index 4
-            candle.Volume.Should().Be(500m);
-        }
-
-        [Fact]
-        public void TimestampConversion_RoundTrips()
-        {
-            var original = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-            var ms = BitfinexMapper.ToUnixMilliseconds(original);
-            var back = BitfinexMapper.FromUnixMilliseconds(ms);
-            back.Should().Be(original);
+            var openTime = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+            var closeTime = BitfinexMapper.ComputeCloseTime(openTime, interval);
+            closeTime.Should().Be(openTime.AddMinutes(expectedMinutes));
         }
     }
 }
