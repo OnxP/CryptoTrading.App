@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class PsarMacdTradingStrategy : TradingStrategy
     {
-        public PsarMacdTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public PsarMacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

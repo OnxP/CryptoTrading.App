@@ -34,9 +34,7 @@ namespace CryptoTrading.App.BrokerTesting
             //var broker = new CryptoBroker(market, logger);
             //set up message broker and submit trade request
             double result = 0.5;
-            // TODO: Inject ISymbolCache properly
-            ISymbolCache symbolCache = null;
-            var request = RequestBuilder.BuildTradeRequest(symbolCache, result, true,"XRPBTC", 0.5m, DateTime.Now, null,100m,1m);
+            var request = RequestBuilder.BuildTradeRequest(result, true,"XRPBTC", 0.5m, DateTime.Now, null,100m,1m);
             MessageBroker.Instance.Publish(new object(), request);
 
             Thread.Sleep(100000);

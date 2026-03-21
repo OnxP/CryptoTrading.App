@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class TrendFollowingTradingStrategy : TradingStrategy
     {
-        public TrendFollowingTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public TrendFollowingTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
@@ -65,7 +65,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             //stop loss check
             var slCheck = (closePrice.Close * (1-StopLimitTrackers.Risk)) >
-                          SymbolCache.Get(closePrice.Symbol).TickSize*2;
+                          ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize*2;
 
 
             return StopLimitTrackers.SetStopLimit(indicatorOutputs, closePrice, condition2 && condition1 && condition3 && condition4 && slCheck,

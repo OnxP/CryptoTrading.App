@@ -8,10 +8,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdGmaTradingStrategy : TradingStrategy
     {
-        public MacdGmaTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public MacdGmaTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
-        public MacdGmaTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public MacdGmaTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

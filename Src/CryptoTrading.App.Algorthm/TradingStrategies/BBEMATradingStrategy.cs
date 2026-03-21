@@ -10,11 +10,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class BBEMATradingStrategy : TradingStrategy
     {
-        public BBEMATradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public BBEMATradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public BBEMATradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public BBEMATradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

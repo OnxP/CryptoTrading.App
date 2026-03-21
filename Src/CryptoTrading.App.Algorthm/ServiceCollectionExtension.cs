@@ -26,7 +26,7 @@ namespace CryptoTrading.App.Algorithm
 
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, IConfig config)
         {
-            services.AddTransient<ITradingStrategy, AbcTradingStrategy>(provider => new AbcTradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), provider.GetService<ISymbolCache>()));
+            services.AddTransient<ITradingStrategy, AbcTradingStrategy>(provider => new AbcTradingStrategy(provider.GetService<ILogger<TradingStrategy>>()));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();
@@ -39,7 +39,7 @@ namespace CryptoTrading.App.Algorithm
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
         {
             services.AddTransient<ITradingStrategy, MacdRSITradingStrategy>( provider =>
-            new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), provider.GetService<ISymbolCache>(), NoOfTrades));
+            new MacdRSITradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), NoOfTrades));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();

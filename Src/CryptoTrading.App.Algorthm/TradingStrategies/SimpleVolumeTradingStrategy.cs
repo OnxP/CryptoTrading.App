@@ -10,11 +10,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class SimpleVolumeStrategy : TradingStrategy
     {
-        public SimpleVolumeStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public SimpleVolumeStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public SimpleVolumeStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public SimpleVolumeStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }
@@ -67,7 +67,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             //Price has to be above the 50EMA
             var diff = closePrice.High - closePrice.Low;
-            var diffCondition = diff > 4 * SymbolCache.Get(closePrice.Symbol).TickSize;
+            var diffCondition = diff > 4 * ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize;
             //Price > than Long EMA
             //Long EMA is in an uptrend
             //Fast > Slow EMA
@@ -87,8 +87,8 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 {
                     StopLimitTrackers.CurrentPrice = closePrice.Close;
                     StopLimitTrackers.Pair = closePrice.Symbol;
-                    StopLimitTrackers.TargetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, closePrice.Close * 8);
-                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, hAlist.Last(x=>x.IsBareish).ClosePrice);
+                    StopLimitTrackers.TargetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, closePrice.Close * 8);
+                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, hAlist.Last(x=>x.IsBareish).ClosePrice);
                 }
 
                 LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice,
@@ -124,20 +124,20 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 var open = indicatorOutputs["close"][4].ToList();
                 StopLimitTrackers.CurrentPrice = closePrice.Close;
                 StopLimitTrackers.Pair = closePrice.Symbol;
-                StopLimitTrackers.TargetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                StopLimitTrackers.TargetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                     closePrice.Close + closePrice.Close);
                 decimal sl = default;
                 for (int i = 0; i < close.Count-1; i++)
                 {
                     var heikinAshi = new HeikinAshi(open[i],close[i],high[i],low[i], open.Skip(i+1).First(), close.Skip(i+1).First());
-                    if (heikinAshi.Close < heikinAshi.Open)// && (heikinAshi.Open - heikinAshi.Close > SymbolCache.Get(closePrice.Symbol).TickSize*2))
+                    if (heikinAshi.Close < heikinAshi.Open)// && (heikinAshi.Open - heikinAshi.Close > ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize*2))
                     {
                         sl = (decimal)low[i];
                         break;
                     }
                 }
 
-                StopLimitTrackers.StopLimitPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, sl);
+                StopLimitTrackers.StopLimitPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, sl);
                 return true;
             }
 

@@ -11,7 +11,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdGradientTradingStrategy : TradingStrategy
     {
-        public MacdGradientTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public MacdGradientTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

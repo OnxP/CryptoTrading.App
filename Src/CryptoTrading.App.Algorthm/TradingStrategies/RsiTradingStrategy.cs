@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class RsiTradingStrategy : TradingStrategy
     {
-        public RsiTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public RsiTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

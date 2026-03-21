@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class AroonStoch : TradingStrategy
     {
-        public AroonStoch(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public AroonStoch(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

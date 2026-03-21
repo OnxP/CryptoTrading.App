@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class EmaTradingStrategy : TradingStrategy
     {
-        public EmaTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public EmaTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

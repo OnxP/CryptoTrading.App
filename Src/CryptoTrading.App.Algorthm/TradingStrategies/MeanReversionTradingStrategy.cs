@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MeanReversionTradingStrategy : TradingStrategy
     {
-        public MeanReversionTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public MeanReversionTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
@@ -44,14 +44,14 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             {
                 //var diff = closePrice.Close - Last10Low;
                 //volume and profitability conditions.
-                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m && SymbolCache.Get(closePrice.Symbol).TickSize * 3 < (decimal)prevStd)
+                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m && ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize * 3 < (decimal)prevStd)
                 {
-                    //if(diff < 3* SymbolCache.Get(closePrice.Symbol).TickSize) return false;
+                    //if(diff < 3* ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize) return false;
                     StopLimitTrackers.CurrentPrice = closePrice.Close;
                     StopLimitTrackers.Pair = closePrice.Symbol;
-                    StopLimitTrackers.TargetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                    StopLimitTrackers.TargetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                         closePrice.Close + (decimal)prevStd);
-                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                         closePrice.Close - (decimal)prevStd);
 
                     LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice,

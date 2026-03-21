@@ -11,12 +11,6 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             Increment = increment / 100m;
         }
 
-        public ManualTrailingStopLimit(decimal risk, decimal increment, ISymbolCache symbolCache) : base(symbolCache)
-        {
-            Risk = risk/100;
-            Increment = increment / 100m;
-        }
-
         public override void Configure(ExchangeOrder order)
         {
             //set stopLimitValue to 10% of current price.
@@ -37,7 +31,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             //StopLimitPrice += Multiple * Increment;
             //TargetPrice *= (1+ Increment);
             //StopLimitPrice *= (1+ Increment);
-            var tickSize = _symbolCache.Get(Pair).TickSize;
+            var tickSize = ExchangeSymbolCache.Instance.Get(Pair).TickSize;
 
             TargetPrice = AdjustForMinimum(tickSize,  Multiple + TargetPrice, MidpointRounding.ToPositiveInfinity);
             var sl = AdjustForMinimum(tickSize, StopLimitPrice + Multiple, MidpointRounding.ToPositiveInfinity);

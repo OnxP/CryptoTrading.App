@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class UptrendingMarket : TradingStrategy
     {
-        public UptrendingMarket(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public UptrendingMarket(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

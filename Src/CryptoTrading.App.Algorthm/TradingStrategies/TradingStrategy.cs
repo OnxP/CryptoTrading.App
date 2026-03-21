@@ -14,7 +14,6 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         public int OutputLength { get; private set; }
         protected virtual double StrategyWeight => 1;
         public ILogger<TradingStrategy> Logger { get; }
-        protected ISymbolCache SymbolCache { get; }
 
         public StringBuilder Builder = new StringBuilder();
         public void Log(string v)
@@ -48,10 +47,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             list.Reverse();
             return list;
         }
-        protected TradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache)
+        protected TradingStrategy(ILogger<TradingStrategy> logger)
         {
             Logger = logger;
-            SymbolCache = symbolCache;
             Indicators = GenerateIndicators();
             Indicators.Add("atr", new IndicatorSetUp(Tulip.Indicators.atr, new double[] { 14 }));
             int i = 0;
@@ -126,18 +124,18 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 //var diff = closePrice.Close - Last10Low;
                 var atr = indicatorOutputs["atr"][0].ToList();
                 //volume and profitability conditions.
-                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m && SymbolCache.Get(closePrice.Symbol).TickSize * 4 < 2 * (decimal)atr.Last())
+                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m && ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize * 4 < 2 * (decimal)atr.Last())
                 {
-                    //if(diff < 3* SymbolCache.Get(closePrice.Symbol).TickSize) return false;
+                    //if(diff < 3* ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize) return false;
                     StopLimitTrackers.CurrentPrice = closePrice.Close;
                     StopLimitTrackers.Pair = closePrice.Symbol;
                     StopLimitTrackers.Multiple =
-                        AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                        AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                             (decimal)atr
-                                .Last()); //(decimal)atr.Last() * 3;//diff + (2*SymbolCache.Get(closePrice.Symbol).TickSize); ;//AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,multiple);
-                    StopLimitTrackers.TargetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                                .Last()); //(decimal)atr.Last() * 3;//diff + (2*ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize); ;//AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,multiple);
+                    StopLimitTrackers.TargetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                         closePrice.Close + 3 * (decimal)atr.Last());
-                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                         closePrice.Close - 3m * (decimal)atr.Last());
 
                     LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice,
@@ -160,16 +158,16 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                 //var atr = indicatorOutputs["atr"][0].ToList();
 
                 if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m &&
-                    SymbolCache.Get(closePrice.Symbol).TickSize * 4 < 2 * diff)
+                    ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize * 4 < 2 * diff)
                 {
                     StopLimitTrackers.CurrentPrice = closePrice.Close;
                     StopLimitTrackers.Pair = closePrice.Symbol;
                     StopLimitTrackers.Multiple =
-                        AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
-                            1.5m * diff); //(decimal)atr.Last() * 3;//diff + (2*SymbolCache.Get(closePrice.Symbol).TickSize); ;//AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,multiple);
-                    StopLimitTrackers.TargetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                        AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
+                            1.5m * diff); //(decimal)atr.Last() * 3;//diff + (2*ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize); ;//AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,multiple);
+                    StopLimitTrackers.TargetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                         closePrice.Close + 1.5m * (decimal)diff);
-                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize,
+                    StopLimitTrackers.StopLimitPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize,
                         closePrice.Close - (decimal)diff);
 
                     LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, StopLimitTrackers.TargetPrice,
@@ -186,12 +184,12 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         {
             if (!stopLimitTrackers.IsOpen)
             {
-                var targetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, (closePrice.Close - (decimal)stopLimit) * (decimal)target)/2;
+                var targetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, (closePrice.Close - (decimal)stopLimit) * (decimal)target)/2;
                 stopLimitTrackers.CurrentPrice = closePrice.Close;
                 stopLimitTrackers.Pair = closePrice.Symbol;
-                stopLimitTrackers.Multiple = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, (closePrice.Close - (decimal)stopLimit) * (decimal)target);
-                stopLimitTrackers.TargetPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, targetPrice + closePrice.Close);
-                stopLimitTrackers.StopLimitPrice = AdjustForMinimum(SymbolCache.Get(closePrice.Symbol).TickSize, (decimal)stopLimit);
+                stopLimitTrackers.Multiple = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, (closePrice.Close - (decimal)stopLimit) * (decimal)target);
+                stopLimitTrackers.TargetPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, targetPrice + closePrice.Close);
+                stopLimitTrackers.StopLimitPrice = AdjustForMinimum(ExchangeSymbolCache.Instance.Get(closePrice.Symbol).TickSize, (decimal)stopLimit);
 
                 LogResult(closePrice.CloseTime, closePrice.Symbol, closePrice.Close, stopLimitTrackers.TargetPrice, stopLimitTrackers.StopLimitPrice);
             }

@@ -10,11 +10,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class PriceAction9TradingStrategy : TradingStrategy
     {
-        public PriceAction9TradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public PriceAction9TradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public PriceAction9TradingStrategy (ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public PriceAction9TradingStrategy (ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

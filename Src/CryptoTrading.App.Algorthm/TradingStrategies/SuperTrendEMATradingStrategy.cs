@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class SuperTrendEMATradingStrategy : TradingStrategy
     {
-        public SuperTrendEMATradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public SuperTrendEMATradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

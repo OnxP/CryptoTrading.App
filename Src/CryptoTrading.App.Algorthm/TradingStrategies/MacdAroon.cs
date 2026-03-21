@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdArroon : TradingStrategy
     {
-        public MacdArroon(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public MacdArroon(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

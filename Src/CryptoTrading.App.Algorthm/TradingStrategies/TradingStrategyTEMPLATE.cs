@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class TradingStrategyTEMPLATE : TradingStrategy
     {
-        public TradingStrategyTEMPLATE(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public TradingStrategyTEMPLATE(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

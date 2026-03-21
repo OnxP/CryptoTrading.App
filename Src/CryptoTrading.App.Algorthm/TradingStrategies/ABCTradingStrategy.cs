@@ -11,7 +11,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class AbcTradingStrategy : TradingStrategy
     {
-        public AbcTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public AbcTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

@@ -9,11 +9,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class EmaRsiTradingStrategy : TradingStrategy
     {
-        public EmaRsiTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public EmaRsiTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public EmaRsiTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public EmaRsiTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

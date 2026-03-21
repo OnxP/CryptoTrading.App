@@ -9,17 +9,17 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MovingAverangeTradingStrategy : TradingStrategy
     {
-        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, Indicator stratgy, double NoOfTrades):this(logger, symbolCache)
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, Indicator stratgy, double NoOfTrades):this(logger)
         {
             indicator = stratgy;
             noOfTrades = NoOfTrades;
         }
 
-        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             indicator = Tulip.Indicators.wma;
             noOfTrades = NoOfTrades;

@@ -6,10 +6,10 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public static class RequestBuilder
     {
-        public static ITradeRequest BuildTradeRequest(ISymbolCache symbolCache, double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume, decimal volumeLimit)
+        public static ITradeRequest BuildTradeRequest(double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume, decimal volumeLimit)
         {
             var tradeRequest = new MarketTradeRequest();
-            tradeRequest.Pair = symbolCache.Get(ticker);
+            tradeRequest.Pair = ExchangeSymbolCache.Instance.Get(ticker);
             tradeRequest.QuoteClosePrice = close;
             tradeRequest.FixedAmount = fixedAmount;
             tradeRequest.Amount = result;

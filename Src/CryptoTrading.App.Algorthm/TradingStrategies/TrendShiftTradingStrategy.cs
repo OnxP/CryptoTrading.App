@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class TrendShiftTradingStrategy : TradingStrategy
     {
-        public TrendShiftTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public TrendShiftTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

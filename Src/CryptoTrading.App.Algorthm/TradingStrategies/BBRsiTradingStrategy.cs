@@ -8,11 +8,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class BBRsiTradingStrategy : TradingStrategy
     {
-        public BBRsiTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public BBRsiTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public BBRsiTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public BBRsiTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

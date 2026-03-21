@@ -9,10 +9,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class TrendMeterTradingStrategy : TradingStrategy
     {
-        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
-        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

@@ -19,10 +19,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         private TrendLine _trendLine = new TrendLine();
         private SupportResistance _supportResistance;
         private Signal _signal = new Signal();
-        public PriceActionTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public PriceActionTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
-        public PriceActionTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public PriceActionTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

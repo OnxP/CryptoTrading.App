@@ -39,7 +39,7 @@ namespace CryptoTrading.App.Calibration
         }
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, IConfig config)
         {
-            services.AddTransient<ITradingStrategy, SuperTrendEMATradingStrategy>(provider => new SuperTrendEMATradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), provider.GetService<ISymbolCache>()));
+            services.AddTransient<ITradingStrategy, SuperTrendEMATradingStrategy>(provider => new SuperTrendEMATradingStrategy(provider.GetService<ILogger<TradingStrategy>>()));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();

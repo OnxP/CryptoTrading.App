@@ -8,11 +8,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class WmaBounce : TradingStrategy
     {
-        public WmaBounce(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public WmaBounce(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 
-        public WmaBounce(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
+        public WmaBounce(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
         {
             noOfTrades = NoOfTrades;
         }

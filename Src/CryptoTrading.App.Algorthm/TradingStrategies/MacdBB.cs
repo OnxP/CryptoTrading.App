@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdBB : TradingStrategy
     {
-        public MacdBB(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
+        public MacdBB(ILogger<TradingStrategy> logger) : base(logger)
         {
         }
 

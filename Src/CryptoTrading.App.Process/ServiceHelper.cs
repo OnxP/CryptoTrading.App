@@ -24,7 +24,6 @@ namespace CryptoTrading.App.Process
 
             var services = new ServiceCollection()
                 .AddMarketData(config)
-                .AddSingleton<ISymbolCache, ExchangeSymbolCache>()
                 .AddTradingCore(config)
                 .AddTradeMonitor(config)
                 .AddBroker(config)

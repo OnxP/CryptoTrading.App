@@ -8,6 +8,9 @@ namespace CryptoTrading.App.Core.Exchange
 {
     public class ExchangeSymbolCache : ISymbolCache
     {
+        private static readonly ExchangeSymbolCache _instance = new();
+        public static ExchangeSymbolCache Instance => _instance;
+
         private readonly ConcurrentDictionary<(string exchangeId, string ticker), ExchangeSymbol> _symbols = new();
         private string _defaultExchangeId;
 
