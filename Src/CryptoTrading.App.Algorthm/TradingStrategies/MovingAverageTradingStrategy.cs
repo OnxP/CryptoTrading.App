@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -9,17 +9,17 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MovingAverangeTradingStrategy : TradingStrategy
     {
-        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
 
-        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, Indicator stratgy, double NoOfTrades):this(logger)
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, Indicator stratgy, double NoOfTrades):this(logger, symbolCache)
         {
             indicator = stratgy;
             noOfTrades = NoOfTrades;
         }
 
-        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        public MovingAverangeTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
         {
             indicator = Tulip.Indicators.wma;
             noOfTrades = NoOfTrades;
@@ -43,7 +43,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var MA25 = indicatorOutputs["25"][0].ToList();
             var MA50 = indicatorOutputs["50"][0].ToList();

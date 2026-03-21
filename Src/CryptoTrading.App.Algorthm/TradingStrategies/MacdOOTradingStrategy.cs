@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -8,10 +8,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdOOTradingStrategy : TradingStrategy
     {
-        public MacdOOTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public MacdOOTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
-        public MacdOOTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        public MacdOOTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
         {
             noOfTrades = NoOfTrades;
         }
@@ -47,7 +47,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             var hist = indicatorOutputs["MACD"][2].ToList();

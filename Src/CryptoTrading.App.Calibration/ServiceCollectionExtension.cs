@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
 using CryptoTrading.App.Algorithm;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Process;
@@ -38,7 +39,7 @@ namespace CryptoTrading.App.Calibration
         }
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, IConfig config)
         {
-            services.AddTransient<ITradingStrategy, SuperTrendEMATradingStrategy>(provider => new SuperTrendEMATradingStrategy(provider.GetService<ILogger<TradingStrategy>>()));
+            services.AddTransient<ITradingStrategy, SuperTrendEMATradingStrategy>(provider => new SuperTrendEMATradingStrategy(provider.GetService<ILogger<TradingStrategy>>(), provider.GetService<ISymbolCache>()));
 
             services.AddTransient<IAlgorithm, SimpleAlgorithm>();
             services.AddComposite<ITradingStrategy, CompositeTradingStrategy>();

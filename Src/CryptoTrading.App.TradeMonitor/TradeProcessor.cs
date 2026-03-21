@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.KeyClass;
@@ -56,7 +56,7 @@ namespace CryptoTrading.App.Monitor
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Action<MessagePayload<Order>> newTradeMesssage = ProcessMessageAction;
+            Action<MessagePayload<ExchangeOrder>> newTradeMesssage = ProcessMessageAction;
             messageBroker.Subscribe(KeyValue,newTradeMesssage);
 
             Action<MessagePayload<string>> CancelTradeMessage = ProcessMessageAction;
@@ -66,17 +66,17 @@ namespace CryptoTrading.App.Monitor
             messageBroker.Subscribe(KeyValue, TradeRequestMessage);
         }
 
-        private void ProcessMessageAction(MessagePayload<Order> obj)
+        private void ProcessMessageAction(MessagePayload<ExchangeOrder> obj)
         {
             if (obj.Who is ITransaction transaction)
             {
-                Order order = obj.What;
+                ExchangeOrder order = obj.What;
                 //assume that order has been filled.
                 try
                 {
                     //error occurs here because there are not monitors set up for trade...need to find out why!
                     var trade = OrderMonitors.Last(x => x.Symbol == order.Symbol);
-                
+
                     switch (transaction.Type)
                     {
                         case TransactionType.StopLimitTransaction:
@@ -86,7 +86,7 @@ namespace CryptoTrading.App.Monitor
                             break;
                         case TransactionType.MarketTransaction:
                             trade.UpdateInitialTransaction(order);
-                            Logger.LogInformation($"Completed Trade for {order.Symbol} Q: {order.ExecutedQuantity} Price: {order.Price} originalQ: {order.OriginalQuantity} Original Price: {trade.Trade.CurrentPrice}");
+                            Logger.LogInformation($"Completed Trade for {order.Symbol} Q: {order.FilledQuantity} Price: {order.Price} originalQ: {order.Quantity} Original Price: {trade.Trade.CurrentPrice}");
                             break;
                     }
                 }
@@ -177,4 +177,3 @@ namespace CryptoTrading.App.Monitor
         }
     }
 }
-

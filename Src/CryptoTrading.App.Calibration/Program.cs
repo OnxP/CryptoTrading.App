@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;

@@ -8,11 +8,14 @@
   <ItemGroup>
     <PackageReference Include="EntityFramework" Version="6.5.1" />
     <PackageReference Include="log4net" Version="3.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+    <PackageReference Include="Skender.Stock.Indicators" Version="2.6.1" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Binance\Binance.csproj" />
     <ProjectReference Include="..\Indicators\Tulip.NETCore.csproj" />
   </ItemGroup>
 

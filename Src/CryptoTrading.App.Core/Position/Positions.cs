@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 
@@ -72,7 +72,7 @@ namespace CryptoTrading.App.Core.Position
 
         public void AjdustPosition(string accountPositionAsset, decimal accountPositionFree)
         {
-            Logger.LogInformation($"Ajusting Position from Binance {accountPositionAsset} - {accountPositionFree}");
+            Logger.LogInformation($"Ajusting Position from Exchange {accountPositionAsset} - {accountPositionFree}");
 
             var pos = GetPosition(accountPositionAsset);
             pos.CreateTransaction(accountPositionFree);

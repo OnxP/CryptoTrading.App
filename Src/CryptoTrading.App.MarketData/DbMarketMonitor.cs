@@ -1,5 +1,4 @@
-﻿using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Trade;
@@ -11,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
-    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data 
+    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data
     //Input(Initial) - Trade details.
     //Input(continuous) - CandleStick Processing.
     //StaticInput - Stop loss type and limit.
@@ -25,16 +24,16 @@ namespace CryptoTrading.App.MarketData
     {
         ICandleStickManagement _mangement;
         IDbData _data;
-        private Dictionary<string, Dictionary<string, Action<CandlestickEventArgs>>> actions;
+        private Dictionary<string, Dictionary<string, Action<ExchangeCandlestickEvent>>> actions;
         public DbMarketMonitor(ICandleStickManagement management, IDbData data)
         {
             _mangement = management;
             _data = data;
-            actions = new Dictionary<string, Dictionary<string,Action<CandlestickEventArgs>>>();
+            actions = new Dictionary<string, Dictionary<string,Action<ExchangeCandlestickEvent>>>();
             //_mangement.AddMonitor(this);
         }
 
-        public CandlestickInterval Interval { get; set; }
+        public CandleInterval Interval { get; set; }
         public int NumberOfRows { get; set; } = 30;
         public int OffSet => 0 ;
 
@@ -81,8 +80,7 @@ namespace CryptoTrading.App.MarketData
                 if (!actions.ContainsKey(kvp.Key)) continue;
                 foreach (var action in actions[kvp.Key])
                 {
-                    action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0,
-                        true));
+                    action.Value.Invoke(new ExchangeCandlestickEvent { EventTime = _mangement.CurrentTick, Candlestick = kvp.Value, FirstTradeId = 0, LastTradeId = 0, IsFinal = true });
 
                     if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key, true))
                     {
@@ -93,7 +91,7 @@ namespace CryptoTrading.App.MarketData
             _data.ClearHistoric(_mangement.PreviousTick, true);
         }
 
-        public void Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
+        public void Subscribe(string symbol, string keyValue,Action<ExchangeCandlestickEvent> processCandleStick)
         {
             lock (_lockAction)
             {
@@ -102,7 +100,7 @@ namespace CryptoTrading.App.MarketData
                 else
                 {
                     _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0,NumberOfRows, OffSet);
-                    actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
+                    actions.Add(symbol, new Dictionary<string, Action<ExchangeCandlestickEvent>>() { { keyValue, processCandleStick } });
                 }
 
                 _data.ClearHistoric(_mangement.PreviousTick, true);

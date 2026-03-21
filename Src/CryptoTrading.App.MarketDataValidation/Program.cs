@@ -8,7 +8,7 @@ using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Sockets;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 
 namespace CryptoTrading.App.MarketDataValidation

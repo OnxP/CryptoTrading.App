@@ -1,7 +1,4 @@
-﻿using Binance;
-using Binance.Client;
-using Binance.Utility;
-using Binance.WebSocket;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Extensions;
 using CryptoTrading.App.Core.TradeRequest;
@@ -23,9 +20,7 @@ namespace CryptoTrading.App.MarketData
         public DateTime From { get; set; }
         public DateTime To { get; set; }
 
-        ICandlestickClient _client;
-        IBinanceWebSocketStream _webSocket;
-        IBinanceApi _api;
+        IExchangeProvider _provider;
         public ILogger<HistoricalMarketData> Logger { get; set; }
 
         public HistoricalMarketData(ILogger<HistoricalMarketData> logger)
@@ -48,42 +43,17 @@ namespace CryptoTrading.App.MarketData
 
             // Configure services.
             var services = new ServiceCollection()
-                .AddBinance() // add default Binance services.
                 .AddLogging(builder => builder // configure logging.
                     .SetMinimumLevel(LogLevel.Trace)
                     .AddFile(configuration.GetSection("Logging:File")))
                 .BuildServiceProvider();
 
-            // Initialize client.
-            _client = services.GetService<ICandlestickClient>();
-            _api = services.GetService<IBinanceApi>();
-            // Initialize the stream.
-            _webSocket = services.GetService<IBinanceWebSocketStream>();
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
-
+            _provider = services.GetService<IExchangeProvider>();
         }
 
-        public void Configure(IBinanceApi api)
+        public void Configure(IExchangeProvider provider)
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, false)
-                .Build();
-
-            // Configure services.
-            var services = new ServiceCollection()
-                .AddBinance() // add default Binance services.
-                .AddLogging(builder => builder // configure logging.
-                    .SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(configuration.GetSection("Logging:File")))
-                .BuildServiceProvider();
-
-            // Initialize client.
-            _client = services.GetService<ICandlestickClient>();
-            _api = api;
-            // Initialize the stream.
-            _webSocket = services.GetService<IBinanceWebSocketStream>();
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
+            _provider = provider;
         }
 
         public override void Configure(IConfig request)
@@ -110,7 +80,7 @@ namespace CryptoTrading.App.MarketData
                 var tasks = new List<Task>();
                 //foreach (var item in historicDataSubscribers)
                 //{
-                //    tasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
+                //    tasks.Add(LoadHistoricData(_provider, item.Key, From, item.Value));
                 //}
                 //Task.WaitAll(tasks.ToArray());
                 //Logger.LogInformation("Finished loading Historic Candlesticks");
@@ -128,7 +98,7 @@ namespace CryptoTrading.App.MarketData
                     {
                         Stopwatch time = new Stopwatch();
                         time.Start();
-                        StreamData(_api, item.Key, from, to);
+                        StreamData(_provider, item.Key, from, to);
                         from = to;
                         //while (time.ElapsedMilliseconds <= 1000)
                         //{ }
@@ -151,54 +121,45 @@ namespace CryptoTrading.App.MarketData
             }
         }
 
-        List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
+        List<(ExchangeCandlestick candlestick, CandleInterval interval)> candleSticksToStream = new List<(ExchangeCandlestick, CandleInterval interval)>();
 
-        private async void StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private async void StreamData(IExchangeProvider provider, (string symbol, CandleInterval interval) symbol, DateTime from, DateTime to)
         {
             /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false);
+            var candleSticks = await provider.GetCandlesticksAsync(symbol.symbol, symbol.interval, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false);
             var action = historicDataSubscribers.First().Value.First();
             Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candleSticks.Count()}");
 
             action.Invoke(candleSticks);
         }
 
-        void liveStream()
-        {
-            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
-
-            using var controller = new RetryTaskController(_webSocket.StreamAsync);
-            controller.Error += (s, e) => HandleError(e.Exception);
-            controller.Begin();
-        }
-
-        private DateTime CalculateFrom(DateTime dateTime, CandlestickInterval interval)
+        private DateTime CalculateFrom(DateTime dateTime, CandleInterval interval)
         {
             int candleSticksToLoad = 200;
             return interval switch
             {
-                CandlestickInterval.Minute => dateTime.AddMinutes(-1 * candleSticksToLoad),
-                CandlestickInterval.Minutes_3 => dateTime.AddMinutes(-3 * candleSticksToLoad),
-                CandlestickInterval.Minutes_5 => dateTime.AddMinutes(-5 * candleSticksToLoad),
-                CandlestickInterval.Minutes_15 => dateTime.AddMinutes(-15 * candleSticksToLoad),
-                CandlestickInterval.Minutes_30 => dateTime.AddMinutes(-30 * candleSticksToLoad),
-                CandlestickInterval.Hour => dateTime.AddHours(-1 * candleSticksToLoad),
-                CandlestickInterval.Hours_2 => dateTime.AddHours(-2 * candleSticksToLoad),
-                CandlestickInterval.Hours_4 => dateTime.AddHours(-4 * candleSticksToLoad),
-                CandlestickInterval.Hours_6 => dateTime.AddHours(-6 * candleSticksToLoad),
-                CandlestickInterval.Hours_8 => dateTime.AddHours(-8 * candleSticksToLoad),
-                CandlestickInterval.Hours_12 => dateTime.AddHours(-12 * candleSticksToLoad),
-                CandlestickInterval.Day => dateTime.AddDays(-1 * candleSticksToLoad),
-                CandlestickInterval.Days_3 => dateTime.AddDays(-3 * candleSticksToLoad),
-                CandlestickInterval.Week => dateTime.AddDays(-7 * candleSticksToLoad),
-                CandlestickInterval.Month => dateTime.AddMonths(-12 * candleSticksToLoad),
+                CandleInterval.Minute_1 => dateTime.AddMinutes(-1 * candleSticksToLoad),
+                CandleInterval.Minute_3 => dateTime.AddMinutes(-3 * candleSticksToLoad),
+                CandleInterval.Minute_5 => dateTime.AddMinutes(-5 * candleSticksToLoad),
+                CandleInterval.Minute_15 => dateTime.AddMinutes(-15 * candleSticksToLoad),
+                CandleInterval.Minute_30 => dateTime.AddMinutes(-30 * candleSticksToLoad),
+                CandleInterval.Hour_1 => dateTime.AddHours(-1 * candleSticksToLoad),
+                CandleInterval.Hour_2 => dateTime.AddHours(-2 * candleSticksToLoad),
+                CandleInterval.Hour_4 => dateTime.AddHours(-4 * candleSticksToLoad),
+                CandleInterval.Hour_6 => dateTime.AddHours(-6 * candleSticksToLoad),
+                CandleInterval.Hour_8 => dateTime.AddHours(-8 * candleSticksToLoad),
+                CandleInterval.Hour_12 => dateTime.AddHours(-12 * candleSticksToLoad),
+                CandleInterval.Day_1 => dateTime.AddDays(-1 * candleSticksToLoad),
+                CandleInterval.Day_3 => dateTime.AddDays(-3 * candleSticksToLoad),
+                CandleInterval.Week_1 => dateTime.AddDays(-7 * candleSticksToLoad),
+                CandleInterval.Month_1 => dateTime.AddMonths(-12 * candleSticksToLoad),
                 _ => dateTime,
             };
         }
-        private async System.Threading.Tasks.Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
+        private async System.Threading.Tasks.Task LoadHistoricData(IExchangeProvider provider, (string symbol, CandleInterval interval) symbol, DateTime from, IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
             var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime()).ConfigureAwait(false);
+            var candleSticks = await provider.GetCandlesticksAsync(symbol.symbol, symbol.interval, calculatedFrom, from.ToUniversalTime()).ConfigureAwait(false);
             //need to drop first candle
             var sticks = candleSticks.Reverse().Skip(1);
             foreach (var action in callback)
@@ -208,31 +169,31 @@ namespace CryptoTrading.App.MarketData
 
         }
 
-        protected IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)
+        protected IEnumerable<DateTime> SplitDates(CandleInterval interval, DateTime from, DateTime to)
         {
             switch (interval)
             {
-                case CandlestickInterval.Minute:
+                case CandleInterval.Minute_1:
                     return GenerateTimeList(1, from, to);
-                case CandlestickInterval.Minutes_3:
+                case CandleInterval.Minute_3:
                     return GenerateTimeList(3, from, to);
-                case CandlestickInterval.Minutes_5:
+                case CandleInterval.Minute_5:
                     return GenerateTimeList(5, from, to);
-                case CandlestickInterval.Minutes_15:
+                case CandleInterval.Minute_15:
                     return GenerateTimeList(15, from, to);
-                case CandlestickInterval.Minutes_30:
+                case CandleInterval.Minute_30:
                     return GenerateTimeList(30, from, to);
-                case CandlestickInterval.Hour:
+                case CandleInterval.Hour_1:
                     return GenerateTimeList(1 * 60, from, to);
-                case CandlestickInterval.Hours_2:
+                case CandleInterval.Hour_2:
                     return GenerateTimeList(2 * 60, from, to);
-                case CandlestickInterval.Hours_4:
+                case CandleInterval.Hour_4:
                     return GenerateTimeList(4 * 60, from, to);
-                case CandlestickInterval.Hours_6:
+                case CandleInterval.Hour_6:
                     return GenerateTimeList(6 * 60, from, to);
-                case CandlestickInterval.Hours_8:
+                case CandleInterval.Hour_8:
                     return GenerateTimeList(8 * 60, from, to);
-                case CandlestickInterval.Hours_12:
+                case CandleInterval.Hour_12:
                     return GenerateTimeList(12 * 60, from, to);
                 default:
                     return new List<DateTime>() { to } ;
@@ -302,4 +263,3 @@ namespace CryptoTrading.App.MarketData
 
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 
 namespace CryptoTrading.App.Core.Trade
@@ -12,7 +12,7 @@ namespace CryptoTrading.App.Core.Trade
         public double Amount { get; set; }
         DateTime? RequestDateTime { get; set; }
         IStopLimitTracker StopLimitTracker { get; set; }
-        CandlestickInterval Interval { get; set; }
+        CandleInterval Interval { get; set; }
         decimal Volume { get; set; }
         decimal BaseQuantity { get; }
         decimal QuoteQuantity { get; }

@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Position;
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ namespace CryptoTrading.App.Core.Trade
         public List<ITransaction> Transactions { get; set; }
         public decimal Price => CurrentTransaction.Price;
         public string Pair => CurrentTransaction.Pair;
-        public OrderSide OrderType => Math.Sign(CurrentTransaction.Base.Quantity) > 0 ? OrderSide.Buy : OrderSide.Sell;
+        public ExchangeOrderSide OrderType => Math.Sign(CurrentTransaction.Base.Quantity) > 0 ? ExchangeOrderSide.Buy : ExchangeOrderSide.Sell;
         public decimal Quantity => CurrentTransaction.Base.Quantity;
         public bool Open { get; set; }
         public IPosition BuyPosition { get; }
@@ -110,12 +110,11 @@ namespace CryptoTrading.App.Core.Trade
 
         public ITransaction CreateStopLimitTransaction(decimal currentStopLimit, DateTime? closeTime = null)
         {
-            var symbol = Symbol.Cache.Get(Pair);
             var buyQuantity = -Transactions.First().Base.Quantity;
             var sellQuantity = Transactions.First().Base.Quantity * currentStopLimit;
             var feeQuantity = Transactions.First().Fee.Quantity;
-            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity), 
-                SellPosition.CreatePendingTransaction(sellQuantity), 
+            var transaction = CreateTransaction<StopLimitTransaction>(BuyPosition.CreatePendingTransaction(buyQuantity),
+                SellPosition.CreatePendingTransaction(sellQuantity),
                 FeePosition.CreatePendingTransaction(feeQuantity), currentStopLimit, closeTime);
             Transactions.Add(transaction);
             return transaction;
@@ -130,7 +129,7 @@ namespace CryptoTrading.App.Core.Trade
             t.TransactionDate = transactionDT ?? DateTime.Now;
             return t;
         }
-        public void UpdateCurrentTransaction(Order order)
+        public void UpdateCurrentTransaction(ExchangeOrder order)
         {
             if (CurrentTransaction != null)
             {
@@ -139,4 +138,3 @@ namespace CryptoTrading.App.Core.Trade
         }
     }
 }
- 

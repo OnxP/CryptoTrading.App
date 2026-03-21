@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance;
-using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,7 +19,7 @@ namespace CryptoTrading.App.Process
         private Func<IAlgorithm> Algorithm { get; set; }
         private IConfig Config { get; }
         private IAccountConfig AccountConfig { get; set; }
-        private List<Symbol> Symbols { get; set; }
+        private List<ExchangeSymbol> Symbols { get; set; }
         public CryptoProcess(CryptoDbConfigContext context)
         {
             Config = context.CryptoConfigs.First(x => x.Id == 1);
@@ -88,7 +87,7 @@ namespace CryptoTrading.App.Process
             var symbols = await AccountConfig.LoadCurrencies();
             if (ProcessHelper.HasSymbols(true,Symbols, symbols, out var newSymbols))
             {
-                newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x));
+                newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x.BaseAsset));
                 ProcessHelper.WireMarketDataEvents(MarketData, newSymbols, Config, Algorithm);
             }
 

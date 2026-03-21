@@ -1,18 +1,23 @@
 ﻿using System;
-using System.Threading;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Algorithm.StopLimits
 {
     class ManualTrailingStopLimit : StopLimitBase
     {
-        public ManualTrailingStopLimit(decimal risk, decimal increment)
+        public ManualTrailingStopLimit(decimal risk, decimal increment) : base()
         {
             Risk = risk/100;
             Increment = increment / 100m;
         }
 
-        public override void Configure(Order order)
+        public ManualTrailingStopLimit(decimal risk, decimal increment, ISymbolCache symbolCache) : base(symbolCache)
+        {
+            Risk = risk/100;
+            Increment = increment / 100m;
+        }
+
+        public override void Configure(ExchangeOrder order)
         {
             //set stopLimitValue to 10% of current price.
             IsOpen = true;
@@ -32,17 +37,17 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             //StopLimitPrice += Multiple * Increment;
             //TargetPrice *= (1+ Increment);
             //StopLimitPrice *= (1+ Increment);
-            var symbol = Symbol.Cache.Get(Symbol.Cache.Get(Pair));
+            var tickSize = _symbolCache.Get(Pair).TickSize;
 
-            TargetPrice = AdjustForMinimum(symbol.Price,  Multiple + TargetPrice, MidpointRounding.ToPositiveInfinity);
-            var sl = AdjustForMinimum(symbol.Price, StopLimitPrice + Multiple, MidpointRounding.ToPositiveInfinity);
+            TargetPrice = AdjustForMinimum(tickSize,  Multiple + TargetPrice, MidpointRounding.ToPositiveInfinity);
+            var sl = AdjustForMinimum(tickSize, StopLimitPrice + Multiple, MidpointRounding.ToPositiveInfinity);
 
-            StopLimitPrice = CurrentPrice > sl ? sl : AdjustForMinimum(symbol.Price, CurrentPrice - Multiple, MidpointRounding.ToPositiveInfinity);
+            StopLimitPrice = CurrentPrice > sl ? sl : AdjustForMinimum(tickSize, CurrentPrice - Multiple, MidpointRounding.ToPositiveInfinity);
         }
-        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)
+        private decimal AdjustForMinimum(decimal increment, decimal calculateQuantity, MidpointRounding rounding)
         {
             //return calculateQuantity;
-            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
+            int precision = (int)Math.Round(-Math.Log10((double)increment), 0);
             return Decimal.Round(calculateQuantity, precision, rounding);
         }
     }

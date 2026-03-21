@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
@@ -10,11 +10,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class PriceAction9TradingStrategy : TradingStrategy
     {
-        public PriceAction9TradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public PriceAction9TradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
 
-        public PriceAction9TradingStrategy (ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        public PriceAction9TradingStrategy (ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
         {
             noOfTrades = NoOfTrades;
         }
@@ -64,7 +64,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             _average = AverageCandleSize(candles);
             return base.Calculate(closePrices, StopLimitTrackers);
         }
-        public decimal AverageCandleSize(List<Candlestick> Candles)
+        public decimal AverageCandleSize(List<ExchangeCandlestick> Candles)
         {
             decimal AverageCandleSize = 0.0m;
             for (int i = 1; i < Candles.Count; ++i)
@@ -74,7 +74,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             AverageCandleSize /= ((decimal)(Candles.Count));
             return AverageCandleSize;
         }
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var atr = indicatorOutputs["atr"][0].ToList();
             var close = indicatorOutputs["close"][0].ToList();

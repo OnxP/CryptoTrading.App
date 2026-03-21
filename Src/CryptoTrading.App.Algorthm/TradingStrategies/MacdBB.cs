@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdBB : TradingStrategy
     {
-        public MacdBB(ILogger<TradingStrategy> logger) : base(logger)
+        public MacdBB(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
 
@@ -30,7 +30,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var lower = indicatorOutputs["BBands"][0].ToList();
             var middle = indicatorOutputs["BBands"][1].ToList();

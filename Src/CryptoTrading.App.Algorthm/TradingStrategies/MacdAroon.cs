@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class MacdArroon : TradingStrategy
     {
-        public MacdArroon(ILogger<TradingStrategy> logger) : base(logger)
+        public MacdArroon(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
 
@@ -48,7 +48,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var macd = indicatorOutputs["MACD"][0].ToList();
             var signal = indicatorOutputs["MACD"][1].ToList();

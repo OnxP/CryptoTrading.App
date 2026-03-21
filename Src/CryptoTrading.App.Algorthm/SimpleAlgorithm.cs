@@ -1,6 +1,5 @@
-﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Core;
+﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
@@ -25,24 +24,26 @@ namespace CryptoTrading.App.Algorithm
         public string KeyValue { get; set; }
 
         public IConfig Config { get; set; }
+        private readonly ISymbolCache _symbolCache;
         public void Configure(IConfig config)
         {
             Config = config;
         }
-        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTracker)
-        { 
+        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTracker, ISymbolCache symbolCache)
+        {
             TradingStrategies = strategies;
             _candleSticks = new CandleStickDictionary(NumberOfCandleSticksToKeep);
             StopLimitTracker = stopLimitTracker;
             Logger = logger;
+            _symbolCache = symbolCache;
             KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
         }
-        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTracker, IKey key):this(strategies,logger,stopLimitTracker)
+        public SimpleAlgorithm(ITradingStrategy strategies, ILogger<SimpleAlgorithm> logger, IStopLimitTracker stopLimitTracker, ISymbolCache symbolCache, IKey key):this(strategies,logger,stopLimitTracker,symbolCache)
         {
             KeyValue = key.KeyValue;
         }
 
-        public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
+        public void ProcessHistoricMarketData(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             //want to reduce dependancy on the candle stick object=> may need to create my own.
             _candleSticks.AddRange(candlesticks);
@@ -57,7 +58,7 @@ namespace CryptoTrading.App.Algorithm
 
 
 
-        public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
+        public void ProcessLiveCandleStick(ExchangeCandlestickEvent candlestickEventArgs)
         {
             try
             {
@@ -65,7 +66,7 @@ namespace CryptoTrading.App.Algorithm
                 if (!candlestickEventArgs.IsFinal) return;
                 _candleSticks.Add(candlestickEventArgs.Candlestick);
                 //Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteAssetVolume,candlestickEventArgs.Candlestick.NumberOfTrades);
+                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteVolume,candlestickEventArgs.Candlestick.NumberOfTrades);
                 //Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
                 if (request==null) return;
                 if (request.Amount <= 0) return;
@@ -93,13 +94,13 @@ namespace CryptoTrading.App.Algorithm
 
             var result = TradingStrategies.Calculate(_candleSticks, StopLimitTracker);
             
-            if(result == 0) return RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
+            if(result == 0) return RequestBuilder.BuildTradeRequest(_symbolCache, result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
 
 
             
             result = (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades;
             //need access to config here.
-            var request = RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
+            var request = RequestBuilder.BuildTradeRequest(_symbolCache, result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
 
             return request;
         }

@@ -1,5 +1,5 @@
 ﻿using System;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class PsarMacdTradingStrategy : TradingStrategy
     {
-        public PsarMacdTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public PsarMacdTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
 
@@ -42,7 +42,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         public bool newTradingOppertunity = false;
         public double lastSellPsar;
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var ema = indicatorOutputs["ema"][0].ToList();
             var macd = indicatorOutputs["macd"][0].ToList();

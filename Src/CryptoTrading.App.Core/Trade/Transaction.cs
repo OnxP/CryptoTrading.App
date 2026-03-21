@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 
 namespace CryptoTrading.App.Core.Trade
@@ -13,7 +13,7 @@ namespace CryptoTrading.App.Core.Trade
         public TransactionLeg Base { get; set; }
         public TransactionLeg Fee { get; set; }
         public DateTime TransactionDate { get; set; }
-        public Order Order { get; private set; }
+        public ExchangeOrder Order { get; private set; }
 
         internal void SetTransactionStatus(TransactionLegStatus status)
         {
@@ -22,42 +22,41 @@ namespace CryptoTrading.App.Core.Trade
             Fee.Status = status;
         }
 
-        public void UpdateOrder(Order order)
+        public void UpdateOrder(ExchangeOrder order)
         {
             Order = order;
             switch (order.Status)
             {
-                case OrderStatus.New:
+                case ExchangeOrderStatus.New:
                     break;
-                case OrderStatus.PartiallyFilled:
+                case ExchangeOrderStatus.PartiallyFilled:
                     //wait for fill fill.
                     break;
-                case OrderStatus.Filled:
+                case ExchangeOrderStatus.Filled:
                     UpdateTransactions(order);
                     SetTransactionStatus(TransactionLegStatus.Completed);
                     Status = TransactionStatus.Completed;
                     break;
-                case OrderStatus.Canceled:
-                case OrderStatus.PendingCancel:
-                case OrderStatus.Rejected:
-                case OrderStatus.Expired:
+                case ExchangeOrderStatus.Cancelled:
+                case ExchangeOrderStatus.Rejected:
+                case ExchangeOrderStatus.Expired:
                     SetTransactionStatus(TransactionLegStatus.Cancelled);
                     Status = TransactionStatus.Cancelled;
                     break;
             }
         }
 
-        private void UpdateTransactions(Order order)
+        private void UpdateTransactions(ExchangeOrder order)
         {
-            if(order.Side == OrderSide.Buy)
+            if(order.Side == ExchangeOrderSide.Buy)
             {
-                Base.Quantity = order.ExecutedQuantity;
-                Quote.Quantity = -order.CummulativeQuoteAssetQuantity;
+                Base.Quantity = order.FilledQuantity;
+                Quote.Quantity = -order.QuoteQuantity;
             }
-            if (order.Side == OrderSide.Sell)
+            if (order.Side == ExchangeOrderSide.Sell)
             {
-                Base.Quantity = -order.ExecutedQuantity;
-                Quote.Quantity = order.CummulativeQuoteAssetQuantity;
+                Base.Quantity = -order.FilledQuantity;
+                Quote.Quantity = order.QuoteQuantity;
             }
 
         }

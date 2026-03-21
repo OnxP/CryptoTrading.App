@@ -1,14 +1,11 @@
-﻿using CryptoTrading.App.Core;
+using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.TradeRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance;
-using Binance.Client;
-using Binance.Utility;
-using Binance.WebSocket;
 using CryptoTrading.App.Core.RequestTracker;
 using Microsoft.Extensions.Logging;
 
@@ -19,20 +16,14 @@ namespace CryptoTrading.App.MarketData
         public DateTime From { get; set; }
         public DateTime To { get; set; }
 
-        readonly ICandlestickClient _client;
-        readonly IBinanceWebSocketStream _webSocket;
-        IBinanceApi _api;
+        IExchangeProvider _provider;
         public ILogger<LiveMarketData> Logger { get; set; }
         public bool loadHistoric = true;
 
-        public LiveMarketData(ILogger<LiveMarketData> logger, IBinanceApi api, ICandlestickClient candlestickClient, IBinanceWebSocketStream webSocket)
+        public LiveMarketData(ILogger<LiveMarketData> logger, IExchangeProvider provider)
         {
             Logger = logger;
-            _api = api;
-            _client = candlestickClient;
-            _webSocket = webSocket;
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
-            _webSocket.PostMessage += (s, e) => RequestTracker.Instance.SubmitRequests();
+            _provider = provider;
         }
 
         public override void Configure(IConfig request)
@@ -42,20 +33,28 @@ namespace CryptoTrading.App.MarketData
                 LoadHistoricCandleSticks(request);
                 loadHistoric = false;
             }
-            _client.Unsubscribe();
+            _provider.UnsubscribeAllAsync().Wait();
             foreach (var subscriber in subscribers)
             {
-                _client.Subscribe(subscriber.Key.symbol, subscriber.Key.interval, subscriber.Value.First());
+                _provider.SubscribeCandlestickAsync(subscriber.Key.symbol, subscriber.Key.interval, candle =>
+                {
+                    var evt = new ExchangeCandlestickEvent
+                    {
+                        EventTime = DateTime.UtcNow,
+                        Candlestick = candle,
+                        FirstTradeId = 0,
+                        LastTradeId = 0,
+                        IsFinal = true
+                    };
+                    subscriber.Value.First()(evt);
+                }).Wait();
             }
-
-            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
         }
 
         public ITaskController GetTaskController()
         {
-            var controller = new RetryTaskController(_webSocket.StreamAsync);
-            controller.Error += (s, e) => HandleError(e.Exception);
-            return controller;
+            // The provider handles streaming internally; return a simple task controller
+            throw new NotImplementedException("WebSocket streaming is now managed by IExchangeProvider");
         }
 
         public void LoadHistoricCandleSticks(IConfig config)
@@ -64,7 +63,7 @@ namespace CryptoTrading.App.MarketData
             var tasks = new List<Task>();
             foreach (var item in historicDataSubscribers)
             {
-                tasks.Add(LoadHistoricData(_api, item.Key, config.NumberOfCandleSticksToLoad, item.Value));
+                tasks.Add(LoadHistoricData(_provider, item.Key, config.NumberOfCandleSticksToLoad, item.Value));
             }
 
             Task.WaitAll(tasks.ToArray());
@@ -75,10 +74,10 @@ namespace CryptoTrading.App.MarketData
             Logger.LogInformation("Loading Candlesticks");
         }
 
-        private async System.Threading.Tasks.Task LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, int numberOfCandleSticks, IList<Action<IEnumerable<Candlestick>>> callback)
+        private async System.Threading.Tasks.Task LoadHistoricData(IExchangeProvider provider, (string symbol, CandleInterval interval) symbol, int numberOfCandleSticks, IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
             var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, symbol.interval, numberOfCandleSticks).ToUniversalTime();
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, DateTime.Now.ToUniversalTime());
+            var candleSticks = await provider.GetCandlesticksAsync(symbol.symbol, symbol.interval, calculatedFrom, DateTime.Now.ToUniversalTime());
             //need to drop first candle
             var sticks = candleSticks.Reverse();
             foreach (var action in callback)

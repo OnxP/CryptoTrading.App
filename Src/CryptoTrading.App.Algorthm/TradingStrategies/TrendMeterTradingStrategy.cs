@@ -1,5 +1,5 @@
 ﻿using System;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -9,10 +9,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 {
     public class TrendMeterTradingStrategy : TradingStrategy
     {
-        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger) : base(logger)
+        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache) : base(logger, symbolCache)
         {
         }
-        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger, double NoOfTrades) : this(logger)
+        public TrendMeterTradingStrategy(ILogger<TradingStrategy> logger, ISymbolCache symbolCache, double NoOfTrades) : this(logger, symbolCache)
         {
             noOfTrades = NoOfTrades;
         }
@@ -34,7 +34,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
 
             ///change to hull suit and boom pro

@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Trade;
 using System;
 
@@ -11,13 +11,13 @@ namespace CryptoTrading.App.Core.TradeRequest
         public decimal QuoteClosePrice { get; internal set; }
         public DateTime? RequestDateTime { get; set; }
         public IStopLimitTracker StopLimitTracker { get; set; }
-        public CandlestickInterval Interval { get ; set; }
+        public CandleInterval Interval { get ; set; }
         public decimal QuoteQuantity { get; set; }
         public decimal BaseQuantity { get; set; }
-    
+
         public bool Validate(decimal freeAmount, decimal nonFreeAmount)
         {
-            //calculate quantity and stoploss limits 
+            //calculate quantity and stoploss limits
             var q = !FixedAmount ? (freeAmount +nonFreeAmount) * (decimal)Amount : (decimal)Amount;
 
             if (q > Volume * VolumeLimit)
@@ -25,12 +25,12 @@ namespace CryptoTrading.App.Core.TradeRequest
                 q = Volume * VolumeLimit;
             }
 
-            QuoteQuantity = AdjustForMinimum(Pair.Price, q, MidpointRounding.ToZero);
-            BaseQuantity = AdjustForMinimum(Pair.Quantity, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
+            QuoteQuantity = AdjustForMinimum(Pair.TickSize, q, MidpointRounding.ToZero);
+            BaseQuantity = AdjustForMinimum(Pair.StepSize, QuoteQuantity / QuoteClosePrice, MidpointRounding.ToZero); //btc
 
-            var res = QuoteQuantity > Pair.NotionalMinimumValue && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
+            var res = QuoteQuantity > Pair.MinNotional && CheckFee(BaseQuantity , QuoteClosePrice - StopLimitTracker.StopLimitPrice,QuoteQuantity);
             return res;
-            //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.Price.Increment);
+            //StopLimitTracker.Multiple = Math.Max(StopLimitTracker.Multiple, Pair.TickSize);
             //StopLimitTracker.SetLimits(QuoteClosePrice);
         }
 
@@ -40,18 +40,18 @@ namespace CryptoTrading.App.Core.TradeRequest
             return quoteQuantity * 0.002m < (Math.Abs(priceDiff) * baseQuantity);
         }
 
-        private decimal AdjustForMinimum(InclusiveRange symbolQuantity, decimal calculateQuantity,MidpointRounding rounding)
+        private decimal AdjustForMinimum(decimal increment, decimal calculateQuantity, MidpointRounding rounding)
         {
             //return calculateQuantity;
-            int precision = (int)Math.Round(-Math.Log10((double)symbolQuantity.Increment), 0);
+            int precision = (int)Math.Round(-Math.Log10((double)increment), 0);
             return Decimal.Round(calculateQuantity, precision, rounding);
         }
 
         public bool FixedAmount { get; set; }
         public double Amount { get; set; }
         public decimal Volume { get; set; }
-        
+
         public decimal VolumeLimit { get; set; }
-        public Symbol Pair { get; set; }
+        public ExchangeSymbol Pair { get; set; }
     }
 }

@@ -1,10 +1,10 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core.TradeRequest
 {
     public interface IMarketRequest : IRequest
     {
-        OrderSide? OrderType { get; }
+        ExchangeOrderSide? OrderType { get; }
         decimal Quantity { get; }
         decimal Price { get; }
     }

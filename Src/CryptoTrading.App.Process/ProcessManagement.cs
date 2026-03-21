@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Utility;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Process

@@ -1,5 +1,4 @@
-﻿using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
@@ -33,7 +32,7 @@ namespace CryptoTrading.App.Monitor
 
         public DateTime currentCloseTime { get; set; }
 
-        public async void ProcessCandleStick(CandlestickEventArgs candleStick)
+        public async void ProcessCandleStick(ExchangeCandlestickEvent candleStick)
         {
             var closePrice = candleStick.Candlestick.Close;
             Trade.CurrentPrice = closePrice;
@@ -53,7 +52,7 @@ namespace CryptoTrading.App.Monitor
                     Trade.CurrentTransaction.TransactionDate = currentCloseTime;
                     Tracker.EndDateTime = currentCloseTime;
                     Trade.Open = false;
-                    
+
                     //unsubscribe to monitor
                     marketMonitor.UnSubscribe(candleStick.Candlestick.Symbol, KeyValue);
                     Tracker.IsOpen = false;
@@ -72,10 +71,10 @@ namespace CryptoTrading.App.Monitor
                 {
                     //partial fill of the order. should just continue...
                 }
-                
+
             }
 
-            
+
             DbCandleStickManagement.PauseFlow = false;
         }
 
@@ -89,14 +88,14 @@ namespace CryptoTrading.App.Monitor
         private void Dispose()
         {
             Tracker.Close();
-            
+
             marketMonitor = null;
         }
 
         private void CreateNewStopLimitOrder()
         {
             Trade.CreateStopLimitTransaction(Tracker.StopLimitPrice,currentCloseTime);
-            
+
             IStopLimitRequest request = new StopLimitRequest(Trade.CurrentTransaction);
             //request.StopPrice = request.Price;
             MessageBroker.Instance.Publish(KeyValue,Trade.CurrentTransaction, request);
@@ -108,9 +107,9 @@ namespace CryptoTrading.App.Monitor
             try
             {
                 long orderId = 0;
-                if (Trade.CurrentTransaction.Order != null && Trade.CurrentTransaction.Order.Id != null )
+                if (Trade.CurrentTransaction.Order != null && Trade.CurrentTransaction.Order.OrderId != null )
                 {
-                    orderId = Trade.CurrentTransaction.Order.Id;
+                    orderId = long.Parse(Trade.CurrentTransaction.Order.OrderId);
                     ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
                     MessageBroker.Instance.Publish(KeyValue, Trade.CurrentTransaction, request);
 
@@ -120,7 +119,7 @@ namespace CryptoTrading.App.Monitor
                     count++;
                     CancelLimitOrder(count);
                 }
-                
+
             }
             catch
             {
@@ -145,10 +144,10 @@ namespace CryptoTrading.App.Monitor
             CreateNewStopLimitOrder();
         }
 
-        public void UpdateInitialTransaction(Order order)
+        public void UpdateInitialTransaction(ExchangeOrder order)
         {
             Trade.UpdateCurrentTransaction(order);
-            if (order.Status == OrderStatus.Filled)
+            if (order.Status == ExchangeOrderStatus.Filled)
             {
                 Tracker.Configure(order);
             }
@@ -163,7 +162,7 @@ namespace CryptoTrading.App.Monitor
             //CreateNewStopLimitOrder();
         }
 
-        public void UpdateStopLimitOrder(Order order)
+        public void UpdateStopLimitOrder(ExchangeOrder order)
         {
             Trade.UpdateCurrentTransaction(order);//order not updated properly.
         }

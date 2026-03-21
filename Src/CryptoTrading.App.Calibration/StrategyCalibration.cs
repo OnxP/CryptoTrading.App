@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Extensions;
@@ -29,7 +29,7 @@ namespace CryptoTrading.App.Calibration
         private IConfig Config { get; }
         private IMarketData MarketData { get; }
 
-        public void WireMarketDataEvents(List<Symbol> symbols)
+        public void WireMarketDataEvents(List<ExchangeSymbol> symbols)
         {
             var interval = Config.Interval;
 
@@ -38,17 +38,17 @@ namespace CryptoTrading.App.Calibration
                 //need to create a unique instance of algo
                 var algorithm = Algorithm.Invoke();
                 algorithm.Configure(Config);
-                MarketData.InitialDataLoadSubscribe(symbol, interval, algorithm.ProcessHistoricMarketData);
-                MarketData.InitialDataStreamSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
+                MarketData.InitialDataLoadSubscribe(symbol.Ticker, interval, algorithm.ProcessHistoricMarketData);
+                MarketData.InitialDataStreamSubscribe(symbol.Ticker, interval, algorithm.ProcessLiveCandleStick);
             }
         }
-        public void RemoveMarketDataEvents(List<Symbol> removeSymbols)
+        public void RemoveMarketDataEvents(List<ExchangeSymbol> removeSymbols)
         {
             var interval = Config.Interval;
             foreach (var symbol in removeSymbols)
             {
-                MarketData.InitialDataLoadUnSubscribe(symbol, interval);
-                MarketData.InitialDataStreamUnSubscribe(symbol, interval);
+                MarketData.InitialDataLoadUnSubscribe(symbol.Ticker, interval);
+                MarketData.InitialDataStreamUnSubscribe(symbol.Ticker, interval);
             }
         }
         public static ServiceProvider BuildServices(IConfig config)

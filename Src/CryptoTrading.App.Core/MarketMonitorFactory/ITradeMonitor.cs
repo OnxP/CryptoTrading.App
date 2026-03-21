@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Core.MarketMonitorFactory
@@ -10,9 +10,9 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
         string KeyValue { get; set; }
 
         ITrade Trade { get; }
-        void UpdateInitialTransaction(Order order);
+        void UpdateInitialTransaction(ExchangeOrder order);
         void CancelLimitOrder(string order);
-        void UpdateStopLimitOrder(Order order);
+        void UpdateStopLimitOrder(ExchangeOrder order);
         void AddTrade(ITrade trade);
     }
 }

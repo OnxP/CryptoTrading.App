@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Trade;
 using System;
 
@@ -6,10 +6,10 @@ namespace CryptoTrading.App.Core.TradeRequest
 {
     public static class RequestBuilder
     {
-        public static ITradeRequest BuildTradeRequest(double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume, decimal volumeLimit)
+        public static ITradeRequest BuildTradeRequest(ISymbolCache symbolCache, double result,bool fixedAmount, string ticker, decimal close, DateTime dateTime, IStopLimitTracker stopLimitTracker, decimal volume, decimal volumeLimit)
         {
             var tradeRequest = new MarketTradeRequest();
-            tradeRequest.Pair = Symbol.Cache.Get(ticker);
+            tradeRequest.Pair = symbolCache.Get(ticker);
             tradeRequest.QuoteClosePrice = close;
             tradeRequest.FixedAmount = fixedAmount;
             tradeRequest.Amount = result;

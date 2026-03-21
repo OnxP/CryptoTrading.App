@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
-using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
     public interface IAlgorithm
     {
-        public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks);
-        public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs);
+        public void ProcessHistoricMarketData(IEnumerable<ExchangeCandlestick> candlesticks);
+        public void ProcessLiveCandleStick(ExchangeCandlestickEvent candlestickEventArgs);
         void Configure(IConfig config);
     }
 }

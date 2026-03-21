@@ -3,8 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 
@@ -18,13 +17,13 @@ namespace CryptoTrading.App.Core.RequestTracker
         {
             get
             {
-                if (_instance == null) CandleSticks = new ConcurrentDictionary<string, CandlestickEventArgs>();
+                if (_instance == null) CandleSticks = new ConcurrentDictionary<string, ExchangeCandlestickEvent>();
                 return _instance ??= new CandleStickTracker();
             }
         }
 
         //store up the request here.
-        public static ConcurrentDictionary<string, CandlestickEventArgs> CandleSticks 
+        public static ConcurrentDictionary<string, ExchangeCandlestickEvent> CandleSticks 
         {
             get;
             set;
@@ -40,7 +39,7 @@ namespace CryptoTrading.App.Core.RequestTracker
             }
         }
 
-        public void UpdateCandleStick(CandlestickEventArgs candlestick)
+        public void UpdateCandleStick(ExchangeCandlestickEvent candlestick)
         {
             if (CandleSticks.ContainsKey(candlestick.Candlestick.Symbol)) 
                 CandleSticks.TryRemove(candlestick.Candlestick.Symbol, out _);

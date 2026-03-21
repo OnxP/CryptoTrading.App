@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Trade;
 
 namespace CryptoTrading.App.Process
 {
     internal class ProcessHelper
     {
-        public static void WireMarketDataEvents(IMarketDataEvents marketData, List<Symbol> symbols, IConfig config, Func<IAlgorithm> getAlgorithm)
+        public static void WireMarketDataEvents(IMarketDataEvents marketData, List<ExchangeSymbol> symbols, IConfig config, Func<IAlgorithm> getAlgorithm)
         {
             var interval = config.Interval;
 
@@ -18,17 +18,17 @@ namespace CryptoTrading.App.Process
                 //need to create a unique instance of algo
                 var algorithm = getAlgorithm.Invoke();
                 algorithm.Configure(config);
-                marketData.InitialDataLoadSubscribe(symbol, interval, algorithm.ProcessHistoricMarketData);
-                marketData.InitialDataStreamSubscribe(symbol, interval, algorithm.ProcessLiveCandleStick);
+                marketData.InitialDataLoadSubscribe(symbol.Ticker, interval, algorithm.ProcessHistoricMarketData);
+                marketData.InitialDataStreamSubscribe(symbol.Ticker, interval, algorithm.ProcessLiveCandleStick);
             }
         }
-        public static void RemoveMarketDataEvents(IMarketDataEvents marketData, List<Symbol> removeSymbols, IConfig config)
+        public static void RemoveMarketDataEvents(IMarketDataEvents marketData, List<ExchangeSymbol> removeSymbols, IConfig config)
         {
             var interval = config.Interval;
             foreach (var symbol in removeSymbols)
             {
-                marketData.InitialDataLoadUnSubscribe(symbol, interval);
-                marketData.InitialDataStreamUnSubscribe(symbol, interval);
+                marketData.InitialDataLoadUnSubscribe(symbol.Ticker, interval);
+                marketData.InitialDataStreamUnSubscribe(symbol.Ticker, interval);
             }
         }
 
@@ -42,7 +42,7 @@ namespace CryptoTrading.App.Process
             return historicTrades;
         }
 
-        public static bool HasSymbols(bool added, List<Symbol> currentSymbols, List<Symbol> newSymbols, out List<Symbol> symbols)
+        public static bool HasSymbols(bool added, List<ExchangeSymbol> currentSymbols, List<ExchangeSymbol> newSymbols, out List<ExchangeSymbol> symbols)
         {
             symbols = added ? newSymbols.Except(currentSymbols).ToList() : currentSymbols.Except(newSymbols).ToList();
             return symbols.Any();

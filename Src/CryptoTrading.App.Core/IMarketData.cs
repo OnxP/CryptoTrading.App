@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Utility;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {

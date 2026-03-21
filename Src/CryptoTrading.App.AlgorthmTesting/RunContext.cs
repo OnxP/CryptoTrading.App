@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Algorithm;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Broker;
@@ -40,7 +40,7 @@ namespace CryptoTrading.App.AlgorithmTesting
         public void RunApp(ServiceProvider masterServices)
         {
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
-            foreach (Symbol item in Symbol.BtcPairs)
+            foreach (var item in symbols)
             {
                 AddPosition(item.BaseAsset, dictionaryPositions);
             }
@@ -66,7 +66,7 @@ namespace CryptoTrading.App.AlgorithmTesting
                     .BuildServiceProvider();
             var serviceScopeFactory = services.GetRequiredService<IServiceScopeFactory>();
             _scope = serviceScopeFactory.CreateScope();
-            
+
                 //Service1
             WireMarketDataEvents(marketData, services);
             //Service2
@@ -74,7 +74,7 @@ namespace CryptoTrading.App.AlgorithmTesting
             //Service3
 
             tradeMonitor = _scope.ServiceProvider.GetService<ITradeProcessor>();
-            
+
         }
 
         public void CompleteApp()
@@ -87,8 +87,8 @@ namespace CryptoTrading.App.AlgorithmTesting
             Console.WriteLine(PrintTrades(completedTrades));
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine(PrintSummary(tradeMonitor, completedTrades));
-            
-            File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{CustomText}_{NoOfTrades}_{Risk}_{Increment}.txt", 
+
+            File.WriteAllLines($@"C:\temp\{stratgy.FullName}\TradeResults_{CustomText}_{NoOfTrades}_{Risk}_{Increment}.txt",
                 new List<string>() { PrintTrades(completedTrades), Environment.NewLine, PrintSummary(tradeMonitor, completedTrades) });
             //Load to Database
 
@@ -119,305 +119,305 @@ namespace CryptoTrading.App.AlgorithmTesting
         private string PrintTrades(List<ITrade> trades)
         {
             return trades.ToStringTable(x => x.Pair,
-                x => x.StartPrice, //.FirstTransaction.Price.ToString("0.#########"), 
-                x => x.Price,//.CurrentTransaction.Price.ToString("0.#########"), 
-                x => x.Quantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 
-                x => x.StartDate, //FirstTransaction.TransactionDate.ToString(), 
-                x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(), 
+                x => x.StartPrice, //.FirstTransaction.Price.ToString("0.#########"),
+                x => x.Price,//.CurrentTransaction.Price.ToString("0.#########"),
+                x => x.Quantity, //CurrentTransaction.Base.Quantity.ToString("0.####"),
+                x => x.StartDate, //FirstTransaction.TransactionDate.ToString(),
+                x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(),
                 x => x.Profit);
         }
 
-        List<Symbol> symbols
+        List<ExchangeSymbol> symbols
         {
             get
             {
-                return new List<Symbol>()
+                return new List<ExchangeSymbol>()
             {
-Symbol.SOL_BTC
-,Symbol.FET_BTC
-,Symbol.MDA_BTC
-,Symbol.VIDT_BTC
-,Symbol.SUSHI_BTC
-,Symbol.RUNE_BTC
-,Symbol.TROY_BTC
-,Symbol.ARPA_BTC
-,Symbol.AAVE_BTC
-,Symbol.FXS_BTC
-,Symbol.LIT_BTC
-,Symbol.NANO_BTC
-,Symbol.TRX_BTC
-,Symbol.AXS_BTC
-,Symbol.ANKR_BTC
-,Symbol.PERP_BTC
-,Symbol.MATIC_BTC
-,Symbol.VIB_BTC
-,Symbol.WNXM_BTC
-,Symbol.NKN_BTC
-,Symbol.BNB_BTC
-,Symbol.BNT_BTC
-,Symbol.GRT_BTC
-,Symbol.TCT_BTC
-,Symbol.STRAX_BTC
-,Symbol.QKC_BTC
-,Symbol.DUSK_BTC
-,Symbol.NXS_BTC
-,Symbol.CELO_BTC
-,Symbol.GXS_BTC
-,Symbol.SRM_BTC
-,Symbol.PHA_BTC
-,Symbol.AUCTION_BTC
-,Symbol.HIVE_BTC
-,Symbol.POWR_BTC
-,Symbol.DNT_BTC
-,Symbol.RCN_BTC
-,Symbol.PHB_BTC
-,Symbol.SUSD_BTC
-,Symbol.RVN_BTC
-,Symbol.ORN_BTC
-,Symbol.ATOM_BTC
-,Symbol.DIA_BTC
-,Symbol.JUV_BTC
-,Symbol.CTSI_BTC
-,Symbol.NAS_BTC
-,Symbol.BRD_BTC
-,Symbol.CND_BTC
-,Symbol.STORJ_BTC
-,Symbol.ARK_BTC
-,Symbol.CHZ_BTC
-,Symbol.UMA_BTC
-,Symbol.KMD_BTC
-,Symbol.FIL_BTC
-,Symbol.BCH_BTC
-,Symbol.VET_BTC
-,Symbol.SYS_BTC
-,Symbol.YFII_BTC
-,Symbol.RDN_BTC
-,Symbol.SUPER_BTC
-,Symbol.KAVA_BTC
-,Symbol.RSR_BTC
-,Symbol.DCR_BTC
-,Symbol.XVS_BTC
-,Symbol.BEL_BTC
-,Symbol.FUN_BTC
-,Symbol.IOST_BTC
-,Symbol.WRX_BTC
-,Symbol.SAND_BTC
-,Symbol.JST_BTC
-,Symbol.OM_BTC
-,Symbol.SUN_BTC
-,Symbol.FIO_BTC
-,Symbol.PNT_BTC
-,Symbol.GLM_BTC
-,Symbol.TRB_BTC
-,Symbol.POND_BTC
-,Symbol.WTC_BTC
-,Symbol.ONT_BTC
-,Symbol.DOGE_BTC
-,Symbol.WPR_BTC
-,Symbol.FLM_BTC
-,Symbol.WBTC_BTC
-,Symbol.MTL_BTC
-,Symbol.TOMO_BTC
-,Symbol.CFX_BTC
-,Symbol.QTUM_BTC
-,Symbol.POA_BTC
-,Symbol.DATA_BTC
-,Symbol.THETA_BTC
-,Symbol.UTK_BTC
-,Symbol.GO_BTC
-,Symbol.VIA_BTC
-,Symbol.HARD_BTC
-,Symbol.CKB_BTC
-,Symbol.GRS_BTC
-,Symbol.KSM_BTC
-,Symbol.LRC_BTC
-,Symbol.STX_BTC
-,Symbol.IOTX_BTC
-,Symbol.CRV_BTC
-,Symbol.CTK_BTC
-,Symbol.OG_BTC
-,Symbol.UNFI_BTC
-,Symbol.GAS_BTC
-,Symbol.QSP_BTC
-,Symbol.RIF_BTC
-,Symbol.MDT_BTC
-,Symbol.FRONT_BTC
-,Symbol.ONG_BTC
-,Symbol.ADA_BTC
-,Symbol.CAKE_BTC
-,Symbol.PSG_BTC
-,Symbol.PIVX_BTC
-,Symbol.BQX_BTC
-,Symbol.SNT_BTC
-,Symbol.XLM_BTC
-,Symbol.FTT_BTC
-,Symbol.SKY_BTC
-,Symbol.EGLD_BTC
-,Symbol.STPT_BTC
-,Symbol.AERGO_BTC
-,Symbol.BAT_BTC
-,Symbol.ZEC_BTC
-,Symbol.UNI_BTC
-,Symbol.BTS_BTC
-,Symbol.APPC_BTC
-,Symbol.REP_BTC
-,Symbol.CELR_BTC
-,Symbol.REN_BTC
-,Symbol.ONE_BTC
-,Symbol.GVT_BTC
-,Symbol.OST_BTC
-,Symbol.IRIS_BTC
-,Symbol.KNC_BTC
-,Symbol.MANA_BTC
-,Symbol.NULS_BTC
-,Symbol.NEBL_BTC
-,Symbol.TRU_BTC
-,Symbol.BAL_BTC
-,Symbol.NEAR_BTC
-,Symbol.COTI_BTC
-,Symbol.DLT_BTC
-,Symbol.XRP_BTC
-,Symbol.ASR_BTC
-,Symbol.YOYO_BTC
-,Symbol.ETH_BTC
-,Symbol.EOS_BTC
-,Symbol.HBAR_BTC
-,Symbol.AION_BTC
-,Symbol.DOCK_BTC
-,Symbol.LUNA_BTC
-,Symbol.NBS_BTC
-,Symbol.LINK_BTC
-,Symbol.MTH_BTC
-,Symbol.PPT_BTC
-,Symbol.DODO_BTC
-,Symbol.ETC_BTC
-,Symbol.TVK_BTC
-,Symbol.HNT_BTC
-,Symbol.PAXG_BTC
-,Symbol.ENJ_BTC
-,Symbol.STEEM_BTC
-,Symbol.ZIL_BTC
-,Symbol.BTG_BTC
-,Symbol.MKR_BTC
-,Symbol.YFI_BTC
-,Symbol.MITH_BTC
-,Symbol.LOOM_BTC
-,Symbol.ARDR_BTC
-,Symbol.IDEX_BTC
-,Symbol.SNGLS_BTC
-,Symbol.DGB_BTC
-,Symbol.OAX_BTC
-,Symbol.FTM_BTC
-,Symbol.AMB_BTC
-,Symbol.DOT_BTC
-,Symbol.FIRO_BTC
-,Symbol.CTXC_BTC
-,Symbol.BZRX_BTC
-,Symbol.SKL_BTC
-,Symbol.BADGER_BTC
-,Symbol.ELF_BTC
-,Symbol.OGN_BTC
-,Symbol.DEGO_BTC
-,Symbol.REQ_BTC
-,Symbol.AVAX_BTC
-,Symbol.XMR_BTC
-,Symbol.ALGO_BTC
-,Symbol.NMR_BTC
-,Symbol.ICX_BTC
-,Symbol.WING_BTC
-,Symbol.OCEAN_BTC
-,Symbol.OMG_BTC
-,Symbol.STMX_BTC
-,Symbol.AVA_BTC
-,Symbol.CVC_BTC
-,Symbol.IOTA_BTC
-,Symbol.VITE_BTC
-,Symbol.XTZ_BTC
-,Symbol.BTCST_BTC
-,Symbol.SNX_BTC
-,Symbol.PERL_BTC
-,Symbol.RENBTC_BTC
-,Symbol.DASH_BTC
-,Symbol.TFUEL_BTC
-,Symbol.CHR_BTC
-,Symbol.INJ_BTC
-,Symbol.SFP_BTC
-,Symbol.ATM_BTC
-,Symbol.LINA_BTC
-,Symbol.BCD_BTC
-,Symbol.QLC_BTC
-,Symbol.ADX_BTC
-,Symbol.RLC_BTC
-,Symbol.TWT_BTC
-,Symbol.INCH_BTC
-,Symbol.XVG_BTC
-,Symbol.NEO_BTC
-,Symbol.WABI_BTC
-,Symbol.SC_BTC
-,Symbol.AST_BTC
-,Symbol.WAVES_BTC
-,Symbol.AKRO_BTC
-,Symbol.ALICE_BTC
-,Symbol.RAMP_BTC
-,Symbol.POLY_BTC
-,Symbol.EVX_BTC
-,Symbol.FOR_BTC
-,Symbol.SCRT_BTC
-,Symbol.ALPHA_BTC
-,Symbol.CDT_BTC
-,Symbol.OXT_BTC
-,Symbol.BLZ_BTC
-,Symbol.LTC_BTC
-,Symbol.ZRX_BTC
-,Symbol.WAN_BTC
-,Symbol.ZEN_BTC
-,Symbol.NAV_BTC
-,Symbol.REEF_BTC
-,Symbol.LSK_BTC
-,Symbol.XEM_BTC
-,Symbol.ACM_BTC
-,Symbol.BAND_BTC
-,Symbol.COMP_BTC
-,Symbol.FIS_BTC
-,Symbol.ANT_BTC
-,Symbol.COS_BTC
-,Symbol.SXP_BTC
-,Symbol.BEAM_BTC
-,Symbol.AUDIO_BTC
-,Symbol.ROSE_BTC
-,Symbol.GTO_BTC
-,Symbol.LTO_BTC
+new ExchangeSymbol { Ticker = "SOLBTC", BaseAsset = "SOL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FETBTC", BaseAsset = "FET", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MDABTC", BaseAsset = "MDA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "VIDTBTC", BaseAsset = "VIDT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SUSHIBTC", BaseAsset = "SUSHI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RUNEBTC", BaseAsset = "RUNE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TROYBTC", BaseAsset = "TROY", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ARPABTC", BaseAsset = "ARPA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AAVEBTC", BaseAsset = "AAVE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FXSBTC", BaseAsset = "FXS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LITBTC", BaseAsset = "LIT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NANOBTC", BaseAsset = "NANO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TRXBTC", BaseAsset = "TRX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AXSBTC", BaseAsset = "AXS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ANKRBTC", BaseAsset = "ANKR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PERPBTC", BaseAsset = "PERP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MATICBTC", BaseAsset = "MATIC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "VIBBTC", BaseAsset = "VIB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WNXMBTC", BaseAsset = "WNXM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NKNBTC", BaseAsset = "NKN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BNBBTC", BaseAsset = "BNB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BNTBTC", BaseAsset = "BNT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GRTBTC", BaseAsset = "GRT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TCTBTC", BaseAsset = "TCT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "STRAXBTC", BaseAsset = "STRAX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "QKCBTC", BaseAsset = "QKC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DUSKBTC", BaseAsset = "DUSK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NXSBTC", BaseAsset = "NXS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CELOBTC", BaseAsset = "CELO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GXSBTC", BaseAsset = "GXS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SRMBTC", BaseAsset = "SRM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PHABTC", BaseAsset = "PHA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AUCTIONBTC", BaseAsset = "AUCTION", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "HIVEBTC", BaseAsset = "HIVE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "POWRBTC", BaseAsset = "POWR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DNTBTC", BaseAsset = "DNT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RCNBTC", BaseAsset = "RCN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PHBBTC", BaseAsset = "PHB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SUSDBTC", BaseAsset = "SUSD", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RVNBTC", BaseAsset = "RVN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ORNBTC", BaseAsset = "ORN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ATOMBTC", BaseAsset = "ATOM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DIABTC", BaseAsset = "DIA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "JUVBTC", BaseAsset = "JUV", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CTSIBTC", BaseAsset = "CTSI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NASBTC", BaseAsset = "NAS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BRDBTC", BaseAsset = "BRD", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CNDBTC", BaseAsset = "CND", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "STORJBTC", BaseAsset = "STORJ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ARKBTC", BaseAsset = "ARK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CHZBTC", BaseAsset = "CHZ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "UMABTC", BaseAsset = "UMA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "KMDBTC", BaseAsset = "KMD", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FILBTC", BaseAsset = "FIL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BCHBTC", BaseAsset = "BCH", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "VETBTC", BaseAsset = "VET", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SYSBTC", BaseAsset = "SYS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "YFIIBTC", BaseAsset = "YFII", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RDNBTC", BaseAsset = "RDN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SUPERBTC", BaseAsset = "SUPER", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "KAVABTC", BaseAsset = "KAVA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RSRBTC", BaseAsset = "RSR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DCRBTC", BaseAsset = "DCR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XVSBTC", BaseAsset = "XVS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BELBTC", BaseAsset = "BEL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FUNBTC", BaseAsset = "FUN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "IOSTBTC", BaseAsset = "IOST", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WRXBTC", BaseAsset = "WRX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SANDBTC", BaseAsset = "SAND", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "JSTBTC", BaseAsset = "JST", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OMBTC", BaseAsset = "OM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SUNBTC", BaseAsset = "SUN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FIOBTC", BaseAsset = "FIO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PNTBTC", BaseAsset = "PNT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GLMBTC", BaseAsset = "GLM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TRBBTC", BaseAsset = "TRB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PONDBTC", BaseAsset = "POND", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WTCBTC", BaseAsset = "WTC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ONTBTC", BaseAsset = "ONT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DOGEBTC", BaseAsset = "DOGE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WPRBTC", BaseAsset = "WPR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FLMBTC", BaseAsset = "FLM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WBTCBTC", BaseAsset = "WBTC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MTLBTC", BaseAsset = "MTL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TOMOBTC", BaseAsset = "TOMO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CFXBTC", BaseAsset = "CFX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "QTUMBTC", BaseAsset = "QTUM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "POABTC", BaseAsset = "POA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DATABTC", BaseAsset = "DATA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "THETABTC", BaseAsset = "THETA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "UTKBTC", BaseAsset = "UTK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GOBTC", BaseAsset = "GO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "VIABTC", BaseAsset = "VIA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "HARDBTC", BaseAsset = "HARD", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CKBBTC", BaseAsset = "CKB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GRSBTC", BaseAsset = "GRS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "KSMBTC", BaseAsset = "KSM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LRCBTC", BaseAsset = "LRC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "STXBTC", BaseAsset = "STX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "IOTXBTC", BaseAsset = "IOTX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CRVBTC", BaseAsset = "CRV", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CTKBTC", BaseAsset = "CTK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OGBTC", BaseAsset = "OG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "UNFIBTC", BaseAsset = "UNFI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GASBTC", BaseAsset = "GAS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "QSPBTC", BaseAsset = "QSP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RIFBTC", BaseAsset = "RIF", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MDTBTC", BaseAsset = "MDT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FRONTBTC", BaseAsset = "FRONT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ONGBTC", BaseAsset = "ONG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ADABTC", BaseAsset = "ADA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CAKEBTC", BaseAsset = "CAKE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PSGBTC", BaseAsset = "PSG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PIVXBTC", BaseAsset = "PIVX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BQXBTC", BaseAsset = "BQX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SNTBTC", BaseAsset = "SNT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XLMBTC", BaseAsset = "XLM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FTTBTC", BaseAsset = "FTT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SKYBTC", BaseAsset = "SKY", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "EGLDBTC", BaseAsset = "EGLD", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "STPTBTC", BaseAsset = "STPT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AEROBTC", BaseAsset = "AERGO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BATBTC", BaseAsset = "BAT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ZECBTC", BaseAsset = "ZEC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "UNIBTC", BaseAsset = "UNI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BTSBTC", BaseAsset = "BTS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "APPCBTC", BaseAsset = "APPC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "REPBTC", BaseAsset = "REP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CELRBTC", BaseAsset = "CELR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RENBTC", BaseAsset = "REN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ONEBTC", BaseAsset = "ONE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GVTBTC", BaseAsset = "GVT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OSTBTC", BaseAsset = "OST", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "IRISBTC", BaseAsset = "IRIS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "KNCBTC", BaseAsset = "KNC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MANABTC", BaseAsset = "MANA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NULSBTC", BaseAsset = "NULS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NEBLBTC", BaseAsset = "NEBL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TRUBTC", BaseAsset = "TRU", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BALBTC", BaseAsset = "BAL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NEARBTC", BaseAsset = "NEAR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "COTIBTC", BaseAsset = "COTI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DLTBTC", BaseAsset = "DLT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XRPBTC", BaseAsset = "XRP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ASRBTC", BaseAsset = "ASR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "YOYOBTC", BaseAsset = "YOYO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ETHBTC", BaseAsset = "ETH", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "EOSBTC", BaseAsset = "EOS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "HBARBTC", BaseAsset = "HBAR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AIONBTC", BaseAsset = "AION", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DOCKBTC", BaseAsset = "DOCK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LUNABTC", BaseAsset = "LUNA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NBSBTC", BaseAsset = "NBS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LINKBTC", BaseAsset = "LINK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MTHBTC", BaseAsset = "MTH", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PPTBTC", BaseAsset = "PPT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DODOBTC", BaseAsset = "DODO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ETCBTC", BaseAsset = "ETC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TVKBTC", BaseAsset = "TVK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "HNTBTC", BaseAsset = "HNT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PAXGBTC", BaseAsset = "PAXG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ENJBTC", BaseAsset = "ENJ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "STEEMBTC", BaseAsset = "STEEM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ZILBTC", BaseAsset = "ZIL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BTGBTC", BaseAsset = "BTG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MKRBTC", BaseAsset = "MKR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "YFIBTC", BaseAsset = "YFI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "MITHBTC", BaseAsset = "MITH", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LOOMBTC", BaseAsset = "LOOM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ARDRBTC", BaseAsset = "ARDR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "IDEXBTC", BaseAsset = "IDEX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SNGLSBTC", BaseAsset = "SNGLS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DGBBTC", BaseAsset = "DGB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OAXBTC", BaseAsset = "OAX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FTMBTC", BaseAsset = "FTM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AMBBTC", BaseAsset = "AMB", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DOTBTC", BaseAsset = "DOT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FIROBTC", BaseAsset = "FIRO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CTXCBTC", BaseAsset = "CTXC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BZRXBTC", BaseAsset = "BZRX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SKLBTC", BaseAsset = "SKL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BADGERBTC", BaseAsset = "BADGER", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ELFBTC", BaseAsset = "ELF", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OGNBTC", BaseAsset = "OGN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DEGOBTC", BaseAsset = "DEGO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "REQBTC", BaseAsset = "REQ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AVAXBTC", BaseAsset = "AVAX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XMRBTC", BaseAsset = "XMR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ALGOBTC", BaseAsset = "ALGO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NMRBTC", BaseAsset = "NMR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ICXBTC", BaseAsset = "ICX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WINGBTC", BaseAsset = "WING", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OCEANBTC", BaseAsset = "OCEAN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OMGBTC", BaseAsset = "OMG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "STMXBTC", BaseAsset = "STMX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AVABTC", BaseAsset = "AVA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CVCBTC", BaseAsset = "CVC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "IOTABTC", BaseAsset = "IOTA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "VITEBTC", BaseAsset = "VITE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XTZBTC", BaseAsset = "XTZ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BTCSTBTC", BaseAsset = "BTCST", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SNXBTC", BaseAsset = "SNX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "PERLBTC", BaseAsset = "PERL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RENBTCBTC", BaseAsset = "RENBTC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "DASHBTC", BaseAsset = "DASH", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TFUELBTC", BaseAsset = "TFUEL", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CHRBTC", BaseAsset = "CHR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "INJBTC", BaseAsset = "INJ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SFPBTC", BaseAsset = "SFP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ATMBTC", BaseAsset = "ATM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LINABTC", BaseAsset = "LINA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BCDBTC", BaseAsset = "BCD", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "QLCBTC", BaseAsset = "QLC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ADXBTC", BaseAsset = "ADX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RLCBTC", BaseAsset = "RLC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "TWTBTC", BaseAsset = "TWT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "1INCHBTC", BaseAsset = "1INCH", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XVGBTC", BaseAsset = "XVG", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NEOBTC", BaseAsset = "NEO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WABIBTC", BaseAsset = "WABI", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SCBTC", BaseAsset = "SC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ASTBTC", BaseAsset = "AST", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WAVESBTC", BaseAsset = "WAVES", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AKROBTC", BaseAsset = "AKRO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ALICEBTC", BaseAsset = "ALICE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "RAMPBTC", BaseAsset = "RAMP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "POLYBTC", BaseAsset = "POLY", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "EVXBTC", BaseAsset = "EVX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FORBTC", BaseAsset = "FOR", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SCRTBTC", BaseAsset = "SCRT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ALPHABTC", BaseAsset = "ALPHA", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "CDTBTC", BaseAsset = "CDT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "OXTBTC", BaseAsset = "OXT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BLZBTC", BaseAsset = "BLZ", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LTCBTC", BaseAsset = "LTC", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ZRXBTC", BaseAsset = "ZRX", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "WANBTC", BaseAsset = "WAN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ZENBTC", BaseAsset = "ZEN", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "NAVBTC", BaseAsset = "NAV", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "REEFBTC", BaseAsset = "REEF", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LSKBTC", BaseAsset = "LSK", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "XEMBTC", BaseAsset = "XEM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ACMBTC", BaseAsset = "ACM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BANDBTC", BaseAsset = "BAND", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "COMPBTC", BaseAsset = "COMP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "FISBTC", BaseAsset = "FIS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ANTBTC", BaseAsset = "ANT", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "COSBTC", BaseAsset = "COS", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "SXPBTC", BaseAsset = "SXP", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "BEAMBTC", BaseAsset = "BEAM", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "AUDIOBTC", BaseAsset = "AUDIO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "ROSEBTC", BaseAsset = "ROSE", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "GTOBTC", BaseAsset = "GTO", QuoteAsset = "BTC" }
+,new ExchangeSymbol { Ticker = "LTOBTC", BaseAsset = "LTO", QuoteAsset = "BTC" }
             };
             }
         }
 
         private void WireMarketDataEvents(IMarketData marketData, ServiceProvider services)
         {
-            var symbol = new List<Symbol>() { Symbol.ETH_BTC };
-            
+            var symbol = new List<ExchangeSymbol>() { new ExchangeSymbol { Ticker = "ETHBTC", BaseAsset = "ETH", QuoteAsset = "BTC" } };
 
-            List<CandlestickInterval> intervals = new List<CandlestickInterval>()
+
+            List<CandleInterval> intervals = new List<CandleInterval>()
             {
-                CandlestickInterval.Minutes_15
+                CandleInterval.Minute_15
             };
             AddEvents(marketData as AbstractMarketData, symbols, intervals, services);
         }
 
-        private void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandlestickInterval> intervals, ServiceProvider services)
+        private void AddEvents(AbstractMarketData marketDate, List<ExchangeSymbol> symbols, List<CandleInterval> intervals, ServiceProvider services)
         {
             foreach (var symbol in symbols)
             {
                 foreach (var interval in intervals)
                 {
                     var algo = services.GetService<IAlgorithm>();
-                    marketDate.InitialDataLoadSubscribe(symbol, interval, algo.ProcessHistoricMarketData);
-                    marketDate.InitialDataStreamSubscribe(symbol, interval, algo.ProcessLiveCandleStick);
+                    marketDate.InitialDataLoadSubscribe(symbol.Ticker, interval, algo.ProcessHistoricMarketData);
+                    marketDate.InitialDataStreamSubscribe(symbol.Ticker, interval, algo.ProcessLiveCandleStick);
                 }
             }
         }
 
 
-        private IEnumerable<(string, Candlestick)> LoadFile()
+        private IEnumerable<(string, ExchangeCandlestick)> LoadFile()
         {
             char[] seperators = { ',' };
             using (StreamReader reader = new StreamReader(Directory.GetCurrentDirectory() + @"/MarketDataTest.csv"))
@@ -426,9 +426,22 @@ Symbol.SOL_BTC
                 while ((line = reader.ReadLine()) != null)
                 {
                     var read = line.Split(seperators, StringSplitOptions.None);
-                    var candleStick = new Candlestick(read[1], CandlestickInterval.Minutes_15,
-                        Convert.ToDateTime(read[6]), Convert.ToDecimal(read[2]), Convert.ToDecimal(read[3]),
-                        Convert.ToDecimal(read[4]), Convert.ToDecimal(read[5]), 0, Convert.ToDateTime(read[7]), 0, 0, 0, 0);
+                    var candleStick = new ExchangeCandlestick
+                    {
+                        Symbol = read[1],
+                        Interval = CandleInterval.Minute_15,
+                        OpenTime = Convert.ToDateTime(read[6]),
+                        Open = Convert.ToDecimal(read[2]),
+                        High = Convert.ToDecimal(read[3]),
+                        Low = Convert.ToDecimal(read[4]),
+                        Close = Convert.ToDecimal(read[5]),
+                        Volume = 0,
+                        CloseTime = Convert.ToDateTime(read[7]),
+                        QuoteVolume = 0,
+                        NumberOfTrades = 0,
+                        TakerBuyBaseAssetVolume = 0,
+                        TakerBuyQuoteAssetVolume = 0
+                    };
                     yield return (read[0], candleStick);
                 }
             }

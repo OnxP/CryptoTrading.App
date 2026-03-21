@@ -1,6 +1,6 @@
-﻿using System;
-using Binance;
+using System;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
@@ -50,7 +50,7 @@ namespace CryptoTrading.App.Broker
                 //set market order
                 var order = await _market.SetMarketOrder(request).ConfigureAwait(false);
                 //confirm market order has been met
-                LogOrder(order, OrderStatus.Filled);
+                LogOrder(order, ExchangeOrderStatus.Filled);
                 MessageBroker.Instance.Publish(KeyValue, obj.Who, order);
             }
 
@@ -69,18 +69,18 @@ namespace CryptoTrading.App.Broker
             //set market order
             var order = await _market.SetLimitOrder(request).ConfigureAwait(false);
             //confirm market order has been met
-            LogOrder(order, OrderStatus.New);
+            LogOrder(order, ExchangeOrderStatus.New);
             MessageBroker.Instance.Publish(KeyValue,obj.Who, order);
         }
 
-        private void LogOrder(Order order, OrderStatus status)
+        private void LogOrder(ExchangeOrder order, ExchangeOrderStatus status)
         {
             //todo log order to the database.
         }
 
         public void ClosePosition(ITrade trade)
         {
-            //IEnumerable<Order> orders = await _market.GetAllOpenOrders().ConfigureAwait(false);
+            //IEnumerable<ExchangeOrder> orders = await _market.GetAllOpenOrders().ConfigureAwait(false);
             //foreach (var order in orders)
             //{
             //    await _market.CancelOrder(order).ConfigureAwait(false);

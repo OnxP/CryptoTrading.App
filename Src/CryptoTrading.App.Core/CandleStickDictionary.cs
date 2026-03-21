@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
-    public class CandleStickDictionary : ConcurrentDictionary<DateTime,Candlestick>
+    public class CandleStickDictionary : ConcurrentDictionary<DateTime,ExchangeCandlestick>
     {
         public int NumberOfCandleSticksToKeep { get; }
 
@@ -14,14 +14,14 @@ namespace CryptoTrading.App.Core
         {
             NumberOfCandleSticksToKeep = numberOfCandleSticksToKeep;
         }
-        public Candlestick Current => this[this.Where(x=>x.Value!=null).Max(x => x.Key)];
-        public CandlestickInterval Interval => Values.First(x => x != null).Interval;
+        public ExchangeCandlestick Current => this[this.Where(x=>x.Value!=null).Max(x => x.Key)];
+        public CandleInterval Interval => Values.First(x => x != null).Interval;
         public bool Ready => Count >= NumberOfCandleSticksToKeep;
         public bool HasMissing => Values.Any(x => x == null);
 
-        public IEnumerable<Candlestick> GetCandlesticks => Values.OrderByDescending(X=>X.CloseTime);
+        public IEnumerable<ExchangeCandlestick> GetCandlesticks => Values.OrderByDescending(X=>X.CloseTime);
 
-        public void Add(Candlestick item)
+        public void Add(ExchangeCandlestick item)
         {
             if (Count == 0)
             {
@@ -44,7 +44,7 @@ namespace CryptoTrading.App.Core
 
         }
 
-        public void AddRange(IEnumerable<Candlestick> candlesticks)
+        public void AddRange(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             foreach (var candlestick in candlesticks)
             {
@@ -52,7 +52,7 @@ namespace CryptoTrading.App.Core
             }
         }
 
-        public IOrderedEnumerable<Candlestick> GroupCandleSticks(int indicatorMultiplier)
+        public IOrderedEnumerable<ExchangeCandlestick> GroupCandleSticks(int indicatorMultiplier)
         {
             if (indicatorMultiplier == 1) return Values.OrderBy(x => x.OpenTime);
 
@@ -62,7 +62,7 @@ namespace CryptoTrading.App.Core
                 .GroupBy(x => x.idx / indicatorMultiplier)
                 .Select(g => g.OrderByDescending(b => b.x).Select(a => a.x));
 
-            var list = new List<Candlestick>();
+            var list = new List<ExchangeCandlestick>();
             foreach (var group in keyGrouping)
             {
                 var candlestickList = group.Select(x => this[x]);
@@ -72,23 +72,25 @@ namespace CryptoTrading.App.Core
             return list.OrderBy(x=>x.OpenTime);
         }
 
-        private Candlestick Aggregate(IEnumerable<Candlestick> list)
+        private ExchangeCandlestick Aggregate(IEnumerable<ExchangeCandlestick> list)
         {
             var candlesticks = list.OrderByDescending(x=>x.OpenTime).ToList();
-            return new Candlestick(
-                candlesticks.First().Symbol,
-                candlesticks.First().Interval,
-                candlesticks.Min(x => x.OpenTime),
-                candlesticks.Last().Open,
-                candlesticks.Max(x => x.High),
-                candlesticks.Min(x => x.Low),
-                candlesticks.First().Close,
-                candlesticks.Sum(x => x.Volume),
-                candlesticks.Max(x=>x.CloseTime),
-                candlesticks.Sum(x => x.QuoteAssetVolume),
-                candlesticks.Sum(x => x.NumberOfTrades),
-                candlesticks.Sum(x => x.TakerBuyBaseAssetVolume),
-                candlesticks.Sum(x => x.TakerBuyQuoteAssetVolume));
+            return new ExchangeCandlestick
+            {
+                Symbol = candlesticks.First().Symbol,
+                Interval = candlesticks.First().Interval,
+                OpenTime = candlesticks.Min(x => x.OpenTime),
+                Open = candlesticks.Last().Open,
+                High = candlesticks.Max(x => x.High),
+                Low = candlesticks.Min(x => x.Low),
+                Close = candlesticks.First().Close,
+                Volume = candlesticks.Sum(x => x.Volume),
+                CloseTime = candlesticks.Max(x => x.CloseTime),
+                QuoteVolume = candlesticks.Sum(x => x.QuoteVolume),
+                NumberOfTrades = candlesticks.Sum(x => x.NumberOfTrades),
+                TakerBuyBaseAssetVolume = candlesticks.Sum(x => x.TakerBuyBaseAssetVolume),
+                TakerBuyQuoteAssetVolume = candlesticks.Sum(x => x.TakerBuyQuoteAssetVolume)
+            };
         }
 
     }

@@ -1,20 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Binance;
-using Binance.Client;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
     public interface IMarketDataEvents
     {
-        public void InitialDataLoadSubscribe(string symbol, CandlestickInterval interval,
-            Action<IEnumerable<Candlestick>> callback);
+        public void InitialDataLoadSubscribe(string symbol, CandleInterval interval,
+            Action<IEnumerable<ExchangeCandlestick>> callback);
 
-        public void InitialDataLoadUnSubscribe(string symbol, CandlestickInterval interval);
+        public void InitialDataLoadUnSubscribe(string symbol, CandleInterval interval);
 
-        public void InitialDataStreamSubscribe(string symbol, CandlestickInterval interval,
-            Action<CandlestickEventArgs> callback);
+        public void InitialDataStreamSubscribe(string symbol, CandleInterval interval,
+            Action<ExchangeCandlestickEvent> callback);
 
-        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval);
+        public void InitialDataStreamUnSubscribe(string symbol, CandleInterval interval);
     }
 }

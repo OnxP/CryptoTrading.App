@@ -1,69 +1,58 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.TradeRequest;
-using log4net.Config;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Broker
 {
     public class TestLiveMarket : IMarket
     {
-        private readonly IBinanceApi _api;
-        private readonly IBinanceApiUser _user;
+        private readonly IExchangeProvider _provider;
         private readonly ILogger<TestLiveMarket> _logger;
-        public TestLiveMarket(ILogger<TestLiveMarket> logger,IBinanceApi api,IBinanceApiUser user)
+        public TestLiveMarket(ILogger<TestLiveMarket> logger, IExchangeProvider provider)
         {
-            _api = api;
-            _user = user;
+            _provider = provider;
             _logger = logger;
         }
-        public async Task<IEnumerable<AccountBalance>> GetAccountBalances()
+        public async Task<IEnumerable<ExchangeBalance>> GetAccountBalances()
         {
-            var accountBalances = await _api.GetAccountInfoAsync(_user);
-            return accountBalances.Balances.Where(x=>x.Free > 0);
+            var balances = await _provider.GetBalancesAsync();
+            return balances.Where(x => x.Free > 0);
         }
 
-        public Task<IEnumerable<Order>> GetAllOpenOrders()
+        public Task<IEnumerable<ExchangeOrder>> GetAllOpenOrders()
         {
             throw new NotImplementedException();
         }
 
-        public async Task<Order> SetMarketOrder(IMarketRequest trade)
+        public async Task<ExchangeOrder> SetMarketOrder(IMarketRequest trade)
         {
-            var clientOrder = new MarketOrder(_user)
-            {
-                Symbol = trade.Symbol,
-                Side = trade.OrderType,
-                Quantity = trade.Quantity
-            };
-
-            return await _api.TestPlaceAsync(clientOrder);
+            return await _provider.PlaceMarketOrderAsync(
+                trade.Symbol,
+                trade.OrderType ?? ExchangeOrderSide.Buy,
+                trade.Quantity);
         }
 
-        public async Task<Order> SetLimitOrder(IStopLimitRequest trade)
+        public async Task<ExchangeOrder> SetLimitOrder(IStopLimitRequest trade)
         {
-            var clientOrder = new LimitOrder(_user)
-            {
-                Symbol = trade.Symbol,
-                Side = trade.OrderType,
-                Price = trade.StopPrice,
-                Quantity = trade.Quantity
-            };
-
-            return await _api.TestPlaceAsync(clientOrder);
+            return await _provider.PlaceLimitOrderAsync(
+                trade.Symbol,
+                trade.OrderType ?? ExchangeOrderSide.Buy,
+                trade.StopPrice,
+                trade.Quantity);
         }
 
-        private void LogOrder(string symbol, string order, OrderStatus filled)
+        private void LogOrder(string symbol, string order, ExchangeOrderStatus status)
         {
-            _logger.LogInformation($"{symbol} - {order} {filled.ToString()}");
+            _logger.LogInformation($"{symbol} - {order} {status.ToString()}");
         }
 
         public async Task<string> CancelOrder(ICancelRequest order)
         {
-            LogOrder(order.Symbol, order.ClientOrderId.ToString(), OrderStatus.Canceled);
+            LogOrder(order.Symbol, order.ClientOrderId.ToString(), ExchangeOrderStatus.Cancelled);
             return await Task.Run(() => "");
         }
     }

@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System;
 
 namespace CryptoTrading.App.Algorithm.StopLimits
@@ -13,7 +13,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             Increment = increment / 100m;
         }
 
-        public override void Configure(Order order)
+        public override void Configure(ExchangeOrder order)
         {
             //set stopLimitValue to 10% of current price.
             CurrentPrice = order.Price;
