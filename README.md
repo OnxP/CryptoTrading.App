@@ -1,415 +1,674 @@
 # CryptoTrading.App
 
-A comprehensive algorithmic cryptocurrency trading application for the Binance exchange, built with .NET.
+A comprehensive algorithmic cryptocurrency trading application built with .NET 9.0, supporting multi-exchange trading, advanced regime-based strategies, and ML-powered market analysis.
 
 ![.NET](https://img.shields.io/badge/.NET-9.0-512BD4)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![Platform](https://img.shields.io/badge/platform-Binance-F0B90B)
+![Platform](https://img.shields.io/badge/exchange-Binance%20%7C%20Bitfinex-F0B90B)
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
-- [Features](#features)
 - [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Usage Scenarios](#usage-scenarios)
+  - [1. Data Load](#1-data-load)
+  - [2. Backtesting](#2-backtesting-algorithm-from-database)
+  - [3. Live Testing](#3-live-testing-paper-trading)
+  - [4. Live Trading](#4-live-trading)
+  - [5. Dashboard UI](#5-dashboard-ui)
 - [Configuration](#configuration)
 - [Trading Strategies](#trading-strategies)
-- [Technical Indicators](#technical-indicators)
-- [API Reference](#api-reference)
+- [Multi-Exchange Support](#multi-exchange-support)
+- [Deployment](#deployment)
 - [Testing](#testing)
-- [Contributing](#contributing)
+- [Roadmap](#roadmap)
 - [Disclaimer](#disclaimer)
 
-## 🎯 Overview
+## Overview
 
-CryptoTrading.App is a modular, extensible algorithmic trading platform designed for automated cryptocurrency trading on the Binance exchange. It supports:
+CryptoTrading.App is a modular, extensible algorithmic trading platform designed for automated cryptocurrency trading. It supports:
 
-- **Live Trading**: Real-time order execution via Binance WebSocket streams
-- **Backtesting**: Historical data analysis with comprehensive metrics
-- **Multiple Strategies**: 30+ pre-built trading strategies
-- **Risk Management**: Configurable stop-loss and take-profit mechanisms
-- **Multi-Timeframe Analysis**: Support for various candlestick intervals
+- **Multi-Exchange Trading**: Binance and Bitfinex with exchange-agnostic abstractions
+- **Live Trading**: Real-time order execution via WebSocket streams
+- **Backtesting**: Historical data analysis with comprehensive metrics (Sharpe, Sortino, Calmar, drawdown)
+- **Regime-Based Strategy**: Multi-timeframe approach (4H regime, 15M setup, 1M execution)
+- **30+ Pre-built Strategies**: Trend following, mean reversion, momentum, and price action
+- **Risk Management**: ATR-based stops, trailing stops, scale-out exits, leverage probability scoring
+- **Strategy Optimization**: Grid search and walk-forward parameter optimization
+- **ML Integration**: LightGBM regime classification with hot-swap model reloading
+- **React Dashboard**: TradingView charts with real-time SignalR updates
 
-## 🏗️ Architecture
-
-The application follows a clean, layered architecture with dependency injection throughout:
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Application Layer                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ Console App │  │ Backtesting │  │ Algorithm Testing       │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                    Processing Layer                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   Process   │  │   Monitor   │  │       Calibration       │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                    Domain Layer                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │  Algorithm  │  │   Broker    │  │      Market Data        │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                    Core Layer                                    │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │    Core     │  │  Database   │  │    Message Broker       │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                    Infrastructure Layer                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ Binance API │  │ Indicators  │  │      WebSocket          │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------------+
+|                      Application Layer                             |
+|  +-----------+  +-------------+  +-----------+  +---------------+ |
+|  | Main App  |  | Backtesting |  |   API     |  |   Dashboard   | |
+|  | (Console) |  | (Console)   |  | (ASP.NET) |  |   (React)     | |
+|  +-----------+  +-------------+  +-----------+  +---------------+ |
++-------------------------------------------------------------------+
+|                      Processing Layer                              |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
+|  |  Process  |  |  Monitor  |  |Calibration|  |  Optimization   | |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
++-------------------------------------------------------------------+
+|                      Domain Layer                                  |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
+|  | Algorithm |  |  Broker   |  |MarketData |  |       ML        | |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
++-------------------------------------------------------------------+
+|                      Core Layer                                    |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
+|  |   Core    |  | Database  |  |  Exchange |  | Message Broker  | |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
++-------------------------------------------------------------------+
+|                      Exchange Adapters                             |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
+|  |  Binance  |  | Bitfinex  |  |Indicators |  |   WebSocket     | |
+|  +-----------+  +-----------+  +-----------+  +-----------------+ |
++-------------------------------------------------------------------+
 ```
 
-### Key Components
-
-| Component | Description |
-|-----------|-------------|
-| **CryptoTrading.App.Core** | Core interfaces, models, database access, positions, trades |
-| **CryptoTrading.App.Algorithm** | Trading strategies and custom indicators |
-| **CryptoTrading.App.Broker** | Order execution and market interaction |
-| **CryptoTrading.App.MarketData** | Live & historical market data feeds |
-| **CryptoTrading.App.Monitor** | Trade monitoring and position management |
-| **CryptoTrading.App.Process** | Trade processing and backtesting metrics |
-| **Binance** | Full Binance API wrapper (REST & WebSocket) |
-| **Tulip.NETCore** | 100+ technical indicators library |
-
-## ✨ Features
-
-### Trading Features
-- ✅ Live trading with Binance WebSocket streams
-- ✅ Market, Limit, and Stop-Limit order types
-- ✅ Position management with multiple legs
-- ✅ Automatic stop-loss and take-profit orders
-- ✅ Multi-timeframe analysis support
-- ✅ Real-time candlestick aggregation
-
-### Risk Management
-- ✅ ATR-based stop-loss calculation
-- ✅ Trailing stop-loss mechanisms
-- ✅ Fixed and percentage-based risk limits
-- ✅ Position sizing based on account balance
-- ✅ Maximum daily volume limits
-
-### Analysis & Backtesting
-- ✅ Historical data backtesting
-- ✅ Strategy calibration and optimization
-- ✅ Performance metrics and reporting
-- ✅ Trade history storage in SQL Server
-
-### Technical Infrastructure
-- ✅ Dependency injection throughout
-- ✅ Internal message broker for event handling
-- ✅ Comprehensive logging
-- ✅ Configuration management
-- ✅ Email notifications for trade alerts
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 Src/
-├── Binance/                          # Binance API wrapper
-│   ├── Account/                      # Account models (balances, orders, etc.)
-│   ├── Api/                          # REST API client
-│   ├── Cache/                        # Data caching
-│   ├── Client/                       # WebSocket clients
-│   ├── Market/                       # Market data models
-│   ├── Serialization/                # JSON serializers
-│   ├── Stream/                       # Stream publishers
-│   ├── Utility/                      # Helper utilities
-│   └── WebSocket/                    # WebSocket implementation
-│
-├── CryptoTrading.App.Core/           # Core domain
-│   ├── BinanceAccount/               # Account configuration
-│   ├── Database/                     # EF contexts and repositories
-│   ├── KeyClass/                     # API key management
-│   ├── Logging/                      # Custom file logger
-│   ├── MarketMonitorFactory/         # Monitor factory
-│   ├── Message Broker/               # Internal pub/sub
-│   ├── Position/                     # Position management
-│   ├── RequestTracker/               # Request tracking
-│   ├── Strategy/                     # Strategy interfaces
-│   ├── Trade/                        # Trade models
-│   └── TradeRequest/                 # Order requests
-│
-├── CryptoTrading.App.Algorthm/       # Trading algorithms
-│   ├── CustomIndicators/             # Custom indicator implementations
-│   ├── StopLimits/                   # Stop-loss strategies
-│   └── TradingStrategies/            # 30+ trading strategies
-│
-├── CryptoTrading.App.Broker/         # Order execution
-├── CryptoTrading.App.MarketData/     # Market data feeds
-├── CryptoTrading.App.Monitor/        # Trade monitoring
-├── CryptoTrading.App.Process/        # Trade processing
-├── CryptoTrading.App.Calibration/    # Strategy optimization
-│
-├── Indicators/                       # Tulip.NETCore indicators
-│
-├── Samples/                          # Example applications
-│   ├── BinanceConsoleApp/            # Full-featured console app
-│   ├── BinancePriceChart/            # Price charting example
-│   ├── BinanceMarketDepth/           # Order book example
-│   └── BinanceTradeHistory/          # Trade history example
-│
-└── Tests/
-    ├── IndicatorsTest/               # Indicator unit tests
-    └── CryptoTrading.App.Monitor.Tests/ # Monitor tests
++-- CryptoTrading.App/                   # Main console application (entry point)
++-- CryptoTrading.App.Core/              # Core domain: interfaces, models, database, exchange abstractions
+|   +-- Database/Config/                 # EF6 contexts, strategy parameters, exchange configs
+|   +-- Exchange/                        # Exchange-agnostic types (IExchangeProvider, models)
+|   +-- Position/                        # Position and trade management
+|   +-- Strategy/                        # Strategy interfaces
+|   +-- Trade/                           # Trade models, BacktestMetrics
++-- CryptoTrading.App.Algorthm/          # Trading algorithms
+|   +-- RegimeBased/                     # Multi-timeframe regime strategy (23 files)
+|   +-- TradingStrategies/               # 30+ pre-built strategies
+|   +-- CustomIndicators/                # Custom indicator implementations
++-- CryptoTrading.App.Broker/            # Order execution layer
++-- CryptoTrading.App.MarketData/        # Live & historical data feeds
++-- CryptoTrading.App.Monitor/           # Trade monitoring and position management
++-- CryptoTrading.App.Process/           # Trade processing and orchestration
++-- CryptoTrading.App.DatabaseLoad/      # Candlestick data ingestion from Binance
++-- CryptoTrading.App.AlgorthmTesting/   # Backtesting framework
++-- CryptoTrading.App.Exchange.Binance/  # Binance IExchangeProvider adapter
++-- CryptoTrading.App.Exchange.Bitfinex/ # Bitfinex IExchangeProvider adapter
++-- CryptoTrading.App.Optimization/      # Grid search & walk-forward optimizer
++-- CryptoTrading.App.ML/               # ML.NET regime classification
++-- CryptoTrading.App.Api/              # REST API (ASP.NET Core + Swagger)
++-- CryptoTrading.App.Dashboard/         # React + TradingView Lightweight Charts UI
++-- CryptoTrading.App.Tests/             # Unit tests (xUnit + FluentAssertions)
++-- Binance/                             # Full Binance API wrapper (REST & WebSocket)
++-- Indicators/                          # Tulip.NETCore - 100+ technical indicators
 ```
 
-## 🚀 Getting Started
+## Prerequisites
 
-### Prerequisites
+- **.NET 9.0 SDK** or later
+- **SQL Server** instance (e.g. `ANKUR-PC\APDATASERVICE`)
+- **Binance API key and secret** (for data loading and live trading)
+- **Node.js 18+** (for Dashboard UI only)
 
-- .NET 9.0 SDK or later
-- SQL Server (for trade history storage)
-- Binance API key and secret
+### Database Setup
 
-### Installation
+The application uses SQL Server with `CryptoDb` as the database name. The connection uses Windows Integrated Security:
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/CryptoTrading.App.git
-   cd CryptoTrading.App/Src
-   ```
+```
+Data Source=YOUR_SERVER\INSTANCE;Initial Catalog=CryptoDb;Integrated Security=True
+```
 
-2. **Restore NuGet packages**
-   ```bash
-   dotnet restore CryptoTrading.App.sln
-   ```
+Key tables are created automatically by Entity Framework:
+- `CandleStickDbs` - OHLCV candlestick data
+- `CryptoConfigs` - Runtime configuration (RunType, API keys, trading parameters)
+- `Trades` - Historical trade results
+- `ExchangeConfigs` - Multi-exchange connection settings
+- `StrategyParameters` - Externalized strategy parameters with optimization bounds
+- `AccountSnapshots` - Daily balance snapshots per exchange
 
-3. **Build the solution**
-   ```bash
-   dotnet build CryptoTrading.App.sln
-   ```
+## Getting Started
 
-4. **Configure your settings** (see [Configuration](#configuration))
-
-5. **Run the application**
-   ```bash
-   dotnet run --project CryptoTrading.App.2/CryptoTrading.App.2.csproj -- "YOUR_DATABASE_CONNECTION"
-   ```
-
-### Quick Start (Backtesting)
+### 1. Clone and Build
 
 ```bash
-dotnet run --project CryptoTrading.App.AlgorthmTesting/CryptoTrading.App.AlgorthmTesting.csproj
+git clone https://github.com/OnxP/CryptoTrading.App.git
+cd CryptoTrading.App/Src
+dotnet restore CryptoTrading.App.sln
+dotnet build CryptoTrading.App.sln --configuration Release
 ```
 
-## ⚙️ Configuration
+### 2. Configure Database
 
-### appsettings.json
+Update the database server name in `CryptoConfigs` table (Id=1) or pass it as a command-line argument.
 
+### 3. Configure API Keys
+
+Set your Binance API credentials in `appsettings.json` (for DatabaseLoad) or in the `CryptoConfigs` database table (for live trading).
+
+---
+
+## Usage Scenarios
+
+### 1. Data Load
+
+**Purpose**: Download historical candlestick data from Binance and store it in SQL Server for backtesting.
+
+**Project**: `CryptoTrading.App.DatabaseLoad`
+
+**What it does**:
+- Connects to Binance REST API to fetch OHLCV candlestick data
+- Detects gaps in existing data using `MissingCandleDetector`
+- Fills only missing data (incremental, not full re-download)
+- Downloads multiple intervals: 1m, 5m, 15m, 1h, 4h
+- Processes up to 10 concurrent API calls for performance
+- Stores everything in the `CandleStickDbs` table
+
+**Configuration** (`appsettings.json`):
 ```json
 {
-  "BinanceApi": {
-    "ApiKey": "YOUR_API_KEY",
-    "ApiSecret": "YOUR_API_SECRET"
+  "User": {
+    "ApiKey": "YOUR_BINANCE_API_KEY",
+    "ApiSecret": "YOUR_BINANCE_API_SECRET"
   },
-  "Database": {
-    "ConnectionString": "Data Source=SERVER;Initial Catalog=CryptoDb;Integrated Security=True"
-  },
-  "Trading": {
-    "Interval": "FiveMinutes",
-    "Risk": 0.02,
-    "NoOfTrades": 3,
-    "UseFixedAmount": false,
-    "FixedAmount": 100,
-    "PercentDailyVolume": 0.01
-  },
-  "Email": {
-    "Server": "smtp.example.com",
-    "Port": 587,
-    "From": "alerts@example.com",
-    "To": "trader@example.com"
+  "ApiOptions": {
+    "EndpointUrl": "https://api.binance.com",
+    "RecvWindowDefault": 15000,
+    "RequestRateLimit": { "Count": 1200, "DurationMinutes": 1 }
   }
 }
 ```
 
-### Supported Candlestick Intervals
-
-| Interval | Description |
-|----------|-------------|
-| `OneMinute` | 1-minute candles |
-| `ThreeMinutes` | 3-minute candles |
-| `FiveMinutes` | 5-minute candles |
-| `FifteenMinutes` | 15-minute candles |
-| `ThirtyMinutes` | 30-minute candles |
-| `OneHour` | 1-hour candles |
-| `FourHours` | 4-hour candles |
-| `OneDay` | Daily candles |
-
-## 📈 Trading Strategies
-
-The application includes 30+ pre-built trading strategies:
-
-### Trend Following
-- `MacdTradingStrategy` - MACD crossover with WMA confirmation
-- `EmaTradingStrategy` - EMA crossover strategy
-- `TrendFollowingTradingStrategy` - Multi-indicator trend following
-- `SuperTrendEMATradingStrategy` - SuperTrend with EMA filter
-
-### Mean Reversion
-- `MeanReversionTradingStrategy` - Bollinger Band mean reversion
-- `BBRsiTradingStrategy` - Bollinger Bands with RSI confirmation
-
-### Momentum
-- `RsiTradingStrategy` - RSI overbought/oversold
-- `MacdRSITradingStrategy` - MACD and RSI combination
-- `AroonStoch` - Aroon and Stochastic combination
-
-### Price Action
-- `PriceActionTradingStrategy` - Candlestick pattern recognition
-- `HeikinAshiTS` - Heikin-Ashi trend strategy
-
-### Creating Custom Strategies
-
-```csharp
-public class MyCustomStrategy : TradingStrategy
-{
-    public MyCustomStrategy(ILogger<TradingStrategy> logger) : base(logger) { }
-
-    protected override Dictionary<string, IndicatorSetUp> GenerateIndicators()
-    {
-        return new Dictionary<string, IndicatorSetUp>
-        {
-            ["EMA20"] = new IndicatorSetUp(Tulip.Indicators.ema, new double[] { 20 }),
-            ["RSI"] = new IndicatorSetUp(Tulip.Indicators.rsi, new double[] { 14 })
-        };
-    }
-
-    protected override double Calculate(
-        Dictionary<string, double[][]> indicatorOutputs,
-        Candlestick closePrice,
-        IStopLimitTracker stopLimitTrackers)
-    {
-        var ema = indicatorOutputs["EMA20"][0].Last();
-        var rsi = indicatorOutputs["RSI"][0].Last();
-
-        // Buy signal: Price above EMA and RSI < 30
-        if ((double)closePrice.Close > ema && rsi < 30)
-        {
-            SetStopLimit(indicatorOutputs, closePrice, stopLimitTrackers);
-            return 1; // Buy signal
-        }
-
-        return 0; // Hold
-    }
-}
+**Running**:
+```bash
+cd Src
+dotnet run --project CryptoTrading.App.DatabaseLoad/CryptoTrading.App.DatabaseLoad.csproj
 ```
 
-## 📊 Technical Indicators
+**Notes**:
+- First run may take several hours depending on how many symbols and intervals you load
+- Subsequent runs only fill gaps, so they are much faster
+- The date range and symbols are configured in `Program.cs`
+- Respects Binance rate limits (1200 requests/minute)
 
-The application uses the Tulip Indicators library with 100+ indicators:
+---
 
-### Trend Indicators
-- EMA, SMA, WMA, DEMA, TEMA
-- MACD, ADX, Parabolic SAR
-- Aroon, SuperTrend
+### 2. Backtesting (Algorithm from Database)
 
-### Momentum Indicators
-- RSI, Stochastic, Stochastic RSI
-- CCI, Williams %R, MFI
+**Purpose**: Test trading algorithms against historical data stored in the database, without risking real money.
 
-### Volatility Indicators
-- Bollinger Bands, ATR, Keltner Channels
-- Standard Deviation, Donchian Channels
+**Project**: `CryptoTrading.App.AlgorthmTesting`
 
-### Volume Indicators
-- OBV, VWAP, VWMA
-- Volume Rate of Change
+**What it does**:
+- Loads historical candlestick data from SQL Server
+- Runs the selected trading algorithm against each candle sequentially
+- Tracks simulated positions, entries, exits, and P&L
+- Outputs trade results to both a text file and the database
+- Calculates performance metrics (win rate, total return, trade count)
 
-## 🔌 API Reference
+**Configuration** (in `RunContext.cs`):
+- `Indicator stratgy` - Which algorithm to test
+- `NoOfTrades` - Maximum concurrent trades
+- `Risk` - Risk percentage per trade
+- `From` / `To` - Backtest date range
+- Output path: `C:\Temp\{strategy_name}\TradeResults_{params}.txt`
 
-### IBroker Interface
-
-```csharp
-public interface IBroker
-{
-    void ClosePosition(ITrade trade);
-}
+**Running**:
+```bash
+cd Src
+dotnet run --project CryptoTrading.App.AlgorthmTesting/CryptoTrading.App.AlgorthmTesting.csproj
 ```
 
-### ITradingStrategy Interface
-
-```csharp
-public interface ITradingStrategy
-{
-    int OutputLength { get; }
-    double Calculate(CandleStickDictionary candleSticks, IStopLimitTracker stopLimitTrackers);
-    void Log(string v);
-}
+**Example Output**:
+```
+Strategy: RegimeBased | Symbol: BTCUSDT | Timeframe: 15m
+Period: 2024-01-01 to 2024-06-01
+Total Trades: 142 | Winners: 85 (59.9%) | Losers: 57 (40.1%)
+Total Return: 34.7% | Max Drawdown: 8.2%
 ```
 
-### IMarketMonitor Interface
+**Notes**:
+- Ensure you have loaded data for the backtest period using the Data Load step first
+- Modify `Program.cs` to select different strategies, symbols, or date ranges
+- Results are stored in the `Trades` table for comparison
 
-```csharp
-public interface IMarketMonitor
-{
-    Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> callback);
-    Task<IEnumerable<Candlestick>> GetHistoricCandleSticks(string symbol);
-    Task CheckOrder(ITransaction transaction);
-    bool IsSubscribed(string symbol, string keyValue);
-}
+---
+
+### 3. Live Testing (Paper Trading)
+
+**Purpose**: Run the algorithm with real-time market data but simulated orders. No real money is at risk.
+
+**Project**: `CryptoTrading.App` (main console application)
+
+**What it does**:
+- Connects to Binance WebSocket streams for real-time candlestick data
+- Runs the trading algorithm on each new candle as it arrives
+- Simulates order execution (TestBroker) - no real orders are placed
+- Reads live account balances but does not modify them
+- Runs continuously with a 2-minute refresh cycle
+- Monitors for configuration changes every 2 minutes
+
+**Setup**:
+1. Set `RunType = LiveTesting` in the `CryptoConfigs` database table
+2. Ensure API keys are configured in the database
+
+**Running**:
+```bash
+cd Src
+# Uses default database server (ANKUR-PC\APDATASERVICE)
+dotnet run --project CryptoTrading.App/CryptoTrading.App.csproj
+
+# Or specify a custom database server
+dotnet run --project CryptoTrading.App/CryptoTrading.App.csproj -- "YOUR_SERVER\INSTANCE"
 ```
 
-## 🧪 Testing
+**Process Loop**:
+- Every 2 minutes: Checks `CryptoConfig.EndProcess` flag - set to `true` to gracefully stop
+- Every 60 minutes: Refreshes position balances
+- Daily at 21:17 UTC: Archives trades and refreshes symbols
 
-### Running Unit Tests
+**Stopping**:
+Set `EndProcess = true` in the `CryptoConfigs` database table. The application will stop at the next 2-minute check.
+
+---
+
+### 4. Live Trading
+
+**Purpose**: Run the algorithm with real-time data and execute real orders on the exchange.
+
+**Project**: `CryptoTrading.App` (same as Live Testing)
+
+> **WARNING**: This mode places REAL orders with REAL money. Ensure thorough backtesting and live testing before enabling this mode. Start with small position sizes.
+
+**What it does**:
+- Everything Live Testing does, PLUS:
+- Places real market, limit, and stop-limit orders via Binance API
+- Manages real positions with automatic stop-loss and take-profit
+- Sends email notifications on trade events
+- Records all trades and position changes to the database
+
+**Setup**:
+1. Set `RunType = Live` in the `CryptoConfigs` database table
+2. Ensure API keys have trading permissions enabled on Binance
+3. Configure email notification settings in `CryptoConfigs`
+4. Set appropriate risk parameters (`Risk`, `NoOfTrades`, `UseFixedAmount`, `FixedAmount`)
+
+**Running**:
+```bash
+cd Src
+dotnet run --project CryptoTrading.App/CryptoTrading.App.csproj -- "YOUR_SERVER\INSTANCE"
+```
+
+**Key Configuration** (in `CryptoConfigs` table):
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `RunType` | `Live` for real trading | `Live` |
+| `NoOfTrades` | Max concurrent positions | `3` |
+| `Risk` | Risk % per trade | `0.02` |
+| `UseFixedAmount` | Use fixed size or % of balance | `true` |
+| `FixedAmount` | Fixed trade amount in quote asset | `100` |
+| `PercentDailyVolume` | Max % of daily volume per trade | `0.01` |
+| `Interval` | Candlestick timeframe | `FifteenMinutes` |
+
+**Safety Features**:
+- Set `EndProcess = true` in DB to gracefully stop at next refresh
+- Position size limits prevent oversized orders
+- Daily volume limits prevent market impact
+- Email alerts for trade events and errors
+
+---
+
+### 5. Dashboard UI
+
+**Purpose**: Visual interface for monitoring trading activity, viewing charts, and managing strategy parameters.
+
+**Project**: `CryptoTrading.App.Dashboard` (React) + `CryptoTrading.App.Api` (ASP.NET Core backend)
+
+**What it provides**:
+- TradingView Lightweight Charts with candlestick display
+- Regime zone overlays (Bull/Bear/Ranging colored backgrounds)
+- Supply/demand zone visualization
+- Trade entry/exit markers on chart
+- Performance metrics panel (Sharpe ratio, drawdown, win rate, profit factor)
+- Live state panel (current regime, volatility, open trades)
+- Strategy parameter editor with live API integration
+- Real-time updates via SignalR WebSocket
+
+**Starting the API backend**:
+```bash
+cd Src
+dotnet run --project CryptoTrading.App.Api/CryptoTrading.App.Api.csproj
+# API runs at http://localhost:5000
+# Swagger UI at http://localhost:5000/swagger
+```
+
+**Starting the Dashboard**:
+```bash
+cd Src/CryptoTrading.App.Dashboard
+npm install
+npm run dev
+# Dashboard runs at http://localhost:5173
+```
+
+**API Endpoints**:
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/strategies` | List strategy names |
+| GET/PUT | `/api/strategies/{name}/parameters` | Get/update parameters |
+| POST | `/api/strategies/{name}/parameters/reset` | Reset to defaults |
+| GET | `/api/chart/{symbol}/candles` | OHLCV candlestick data |
+| GET | `/api/chart/{symbol}/regimes` | Regime zone periods |
+| GET | `/api/chart/{symbol}/signals` | Trade signals |
+| GET | `/api/chart/{symbol}/zones` | Supply/demand zones |
+| GET | `/api/exchanges` | List exchanges |
+| GET | `/api/exchanges/{id}/balances` | Exchange balances |
+| POST | `/api/exchanges/{id}/refresh` | Trigger account refresh |
+| GET | `/api/live/state` | Current algorithm state |
+| GET | `/api/performance/summary` | Strategy metrics |
+
+---
+
+## Configuration
+
+### Runtime Configuration (Database)
+
+All runtime settings are stored in the `CryptoConfigs` table (Id=1). Key settings:
+
+```
+RunType             : BackTesting | LiveTesting | Live
+EndProcess          : false (set true to stop)
+Interval            : FifteenMinutes
+NoOfTrades          : 3
+Risk                : 0.02
+ApiKey              : [Binance API Key]
+ApiKeySecret        : [Binance API Secret]
+From / To           : Date range for backtesting
+EmailServer/Port    : SMTP settings for alerts
+```
+
+### Strategy Parameters (Database)
+
+All strategy parameters are externalized to the `StrategyParameters` table with optimization bounds:
+
+```sql
+-- Example: View all parameters for the regime strategy
+SELECT StrategyName, ParameterName, Value, MinValue, MaxValue, StepSize
+FROM StrategyParameters
+WHERE IsActive = 1
+ORDER BY Category, StrategyName
+```
+
+Parameters auto-reload every 60 seconds without requiring a restart.
+
+---
+
+## Trading Strategies
+
+### Regime-Based Multi-Timeframe Strategy (Primary)
+
+The flagship strategy operates across three timeframes:
+
+1. **4-Hour (Regime Detection)**: Classifies the market as Bull, Bear, or Ranging using EMA gradients, ATR percentiles, and volatility analysis
+2. **15-Minute (Setup)**: Evaluates MACD divergence, Bollinger Band reversals, and supply/demand zones for trade setups
+3. **1-Minute (Execution)**: Precise entry timing using Stochastic RSI crossovers
+
+**Leverage Probability Scoring**: Each trade setup receives a confidence score (0.0 - 1.0) based on:
+- Regime confidence (EMA gradient strength, volatility)
+- Setup confidence (momentum, zone confluence, risk/reward ratio)
+- The confidence score determines recommended leverage (currently capped at 1x by default)
+
+### Pre-built Strategies (30+)
+
+| Category | Strategies |
+|----------|------------|
+| **Trend Following** | MACD, EMA Crossover, SuperTrend+EMA, Trend Following |
+| **Mean Reversion** | Bollinger Band, BB+RSI |
+| **Momentum** | RSI, MACD+RSI, Aroon+Stochastic |
+| **Price Action** | Candlestick Patterns, Heikin-Ashi |
+
+---
+
+## Multi-Exchange Support
+
+The application uses an exchange-agnostic abstraction layer (`IExchangeProvider`) that supports multiple exchanges:
+
+| Exchange | Status | Fee (Maker/Taker) |
+|----------|--------|-------------------|
+| Binance | Implemented | 0.1% / 0.1% (BNB discount: 25%) |
+| Bitfinex | Implemented | 0.1% / 0.2% |
+
+Each exchange has:
+- Isolated accounting (positions, balances, trades)
+- Separate data feeds
+- Independent fee schedules
+- Daily account snapshot refresh
+
+---
+
+## Deployment
+
+### Current Deployment Procedure
+
+The application is deployed by building locally, pushing to a release branch, and pulling on the server:
+
+#### 1. Build the Release
 
 ```bash
-dotnet test CryptoTrading.App.sln
+# On your development machine
+cd CryptoTrading.App/Src
+dotnet build CryptoTrading.App.sln --configuration Release
+dotnet publish CryptoTrading.App/CryptoTrading.App.csproj -c Release -o ../publish/app
+dotnet publish CryptoTrading.App.Api/CryptoTrading.App.Api.csproj -c Release -o ../publish/api
 ```
 
-### Running Specific Test Projects
+#### 2. Commit and Push to Release Branch
 
 ```bash
-# Indicator tests
-dotnet test IndicatorsTest/IndicatorsTest.csproj
-
-# Monitor tests
-dotnet test CryptoTrading.App.Monitor.Tests/CryptoTrading.App.Monitor.Tests.csproj
+cd ..
+git checkout release
+git merge EntryStratigies
+git add publish/
+git commit -m "Release build $(date +%Y-%m-%d)"
+git push origin release
 ```
 
-## 🤝 Contributing
+#### 3. Deploy on the Server
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+```bash
+# SSH into the server
+ssh your-server
 
-### Coding Standards
+# Pull the latest release
+cd /opt/cryptotrading
+git pull origin release
 
-- Follow C# naming conventions
-- Use dependency injection for all services
-- Write unit tests for new functionality
-- Document public APIs with XML comments
+# Stop the running service
+sudo systemctl stop cryptotrading
 
-## ⚠️ Disclaimer
+# Update the binaries
+cp -r publish/app/* /opt/cryptotrading/app/
+cp -r publish/api/* /opt/cryptotrading/api/
 
-**IMPORTANT: This software is for educational purposes only.**
+# Start the service
+sudo systemctl start cryptotrading
+```
+
+#### 4. Verify the Deployment
+
+```bash
+# Check the service is running
+sudo systemctl status cryptotrading
+
+# Tail the logs
+tail -f /opt/cryptotrading/logs/cryptotrading.log
+
+# Check the API is responding
+curl http://localhost:5000/api/live/state
+```
+
+### Setting Up as a Systemd Service (Linux)
+
+Create `/etc/systemd/system/cryptotrading.service`:
+
+```ini
+[Unit]
+Description=CryptoTrading Algorithm
+After=network.target
+
+[Service]
+Type=simple
+User=trading
+WorkingDirectory=/opt/cryptotrading/app
+ExecStart=/usr/bin/dotnet CryptoTrading.App.dll "YOUR_SERVER\\INSTANCE"
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Create `/etc/systemd/system/cryptotrading-api.service`:
+
+```ini
+[Unit]
+Description=CryptoTrading API
+After=network.target
+
+[Service]
+Type=simple
+User=trading
+WorkingDirectory=/opt/cryptotrading/api
+ExecStart=/usr/bin/dotnet CryptoTrading.App.Api.dll
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable cryptotrading cryptotrading-api
+sudo systemctl start cryptotrading cryptotrading-api
+```
+
+### Setting Up as a Windows Service
+
+Use NSSM (Non-Sucking Service Manager) to run as a Windows service:
+
+```batch
+REM Install the trading service
+nssm install CryptoTrading "C:\dotnet\dotnet.exe" "CryptoTrading.App.dll YOUR_SERVER\INSTANCE"
+nssm set CryptoTrading AppDirectory "C:\CryptoTrading\app"
+nssm set CryptoTrading Start SERVICE_AUTO_START
+
+REM Install the API service
+nssm install CryptoTradingApi "C:\dotnet\dotnet.exe" "CryptoTrading.App.Api.dll"
+nssm set CryptoTradingApi AppDirectory "C:\CryptoTrading\api"
+nssm set CryptoTradingApi AppEnvironmentExtra "ASPNETCORE_URLS=http://0.0.0.0:5000"
+nssm set CryptoTradingApi Start SERVICE_AUTO_START
+
+REM Start both
+nssm start CryptoTrading
+nssm start CryptoTradingApi
+```
+
+### Dashboard Deployment
+
+For the React dashboard, build and serve as static files:
+
+```bash
+cd Src/CryptoTrading.App.Dashboard
+npm install
+npm run build
+# Output in dist/ - serve with nginx, IIS, or any static file server
+```
+
+Nginx configuration:
+```nginx
+server {
+    listen 80;
+    server_name trading.yourdomain.com;
+
+    location / {
+        root /opt/cryptotrading/dashboard/dist;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:5000;
+    }
+
+    location /hubs/ {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+---
+
+## Testing
+
+### Running All Tests
+
+```bash
+cd Src
+dotnet test CryptoTrading.App.Tests/CryptoTrading.App.Tests.csproj --verbosity normal
+```
+
+### Test Coverage (117+ tests)
+
+| Test Suite | Tests | Description |
+|------------|-------|-------------|
+| Exchange Domain Models | 56 | ExchangeOrder, Balance, Symbol, Candlestick, FeeSchedule |
+| Exchange Isolation | 15 | Position isolation, candlestick routing, trade isolation |
+| Binance Mapper | 30 | All Binance type conversions and round-trips |
+| Bitfinex Mapper | 15 | Symbol format, order mapping, candlestick parsing |
+| BacktestMetrics | 11 | Sharpe, Sortino, drawdown, profit factor, expectancy |
+
+---
+
+## Roadmap
+
+| Phase | Branch | Status | Description |
+|-------|--------|--------|-------------|
+| 6 | `phase6-multi-exchange-adapters` | In Progress | Multi-exchange adapters, broker refactoring |
+| 1 | `phase1-parameter-externalization` | Scaffolded | Strategy parameter externalization |
+| 2 | `phase2-optimization-engine` | Scaffolded | Grid search & walk-forward optimization |
+| 3 | `phase3-api-hot-reload` | Scaffolded | REST API & parameter hot-reload |
+| 4 | `phase4-ai-ml-integration` | Scaffolded | ML.NET regime classification |
+| 5 | `phase5-visualization-ui` | Scaffolded | React + TradingView dashboard |
+
+---
+
+## Disclaimer
+
+**WARNING: This software is for educational purposes only.**
 
 - Cryptocurrency trading involves substantial risk of loss
 - Past performance does not guarantee future results
 - Never trade with money you cannot afford to lose
-- Always test strategies thoroughly with backtesting before live trading
+- Always test strategies thoroughly with backtesting and live testing before real trading
 - The authors are not responsible for any financial losses
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Binance API](https://binance-docs.github.io/apidocs/) - Exchange API
 - [Tulip Indicators](https://tulipindicators.org/) - Technical analysis library
 - [Skender.Stock.Indicators](https://github.com/DaveSkender/Stock.Indicators) - Additional indicators
-
----
-
-**Built with ❤️ for algorithmic traders**
+- [TradingView Lightweight Charts](https://github.com/nicorichard/lightweight-charts) - Chart rendering
+- [ML.NET](https://dotnet.microsoft.com/en-us/apps/machinelearning-ai/ml-dotnet) - Machine learning framework
