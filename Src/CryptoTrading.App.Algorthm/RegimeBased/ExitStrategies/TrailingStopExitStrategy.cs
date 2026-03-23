@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
 {
@@ -32,13 +33,20 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
                     ? currentPrice <= trailingStopLevel
                     : currentPrice >= trailingStopLevel;
 
+                Logger?.LogDebug($"[1M EXIT TrailingStop] R:{rMultiple:F2} price:{currentPrice:F2} trail:{trailingStopLevel:F2} high:{HighestPrice:F2} low:{LowestPrice:F2} atr:{atr:F2} hit:{trailingStopHit}");
+
                 if (trailingStopHit)
                 {
+                    Logger?.LogInformation($"[1M EXIT TrailingStop] TRIGGER @ {currentPrice:F2} (trail:{trailingStopLevel:F2} R:{rMultiple:F2})");
                     result.ShouldTrade = true;
                     result.Price = currentPrice;
                     result.Quantity = positionSize;
                     result.OrderType = "MARKET";
                 }
+            }
+            else
+            {
+                Logger?.LogDebug($"[1M EXIT TrailingStop] R:{rMultiple:F2} < {_trailingStartMultiple} (not active) price:{currentPrice:F2}");
             }
 
             return result;

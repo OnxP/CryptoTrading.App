@@ -120,11 +120,16 @@ namespace CryptoTrading.App.Monitor
                 Volume = candleStick.Candlestick.Volume
             });
 
+            var ts = candleStick.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
+
             //only get pending transactions
             if (Trade.PendingEntryTransactions.Count >0  && Trade.PendingExitTransactions.Count >0)
                 await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
 
             var strategyResult = Request.Strategy.ProcessStrategy(Trade);
+            var previousState = _positionState;
+
+            Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} Price:{candleStick.Candlestick.Close:F2} Quotes:{_quoteHub.Quotes.Count}");
 
             switch (_positionState)
             {
@@ -148,6 +153,9 @@ namespace CryptoTrading.App.Monitor
                     await HandleClosingPosition(strategyResult, candleStick);
                     break;
             }
+
+            if (_positionState != previousState)
+                Logger.LogInformation($"[1M TM {ts}] {Symbol} STATE CHANGE: {previousState} -> {_positionState}");
 
             //3 options Open/Move position, Exit position, Hold position.
 

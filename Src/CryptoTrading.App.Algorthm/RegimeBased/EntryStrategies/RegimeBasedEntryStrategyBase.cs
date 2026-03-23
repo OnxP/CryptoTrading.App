@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
     {
         protected QuoteHub<IQuote> QuoteHub;
         protected readonly SetupResult Setup;
+        protected ILogger Logger;
+
+        public void SetLogger(ILogger logger) => Logger = logger;
 
         protected RegimeBasedEntryStrategyBase(SetupResult setup)
         {

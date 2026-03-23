@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System.Linq;
 
@@ -29,7 +30,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
             var result = new TradeDetails { ShouldTrade = false };
 
             // Need enough data for StochRsi calculation
-            if (QuoteHub.Quotes.Count < 50) return result;
+            if (QuoteHub.Quotes.Count < 50)
+            {
+                Logger?.LogDebug($"[1M ENTRY StochRsi] Insufficient data ({QuoteHub.Quotes.Count}/50)");
+                return result;
+            }
 
             var stochRsi = QuoteHub.Quotes.ToStochRsi(_rsiPeriod, _stochPeriod, _signalPeriod, _smoothPeriod);
             if (stochRsi == null || stochRsi.Count < 2) return result;
@@ -48,10 +53,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
 
             if (Setup.Direction == TradeDirection.Long)
             {
-                // Bullish entry: StochRsi was oversold or below midline, now crossing above signal
                 bool wasOversold = prevStoch < _oversoldThreshold;
                 bool bullishCrossover = prevStoch <= prevSignal && currStoch > currSignal;
                 bool confirmingMomentum = IsRisingMicroMomentum();
+
+                Logger?.LogDebug($"[1M ENTRY StochRsi LONG] stoch:{currStoch:F2} sig:{currSignal:F2} prevStoch:{prevStoch:F2} prevSig:{prevSignal:F2} | wasOversold:{wasOversold} cross:{bullishCrossover} momentum:{confirmingMomentum}");
 
                 if ((wasOversold || currStoch < 50) && bullishCrossover && confirmingMomentum)
                 {
@@ -60,14 +66,16 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
                     result.Price = currentPrice;
                     result.Quantity = targetPositionSize;
                     result.OrderType = "MARKET";
+                    Logger?.LogInformation($"[1M ENTRY StochRsi] TRIGGER LONG @ {currentPrice:F2}");
                 }
             }
             else
             {
-                // Bearish entry: StochRsi was overbought or above midline, now crossing below signal
                 bool wasOverbought = prevStoch > _overboughtThreshold;
                 bool bearishCrossover = prevStoch >= prevSignal && currStoch < currSignal;
                 bool confirmingMomentum = IsFallingMicroMomentum();
+
+                Logger?.LogDebug($"[1M ENTRY StochRsi SHORT] stoch:{currStoch:F2} sig:{currSignal:F2} prevStoch:{prevStoch:F2} prevSig:{prevSignal:F2} | wasOverbought:{wasOverbought} cross:{bearishCrossover} momentum:{confirmingMomentum}");
 
                 if ((wasOverbought || currStoch > 50) && bearishCrossover && confirmingMomentum)
                 {
@@ -76,6 +84,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
                     result.Price = currentPrice;
                     result.Quantity = targetPositionSize;
                     result.OrderType = "MARKET";
+                    Logger?.LogInformation($"[1M ENTRY StochRsi] TRIGGER SHORT @ {currentPrice:F2}");
                 }
             }
 

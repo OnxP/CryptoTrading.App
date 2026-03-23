@@ -2,6 +2,7 @@
 using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System.Linq;
 
@@ -19,6 +20,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
     {
         private QuoteHub<IQuote> _quoteHub;
         private readonly SetupResult _setup;
+        private ILogger _logger;
 
         public IEntryStrategy EntryStrategy { get; set; }
         public IExitStrategy ExitStrategy { get; set; }
@@ -33,6 +35,13 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             ExitStrategy = RegimeBasedExitStrategyBase.Create(setup);
 
             SetQuotes(quoteHub);
+        }
+
+        public void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+            (EntryStrategy as RegimeBasedEntryStrategyBase)?.SetLogger(logger);
+            (ExitStrategy as RegimeBasedExitStrategyBase)?.SetLogger(logger);
         }
 
         public void SetQuotes(QuoteHub<IQuote> quoteHub)
@@ -57,9 +66,13 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             };
 
             if (_quoteHub?.Quotes == null || _quoteHub.Quotes.Count < 20)
+            {
+                _logger?.LogDebug($"[1M EXEC] Insufficient data ({_quoteHub?.Quotes?.Count ?? 0} quotes, need 20)");
                 return status;
+            }
 
             var currentPrice = (decimal)_quoteHub.Quotes.Last().Close;
+            var ts = _quoteHub.Quotes.Last().Timestamp.ToString("yyyy-MM-dd HH:mm");
 
             // Not in trade - check for entry
             if (!trade.Open)
@@ -67,6 +80,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 var entryDetails = EntryStrategy.GetNextEntry(0, Quantity, currentPrice);
                 if (entryDetails.ShouldTrade)
                 {
+                    _logger?.LogInformation($"[1M {ts}] ENTRY SIGNAL: {_setup.RecommendedEntryStrategy} | Price: {currentPrice:F2} | Qty: {entryDetails.Quantity} | Type: {entryDetails.OrderType}");
                     status.StrategyAction = StrategyAction.OpenTrade;
                     status.StrategyState = StrategyState.WaitingForEntry;
                 }
@@ -78,6 +92,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             var exitDetails = ExitStrategy.GetNextExit(trade.TotalOpenBaseQuantity, currentPrice, trade.ProfitPct);
             if (exitDetails.ShouldTrade)
             {
+                _logger?.LogInformation($"[1M {ts}] EXIT SIGNAL: {_setup.RecommendedExitStrategy} | Price: {currentPrice:F2} | PnL: {trade.ProfitPct:F2}% | Qty: {exitDetails.Quantity}");
                 status.StrategyAction = StrategyAction.CloseTrade;
                 status.StrategyState = StrategyState.ExitSubmitted;
             }

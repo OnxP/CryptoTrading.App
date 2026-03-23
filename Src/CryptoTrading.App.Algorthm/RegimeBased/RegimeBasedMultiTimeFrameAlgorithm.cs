@@ -61,6 +61,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             _setupStrategy = setupStrategy ?? new RegimeBasedSetupStrategy();
             _logger = logger;
 
+            // Pass logger to strategies that support it
+            (_setupStrategy as RegimeBasedSetupStrategy)?.SetLogger(_logger);
+
             _quoteHub4H = new QuoteHub<IQuote>(_candlesToKeep);
             _quoteHub15M = new QuoteHub<IQuote>(_candlesToKeep);
             _quoteHub1M = new QuoteHub<IQuote>(_candlesToKeep);
@@ -242,6 +245,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     var regimeResult = strategyResult as RegimeBasedStrategyResult;
                     _activeSetup = regimeResult?.Setup;
                     _activeExecutionStrategy = executionStrategy;
+
+                    // Pass logger to execution strategy and its entry/exit strategies
+                    (executionStrategy as RegimeBasedExecutionStrategy)?.SetLogger(_logger);
 
                     // Submit trade request to RequestTracker for execution by TradeMonitor
                     if (_activeSetup != null)
