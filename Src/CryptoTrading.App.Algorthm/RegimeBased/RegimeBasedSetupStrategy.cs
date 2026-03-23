@@ -34,7 +34,6 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
         // Leverage probability calculator
         private readonly LeverageProbabilityCalculator _leverageCalculator = new LeverageProbabilityCalculator();
-
         // Configuration
         private readonly decimal _minRiskRewardRatio = 1.5m;
         private readonly int _macdFast = 12;
