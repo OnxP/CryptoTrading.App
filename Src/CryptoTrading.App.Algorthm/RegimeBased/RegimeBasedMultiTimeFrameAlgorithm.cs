@@ -243,7 +243,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     _activeSetup = regimeResult?.Setup;
                     _activeExecutionStrategy = executionStrategy;
 
-                    // Setup detected — 1M execution layer will handle precise entry and trade submission
+                    // Submit trade request to RequestTracker for execution by TradeMonitor
                     if (_activeSetup != null)
                     {
                         _logger.LogInformation(
@@ -256,6 +256,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                         _logger.LogInformation(
                             $"[15M {ts15M}] Entry: {_activeSetup.RecommendedEntryStrategy} | Exit: {_activeSetup.RecommendedExitStrategy} | " +
                             $"Conf: {_activeSetup.Confidence:P0}");
+
+                        RequestTracker.Instance.Add(
+                            args.Candlestick.Symbol,
+                            new CryptoTrading.App.Algorithm.TradeRequest(strategyResult, executionStrategy, _symbol, args.Candlestick.CloseTime),
+                            KeyValue);
                     }
                 }
             }
