@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
 {
@@ -17,11 +18,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             var result = new TradeDetails { ShouldTrade = false };
 
             decimal rMultiple = GetRMultiple(currentPrice);
+            Logger?.LogDebug($"[1M EXIT ScaleOut] R:{rMultiple:F2} price:{currentPrice:F2} pos:{positionSize}");
 
-            // Scale out at R-multiples
             if (rMultiple >= 3.0m)
             {
-                // Final exit
+                Logger?.LogInformation($"[1M EXIT ScaleOut] FULL EXIT @ 3R ({rMultiple:F2}) price:{currentPrice:F2}");
                 result.ShouldTrade = true;
                 result.Price = currentPrice;
                 result.Quantity = positionSize;
@@ -29,7 +30,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             }
             else if (rMultiple >= 2.0m && IsMomentumExhausted())
             {
-                // Exit remaining on reversal
+                Logger?.LogInformation($"[1M EXIT ScaleOut] EXIT @ 2R momentum exhausted ({rMultiple:F2}) price:{currentPrice:F2}");
                 result.ShouldTrade = true;
                 result.Price = currentPrice;
                 result.Quantity = positionSize;
@@ -37,7 +38,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             }
             else if (rMultiple >= 1.0m)
             {
-                // Partial exit at 1R (take 1/3)
+                Logger?.LogInformation($"[1M EXIT ScaleOut] PARTIAL 33% @ 1R ({rMultiple:F2}) price:{currentPrice:F2}");
                 result.ShouldTrade = true;
                 result.Price = currentPrice;
                 result.Quantity = positionSize * 0.33m;

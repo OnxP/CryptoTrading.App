@@ -61,6 +61,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             _setupStrategy = setupStrategy ?? new RegimeBasedSetupStrategy();
             _logger = logger;
 
+            // Pass logger to strategies that support it
+            (_setupStrategy as RegimeBasedSetupStrategy)?.SetLogger(_logger);
+
             _quoteHub4H = new QuoteHub<IQuote>(_candlesToKeep);
             _quoteHub15M = new QuoteHub<IQuote>(_candlesToKeep);
             _quoteHub1M = new QuoteHub<IQuote>(_candlesToKeep);
@@ -78,6 +81,57 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         public void Configure(IConfig config)
         {
             Config = config;
+            LogRunParameters();
+        }
+
+        private void LogRunParameters()
+        {
+            _logger.LogInformation("================================================================");
+            _logger.LogInformation("  RUN PARAMETERS");
+            _logger.LogInformation("================================================================");
+
+            // Database / run config
+            _logger.LogInformation($"  RunType:            {Config.RunType}");
+            _logger.LogInformation($"  Interval:           {Config.Interval}");
+            _logger.LogInformation($"  From:               {Config.From:yyyy-MM-dd}");
+            _logger.LogInformation($"  To:                 {Config.To:yyyy-MM-dd}");
+            _logger.LogInformation($"  NoOfTrades:         {Config.NoOfTrades}");
+            _logger.LogInformation($"  Risk:               {Config.Risk}");
+            _logger.LogInformation($"  UseFixedAmount:     {Config.UseFixedAmount}");
+            _logger.LogInformation($"  FixedAmount:        {Config.FixedAmount}");
+            _logger.LogInformation($"  PercentDailyVolume: {Config.PercentDailyVolume}");
+            _logger.LogInformation($"  StartBtcAmount:     {Config.StartBtcAmount}");
+            _logger.LogInformation($"  CandlesToLoad:      {Config.NumberOfCandleSticksToLoad}");
+            _logger.LogInformation($"  Increment:          {Config.Increment}");
+
+            // 4H regime strategy parameters
+            var regimeStrategy = _regimeStrategy as RegimeBasedMarketStructureStrategy;
+            _logger.LogInformation("  -- 4H Regime Strategy --");
+            _logger.LogInformation($"  EmaGradientPeriod:     5 (default)");
+            _logger.LogInformation($"  GradientLookback:      3 (default)");
+            _logger.LogInformation($"  TrendThreshold:        0.05 (default)");
+            _logger.LogInformation($"  VolHighPercentile:     75");
+            _logger.LogInformation($"  VolLowPercentile:      25");
+
+            // 15M setup strategy parameters
+            _logger.LogInformation("  -- 15M Setup Strategy --");
+            _logger.LogInformation($"  MinRiskRewardRatio:    1.5");
+            _logger.LogInformation($"  MACD:                  12/26/9");
+            _logger.LogInformation($"  BollingerBands:        20 period, 2 stddev");
+            _logger.LogInformation($"  RSI:                   14 period, oversold=35, overbought=65");
+            _logger.LogInformation($"  ZoneProximity:         2x ATR");
+
+            // 1M entry strategy parameters
+            _logger.LogInformation("  -- 1M Entry Strategy --");
+            _logger.LogInformation($"  StochRsi:              14/14/3/3, oversold=20, overbought=80");
+
+            // 1M exit strategy parameters
+            _logger.LogInformation("  -- 1M Exit Strategy --");
+            _logger.LogInformation($"  TrailingStop:          startR=1.0, trailATR=1.5x");
+            _logger.LogInformation($"  ScaleOut:              1R=33%, 2R+exhausted=100%, 3R=100%");
+            _logger.LogInformation($"  FixedTarget:           exit at 80% progress + momentum exhausted");
+
+            _logger.LogInformation("================================================================");
         }
 
         public void Subscribe(Symbol symbol, IMarketDataEvents marketData)
@@ -242,6 +296,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     var regimeResult = strategyResult as RegimeBasedStrategyResult;
                     _activeSetup = regimeResult?.Setup;
                     _activeExecutionStrategy = executionStrategy;
+
+                    // Pass logger to execution strategy and its entry/exit strategies
+                    (executionStrategy as RegimeBasedExecutionStrategy)?.SetLogger(_logger);
 
                     // Submit trade request to RequestTracker for execution by TradeMonitor
                     if (_activeSetup != null)

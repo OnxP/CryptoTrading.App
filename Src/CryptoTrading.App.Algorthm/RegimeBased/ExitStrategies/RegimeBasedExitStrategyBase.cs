@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
 using System.Linq;
@@ -14,6 +15,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
     {
         protected QuoteHub<IQuote> QuoteHub;
         protected readonly SetupResult Setup;
+        protected ILogger Logger;
+
+        public void SetLogger(ILogger logger) => Logger = logger;
 
         // Position tracking
         protected decimal HighestPrice;
@@ -65,6 +69,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             // Check hard stop
             if (CheckStopLoss(close))
             {
+                Logger?.LogInformation($"[1M EXIT] STOP LOSS HIT @ {close:F2} (stop:{Setup.StopLoss:F2}) bars:{BarsHeld}");
                 result.ShouldTrade = true;
                 result.Price = Setup.StopLoss;
                 result.Quantity = currentPositionSize;
@@ -75,6 +80,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             // Check take profit
             if (CheckTakeProfit(close))
             {
+                Logger?.LogInformation($"[1M EXIT] TAKE PROFIT HIT @ {close:F2} (tp:{Setup.TakeProfit:F2}) bars:{BarsHeld}");
                 result.ShouldTrade = true;
                 result.Price = Setup.TakeProfit;
                 result.Quantity = currentPositionSize;

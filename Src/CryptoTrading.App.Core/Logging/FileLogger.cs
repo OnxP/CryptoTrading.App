@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace CryptoTrading.App.Core.Logging
@@ -31,13 +32,25 @@ namespace CryptoTrading.App.Core.Logging
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentNullException(nameof(filePath));
 
+            // Tag log file name with current git commit
+            var commitHash = GetGitCommitHash();
+            if (!string.IsNullOrEmpty(commitHash))
+            {
+                var dir = Path.GetDirectoryName(filePath);
+                var name = Path.GetFileNameWithoutExtension(filePath);
+                var ext = Path.GetExtension(filePath);
+                filePath = Path.Combine(dir ?? "", $"{name}_{commitHash}{ext}");
+            }
+
             _filePath = filePath;
             _level = level;
 
-            //delete first log file.
-
-            FileInfo fi1 = new FileInfo(filePath);
+            // Truncate log file for each new run
+            FileInfo fi1 = new FileInfo(_filePath);
             if(fi1.Exists) fi1.Delete();
+
+            // Write header with run metadata
+            WriteHeader(commitHash);
         }
 
         public FileLogger(string filePath, LogLevel level, int maxLogSize) : this(filePath, level)
@@ -147,6 +160,47 @@ namespace CryptoTrading.App.Core.Logging
                 default:
                     throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
             }
+        }
+
+        private static string GetGitCommitHash()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("git", "rev-parse --short HEAD")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using var process = Process.Start(psi);
+                var output = process?.StandardOutput.ReadToEnd().Trim();
+                process?.WaitForExit(3000);
+                return output;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void WriteHeader(string commitHash)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                using var stream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                using var writer = new StreamWriter(stream) { AutoFlush = true };
+                writer.WriteLine("================================================================");
+                writer.WriteLine($"  Run started: {DateTimeOffset.Now}");
+                writer.WriteLine($"  Git commit:  {commitHash ?? "unknown"}");
+                writer.WriteLine($"  Log level:   {_level}");
+                writer.WriteLine("================================================================");
+                writer.WriteLine();
+            }
+            catch { /* ignore */ }
         }
 
         #endregion

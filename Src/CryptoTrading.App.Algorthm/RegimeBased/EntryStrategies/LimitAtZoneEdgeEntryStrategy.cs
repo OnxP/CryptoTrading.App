@@ -1,4 +1,5 @@
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 
 namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
@@ -23,24 +24,31 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
         {
             var result = new TradeDetails { ShouldTrade = false };
 
-            // Must have a zone from the setup
-            if (Setup.NearestZone == null) return result;
+            if (Setup.NearestZone == null)
+            {
+                Logger?.LogDebug("[1M ENTRY ZoneEdge] No zone in setup");
+                return result;
+            }
 
             var zone = Setup.NearestZone;
 
-            // Price must be within or very close to the zone
             bool nearZone = zone.Contains(currentPrice) ||
                             zone.DistanceTo(currentPrice) <= (zone.High - zone.Low) * 0.5m;
-            if (!nearZone) return result;
+            if (!nearZone)
+            {
+                Logger?.LogDebug($"[1M ENTRY ZoneEdge] Price {currentPrice:F2} not near zone [{zone.Low:F2}-{zone.High:F2}] dist:{zone.DistanceTo(currentPrice):F2}");
+                return result;
+            }
 
             var recentCandles = QuoteHub.Quotes.TakeLast(5).ToList();
 
             if (Setup.Direction == TradeDirection.Long && zone.Type == ZoneType.Demand)
             {
-                // At demand zone: look for bullish reversal patterns
                 bool bullishEngulfing = IsBullishEngulfing(recentCandles);
                 bool hammer = IsHammerPattern(recentCandles.Last());
                 bool risingMomentum = IsRisingMicroMomentum();
+
+                Logger?.LogDebug($"[1M ENTRY ZoneEdge LONG] price:{currentPrice:F2} zone:[{zone.Low:F2}-{zone.High:F2}] | engulfing:{bullishEngulfing} hammer:{hammer} momentum:{risingMomentum}");
 
                 if (bullishEngulfing || hammer || risingMomentum)
                 {
@@ -49,14 +57,16 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
                     result.Price = zone.High;
                     result.Quantity = targetPositionSize;
                     result.OrderType = "LIMIT";
+                    Logger?.LogInformation($"[1M ENTRY ZoneEdge] TRIGGER LONG LIMIT @ {zone.High:F2}");
                 }
             }
             else if (Setup.Direction == TradeDirection.Short && zone.Type == ZoneType.Supply)
             {
-                // At supply zone: look for bearish reversal patterns
                 bool bearishEngulfing = IsBearishEngulfing(recentCandles);
                 bool shootingStar = IsShootingStarPattern(recentCandles.Last());
                 bool fallingMomentum = IsFallingMicroMomentum();
+
+                Logger?.LogDebug($"[1M ENTRY ZoneEdge SHORT] price:{currentPrice:F2} zone:[{zone.Low:F2}-{zone.High:F2}] | engulfing:{bearishEngulfing} shootingStar:{shootingStar} momentum:{fallingMomentum}");
 
                 if (bearishEngulfing || shootingStar || fallingMomentum)
                 {
@@ -65,6 +75,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
                     result.Price = zone.Low;
                     result.Quantity = targetPositionSize;
                     result.OrderType = "LIMIT";
+                    Logger?.LogInformation($"[1M ENTRY ZoneEdge] TRIGGER SHORT LIMIT @ {zone.Low:F2}");
                 }
             }
 

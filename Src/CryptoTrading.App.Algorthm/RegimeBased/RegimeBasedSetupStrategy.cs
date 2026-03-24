@@ -1,5 +1,6 @@
 using Binance;
 using CryptoTrading.App.Core.Strategy;
+using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
     public class RegimeBasedSetupStrategy : IStrategy
     {
         private QuoteHub<IQuote> _quoteHub;
+        private ILogger _logger;
+
+        public void SetLogger(ILogger logger) => _logger = logger;
 
         // Streaming indicators
         private AtrHub<IQuote> _atr;
@@ -71,6 +75,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 regimeResult.AllowedDirection == AllowedDirection.None)
             {
                 // No-trade path: ranging + low vol, or no valid regime
+                _logger?.LogDebug($"[15M SKIP] No allowed setups. Regime: {regimeResult?.MarketRegime} | Vol: {regimeResult?.VolatilityRegime} | Dir: {regimeResult?.AllowedDirection}");
                 return (new StrategyResult { PostTrade = false }, null);
             }
 
@@ -81,13 +86,21 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 var setup = EvaluateSetup(setupType, regimeResult);
                 if (setup != null && setup.IsValid)
                 {
+                    _logger?.LogDebug($"[15M EVAL] {setupType} VALID R:R={setup.RiskRewardRatio:F2}");
                     if (bestSetup == null || setup.RiskRewardRatio > bestSetup.RiskRewardRatio)
                         bestSetup = setup;
+                }
+                else
+                {
+                    _logger?.LogDebug($"[15M EVAL] {setupType} REJECTED - {setup?.Reasoning ?? "no signal"}");
                 }
             }
 
             if (bestSetup == null || !bestSetup.IsValid)
+            {
+                _logger?.LogDebug($"[15M SKIP] All setups invalid. Evaluated: {string.Join(", ", regimeResult.AllowedSetups)}");
                 return (new StrategyResult { PostTrade = false }, null);
+            }
 
             // Calculate leverage probability score
             var leverageRec = _leverageCalculator.Calculate(
@@ -150,11 +163,19 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 Direction = direction
             };
 
-            if (!HasSufficientData() || _macd == null || _macd.Count < 2) return result;
+            if (!HasSufficientData() || _macd == null || _macd.Count < 2)
+            {
+                result.Reasoning = "insufficient data";
+                return result;
+            }
 
             var currentPrice = (decimal)_quoteHub.Quotes.Last().Close;
             var atr = (decimal)(_atr.Results.LastOrDefault()?.Atr ?? 0);
-            if (atr == 0) return result;
+            if (atr == 0)
+            {
+                result.Reasoning = "ATR=0";
+                return result;
+            }
 
             var currentMacd = _macd[_macd.Count - 1];
             var previousMacd = _macd[_macd.Count - 2];
@@ -200,14 +221,22 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 target = structureLow < currentPrice ? structureLow : currentPrice - (3m * atr);
             }
 
-            if (!macdSignal) return result;
+            if (!macdSignal)
+            {
+                result.Reasoning = $"no MACD cross (hist:{currHistogram:F4} prev:{prevHistogram:F4} macd:{currMacdLine:F4} sig:{currSignalLine:F4})";
+                return result;
+            }
 
             // Calculate risk/reward
             decimal risk = Math.Abs(currentPrice - stop);
             decimal reward = Math.Abs(target - currentPrice);
             result.RiskRewardRatio = risk > 0 ? reward / risk : 0;
 
-            if (result.RiskRewardRatio < _minRiskRewardRatio) return result;
+            if (result.RiskRewardRatio < _minRiskRewardRatio)
+            {
+                result.Reasoning = $"R:R too low ({result.RiskRewardRatio:F2} < {_minRiskRewardRatio}) price:{currentPrice:F2} stop:{stop:F2} target:{target:F2}";
+                return result;
+            }
 
             // Check zone proximity: within 2×ATR of a relevant zone?
             var zoneType = direction == TradeDirection.Long ? ZoneType.Demand : ZoneType.Supply;
@@ -262,7 +291,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 Direction = direction
             };
 
-            if (!HasSufficientData() || _bollingerBands == null || _rsi == null) return result;
+            if (!HasSufficientData() || _bollingerBands == null || _rsi == null)
+            {
+                result.Reasoning = "insufficient data for BB";
+                return result;
+            }
 
             var currentPrice = (decimal)_quoteHub.Quotes.Last().Close;
             var bb = _bollingerBands.LastOrDefault();
@@ -301,14 +334,22 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 target = bbMiddle;
             }
 
-            if (!bbSignal) return result;
+            if (!bbSignal)
+            {
+                result.Reasoning = $"no BB signal (price:{currentPrice:F2} bbLow:{bbLower:F2} bbUp:{bbUpper:F2} rsi:{rsi:F1})";
+                return result;
+            }
 
             // Calculate risk/reward
             decimal risk = Math.Abs(currentPrice - stop);
             decimal reward = Math.Abs(target - currentPrice);
             result.RiskRewardRatio = risk > 0 ? reward / risk : 0;
 
-            if (result.RiskRewardRatio < _minRiskRewardRatio) return result;
+            if (result.RiskRewardRatio < _minRiskRewardRatio)
+            {
+                result.Reasoning = $"R:R too low ({result.RiskRewardRatio:F2} < {_minRiskRewardRatio}) price:{currentPrice:F2} stop:{stop:F2} target:{bbMiddle:F2}";
+                return result;
+            }
 
             // Check zone proximity
             var zoneType = direction == TradeDirection.Long ? ZoneType.Demand : ZoneType.Supply;
