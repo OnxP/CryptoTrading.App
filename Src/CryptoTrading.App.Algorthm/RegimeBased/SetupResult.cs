@@ -40,5 +40,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
     public class RegimeBasedStrategyResult : StrategyResult
     {
         public SetupResult Setup { get; set; }
+
+        /// <summary>
+        /// Leverage probability analysis showing the composite score,
+        /// component scores, and recommended vs actual leverage.
+        /// </summary>
+        public LeverageRecommendation LeverageRecommendation { get; set; }
     }
 }

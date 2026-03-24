@@ -36,6 +36,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         private IReadOnlyList<BollingerBandsResult> _bollingerBands;
         private IReadOnlyList<RsiResult> _rsi;
 
+        // Leverage probability calculator
+        private readonly LeverageProbabilityCalculator _leverageCalculator = new LeverageProbabilityCalculator();
         // Configuration
         private readonly decimal _minRiskRewardRatio = 1.5m;
         private readonly int _macdFast = 12;
@@ -100,14 +102,28 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 return (new StrategyResult { PostTrade = false }, null);
             }
 
+            // Calculate leverage probability score
+            var leverageRec = _leverageCalculator.Calculate(
+                regimeConfidence: regimeResult.Confidence,
+                setupConfidence: bestSetup.Confidence,
+                volatilityRegime: regimeResult.VolatilityRegime,
+                atrPercentile: regimeResult.AtrPercentile,
+                isZoneTrade: bestSetup.IsZoneTrade,
+                riskRewardRatio: bestSetup.RiskRewardRatio);
+
+            // Skip trade if composite score is below minimum threshold
+            if (leverageRec.ActualLeverage == 0)
+                return (new StrategyResult { PostTrade = false }, null);
+
             // Create result and execution strategy
             var strategyResult = new RegimeBasedStrategyResult
             {
                 PostTrade = true,
                 Amount = 0.1m,
-                Leverage = 3,
+                Leverage = leverageRec.ActualLeverage,
                 OrderSide = bestSetup.Direction == TradeDirection.Long ? OrderSide.Buy : OrderSide.Sell,
-                Setup = bestSetup
+                Setup = bestSetup,
+                LeverageRecommendation = leverageRec
             };
 
             var executionStrategy = new RegimeBasedExecutionStrategy(_quoteHub, bestSetup);
