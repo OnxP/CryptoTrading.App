@@ -86,7 +86,7 @@ namespace CryptoTrading.App.Monitor
                     break;
                 case CompareResults.ChangeDirection:
                     //need to exit out of the existing one.
-                    if(Trade.GetCurrentTransaction() != null)
+                    if(Trade.GetCurrentTransaction() != null && marketMonitor != null)
                     {
                         await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
                         if(!Trade.GetCurrentTransaction().IsFilled)
@@ -444,7 +444,8 @@ namespace CryptoTrading.App.Monitor
 
         public void CompleteTrade()
         {
-            marketMonitor = null;
+            // Note: marketMonitor is intentionally kept alive here so the monitor
+            // can continue processing candles and handling new requests for the next trade.
             if (Config != null)
             {
                 var factory = new ArchiveTradeFactory(Config);
