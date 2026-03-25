@@ -14,7 +14,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
     public abstract class RegimeBasedExitStrategyBase : IExitStrategy
     {
         protected QuoteHub<IQuote> QuoteHub;
-        protected readonly SetupResult Setup;
+        public SetupResult Setup { get; protected set; }
         protected ILogger Logger;
 
         public void SetLogger(ILogger logger) => Logger = logger;
@@ -34,6 +34,19 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
         public void SetQuotes(QuoteHub<IQuote> quoteHub)
         {
             QuoteHub = quoteHub;
+        }
+
+        /// <summary>
+        /// Updates the setup with fresh SL/TP levels from a newer 15M setup.
+        /// Called when a same-direction setup arrives while a trade is open.
+        /// </summary>
+        public void UpdateSetup(SetupResult newSetup)
+        {
+            if (newSetup == null) return;
+            Logger?.LogInformation(
+                $"[1M EXIT] Updating SL/TP: SL {Setup.StopLoss:F2}->{newSetup.StopLoss:F2}, " +
+                $"TP {Setup.TakeProfit:F2}->{newSetup.TakeProfit:F2}");
+            Setup = newSetup;
         }
 
         public void InitializePosition(decimal entryPrice)
@@ -66,23 +79,24 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             if (close < LowestPrice) LowestPrice = close;
             BarsHeld++;
 
-            // Check hard stop
+            // Check hard stop — SL is algorithm-only, so the exit order is a new
+            // market order at the current price, not at the theoretical SL level.
             if (CheckStopLoss(close))
             {
                 Logger?.LogInformation($"[1M EXIT] STOP LOSS HIT @ {close:F2} (stop:{Setup.StopLoss:F2}) bars:{BarsHeld}");
                 result.ShouldTrade = true;
-                result.Price = Setup.StopLoss;
+                result.Price = close;
                 result.Quantity = currentPositionSize;
                 result.OrderType = "MARKET";
                 return result;
             }
 
-            // Check take profit
+            // Check take profit — fill at actual market price, not the theoretical TP level.
             if (CheckTakeProfit(close))
             {
                 Logger?.LogInformation($"[1M EXIT] TAKE PROFIT HIT @ {close:F2} (tp:{Setup.TakeProfit:F2}) bars:{BarsHeld}");
                 result.ShouldTrade = true;
-                result.Price = Setup.TakeProfit;
+                result.Price = close;
                 result.Quantity = currentPositionSize;
                 result.OrderType = "MARKET";
                 return result;

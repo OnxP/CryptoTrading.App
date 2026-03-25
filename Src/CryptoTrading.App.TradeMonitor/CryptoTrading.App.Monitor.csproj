@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CryptoTrading.App.Algorthm\CryptoTrading.App.Algorithm.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
   </ItemGroup>
 
