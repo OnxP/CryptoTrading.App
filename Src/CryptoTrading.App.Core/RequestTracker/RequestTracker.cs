@@ -29,7 +29,11 @@ namespace CryptoTrading.App.Core.RequestTracker
         }
         public void Add(string symbol, ITradeRequest request, string keyValue)
         {
-            Requests.TryAdd(symbol, new Tuple<string, ITradeRequest>(keyValue, request));
+            // Use AddOrUpdate so newer setups replace older pending ones for the same symbol
+            Requests.AddOrUpdate(
+                symbol,
+                new Tuple<string, ITradeRequest>(keyValue, request),
+                (key, existing) => new Tuple<string, ITradeRequest>(keyValue, request));
 
             //if (CandleStickTracker.Instance.IsFinal) ProcessRequests();
         }
