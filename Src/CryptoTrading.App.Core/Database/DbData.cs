@@ -117,9 +117,10 @@ namespace CryptoTrading.App.Core.Database
         {
             lock (_lock)
             {
-                foreach (var kvp in _data.Where(kvp => kvp.Key <= from))
+                var keysToRemove = _data.Keys.Where(k => k <= from).ToList();
+                foreach (var key in keysToRemove)
                 {
-                    RemoveTick(kvp.Key);
+                    _data.Remove(key);
                 }
             }
         }
