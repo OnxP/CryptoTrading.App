@@ -1,5 +1,7 @@
 ﻿using Binance;
 using Binance.Client;
+using CryptoTrading.App.Algorithm.RegimeBased;
+using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.MarketMonitorFactory;
@@ -82,6 +84,14 @@ namespace CryptoTrading.App.Monitor
                         // Store the new request so CompleteTrade can pick it up after the current trade closes
                         Logger.LogDebug($"In position ({_positionState}) for {Symbol}, queuing new setup for next trade.");
                         _pendingRequest = what;
+
+                        // Also update the current exit strategy's SL/TP with fresh levels
+                        // so the active trade uses current risk management, not stale values
+                        if (what.Strategy.ExitStrategy is RegimeBasedExitStrategyBase newExit
+                            && Request.Strategy.ExitStrategy is RegimeBasedExitStrategyBase currentExit)
+                        {
+                            currentExit.UpdateSetup(newExit.Setup);
+                        }
                     }
                     break;
                 case CompareResults.ChangeDirection:

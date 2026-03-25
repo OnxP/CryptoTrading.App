@@ -14,7 +14,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
     public abstract class RegimeBasedExitStrategyBase : IExitStrategy
     {
         protected QuoteHub<IQuote> QuoteHub;
-        protected readonly SetupResult Setup;
+        public SetupResult Setup { get; protected set; }
         protected ILogger Logger;
 
         public void SetLogger(ILogger logger) => Logger = logger;
@@ -75,6 +75,19 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
         public void SetQuotes(QuoteHub<IQuote> quoteHub)
         {
             QuoteHub = quoteHub;
+        }
+
+        /// <summary>
+        /// Updates the setup with fresh SL/TP levels from a newer 15M setup.
+        /// Called when a same-direction setup arrives while a trade is open.
+        /// </summary>
+        public void UpdateSetup(SetupResult newSetup)
+        {
+            if (newSetup == null) return;
+            Logger?.LogInformation(
+                $"[1M EXIT] Updating SL/TP: SL {Setup.StopLoss:F2}->{newSetup.StopLoss:F2}, " +
+                $"TP {Setup.TakeProfit:F2}->{newSetup.TakeProfit:F2}");
+            Setup = newSetup;
         }
 
         public void InitializePosition(decimal entryPrice)
