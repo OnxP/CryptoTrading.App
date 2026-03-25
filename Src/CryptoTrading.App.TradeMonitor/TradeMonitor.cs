@@ -41,6 +41,7 @@ namespace CryptoTrading.App.Monitor
         public ITradeRequest Request { get; set; }
         private readonly QuoteHub<IQuote> _quoteHub;
         private PositionState _positionState = PositionState.NoPosition;
+        private ITradeRequest _pendingRequest;
 
         public async Task SubscribetToMarketData()
         {
@@ -68,6 +69,20 @@ namespace CryptoTrading.App.Monitor
             switch (compareResults)
             {
                 case CompareResults.SameDirection:
+                    // Same direction: update the request with fresh setup/prices
+                    // but only if we're not currently in an active position
+                    if (_positionState == PositionState.NoPosition)
+                    {
+                        Logger.LogInformation($"Updating setup for {Symbol} (same direction). New entry zone from 15M.");
+                        Request = what;
+                        Request.Strategy.SetQuotes(_quoteHub);
+                    }
+                    else
+                    {
+                        // Store the new request so CompleteTrade can pick it up after the current trade closes
+                        Logger.LogDebug($"In position ({_positionState}) for {Symbol}, queuing new setup for next trade.");
+                        _pendingRequest = what;
+                    }
                     break;
                 case CompareResults.ChangeDirection:
                     //need to exit out of the existing one.
@@ -85,15 +100,12 @@ namespace CryptoTrading.App.Monitor
                             await SubmitOrder(transaction);
                         }
                     }
+                    Request = what;
+                    Request.Strategy.SetQuotes(_quoteHub);
                     break;
                 default:
                     break;
             }
-            Request = what;
-            Request.Strategy.SetQuotes(_quoteHub);
-            //need to decide what to do here. if some clean up is needed Process next candle stick should take care of this,
-            //but cancelling an open order when the trade needs to flip or exiting out of an existing Buy due to a new sell order.
-
         }
 
         private CompareResults CompareRequests(ITradeRequest request, ITradeRequest what)
@@ -439,6 +451,16 @@ namespace CryptoTrading.App.Monitor
                 var trade = factory.CreateHistoricTrades(Trade);
                 //StoreTradesToDb(trade, Config);
             }
+
+            // Adopt the pending request if a newer setup arrived while in position
+            if (_pendingRequest != null)
+            {
+                Logger.LogInformation($"Adopting queued setup for {Symbol} with fresh prices.");
+                Request = _pendingRequest;
+                Request.Strategy.SetQuotes(_quoteHub);
+                _pendingRequest = null;
+            }
+
             var newTrade = _positions.CreateTrade(Request);
             HistoricTrades.Add(newTrade);
         }

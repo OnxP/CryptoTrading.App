@@ -79,7 +79,7 @@ namespace CryptoTrading.App.Monitor
 
         private bool CheckCurrentOrderMonitors(string symbol)
         {
-            if (CurrentMonitors.Count() != 0) return false;
+            if (CurrentMonitors.Count() == 0) return false;
             return CurrentMonitors.LastOrDefault(x => x.Symbol == symbol) != null && CurrentMonitors.LastOrDefault(x => x.Symbol == symbol)!.Live;
         }
 
