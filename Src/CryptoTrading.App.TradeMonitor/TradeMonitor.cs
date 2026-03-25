@@ -201,38 +201,68 @@ namespace CryptoTrading.App.Monitor
                 // Strategy changed, need to exit early
                 Logger.LogInformation($"Exiting position early during build phase for {Symbol}");
                 await CancelAllPendingEntries();
+
+                // If nothing was filled, go straight back to NoPosition
+                if (Trade.TotalOpenBaseQuantity <= 0)
+                {
+                    Logger.LogInformation($"No filled quantity to close for {Symbol}. Returning to NoPosition");
+                    _positionState = PositionState.NoPosition;
+                    CompleteTrade();
+                    return;
+                }
+
                 _positionState = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick);
+                return; // Don't fall through to the FullyOpen check
             }
 
-            // Check if position is fully built
-            if (Trade.RemainingQuantity >= Trade.RemainingQuantity && Trade.PendingEntryTransactions.Count == 0)
+            // Check if position is fully built (has filled quantity and no pending entries)
+            if (Trade.TotalOpenBaseQuantity > 0 && Trade.PendingEntryTransactions.Count == 0)
             {
-                Logger.LogInformation($"Position fully built for {Symbol}. Size: {Trade.RemainingQuantity}");
+                Logger.LogInformation($"Position fully built for {Symbol}. Size: {Trade.TotalOpenBaseQuantity}");
                 _positionState = PositionState.FullyOpen;
             }
         }
 
         private async Task HandleFullyOpenPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
+            // Safety check: if position has no quantity, reset to NoPosition
+            if (Trade.TotalOpenBaseQuantity <= 0)
+            {
+                Logger.LogWarning($"Position has zero quantity for {Symbol}. Resetting to NoPosition");
+                _positionState = PositionState.NoPosition;
+                CompleteTrade();
+                return;
+            }
+
+            // Check for exit signal first (takes priority)
+            if (result.StrategyAction == StrategyAction.CloseTrade)
+            {
+                Logger.LogInformation($"Exit signal received for {Symbol}");
+                _positionState = PositionState.Closing;
+                await ExecuteExitStrategy(candleStick);
+                return;
+            }
+
             // Check if position is in profit
             if (Trade.ProfitPct > 0)
             {
                 Logger.LogInformation($"Position in profit for {Symbol}. Profit: {Trade.ProfitPct}%");
                 _positionState = PositionState.InProfit;
             }
-
-            // Check for exit signal
-            if (result.StrategyAction == StrategyAction.CloseTrade)
-            {
-                Logger.LogInformation($"Exit signal received for {Symbol}");
-                _positionState = PositionState.Closing;
-                await ExecuteExitStrategy(candleStick);
-            }
         }
 
         private async Task HandleInProfitPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
+            // Safety check: if position has no quantity, reset to NoPosition
+            if (Trade.TotalOpenBaseQuantity <= 0)
+            {
+                Logger.LogWarning($"InProfit position has zero quantity for {Symbol}. Resetting to NoPosition");
+                _positionState = PositionState.NoPosition;
+                CompleteTrade();
+                return;
+            }
+
             // Once in profit, use exit strategy
             if (result.StrategyAction == StrategyAction.CloseTrade)
             {
@@ -250,7 +280,7 @@ namespace CryptoTrading.App.Monitor
         private async Task HandleClosingPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
             // Continue executing exit strategy until position is fully closed
-            if (Trade.RemainingQuantity > 0)
+            if (Trade.RemainingQuantity > 0 && Trade.TotalOpenBaseQuantity > 0)
             {
                 await ExecuteExitStrategy(candleStick);
             }
