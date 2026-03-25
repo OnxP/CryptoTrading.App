@@ -26,13 +26,21 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         public IExitStrategy ExitStrategy { get; set; }
         public decimal Quantity { get; set; }
 
+        // Fee and minimum profit configuration
+        // Round-trip fee rate: buy + sell fees combined (default 0.2% for Binance with BNB discount + margin)
+        public decimal RoundTripFeeRate { get; set; } = 0.002m;
+        // Minimum profit target after fees (default 0.5%)
+        public decimal MinProfitRate { get; set; } = 0.005m;
+
         public RegimeBasedExecutionStrategy(QuoteHub<IQuote> quoteHub, SetupResult setup)
         {
             _setup = setup;
             Quantity = 0.1m; // Default, will be set by caller
 
             EntryStrategy = RegimeBasedEntryStrategyBase.Create(setup);
-            ExitStrategy = RegimeBasedExitStrategyBase.Create(setup);
+            var exitStrategy = RegimeBasedExitStrategyBase.Create(setup);
+            exitStrategy.SetMinProfitThreshold(RoundTripFeeRate, MinProfitRate);
+            ExitStrategy = exitStrategy;
 
             SetQuotes(quoteHub);
         }

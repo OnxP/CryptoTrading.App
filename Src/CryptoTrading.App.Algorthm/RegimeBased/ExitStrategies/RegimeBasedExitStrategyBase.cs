@@ -26,9 +26,50 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
         protected decimal EntryPrice;
         protected bool Initialized;
 
+        // Fee and minimum profit configuration
+        // Total round-trip fee as a percentage (buy + sell). Default 0.2% for Binance spot with BNB discount.
+        protected decimal RoundTripFeeRate = 0.002m;
+        // Minimum profit percentage target after fees. Default 0.5%.
+        protected decimal MinProfitRate = 0.005m;
+
         protected RegimeBasedExitStrategyBase(SetupResult setup)
         {
             Setup = setup;
+        }
+
+        /// <summary>
+        /// Configure fee rate and minimum profit threshold.
+        /// </summary>
+        /// <param name="roundTripFeeRate">Total fees for buy + sell as decimal (e.g. 0.002 = 0.2%)</param>
+        /// <param name="minProfitRate">Minimum profit target after fees as decimal (e.g. 0.005 = 0.5%)</param>
+        public void SetMinProfitThreshold(decimal roundTripFeeRate, decimal minProfitRate)
+        {
+            RoundTripFeeRate = roundTripFeeRate;
+            MinProfitRate = minProfitRate;
+        }
+
+        /// <summary>
+        /// Calculates the minimum exit price that achieves the target profit after fees.
+        /// For LONG: entry * (1 + fees + minProfit)
+        /// For SHORT: entry * (1 - fees - minProfit)
+        /// </summary>
+        protected decimal GetMinProfitPrice()
+        {
+            decimal totalRate = RoundTripFeeRate + MinProfitRate;
+            return Setup.Direction == TradeDirection.Long
+                ? EntryPrice * (1 + totalRate)
+                : EntryPrice * (1 - totalRate);
+        }
+
+        /// <summary>
+        /// Checks whether the current price meets the minimum profit threshold.
+        /// </summary>
+        protected bool MeetsMinProfitThreshold(decimal currentPrice)
+        {
+            var minPrice = GetMinProfitPrice();
+            return Setup.Direction == TradeDirection.Long
+                ? currentPrice >= minPrice
+                : currentPrice <= minPrice;
         }
 
         public void SetQuotes(QuoteHub<IQuote> quoteHub)
@@ -66,30 +107,46 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             if (close < LowestPrice) LowestPrice = close;
             BarsHeld++;
 
-            // Check hard stop
+            // Check hard stop — always fires regardless of profit threshold (protective exit)
             if (CheckStopLoss(close))
             {
                 Logger?.LogInformation($"[1M EXIT] STOP LOSS HIT @ {close:F2} (stop:{Setup.StopLoss:F2}) bars:{BarsHeld}");
                 result.ShouldTrade = true;
-                result.Price = Setup.StopLoss;
+                result.Price = close;
                 result.Quantity = currentPositionSize;
                 result.OrderType = "MARKET";
                 return result;
             }
 
-            // Check take profit
+            // Check take profit — only if minimum profit threshold is met
             if (CheckTakeProfit(close))
             {
-                Logger?.LogInformation($"[1M EXIT] TAKE PROFIT HIT @ {close:F2} (tp:{Setup.TakeProfit:F2}) bars:{BarsHeld}");
-                result.ShouldTrade = true;
-                result.Price = Setup.TakeProfit;
-                result.Quantity = currentPositionSize;
-                result.OrderType = "MARKET";
-                return result;
+                if (!MeetsMinProfitThreshold(close))
+                {
+                    Logger?.LogDebug($"[1M EXIT] TP level reached but below min profit threshold @ {close:F2} (minPrice:{GetMinProfitPrice():F2}) bars:{BarsHeld}");
+                }
+                else
+                {
+                    Logger?.LogInformation($"[1M EXIT] TAKE PROFIT HIT @ {close:F2} (tp:{Setup.TakeProfit:F2}, minPrice:{GetMinProfitPrice():F2}) bars:{BarsHeld}");
+                    result.ShouldTrade = true;
+                    result.Price = close;
+                    result.Quantity = currentPositionSize;
+                    result.OrderType = "MARKET";
+                    return result;
+                }
             }
 
             // Delegate to strategy-specific exit logic
-            return EvaluateExit(close, currentPositionSize);
+            var exitResult = EvaluateExit(close, currentPositionSize);
+
+            // Enforce minimum profit on strategy exits too (except SL which is handled above)
+            if (exitResult.ShouldTrade && !MeetsMinProfitThreshold(close))
+            {
+                Logger?.LogDebug($"[1M EXIT] Strategy exit suppressed — below min profit @ {close:F2} (minPrice:{GetMinProfitPrice():F2}) bars:{BarsHeld}");
+                exitResult.ShouldTrade = false;
+            }
+
+            return exitResult;
         }
 
         /// <summary>
