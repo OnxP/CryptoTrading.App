@@ -29,7 +29,7 @@ namespace CryptoTrading.App.Monitor
             marketMonitor = monitor;
             Logger = logger;
             Config = config;
-            _quoteHub = new QuoteHub<IQuote>();
+            _quoteHub = new QuoteHub<IQuote>(300);
         }
 
         public ITrade Trade => HistoricTrades.Last();

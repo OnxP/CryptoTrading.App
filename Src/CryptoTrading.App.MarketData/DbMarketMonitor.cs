@@ -107,7 +107,9 @@ namespace CryptoTrading.App.MarketData
                     }
                 }
             }
-            _data.ClearHistoric(_mangement.PreviousTick);
+            // Clear current tick's data — it's been fully consumed by both
+            // DbMarketData (4H/15M) and DbMarketMonitor (1M) at this point
+            _data.ClearHistoric(_mangement.CurrentTick);
         }
 
         public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
