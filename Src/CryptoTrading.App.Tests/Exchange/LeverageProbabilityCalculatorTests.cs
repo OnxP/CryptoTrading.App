@@ -57,7 +57,7 @@ namespace CryptoTrading.App.Tests.Exchange
                 riskRewardRatio: 2.0m);
 
             result.ActualLeverage.Should().BeInRange(1, 3);
-            result.CompositeScore.Should().BeGreaterOrEqualTo(0.5m);
+            result.CompositeScore.Should().BeGreaterThanOrEqualTo(0.5m);
         }
 
         [Fact]
@@ -192,7 +192,7 @@ namespace CryptoTrading.App.Tests.Exchange
                 isZoneTrade: true,
                 riskRewardRatio: 3.0m);
 
-            highRR.ZoneScore.Should().BeGreaterOrEqualTo(lowRR.ZoneScore);
+            highRR.ZoneScore.Should().BeGreaterThanOrEqualTo(lowRR.ZoneScore);
         }
     }
 }
