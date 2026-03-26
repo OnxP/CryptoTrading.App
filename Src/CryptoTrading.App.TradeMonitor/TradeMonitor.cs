@@ -200,26 +200,10 @@ namespace CryptoTrading.App.Monitor
             // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
         }
 
-        // Maximum age for a setup before it's considered stale.
-        // If the 15M layer hasn't produced a new setup within this window,
-        // the old entry zone/prices are no longer valid.
-        private static readonly TimeSpan MaxSetupAge = TimeSpan.FromHours(4);
-
         private async Task HandleNoPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                // Don't enter with a stale setup — the entry zone/prices may be days old
-                if (Request.RequestDateTime.HasValue)
-                {
-                    var setupAge = candleStick.Candlestick.CloseTime - Request.RequestDateTime.Value;
-                    if (setupAge > MaxSetupAge)
-                    {
-                        Logger.LogDebug($"[1M TM] Skipping entry for {Symbol} — setup is {setupAge.TotalHours:F1}h old (max {MaxSetupAge.TotalHours}h). Waiting for fresh 15M setup.");
-                        return;
-                    }
-                }
-
                 Logger.LogInformation($"Starting new position for {Symbol}");
                 _positionState = PositionState.Building;
 
@@ -352,15 +336,31 @@ namespace CryptoTrading.App.Monitor
 
             if (entryDecision.ShouldTrade)
             {
+                // For backtest LIMIT orders: a limit buy fills at min(limit, market),
+                // a limit sell fills at max(limit, market). The exchange would never
+                // fill worse than the current market price.
+                var marketPrice = candleStick.Candlestick.Close;
+                var fillPrice = string.Equals(entryDecision.OrderType?.ToString(), "LIMIT", StringComparison.OrdinalIgnoreCase)
+                    ? (Request.OrderSide == Binance.OrderSide.Buy
+                        ? Math.Min(entryDecision.Price, marketPrice)
+                        : Math.Max(entryDecision.Price, marketPrice))
+                    : marketPrice;
+
+                if (fillPrice != entryDecision.Price)
+                {
+                    Logger.LogInformation(
+                        $"Entry LIMIT price adjusted: {entryDecision.Price:F2} -> {fillPrice:F2} (market: {marketPrice:F2})");
+                }
+
                 var transaction = Trade.CreateOpenTransaction(
-                    entryDecision.Price,
+                    fillPrice,
                     candleStick.Candlestick.CloseTime,
                     entryDecision.Quantity//Quote Quantity
                 );
                 await SubmitOrder(transaction);
 
                 Logger.LogInformation(
-                    $"Entry order placed: {Symbol} Price: {entryDecision.Price}, " +
+                    $"Entry order placed: {Symbol} Price: {fillPrice}, " +
                     $"Qty: {entryDecision.Quantity}, Type: {entryDecision.OrderType}"
                 );
             }
