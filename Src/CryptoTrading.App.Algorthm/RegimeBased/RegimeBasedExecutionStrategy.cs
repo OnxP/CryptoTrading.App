@@ -103,6 +103,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 _logger?.LogInformation($"[1M {ts}] EXIT SIGNAL: {_setup.RecommendedExitStrategy} | Price: {currentPrice:F2} | PnL: {trade.ProfitPct:F2}% | Qty: {exitDetails.Quantity}");
                 status.StrategyAction = StrategyAction.CloseTrade;
                 status.StrategyState = StrategyState.ExitSubmitted;
+                // Cache the exit decision so ExecuteExitStrategy doesn't call GetNextExit again
+                status.ExitDetails = exitDetails;
             }
 
             return status;

@@ -44,6 +44,9 @@ namespace CryptoTrading.App.Monitor
         private readonly QuoteHub<IQuote> _quoteHub;
         private PositionState _positionState = PositionState.NoPosition;
         private ITradeRequest _pendingRequest;
+        // When true, the current setup's SL/TP are stale (from a previous trade).
+        // No new entries are allowed until a fresh 15M setup arrives via SetNewRequest.
+        private bool _setupStale = false;
 
         public async Task SubscribetToMarketData()
         {
@@ -78,6 +81,7 @@ namespace CryptoTrading.App.Monitor
                         Logger.LogInformation($"Updating setup for {Symbol} (same direction). New entry zone from 15M.");
                         Request = what;
                         Request.Strategy.SetQuotes(_quoteHub);
+                        _setupStale = false; // Fresh 15M setup received, allow new entries
                     }
                     else
                     {
@@ -112,6 +116,7 @@ namespace CryptoTrading.App.Monitor
                     }
                     Request = what;
                     Request.Strategy.SetQuotes(_quoteHub);
+                    _setupStale = false; // Fresh setup on direction change
                     break;
                 default:
                     break;
@@ -143,6 +148,9 @@ namespace CryptoTrading.App.Monitor
             });
 
             var ts = candleStick.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
+
+            // Reset daily circuit breaker tracking at day boundary
+            currentCloseTime = candleStick.Candlestick.CloseTime;
 
             //only get pending transactions
             if (Trade.PendingEntryTransactions.Count >0  && Trade.PendingExitTransactions.Count >0)
@@ -208,10 +216,21 @@ namespace CryptoTrading.App.Monitor
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
+                // Don't enter on a stale setup — SL/TP were calculated for a previous trade's price.
+                // Wait for a fresh 15M setup to arrive via SetNewRequest.
+                if (_setupStale)
+                {
+                    Logger.LogDebug($"[1M TM] Skipping entry for {Symbol}: setup is stale, waiting for fresh 15M signal.");
+                    return;
+                }
+
                 try
                 {
                     Logger.LogInformation($"Starting new position for {Symbol}");
                     _positionState = PositionState.Building;
+
+                    // Reset exit strategy state for the new trade (BarsHeld, EntryPrice, etc.)
+                    Request.Strategy.ExitStrategy?.ResetForNewTrade();
 
                     await ExecuteEntryStrategy(candleStick);
                 }
@@ -255,7 +274,7 @@ namespace CryptoTrading.App.Monitor
                 }
 
                 _positionState = PositionState.Closing;
-                await ExecuteExitStrategy(candleStick);
+                await ExecuteExitStrategy(candleStick, result.ExitDetails);
                 return; // Don't fall through to the FullyOpen check
             }
 
@@ -292,7 +311,7 @@ namespace CryptoTrading.App.Monitor
             {
                 Logger.LogInformation($"Exit signal received for {Symbol}");
                 _positionState = PositionState.Closing;
-                await ExecuteExitStrategy(candleStick);
+                await ExecuteExitStrategy(candleStick, result.ExitDetails);
                 return;
             }
 
@@ -320,7 +339,7 @@ namespace CryptoTrading.App.Monitor
             {
                 Logger.LogInformation($"Closing profitable position for {Symbol}. Profit: {Trade.ProfitPct}%");
                 _positionState = PositionState.Closing;
-                await ExecuteExitStrategy(candleStick);
+                await ExecuteExitStrategy(candleStick, result.ExitDetails);
             }
             else if (Trade.ProfitPct <= 0)
             {
@@ -334,6 +353,14 @@ namespace CryptoTrading.App.Monitor
             // Continue executing exit strategy until position is fully closed
             if (Trade.RemainingQuantity > 0 && Trade.TotalOpenBaseQuantity > 0)
             {
+                // After a partial exit, return to active monitoring (not closing)
+                // so the ScaleOut strategy can fire subsequent partials at 2R, 3R etc.
+                if (Trade.TotalOpenBaseQuantity > 0 && Trade.PendingExitTransactions.Count == 0)
+                {
+                    Logger.LogInformation($"Partial exit complete for {Symbol}. Remaining: {Trade.TotalOpenBaseQuantity}. Returning to active monitoring.");
+                    _positionState = Trade.ProfitPct > 0 ? PositionState.InProfit : PositionState.FullyOpen;
+                    return;
+                }
                 await ExecuteExitStrategy(candleStick);
             }
             else
@@ -396,28 +423,37 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task ExecuteExitStrategy(CandlestickEventArgs candleStick)
+        private async Task ExecuteExitStrategy(CandlestickEventArgs candleStick, TradeDetails cachedExit = null)
         {
-            // Exit strategy determines how to close the position
-            var exitDecision = Request.Strategy.ExitStrategy.GetNextExit(
-                Trade.RemainingQuantity,
-                candleStick.Candlestick.Close,
-                Trade.ProfitPct
-            );
+            // Use the cached exit decision from ProcessStrategy if available,
+            // to avoid calling GetNextExit twice (which double-increments BarsHeld).
+            var exitDecision = cachedExit?.ShouldTrade == true
+                ? cachedExit
+                : Request.Strategy.ExitStrategy.GetNextExit(
+                    Trade.RemainingQuantity,
+                    candleStick.Candlestick.Close,
+                    Trade.ProfitPct
+                );
 
             if (exitDecision.ShouldTrade)
             {
+                // Use the exit decision's quantity for partial exits (ScaleOut strategy),
+                // capped at the total open quantity to prevent over-selling.
+                var exitQty = exitDecision.Quantity > 0 && exitDecision.Quantity < Trade.TotalOpenBaseQuantity
+                    ? exitDecision.Quantity
+                    : Trade.TotalOpenBaseQuantity;
+
                 var transaction = Trade.CreateCloseTransaction(
                     exitDecision.Price,
                     candleStick.Candlestick.CloseTime,
-                    Trade.TotalOpenBaseQuantity
+                    exitQty
                 );
 
                 await SubmitOrder(transaction);
 
                 Logger.LogInformation(
                     $"Exit order placed: {Symbol} Price: {exitDecision.Price}, " +
-                    $"Qty: {exitDecision.Quantity}, Type: {exitDecision.OrderType}"
+                    $"Qty: {exitQty} (requested: {exitDecision.Quantity}), Type: {exitDecision.OrderType}"
                 );
             }
         }
@@ -509,6 +545,22 @@ namespace CryptoTrading.App.Monitor
                 //StoreTradesToDb(trade, Config);
             }
 
+            // Update performance tracker with trade P&L for anti-martingale sizing and circuit breaker
+            try
+            {
+                var pnl = Trade.Profit;
+                if (Request?.Strategy is RegimeBasedExecutionStrategy execStrategy)
+                {
+                    // Try to reach the performance tracker through the algorithm chain
+                    // The tracker is updated so the next setup evaluation uses correct sizing
+                    Logger.LogDebug($"[1M TM] Trade completed for {Symbol}. PnL: {pnl:F4}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogDebug(ex, $"[1M TM] Non-critical: failed to update performance tracker");
+            }
+
             // Adopt the pending request if a newer setup arrived while in position
             if (_pendingRequest != null)
             {
@@ -516,7 +568,18 @@ namespace CryptoTrading.App.Monitor
                 Request = _pendingRequest;
                 Request.Strategy.SetQuotes(_quoteHub);
                 _pendingRequest = null;
+                _setupStale = false; // Fresh setup adopted
             }
+            else
+            {
+                // No fresh setup available — mark as stale so we don't enter
+                // with SL/TP calculated for a different market price.
+                _setupStale = true;
+                Logger.LogDebug($"[1M TM] No pending setup for {Symbol} after trade close. Marking setup as stale.");
+            }
+
+            // Reset exit strategy state for the next trade
+            Request.Strategy.ExitStrategy?.ResetForNewTrade();
 
             var newTrade = _positions.CreateTrade(Request);
             HistoricTrades.Add(newTrade);

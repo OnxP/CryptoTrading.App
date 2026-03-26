@@ -31,6 +31,12 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         // Supply/demand zone detector
         private SupplyDemandZoneDetector _zoneDetector;
 
+        // Regime confirmation: require consecutive bars in the same direction to prevent whipsaw
+        private MarketRegime _previousRegime = MarketRegime.RangingMarket;
+        private MarketRegime _pendingRegime = MarketRegime.RangingMarket;
+        private int _pendingRegimeCount = 0;
+        private readonly int _regimeConfirmationBars = 2; // Require 2 consecutive bars of new regime
+
         // Configuration
         private readonly int _emaGradientPeriod;
         private readonly int _gradientLookback;
@@ -132,13 +138,51 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
         private MarketRegime ClassifyRegime(decimal normalizedGradient)
         {
+            MarketRegime rawRegime;
             if (normalizedGradient > _trendThreshold)
-                return MarketRegime.BullMarket;
+                rawRegime = MarketRegime.BullMarket;
+            else if (normalizedGradient < -_trendThreshold)
+                rawRegime = MarketRegime.BearMarket;
+            else
+                rawRegime = MarketRegime.RangingMarket;
 
-            if (normalizedGradient < -_trendThreshold)
-                return MarketRegime.BearMarket;
+            // Require N consecutive bars of a new regime before switching (prevents whipsaw).
+            // Transition to Ranging is instant (safer to stop trading than keep stale trend).
+            if (rawRegime == _previousRegime)
+            {
+                _pendingRegimeCount = 0;
+                _pendingRegime = rawRegime;
+                return rawRegime;
+            }
 
-            return MarketRegime.RangingMarket;
+            if (rawRegime == MarketRegime.RangingMarket)
+            {
+                // Instant transition to Ranging (risk-off)
+                _previousRegime = rawRegime;
+                _pendingRegimeCount = 0;
+                return rawRegime;
+            }
+
+            // Trending regime change: require confirmation
+            if (rawRegime == _pendingRegime)
+            {
+                _pendingRegimeCount++;
+            }
+            else
+            {
+                _pendingRegime = rawRegime;
+                _pendingRegimeCount = 1;
+            }
+
+            if (_pendingRegimeCount >= _regimeConfirmationBars)
+            {
+                _previousRegime = rawRegime;
+                _pendingRegimeCount = 0;
+                return rawRegime;
+            }
+
+            // Not yet confirmed — keep previous regime
+            return _previousRegime;
         }
 
         #endregion
