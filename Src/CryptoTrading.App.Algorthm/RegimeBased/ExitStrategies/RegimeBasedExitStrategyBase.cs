@@ -99,6 +99,21 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             Initialized = true;
         }
 
+        /// <summary>
+        /// Reset all position tracking state for a new trade.
+        /// Must be called between trades to prevent stale EntryPrice, BarsHeld, etc.
+        /// The auto-init block in GetNextExit will re-initialize with the correct
+        /// entry price on the first candle of the new trade.
+        /// </summary>
+        public virtual void ResetForNewTrade()
+        {
+            Initialized = false;
+            EntryPrice = 0;
+            HighestPrice = 0;
+            LowestPrice = 0;
+            BarsHeld = 0;
+        }
+
         public TradeDetails GetNextExit(decimal currentPositionSize, decimal close, decimal profit)
         {
             var result = new TradeDetails { ShouldTrade = false };

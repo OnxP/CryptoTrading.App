@@ -18,5 +18,10 @@ namespace CryptoTrading.App.Algorithm
         {
             throw new NotImplementedException();
         }
+
+        public void ResetForNewTrade()
+        {
+            // No state to reset in the stub implementation
+        }
     }
 }
