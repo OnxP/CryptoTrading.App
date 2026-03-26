@@ -165,6 +165,22 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         {
             _symbol = symbol;
 
+            // Pass symbol-specific order constraints to the setup strategy for position sizing
+            if (_setupStrategy is RegimeBasedSetupStrategy setupStrategy)
+            {
+                setupStrategy.SymbolConstraints = new SymbolConstraints
+                {
+                    MinQuantity = symbol.Quantity.Minimum,
+                    MaxQuantity = symbol.Quantity.Maximum,
+                    StepSize = symbol.Quantity.Increment,
+                    MinNotional = symbol.NotionalMinimumValue,
+                    TickSize = symbol.Price.Increment
+                };
+                _logger.LogInformation(
+                    $"Symbol constraints: MinQty={symbol.Quantity.Minimum} MaxQty={symbol.Quantity.Maximum} " +
+                    $"Step={symbol.Quantity.Increment} MinNotional={symbol.NotionalMinimumValue} Tick={symbol.Price.Increment}");
+            }
+
             // 4H for regime detection
             marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Hours_4, ProcessHistoricData4H);
             marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Hours_4, ProcessLiveCandle4H);

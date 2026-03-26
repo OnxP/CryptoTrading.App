@@ -44,6 +44,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
         // Account equity for position sizing (set by the algorithm layer)
         public decimal Equity { get; set; } = 10000m;
+
+        // Symbol-specific order constraints (min qty, step size, min notional)
+        // Set by the algorithm layer from the exchange symbol info.
+        public SymbolConstraints SymbolConstraints { get; set; }
         // Configuration
         private readonly decimal _minRiskRewardRatio = 1.5m;
         private readonly int _macdFast = 12;
@@ -150,6 +154,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 equity: Equity,
                 entryPrice: effectiveEntry,
                 stopLoss: bestSetup.StopLoss,
+                symbolConstraints: SymbolConstraints,
                 streakMultiplier: streakMultiplier,
                 regimeMultiplier: regimeMultiplier);
 
