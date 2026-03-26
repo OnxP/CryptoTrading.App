@@ -227,27 +227,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 return result;
             }
 
-            // Calculate risk/reward
-            decimal risk = Math.Abs(currentPrice - stop);
-            decimal reward = Math.Abs(target - currentPrice);
-            result.RiskRewardRatio = risk > 0 ? reward / risk : 0;
-
-            if (result.RiskRewardRatio < _minRiskRewardRatio)
-            {
-                result.Reasoning = $"R:R too low ({result.RiskRewardRatio:F2} < {_minRiskRewardRatio}) price:{currentPrice:F2} stop:{stop:F2} target:{target:F2}";
-                return result;
-            }
-
             // Check zone proximity: within 2×ATR of a relevant zone?
             var zoneType = direction == TradeDirection.Long ? ZoneType.Demand : ZoneType.Supply;
             var nearestZone = FindNearestZone(currentPrice, regimeResult.ActiveZones, zoneType);
             bool isZoneTrade = nearestZone != null && nearestZone.DistanceTo(currentPrice) <= atr * _zoneProximityMultiple;
-
-            // Populate result
-            result.IsValid = true;
-            result.StopLoss = stop;
-            result.TakeProfit = target;
-            result.Confidence = CalculateMacdConfidence(currHistogram, prevHistogram, isZoneTrade, result.RiskRewardRatio);
 
             if (isZoneTrade)
             {
@@ -256,6 +239,12 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 result.RecommendedEntryStrategy = EntryStrategyType.LimitAtZoneEdge;
                 result.EntryZoneHigh = nearestZone.High;
                 result.EntryZoneLow = nearestZone.Low;
+
+                // Recalculate SL/TP relative to the zone edge where entry will actually happen.
+                // Long enters at zone.High, Short enters at zone.Low.
+                var entryPrice = direction == TradeDirection.Long ? nearestZone.High : nearestZone.Low;
+                stop = RecalculateStopForZone(direction, entryPrice, nearestZone, atr);
+                target = RecalculateTargetForZone(direction, entryPrice, target, atr);
             }
             else
             {
@@ -264,6 +253,26 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 result.EntryZoneHigh = currentPrice + (0.5m * atr);
                 result.EntryZoneLow = currentPrice - (0.5m * atr);
             }
+
+            // Calculate risk/reward from the actual entry point
+            var effectiveEntry = isZoneTrade
+                ? (direction == TradeDirection.Long ? nearestZone.High : nearestZone.Low)
+                : currentPrice;
+            decimal risk = Math.Abs(effectiveEntry - stop);
+            decimal reward = Math.Abs(target - effectiveEntry);
+            result.RiskRewardRatio = risk > 0 ? reward / risk : 0;
+
+            if (result.RiskRewardRatio < _minRiskRewardRatio)
+            {
+                result.Reasoning = $"R:R too low ({result.RiskRewardRatio:F2} < {_minRiskRewardRatio}) entry:{effectiveEntry:F2} stop:{stop:F2} target:{target:F2}";
+                return result;
+            }
+
+            // Populate result
+            result.IsValid = true;
+            result.StopLoss = stop;
+            result.TakeProfit = target;
+            result.Confidence = CalculateMacdConfidence(currHistogram, prevHistogram, isZoneTrade, result.RiskRewardRatio);
 
             result.RecommendedExitStrategy = result.RiskRewardRatio > 2.5m
                 ? ExitStrategyType.ScaleOut
@@ -340,27 +349,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 return result;
             }
 
-            // Calculate risk/reward
-            decimal risk = Math.Abs(currentPrice - stop);
-            decimal reward = Math.Abs(target - currentPrice);
-            result.RiskRewardRatio = risk > 0 ? reward / risk : 0;
-
-            if (result.RiskRewardRatio < _minRiskRewardRatio)
-            {
-                result.Reasoning = $"R:R too low ({result.RiskRewardRatio:F2} < {_minRiskRewardRatio}) price:{currentPrice:F2} stop:{stop:F2} target:{bbMiddle:F2}";
-                return result;
-            }
-
             // Check zone proximity
             var zoneType = direction == TradeDirection.Long ? ZoneType.Demand : ZoneType.Supply;
             var nearestZone = FindNearestZone(currentPrice, regimeResult.ActiveZones, zoneType);
             bool isZoneTrade = nearestZone != null && nearestZone.DistanceTo(currentPrice) <= atr * _zoneProximityMultiple;
-
-            // Populate result
-            result.IsValid = true;
-            result.StopLoss = stop;
-            result.TakeProfit = target;
-            result.Confidence = CalculateBbConfidence(rsi, direction, isZoneTrade, result.RiskRewardRatio);
 
             if (isZoneTrade)
             {
@@ -369,6 +361,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 result.RecommendedEntryStrategy = EntryStrategyType.LimitAtZoneEdge;
                 result.EntryZoneHigh = nearestZone.High;
                 result.EntryZoneLow = nearestZone.Low;
+
+                // Recalculate SL/TP relative to the zone edge where entry will actually happen.
+                var entryPrice = direction == TradeDirection.Long ? nearestZone.High : nearestZone.Low;
+                stop = RecalculateStopForZone(direction, entryPrice, nearestZone, atr);
+                target = RecalculateTargetForZone(direction, entryPrice, target, atr);
             }
             else
             {
@@ -377,6 +374,26 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 result.EntryZoneHigh = direction == TradeDirection.Long ? bbLower * 1.01m : bbUpper * 1.01m;
                 result.EntryZoneLow = direction == TradeDirection.Long ? bbLower * 0.99m : bbUpper * 0.99m;
             }
+
+            // Calculate risk/reward from the actual entry point
+            var effectiveEntry = isZoneTrade
+                ? (direction == TradeDirection.Long ? nearestZone.High : nearestZone.Low)
+                : currentPrice;
+            decimal risk = Math.Abs(effectiveEntry - stop);
+            decimal reward = Math.Abs(target - effectiveEntry);
+            result.RiskRewardRatio = risk > 0 ? reward / risk : 0;
+
+            if (result.RiskRewardRatio < _minRiskRewardRatio)
+            {
+                result.Reasoning = $"R:R too low ({result.RiskRewardRatio:F2} < {_minRiskRewardRatio}) entry:{effectiveEntry:F2} stop:{stop:F2} target:{target:F2}";
+                return result;
+            }
+
+            // Populate result
+            result.IsValid = true;
+            result.StopLoss = stop;
+            result.TakeProfit = target;
+            result.Confidence = CalculateBbConfidence(rsi, direction, isZoneTrade, result.RiskRewardRatio);
 
             result.RecommendedExitStrategy = ExitStrategyType.FixedTarget;
             result.Reasoning = $"BB RSI:{rsi:F1} Zone:{isZoneTrade} R:R:{result.RiskRewardRatio:F2}";
@@ -390,6 +407,53 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
         private bool HasSufficientData() =>
             _quoteHub?.Quotes != null && _quoteHub.Quotes.Count >= 50;
+
+        /// <summary>
+        /// Recalculate the stop loss relative to the zone entry price.
+        /// For zone trades, the SL must be on the correct side of the zone edge
+        /// where the limit order will actually fill.
+        ///
+        /// Long (entry at zone.High):  SL = zone.Low - 0.5×ATR (below the demand zone)
+        /// Short (entry at zone.Low):  SL = zone.High + 0.5×ATR (above the supply zone)
+        /// </summary>
+        private decimal RecalculateStopForZone(TradeDirection direction, decimal entryPrice, SupplyDemandZone zone, decimal atr)
+        {
+            if (direction == TradeDirection.Long)
+            {
+                // SL below the demand zone
+                var zoneSl = zone.Low - (0.5m * atr);
+                // Ensure SL is always below entry
+                return Math.Min(zoneSl, entryPrice - (0.3m * atr));
+            }
+            else
+            {
+                // SL above the supply zone
+                var zoneSl = zone.High + (0.5m * atr);
+                // Ensure SL is always above entry
+                return Math.Max(zoneSl, entryPrice + (0.3m * atr));
+            }
+        }
+
+        /// <summary>
+        /// Ensure the target is on the correct side of the entry and represents
+        /// at least a minimum move (0.5% from entry to cover fees + min profit).
+        /// </summary>
+        private decimal RecalculateTargetForZone(TradeDirection direction, decimal entryPrice, decimal originalTarget, decimal atr)
+        {
+            var minMove = entryPrice * 0.007m; // 0.7% minimum (fees + profit)
+            if (direction == TradeDirection.Long)
+            {
+                var minTarget = entryPrice + minMove;
+                // Use the larger of original target and minimum target
+                return Math.Max(originalTarget, minTarget);
+            }
+            else
+            {
+                var minTarget = entryPrice - minMove;
+                // Use the smaller of original target and minimum target
+                return Math.Min(originalTarget, minTarget);
+            }
+        }
 
         /// <summary>
         /// Find the nearest zone of a given type from the 4H active zones.
