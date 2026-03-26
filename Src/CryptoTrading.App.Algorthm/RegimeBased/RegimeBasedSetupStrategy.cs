@@ -38,6 +38,12 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
         // Leverage probability calculator
         private readonly LeverageProbabilityCalculator _leverageCalculator = new LeverageProbabilityCalculator();
+
+        // Performance tracker for anti-martingale sizing and circuit breaker
+        public TradePerformanceTracker PerformanceTracker { get; set; }
+
+        // Account equity for position sizing (set by the algorithm layer)
+        public decimal Equity { get; set; } = 10000m;
         // Configuration
         private readonly decimal _minRiskRewardRatio = 1.5m;
         private readonly int _macdFast = 12;
@@ -84,6 +90,13 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 return (new StrategyResult { PostTrade = false }, null);
             }
 
+            // Circuit breaker: stop trading when drawdown exceeds daily or peak limits
+            if (PerformanceTracker != null && PerformanceTracker.IsCircuitBreakerActive())
+            {
+                _logger?.LogWarning($"[15M SKIP] Circuit breaker ACTIVE — {PerformanceTracker.GetStatus()}");
+                return (new StrategyResult { PostTrade = false }, null);
+            }
+
             // Find the best valid setup from the allowed list
             SetupResult bestSetup = null;
             foreach (var setupType in regimeResult.AllowedSetups)
@@ -120,11 +133,35 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             if (leverageRec.ActualLeverage == 0)
                 return (new StrategyResult { PostTrade = false }, null);
 
+            // Position sizing: volatility-adjusted based on SL distance + regime + streak
+            var currentPrice = (decimal)_quoteHub.Quotes.Last().Close;
+            var effectiveEntry = bestSetup.IsZoneTrade
+                ? (bestSetup.Direction == TradeDirection.Long ? bestSetup.EntryZoneHigh : bestSetup.EntryZoneLow)
+                : currentPrice;
+
+            decimal streakMultiplier = PerformanceTracker?.GetSizeMultiplier() ?? 1.0m;
+            decimal regimeMultiplier = PositionSizer.GetRegimeMultiplier(
+                regimeResult.MarketRegime,
+                regimeResult.VolatilityRegime,
+                regimeResult.Confidence,
+                regimeResult.TrendStrength);
+
+            decimal positionSize = PositionSizer.Calculate(
+                equity: Equity,
+                entryPrice: effectiveEntry,
+                stopLoss: bestSetup.StopLoss,
+                streakMultiplier: streakMultiplier,
+                regimeMultiplier: regimeMultiplier);
+
+            _logger?.LogInformation(
+                $"[15M SETUP] {bestSetup.SetupType} entry:{effectiveEntry:F2} SL:{bestSetup.StopLoss:F2} TP:{bestSetup.TakeProfit:F2} " +
+                $"R:R:{bestSetup.RiskRewardRatio:F2} size:{positionSize:F5} streak:{streakMultiplier:F2} regime:{regimeMultiplier:F2}");
+
             // Create result and execution strategy
             var strategyResult = new RegimeBasedStrategyResult
             {
                 PostTrade = true,
-                Amount = 0.1m,
+                Amount = positionSize,
                 Leverage = leverageRec.ActualLeverage,
                 OrderSide = bestSetup.Direction == TradeDirection.Long ? OrderSide.Buy : OrderSide.Sell,
                 Setup = bestSetup,

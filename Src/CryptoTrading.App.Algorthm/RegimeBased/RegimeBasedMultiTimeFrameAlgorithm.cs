@@ -43,6 +43,9 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         private readonly IMarketStructureStrategy _regimeStrategy;
         private readonly IStrategy _setupStrategy;
 
+        // Performance tracking for position sizing and circuit breaker
+        public TradePerformanceTracker PerformanceTracker { get; private set; }
+
         // State
         private IMarketStructureResult _currentRegime;
         private IExecutionStrategy _activeExecutionStrategy;
@@ -81,6 +84,18 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         public void Configure(IConfig config)
         {
             Config = config;
+
+            // Initialize performance tracker with starting equity
+            decimal startEquity = (decimal)(Config.StartBtcAmount > 0 ? Config.StartBtcAmount : 10000);
+            PerformanceTracker = new TradePerformanceTracker(startEquity);
+
+            // Wire performance tracker and equity into setup strategy for position sizing
+            if (_setupStrategy is RegimeBasedSetupStrategy setupStrategy)
+            {
+                setupStrategy.PerformanceTracker = PerformanceTracker;
+                setupStrategy.Equity = startEquity;
+            }
+
             LogRunParameters();
         }
 
@@ -123,13 +138,25 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
             // 1M entry strategy parameters
             _logger.LogInformation("  -- 1M Entry Strategy --");
+            _logger.LogInformation($"  Confluence:            min score 2.0 (7 signals: StochRsi/Pattern/Volume/Zone/MACD/EMA/Momentum)");
             _logger.LogInformation($"  StochRsi:              14/14/3/3, oversold=20, overbought=80");
+            _logger.LogInformation($"  MomentumLookback:      15 bars (extended from 5)");
 
             // 1M exit strategy parameters
             _logger.LogInformation("  -- 1M Exit Strategy --");
-            _logger.LogInformation($"  TrailingStop:          startR=1.0, trailATR=1.5x");
-            _logger.LogInformation($"  ScaleOut:              1R=33%, 2R+exhausted=100%, 3R=100%");
-            _logger.LogInformation($"  FixedTarget:           exit at 80% progress + momentum exhausted");
+            _logger.LogInformation($"  TrailingStop:          adaptive: 0.3R=1.5xATR, 1R=2x, 1.5R=2.5x, 2R=3x, 3R=3.5x");
+            _logger.LogInformation($"  ScaleOut:              1R=33%+BE_SL, 2R=33%, 3R/exhausted=rest (MARKET orders)");
+            _logger.LogInformation($"  FixedTarget:           trail after 50% progress (1.5-2x ATR), full exit at 80%+exhausted");
+            _logger.LogInformation($"  TimeBased:             60 bars + <0.1% move + contracting vol (was 20 bars/0.5%)");
+            _logger.LogInformation($"  StructureBreak:        2 confirming bars + 1.3x volume (was 1 bar, no volume)");
+
+            // Risk management
+            _logger.LogInformation("  -- Risk Management --");
+            _logger.LogInformation($"  PositionSizing:        1% equity risk per trade, volatility-adjusted");
+            _logger.LogInformation($"  AntiMartingale:        0.75x after 1L, 0.50x after 2L, 0.25x after 3L");
+            _logger.LogInformation($"  CircuitBreaker:        3% daily loss, 10% peak drawdown");
+            _logger.LogInformation($"  RegimeScaling:         1.3x strong trend, 0.7x range, 0.7x high vol");
+            _logger.LogInformation($"  QualityFilter:         min composite score 0.55 (raised from 0.50)");
 
             _logger.LogInformation("================================================================");
         }

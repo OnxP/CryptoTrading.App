@@ -33,7 +33,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         // Leverage tier thresholds
         public decimal HighConfidenceThreshold { get; set; } = 0.85m;
         public decimal MediumConfidenceThreshold { get; set; } = 0.70m;
-        public decimal MinimumConfidenceThreshold { get; set; } = 0.50m;
+        public decimal MinimumConfidenceThreshold { get; set; } = 0.55m;  // Raised from 0.50 to filter out marginal setups
 
         // Leverage multipliers per tier
         public int MaxLeverage { get; set; } = 3;

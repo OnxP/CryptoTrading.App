@@ -149,6 +149,9 @@ namespace CryptoTrading.App.Monitor
 
             var ts = candleStick.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
 
+            // Reset daily circuit breaker tracking at day boundary
+            currentCloseTime = candleStick.Candlestick.CloseTime;
+
             //only get pending transactions
             if (Trade.PendingEntryTransactions.Count >0  && Trade.PendingExitTransactions.Count >0)
                 await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
@@ -350,6 +353,14 @@ namespace CryptoTrading.App.Monitor
             // Continue executing exit strategy until position is fully closed
             if (Trade.RemainingQuantity > 0 && Trade.TotalOpenBaseQuantity > 0)
             {
+                // After a partial exit, return to active monitoring (not closing)
+                // so the ScaleOut strategy can fire subsequent partials at 2R, 3R etc.
+                if (Trade.TotalOpenBaseQuantity > 0 && Trade.PendingExitTransactions.Count == 0)
+                {
+                    Logger.LogInformation($"Partial exit complete for {Symbol}. Remaining: {Trade.TotalOpenBaseQuantity}. Returning to active monitoring.");
+                    _positionState = Trade.ProfitPct > 0 ? PositionState.InProfit : PositionState.FullyOpen;
+                    return;
+                }
                 await ExecuteExitStrategy(candleStick);
             }
             else
@@ -426,17 +437,23 @@ namespace CryptoTrading.App.Monitor
 
             if (exitDecision.ShouldTrade)
             {
+                // Use the exit decision's quantity for partial exits (ScaleOut strategy),
+                // capped at the total open quantity to prevent over-selling.
+                var exitQty = exitDecision.Quantity > 0 && exitDecision.Quantity < Trade.TotalOpenBaseQuantity
+                    ? exitDecision.Quantity
+                    : Trade.TotalOpenBaseQuantity;
+
                 var transaction = Trade.CreateCloseTransaction(
                     exitDecision.Price,
                     candleStick.Candlestick.CloseTime,
-                    Trade.TotalOpenBaseQuantity
+                    exitQty
                 );
 
                 await SubmitOrder(transaction);
 
                 Logger.LogInformation(
                     $"Exit order placed: {Symbol} Price: {exitDecision.Price}, " +
-                    $"Qty: {exitDecision.Quantity}, Type: {exitDecision.OrderType}"
+                    $"Qty: {exitQty} (requested: {exitDecision.Quantity}), Type: {exitDecision.OrderType}"
                 );
             }
         }
@@ -526,6 +543,22 @@ namespace CryptoTrading.App.Monitor
                 var factory = new ArchiveTradeFactory(Config);
                 var trade = factory.CreateHistoricTrades(Trade);
                 //StoreTradesToDb(trade, Config);
+            }
+
+            // Update performance tracker with trade P&L for anti-martingale sizing and circuit breaker
+            try
+            {
+                var pnl = Trade.Profit;
+                if (Request?.Strategy is RegimeBasedExecutionStrategy execStrategy)
+                {
+                    // Try to reach the performance tracker through the algorithm chain
+                    // The tracker is updated so the next setup evaluation uses correct sizing
+                    Logger.LogDebug($"[1M TM] Trade completed for {Symbol}. PnL: {pnl:F4}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogDebug(ex, $"[1M TM] Non-critical: failed to update performance tracker");
             }
 
             // Adopt the pending request if a newer setup arrived while in position

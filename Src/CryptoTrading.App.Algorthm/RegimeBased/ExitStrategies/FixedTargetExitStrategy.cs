@@ -5,34 +5,84 @@ using System;
 namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
 {
     /// <summary>
-    /// Exits at a predetermined target, with early exit if momentum
-    /// is exhausted when progress toward the target exceeds 80%.
+    /// Hybrid fixed-target + trailing exit strategy for mean reversion setups.
+    ///
+    /// Improvement over old strategy:
+    /// - Old: Exit at 65% progress toward TP when momentum exhausted (left 35% on table)
+    /// - New: Once at 50% progress, activate a tight trailing stop that lets the
+    ///   trade run if momentum continues, while protecting profit if it reverses.
+    ///
+    /// The trailing stop uses 1.5x ATR initially, widening to 2.0x ATR as profit grows.
+    /// If momentum exhausts near the target, exits cleanly rather than waiting for a reversal.
     /// </summary>
     public class FixedTargetExitStrategy : RegimeBasedExitStrategyBase
     {
+        private bool _trailingActivated;
+
         public FixedTargetExitStrategy(SetupResult setup) : base(setup) { }
+
+        public override void ResetForNewTrade()
+        {
+            base.ResetForNewTrade();
+            _trailingActivated = false;
+        }
 
         protected override TradeDetails EvaluateExit(decimal currentPrice, decimal positionSize)
         {
             var result = new TradeDetails { ShouldTrade = false };
 
             decimal totalTargetDistance = Math.Abs(Setup.TakeProfit - EntryPrice);
+            if (totalTargetDistance <= 0) return result;
+
             decimal distanceToTarget = Setup.Direction == TradeDirection.Long
                 ? Setup.TakeProfit - currentPrice
                 : currentPrice - Setup.TakeProfit;
-            decimal progressToTarget = totalTargetDistance > 0 ? 1 - (distanceToTarget / totalTargetDistance) : 0;
+            decimal progressToTarget = 1 - (distanceToTarget / totalTargetDistance);
 
-            // Exit early at 65% progress if momentum exhausted (was 80% — too late, often missed exit)
-            bool momentumExhausted = progressToTarget > 0.65m && IsMomentumExhausted();
-            Logger?.LogDebug($"[1M EXIT FixedTarget] progress:{progressToTarget:P0} price:{currentPrice:F2} tp:{Setup.TakeProfit:F2} entry:{EntryPrice:F2} momentumExhausted:{momentumExhausted}");
+            decimal rMultiple = GetRMultiple(currentPrice);
+            decimal atr = GetCurrentAtr();
 
-            if (momentumExhausted)
+            Logger?.LogDebug($"[1M EXIT FixedTarget] progress:{progressToTarget:P0} R:{rMultiple:F2} price:{currentPrice:F2} tp:{Setup.TakeProfit:F2} trailActive:{_trailingActivated}");
+
+            // Activate trailing once we reach 50% of target
+            if (progressToTarget >= 0.50m)
+                _trailingActivated = true;
+
+            // Early full exit: momentum exhausted at 80%+ progress (very close to target)
+            if (progressToTarget >= 0.80m && IsMomentumExhausted())
             {
-                Logger?.LogInformation($"[1M EXIT FixedTarget] TRIGGER @ {currentPrice:F2} (progress:{progressToTarget:P0} momentum exhausted)");
+                Logger?.LogInformation($"[1M EXIT FixedTarget] TRIGGER @ {currentPrice:F2} (progress:{progressToTarget:P0} momentum exhausted near target)");
                 result.ShouldTrade = true;
                 result.Price = currentPrice;
                 result.Quantity = positionSize;
                 result.OrderType = "MARKET";
+                return result;
+            }
+
+            // Trailing stop after 50% progress: protect profit while allowing continuation
+            if (_trailingActivated && atr > 0)
+            {
+                // Trail gets wider as we approach target (more room for the final push)
+                decimal trailMultiple = progressToTarget >= 0.75m ? 2.0m : 1.5m;
+                decimal trailingDistance = atr * trailMultiple;
+
+                decimal trailingStopLevel = Setup.Direction == TradeDirection.Long
+                    ? HighestPrice - trailingDistance
+                    : LowestPrice + trailingDistance;
+
+                bool trailingStopHit = Setup.Direction == TradeDirection.Long
+                    ? currentPrice <= trailingStopLevel
+                    : currentPrice >= trailingStopLevel;
+
+                if (trailingStopHit)
+                {
+                    Logger?.LogInformation($"[1M EXIT FixedTarget] TRAILING STOP @ {currentPrice:F2} (trail:{trailingStopLevel:F2} progress:{progressToTarget:P0} atrMult:{trailMultiple:F1})");
+                    result.ShouldTrade = true;
+                    result.Price = currentPrice;
+                    result.Quantity = positionSize;
+                    result.OrderType = "MARKET";
+                    return result;
+                }
             }
 
             return result;

@@ -18,7 +18,14 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
         protected readonly SetupResult Setup;
         protected ILogger Logger;
 
-        public void SetLogger(ILogger logger) => Logger = logger;
+        // Confluence scorer — requires multiple signals to confirm entry
+        private readonly ConfluenceScorer _confluenceScorer = new ConfluenceScorer();
+
+        public void SetLogger(ILogger logger)
+        {
+            Logger = logger;
+            _confluenceScorer.SetLogger(logger);
+        }
 
         protected RegimeBasedEntryStrategyBase(SetupResult setup)
         {
@@ -36,6 +43,17 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
 
             if (QuoteHub?.Quotes == null || QuoteHub.Quotes.Count < 20 || Setup == null)
                 return result;
+
+            // Confluence gate: require minimum score from multiple independent signals
+            // before allowing any entry strategy to fire.
+            var confluence = _confluenceScorer.Score(QuoteHub, Setup, close);
+            if (!confluence.PassesMinimum)
+            {
+                Logger?.LogDebug($"[1M ENTRY] Confluence too low ({confluence.TotalScore:F2} < {_confluenceScorer.MinimumScore}) — skipping entry");
+                return result;
+            }
+
+            Logger?.LogInformation($"[1M ENTRY] Confluence PASS ({confluence.TotalScore:F2}) — evaluating {Setup.RecommendedEntryStrategy}");
 
             return Evaluate(close, currentPositionSize, targetPositionSize);
         }
@@ -116,17 +134,19 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies
 
         protected bool IsRisingMicroMomentum()
         {
-            if (QuoteHub.Quotes.Count < 10) return false;
-            var recent = QuoteHub.Quotes.TakeLast(5).Average(c => c.Close);
-            var prior = QuoteHub.Quotes.Skip(QuoteHub.Quotes.Count - 10).Take(5).Average(c => c.Close);
+            // Extended from 5 to 15 bars for more reliable momentum signal (less noise)
+            if (QuoteHub.Quotes.Count < 30) return false;
+            var recent = QuoteHub.Quotes.TakeLast(15).Average(c => c.Close);
+            var prior = QuoteHub.Quotes.Skip(QuoteHub.Quotes.Count - 30).Take(15).Average(c => c.Close);
             return recent > prior;
         }
 
         protected bool IsFallingMicroMomentum()
         {
-            if (QuoteHub.Quotes.Count < 10) return false;
-            var recent = QuoteHub.Quotes.TakeLast(5).Average(c => c.Close);
-            var prior = QuoteHub.Quotes.Skip(QuoteHub.Quotes.Count - 10).Take(5).Average(c => c.Close);
+            // Extended from 5 to 15 bars for more reliable momentum signal (less noise)
+            if (QuoteHub.Quotes.Count < 30) return false;
+            var recent = QuoteHub.Quotes.TakeLast(15).Average(c => c.Close);
+            var prior = QuoteHub.Quotes.Skip(QuoteHub.Quotes.Count - 30).Take(15).Average(c => c.Close);
             return recent < prior;
         }
 
