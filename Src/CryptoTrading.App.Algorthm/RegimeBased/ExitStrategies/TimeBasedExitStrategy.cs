@@ -10,7 +10,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
     /// </summary>
     public class TimeBasedExitStrategy : RegimeBasedExitStrategyBase
     {
-        private readonly int _timeStopBars = 30;
+        private readonly int _timeStopBars = 20; // Reduced from 30 — cut non-performing trades faster
 
         public TimeBasedExitStrategy(SetupResult setup) : base(setup) { }
 

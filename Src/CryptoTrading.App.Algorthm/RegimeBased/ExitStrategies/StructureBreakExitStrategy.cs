@@ -16,7 +16,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
         {
             var result = new TradeDetails { ShouldTrade = false };
 
-            var recentCandles = QuoteHub.Quotes.TakeLast(10).ToList();
+            var recentCandles = QuoteHub.Quotes.TakeLast(20).ToList(); // Widened from 10 — true structure breaks, not noise
 
             if (Setup.Direction == TradeDirection.Long)
             {

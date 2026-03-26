@@ -46,9 +46,14 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         private readonly int _bbPeriod = 20;
         private readonly int _bbStdDev = 2;
         private readonly int _rsiPeriod = 14;
-        private readonly decimal _rsiOversold = 35m;
-        private readonly decimal _rsiOverbought = 65m;
+        private readonly decimal _rsiOversold = 25m;      // Tightened from 35 → 25 for higher-probability reversals
+        private readonly decimal _rsiOverbought = 75m;     // Tightened from 65 → 75 for higher-probability reversals
         private readonly decimal _zoneProximityMultiple = 2m; // 2x ATR
+
+        // Minimum SL distance as percentage of entry price — prevents stops too tight in narrow ranges
+        private readonly decimal _minStopDistancePct = 0.005m; // 0.5% minimum SL distance
+        // MACD histogram must be at least this fraction of ATR to be considered a valid signal
+        private readonly decimal _minHistogramStrength = 0.1m; // histogram > 10% of ATR
 
         public void SetQuotes(QuoteHub<IQuote> quoteHub)
         {
@@ -194,17 +199,25 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             bool macdSignal;
             decimal stop, target;
 
+            // Volume confirmation: current volume must be above average to validate signal
+            var volumes = _quoteHub.Quotes.TakeLast(20).Select(q => (decimal)q.Volume).ToList();
+            var avgVolume = volumes.Count > 0 ? volumes.Average() : 0;
+            var currentVolume = volumes.Count > 0 ? volumes.Last() : 0;
+            bool volumeConfirmed = avgVolume > 0 && currentVolume >= avgVolume * 0.8m; // At least 80% of avg
+
             if (direction == TradeDirection.Long)
             {
                 // Bullish signal: histogram crosses above zero OR MACD crosses above signal
                 bool histogramCross = prevHistogram <= 0 && currHistogram > 0;
                 bool macdCross = prevMacdLine <= prevSignalLine && currMacdLine > currSignalLine;
-                macdSignal = histogramCross || macdCross;
+                // Histogram strength filter: must be meaningful relative to ATR (not just barely > 0)
+                bool histogramStrong = Math.Abs(currHistogram) > atr * _minHistogramStrength;
+                macdSignal = (histogramCross || macdCross) && histogramStrong;
 
-                var swingLow = (decimal)_quoteHub.Quotes.TakeLast(20).Min(q => q.Low);
+                var swingLow = (decimal)_quoteHub.Quotes.TakeLast(30).Min(q => q.Low); // Widened from 20 to 30 bars
                 var structureHigh = (decimal)_quoteHub.Quotes.TakeLast(50).Max(q => q.High);
 
-                stop = swingLow - (0.1m * atr);
+                stop = swingLow - (0.3m * atr); // Widened buffer from 0.1 to 0.3 ATR
                 target = structureHigh > currentPrice ? structureHigh : currentPrice + (3m * atr);
             }
             else
@@ -212,20 +225,34 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 // Bearish signal: histogram crosses below zero OR MACD crosses below signal
                 bool histogramCross = prevHistogram >= 0 && currHistogram < 0;
                 bool macdCross = prevMacdLine >= prevSignalLine && currMacdLine < currSignalLine;
-                macdSignal = histogramCross || macdCross;
+                bool histogramStrong = Math.Abs(currHistogram) > atr * _minHistogramStrength;
+                macdSignal = (histogramCross || macdCross) && histogramStrong;
 
-                var swingHigh = (decimal)_quoteHub.Quotes.TakeLast(20).Max(q => q.High);
+                var swingHigh = (decimal)_quoteHub.Quotes.TakeLast(30).Max(q => q.High); // Widened from 20 to 30 bars
                 var structureLow = (decimal)_quoteHub.Quotes.TakeLast(50).Min(q => q.Low);
 
-                stop = swingHigh + (0.1m * atr);
+                stop = swingHigh + (0.3m * atr); // Widened buffer from 0.1 to 0.3 ATR
                 target = structureLow < currentPrice ? structureLow : currentPrice - (3m * atr);
             }
 
             if (!macdSignal)
             {
-                result.Reasoning = $"no MACD cross (hist:{currHistogram:F4} prev:{prevHistogram:F4} macd:{currMacdLine:F4} sig:{currSignalLine:F4})";
+                result.Reasoning = $"no MACD cross (hist:{currHistogram:F4} prev:{prevHistogram:F4} macd:{currMacdLine:F4} sig:{currSignalLine:F4} histStrong:{Math.Abs(currHistogram) > atr * _minHistogramStrength})";
                 return result;
             }
+
+            if (!volumeConfirmed)
+            {
+                result.Reasoning = $"volume too low ({currentVolume:F0} < {avgVolume * 0.8m:F0} = 80% avg)";
+                return result;
+            }
+
+            // Enforce minimum SL distance to prevent tight stops in narrow ranges
+            var minStopDistance = currentPrice * _minStopDistancePct;
+            if (direction == TradeDirection.Long)
+                stop = Math.Min(stop, currentPrice - minStopDistance);
+            else
+                stop = Math.Max(stop, currentPrice + minStopDistance);
 
             // Check zone proximity: within 2×ATR of a relevant zone?
             var zoneType = direction == TradeDirection.Long ? ZoneType.Demand : ZoneType.Supply;
@@ -320,26 +347,32 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             bool bbSignal;
             decimal stop, target;
 
+            // Volume confirmation for BB mean reversion
+            var volumes = _quoteHub.Quotes.TakeLast(20).Select(q => (decimal)q.Volume).ToList();
+            var avgVolume = volumes.Count > 0 ? volumes.Average() : 0;
+            var currentVolume = volumes.Count > 0 ? volumes.Last() : 0;
+            bool volumeConfirmed = avgVolume > 0 && currentVolume >= avgVolume * 0.8m;
+
             if (direction == TradeDirection.Long)
             {
-                // Price at lower band + RSI oversold
-                bool atLowerBand = currentPrice <= bbLower * 1.005m;
+                // Price at lower band (widened tolerance to 1%) + RSI oversold (now 25)
+                bool atLowerBand = currentPrice <= bbLower * 1.01m;
                 bool oversold = rsi < _rsiOversold;
                 bbSignal = atLowerBand && oversold;
 
-                var recentLow = (decimal)_quoteHub.Quotes.TakeLast(10).Min(q => q.Low);
-                stop = recentLow - (0.3m * atr);
+                var recentLow = (decimal)_quoteHub.Quotes.TakeLast(15).Min(q => q.Low); // Widened from 10 to 15
+                stop = recentLow - (0.5m * atr); // Wider buffer: 0.3 → 0.5 ATR
                 target = bbMiddle;
             }
             else
             {
-                // Price at upper band + RSI overbought
-                bool atUpperBand = currentPrice >= bbUpper * 0.995m;
+                // Price at upper band (widened tolerance) + RSI overbought (now 75)
+                bool atUpperBand = currentPrice >= bbUpper * 0.99m;
                 bool overbought = rsi > _rsiOverbought;
                 bbSignal = atUpperBand && overbought;
 
-                var recentHigh = (decimal)_quoteHub.Quotes.TakeLast(10).Max(q => q.High);
-                stop = recentHigh + (0.3m * atr);
+                var recentHigh = (decimal)_quoteHub.Quotes.TakeLast(15).Max(q => q.High); // Widened from 10 to 15
+                stop = recentHigh + (0.5m * atr); // Wider buffer: 0.3 → 0.5 ATR
                 target = bbMiddle;
             }
 
@@ -348,6 +381,19 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 result.Reasoning = $"no BB signal (price:{currentPrice:F2} bbLow:{bbLower:F2} bbUp:{bbUpper:F2} rsi:{rsi:F1})";
                 return result;
             }
+
+            if (!volumeConfirmed)
+            {
+                result.Reasoning = $"volume too low for BB ({currentVolume:F0} < {avgVolume * 0.8m:F0})";
+                return result;
+            }
+
+            // Enforce minimum SL distance
+            var minStopDistance = currentPrice * _minStopDistancePct;
+            if (direction == TradeDirection.Long)
+                stop = Math.Min(stop, currentPrice - minStopDistance);
+            else
+                stop = Math.Max(stop, currentPrice + minStopDistance);
 
             // Check zone proximity
             var zoneType = direction == TradeDirection.Long ? ZoneType.Demand : ZoneType.Supply;
@@ -440,7 +486,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         /// </summary>
         private decimal RecalculateTargetForZone(TradeDirection direction, decimal entryPrice, decimal originalTarget, decimal atr)
         {
-            var minMove = entryPrice * 0.007m; // 0.7% minimum (fees + profit)
+            var minMove = entryPrice * 0.010m; // 1.0% minimum (fees + meaningful profit)
             if (direction == TradeDirection.Long)
             {
                 var minTarget = entryPrice + minMove;
@@ -480,11 +526,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             if (isZoneTrade)
                 conf += 0.2m;
 
-            // Good R:R adds confidence
-            if (rr > 2m)
-                conf += 0.15m;
-            else if (rr > 2.5m)
+            // Good R:R adds confidence (check higher threshold first)
+            if (rr > 2.5m)
                 conf += 0.25m;
+            else if (rr > 2m)
+                conf += 0.15m;
 
             return Math.Clamp(conf, 0, 1);
         }

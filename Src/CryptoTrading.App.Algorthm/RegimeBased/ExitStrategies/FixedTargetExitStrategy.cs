@@ -22,7 +22,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
                 : currentPrice - Setup.TakeProfit;
             decimal progressToTarget = totalTargetDistance > 0 ? 1 - (distanceToTarget / totalTargetDistance) : 0;
 
-            bool momentumExhausted = progressToTarget > 0.8m && IsMomentumExhausted();
+            // Exit early at 65% progress if momentum exhausted (was 80% — too late, often missed exit)
+            bool momentumExhausted = progressToTarget > 0.65m && IsMomentumExhausted();
             Logger?.LogDebug($"[1M EXIT FixedTarget] progress:{progressToTarget:P0} price:{currentPrice:F2} tp:{Setup.TakeProfit:F2} entry:{EntryPrice:F2} momentumExhausted:{momentumExhausted}");
 
             if (momentumExhausted)

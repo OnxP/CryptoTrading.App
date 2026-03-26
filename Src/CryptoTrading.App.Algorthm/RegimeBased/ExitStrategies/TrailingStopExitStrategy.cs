@@ -9,8 +9,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
     /// </summary>
     public class TrailingStopExitStrategy : RegimeBasedExitStrategyBase
     {
-        private readonly decimal _trailingStartMultiple = 1.0m;
-        private readonly decimal _trailingAtrMultiple = 1.5m;
+        private readonly decimal _trailingStartMultiple = 0.5m;  // Activate earlier (0.5R instead of 1R)
+        private readonly decimal _trailingAtrMultiple = 2.0m;  // Wider trail (2×ATR instead of 1.5) to avoid noise
 
         public TrailingStopExitStrategy(SetupResult setup) : base(setup) { }
 
