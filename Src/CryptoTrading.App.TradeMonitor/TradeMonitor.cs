@@ -151,7 +151,11 @@ namespace CryptoTrading.App.Monitor
             var strategyResult = Request.Strategy.ProcessStrategy(Trade);
             var previousState = _positionState;
 
-            Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} Price:{candleStick.Candlestick.Close:F2} Quotes:{_quoteHub.Quotes.Count}");
+            // Log state at Info level when entry/exit signals fire (not just Debug)
+            if (strategyResult.StrategyAction != StrategyAction.NoAction)
+                Logger.LogInformation($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} TradeOpen:{Trade.Open} Qty:{Trade.TotalOpenBaseQuantity} Price:{candleStick.Candlestick.Close:F2}");
+            else
+                Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} Price:{candleStick.Candlestick.Close:F2} Quotes:{_quoteHub.Quotes.Count}");
 
             switch (_positionState)
             {
@@ -200,30 +204,22 @@ namespace CryptoTrading.App.Monitor
             // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
         }
 
-        // Maximum age for a setup before it's considered stale.
-        // If the 15M layer hasn't produced a new setup within this window,
-        // the old entry zone/prices are no longer valid.
-        private static readonly TimeSpan MaxSetupAge = TimeSpan.FromHours(4);
-
         private async Task HandleNoPosition(StrategyStatus result, CandlestickEventArgs candleStick)
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                // Don't enter with a stale setup — the entry zone/prices may be days old
-                if (Request.RequestDateTime.HasValue)
+                try
                 {
-                    var setupAge = candleStick.Candlestick.CloseTime - Request.RequestDateTime.Value;
-                    if (setupAge > MaxSetupAge)
-                    {
-                        Logger.LogDebug($"[1M TM] Skipping entry for {Symbol} — setup is {setupAge.TotalHours:F1}h old (max {MaxSetupAge.TotalHours}h). Waiting for fresh 15M setup.");
-                        return;
-                    }
+                    Logger.LogInformation($"Starting new position for {Symbol}");
+                    _positionState = PositionState.Building;
+
+                    await ExecuteEntryStrategy(candleStick);
                 }
-
-                Logger.LogInformation($"Starting new position for {Symbol}");
-                _positionState = PositionState.Building;
-
-                await ExecuteEntryStrategy(candleStick);
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"[1M TM] Exception in HandleNoPosition for {Symbol}. Resetting to NoPosition.");
+                    _positionState = PositionState.NoPosition;
+                }
             }
         }
 
@@ -232,7 +228,16 @@ namespace CryptoTrading.App.Monitor
             // Continue building position using entry strategy
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                await ExecuteEntryStrategy(candleStick);
+                try
+                {
+                    await ExecuteEntryStrategy(candleStick);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"[1M TM] Exception in HandleBuildingPosition for {Symbol}. Resetting to NoPosition.");
+                    _positionState = PositionState.NoPosition;
+                    return;
+                }
             }
             else if (result.StrategyAction == StrategyAction.CloseTrade)
             {
@@ -252,6 +257,15 @@ namespace CryptoTrading.App.Monitor
                 _positionState = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick);
                 return; // Don't fall through to the FullyOpen check
+            }
+
+            // Safety: if Building but nothing filled and no pending entries, reset to NoPosition.
+            // This prevents getting stuck in Building state when entries repeatedly fail.
+            if (Trade.TotalOpenBaseQuantity <= 0 && Trade.PendingEntryTransactions.Count == 0)
+            {
+                Logger.LogInformation($"[1M TM] Building with no entries for {Symbol} — resetting to NoPosition");
+                _positionState = PositionState.NoPosition;
+                return;
             }
 
             // Check if position is fully built (has filled quantity and no pending entries)
