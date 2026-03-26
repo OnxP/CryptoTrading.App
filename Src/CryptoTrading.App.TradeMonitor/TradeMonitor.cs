@@ -151,7 +151,11 @@ namespace CryptoTrading.App.Monitor
             var strategyResult = Request.Strategy.ProcessStrategy(Trade);
             var previousState = _positionState;
 
-            Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} Price:{candleStick.Candlestick.Close:F2} Quotes:{_quoteHub.Quotes.Count}");
+            // Log state at Info level when entry/exit signals fire (not just Debug)
+            if (strategyResult.StrategyAction != StrategyAction.NoAction)
+                Logger.LogInformation($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} TradeOpen:{Trade.Open} Qty:{Trade.TotalOpenBaseQuantity} Price:{candleStick.Candlestick.Close:F2}");
+            else
+                Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} Price:{candleStick.Candlestick.Close:F2} Quotes:{_quoteHub.Quotes.Count}");
 
             switch (_positionState)
             {
@@ -204,10 +208,18 @@ namespace CryptoTrading.App.Monitor
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                Logger.LogInformation($"Starting new position for {Symbol}");
-                _positionState = PositionState.Building;
+                try
+                {
+                    Logger.LogInformation($"Starting new position for {Symbol}");
+                    _positionState = PositionState.Building;
 
-                await ExecuteEntryStrategy(candleStick);
+                    await ExecuteEntryStrategy(candleStick);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"[1M TM] Exception in HandleNoPosition for {Symbol}. Resetting to NoPosition.");
+                    _positionState = PositionState.NoPosition;
+                }
             }
         }
 
@@ -216,7 +228,16 @@ namespace CryptoTrading.App.Monitor
             // Continue building position using entry strategy
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                await ExecuteEntryStrategy(candleStick);
+                try
+                {
+                    await ExecuteEntryStrategy(candleStick);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"[1M TM] Exception in HandleBuildingPosition for {Symbol}. Resetting to NoPosition.");
+                    _positionState = PositionState.NoPosition;
+                    return;
+                }
             }
             else if (result.StrategyAction == StrategyAction.CloseTrade)
             {
@@ -236,6 +257,15 @@ namespace CryptoTrading.App.Monitor
                 _positionState = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick);
                 return; // Don't fall through to the FullyOpen check
+            }
+
+            // Safety: if Building but nothing filled and no pending entries, reset to NoPosition
+            // This prevents getting stuck in Building state when entries repeatedly fail
+            if (Trade.TotalOpenBaseQuantity <= 0 && Trade.PendingEntryTransactions.Count == 0)
+            {
+                Logger.LogInformation($"[1M TM] Building with no entries for {Symbol} — resetting to NoPosition");
+                _positionState = PositionState.NoPosition;
+                return;
             }
 
             // Check if position is fully built (has filled quantity and no pending entries)
