@@ -216,11 +216,15 @@ namespace CryptoTrading.App.Monitor
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                // Note: _setupStale guard removed. After a trade closes, Live=false so
-                // TradeProcessor.CheckCurrentOrderMonitors returns false. New 15M setups
-                // create a NEW TradeMonitor with fresh SL/TP via TradeFactory.CreateMonitor.
-                // The stale flag was blocking ALL entries on this monitor permanently since
-                // SetNewRequest only routes to Live monitors.
+                // Don't enter on a stale setup — SL/TP were calculated for a previous trade's price.
+                // Wait for a fresh 15M setup to arrive via SetNewRequest.
+                // TradeProcessor now routes SetNewRequest to ALL monitors (not just Live ones)
+                // so this flag WILL be cleared when the next 15M setup fires.
+                if (_setupStale)
+                {
+                    Logger.LogDebug($"[1M TM] Skipping entry for {Symbol}: setup is stale, waiting for fresh 15M signal.");
+                    return;
+                }
 
                 try
                 {
