@@ -56,24 +56,21 @@ namespace CryptoTrading.App.Monitor
 
         private async Task ProcessMessageAction(MessagePayload<ITradeRequest> obj)
         {
-            if(CheckCurrentOrderMonitors(obj.What.BaseSymbol + obj.What.QuoteSymbol))
+            var symbol = obj.What.BaseSymbol + obj.What.QuoteSymbol;
+
+            // First check: is there an existing monitor for this symbol (Live or not)?
+            // A non-Live monitor still has its 1M subscription active and should receive
+            // fresh setups via SetNewRequest so it can trade again with updated SL/TP.
+            var existingMonitor = OrderMonitors.LastOrDefault(x => x.Symbol == symbol);
+            if (existingMonitor != null)
             {
-                //Need to update the execution strategy
-                var monitor = CurrentMonitors.LastOrDefault(x => x.Symbol == obj.What.BaseSymbol + obj.What.QuoteSymbol);
-                if (monitor != null)
-                {
-                    await monitor.SetNewRequest(obj.What);
-                }
+                await existingMonitor.SetNewRequest(obj.What);
             }
             else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
             {
                 var tradeMonitor = await TradeFactory.CreateMonitor(obj.What, Positions);
                 tradeMonitor.KeyValue = KeyValue;
                 OrderMonitors.Add(tradeMonitor);
-                //create Market Order
-                //var marketOrder = new MarketRequest(trade.CurrentTransaction);
-                //await MessageBroker.Instance.Publish<IMarketRequest>(KeyValue,trade.CurrentTransaction, marketOrder);
-                //Logger.LogInformation($"Place Trade for {trade.Pair} Q: {trade.Quantity} BTC amt: {trade.CurrentTransaction.Quote.Quantity}");
             }
         }
 
