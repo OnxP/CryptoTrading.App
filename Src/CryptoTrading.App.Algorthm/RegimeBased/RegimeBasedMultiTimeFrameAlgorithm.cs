@@ -43,6 +43,10 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         private readonly IMarketStructureStrategy _regimeStrategy;
         private readonly IStrategy _setupStrategy;
 
+        // Equity tracking: StartBtcAmount is in BTC, needs conversion to USDT
+        private decimal _startBtcAmount;
+        private bool _equityInitialized;
+
         // Performance tracking for position sizing and circuit breaker
         public TradePerformanceTracker PerformanceTracker { get; private set; }
 
@@ -85,15 +89,18 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         {
             Config = config;
 
-            // Initialize performance tracker with starting equity
-            decimal startEquity = (decimal)(Config.StartBtcAmount > 0 ? Config.StartBtcAmount : 10000);
-            PerformanceTracker = new TradePerformanceTracker(startEquity);
+            // Initialize performance tracker with starting equity.
+            // Note: StartBtcAmount is in BTC (e.g. 1 BTC). PositionSizer needs USDT equity.
+            // We'll convert to USDT when the first price comes in (see _equityInitialized flag).
+            _startBtcAmount = (decimal)(Config.StartBtcAmount > 0 ? Config.StartBtcAmount : 1);
+            PerformanceTracker = new TradePerformanceTracker(_startBtcAmount); // temporary, updated on first price
 
-            // Wire performance tracker and equity into setup strategy for position sizing
+            // Wire performance tracker into setup strategy for position sizing
             if (_setupStrategy is RegimeBasedSetupStrategy setupStrategy)
             {
                 setupStrategy.PerformanceTracker = PerformanceTracker;
-                setupStrategy.Equity = startEquity;
+                // Equity will be set to USDT value on first 15M candle
+                setupStrategy.Equity = _startBtcAmount;
             }
 
             LogRunParameters();
@@ -318,6 +325,21 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 });
 
                 var ts15M = args.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
+
+                // Convert BTC equity to USDT on first price available
+                if (!_equityInitialized && args.Candlestick.Close > 0)
+                {
+                    decimal equityUsdt = _startBtcAmount * args.Candlestick.Close;
+                    PerformanceTracker = new TradePerformanceTracker(equityUsdt);
+                    if (_setupStrategy is RegimeBasedSetupStrategy setupStrat)
+                    {
+                        setupStrat.Equity = equityUsdt;
+                        setupStrat.PerformanceTracker = PerformanceTracker;
+                    }
+                    _equityInitialized = true;
+                    _logger.LogInformation(
+                        $"[EQUITY] Initialized: {_startBtcAmount} BTC × {args.Candlestick.Close:F2} = {equityUsdt:F2} USDT");
+                }
 
                 if (_currentRegime == null)
                 {
