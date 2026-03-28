@@ -386,10 +386,13 @@ namespace CryptoTrading.App.Monitor
 
         private async Task ExecuteEntryStrategy(CandlestickEventArgs candleStick)
         {
-            // Entry strategy determines how to build the position
+            // Entry strategy determines how to build the position.
+            // Use the execution strategy's computed Quantity (from PositionSizer)
+            // instead of hardcoded 1.
+            var targetQty = Request.Strategy.Quantity > 0 ? Request.Strategy.Quantity : 0.1m;
             var entryDecision = Request.Strategy.EntryStrategy.GetNextEntry(
                 Trade.RemainingQuantity,
-                1,
+                targetQty,
                 candleStick.Candlestick.Close
             );
 
@@ -411,16 +414,20 @@ namespace CryptoTrading.App.Monitor
                         $"Entry LIMIT price adjusted: {entryDecision.Price:F2} -> {fillPrice:F2} (market: {marketPrice:F2})");
                 }
 
+                // CreateOpenTransaction expects QuoteAmount (USDT), but entryDecision.Quantity
+                // is in base currency (BTC) from PositionSizer. Convert: USDT = BTC × price.
+                var quoteAmount = entryDecision.Quantity * fillPrice;
+
                 var transaction = Trade.CreateOpenTransaction(
                     fillPrice,
                     candleStick.Candlestick.CloseTime,
-                    entryDecision.Quantity//Quote Quantity
+                    quoteAmount
                 );
                 await SubmitOrder(transaction);
 
                 Logger.LogInformation(
                     $"Entry order placed: {Symbol} Price: {fillPrice}, " +
-                    $"Qty: {entryDecision.Quantity}, Type: {entryDecision.OrderType}"
+                    $"Qty: {entryDecision.Quantity:F6} BTC ({quoteAmount:F2} USDT), Type: {entryDecision.OrderType}"
                 );
             }
         }
