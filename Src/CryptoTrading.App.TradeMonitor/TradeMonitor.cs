@@ -386,10 +386,13 @@ namespace CryptoTrading.App.Monitor
 
         private async Task ExecuteEntryStrategy(CandlestickEventArgs candleStick)
         {
-            // Entry strategy determines how to build the position
+            // Entry strategy determines how to build the position.
+            // Use the execution strategy's computed Quantity (from PositionSizer)
+            // instead of hardcoded 1.
+            var targetQty = Request.Strategy.Quantity > 0 ? Request.Strategy.Quantity : 0.1m;
             var entryDecision = Request.Strategy.EntryStrategy.GetNextEntry(
                 Trade.RemainingQuantity,
-                1,
+                targetQty,
                 candleStick.Candlestick.Close
             );
 

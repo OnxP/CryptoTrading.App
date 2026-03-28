@@ -174,6 +174,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             };
 
             var executionStrategy = new RegimeBasedExecutionStrategy(_quoteHub, bestSetup);
+            executionStrategy.Quantity = positionSize;
 
             return (strategyResult, executionStrategy);
         }
