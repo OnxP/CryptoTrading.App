@@ -414,16 +414,20 @@ namespace CryptoTrading.App.Monitor
                         $"Entry LIMIT price adjusted: {entryDecision.Price:F2} -> {fillPrice:F2} (market: {marketPrice:F2})");
                 }
 
+                // CreateOpenTransaction expects QuoteAmount (USDT), but entryDecision.Quantity
+                // is in base currency (BTC) from PositionSizer. Convert: USDT = BTC × price.
+                var quoteAmount = entryDecision.Quantity * fillPrice;
+
                 var transaction = Trade.CreateOpenTransaction(
                     fillPrice,
                     candleStick.Candlestick.CloseTime,
-                    entryDecision.Quantity//Quote Quantity
+                    quoteAmount
                 );
                 await SubmitOrder(transaction);
 
                 Logger.LogInformation(
                     $"Entry order placed: {Symbol} Price: {fillPrice}, " +
-                    $"Qty: {entryDecision.Quantity}, Type: {entryDecision.OrderType}"
+                    $"Qty: {entryDecision.Quantity:F6} BTC ({quoteAmount:F2} USDT), Type: {entryDecision.OrderType}"
                 );
             }
         }
