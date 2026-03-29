@@ -26,14 +26,16 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
         /// Get the dynamic trailing ATR multiple based on current R-multiple.
         /// Wider trail = more room for winners to breathe.
         /// Tighter trail = cut losers before they grow.
+        /// Widened across the board: 1M candles have significant noise that
+        /// was causing premature trail exits before targets could be reached.
         /// </summary>
         private decimal GetDynamicTrailingMultiple(decimal rMultiple)
         {
-            if (rMultiple >= 3.0m) return 3.5m;   // Very wide trail for big winners
-            if (rMultiple >= 2.0m) return 3.0m;   // Wide trail
-            if (rMultiple >= 1.5m) return 2.5m;   // Medium trail
-            if (rMultiple >= 1.0m) return 2.0m;   // Standard trail
-            return 1.5m;                            // Tight trail for early profit (cut losers fast)
+            if (rMultiple >= 3.0m) return 4.0m;   // Very wide trail for big winners
+            if (rMultiple >= 2.0m) return 3.5m;   // Wide trail
+            if (rMultiple >= 1.5m) return 3.0m;   // Medium trail
+            if (rMultiple >= 1.0m) return 2.5m;   // Standard trail
+            return 2.0m;                            // Early profit: wider to survive 1M noise
         }
 
         protected override TradeDetails EvaluateExit(decimal currentPrice, decimal positionSize)

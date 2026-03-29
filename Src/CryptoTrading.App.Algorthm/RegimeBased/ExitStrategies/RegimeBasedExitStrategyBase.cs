@@ -146,22 +146,15 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
                 return result;
             }
 
-            // Check take profit — only if minimum profit threshold is met
+            // Check take profit — always fires when hit (TP was pre-calculated to be profitable)
             if (CheckTakeProfit(close))
             {
-                if (!MeetsMinProfitThreshold(close))
-                {
-                    Logger?.LogDebug($"[1M EXIT] TP level reached but below min profit threshold @ {close:F2} (minPrice:{GetMinProfitPrice():F2}) bars:{BarsHeld}");
-                }
-                else
-                {
-                    Logger?.LogInformation($"[1M EXIT] TAKE PROFIT HIT @ {close:F2} (tp:{Setup.TakeProfit:F2}, minPrice:{GetMinProfitPrice():F2}) bars:{BarsHeld}");
-                    result.ShouldTrade = true;
-                    result.Price = close;
-                    result.Quantity = currentPositionSize;
-                    result.OrderType = "MARKET";
-                    return result;
-                }
+                Logger?.LogInformation($"[1M EXIT] TAKE PROFIT HIT @ {close:F2} (tp:{Setup.TakeProfit:F2}) bars:{BarsHeld}");
+                result.ShouldTrade = true;
+                result.Price = close;
+                result.Quantity = currentPositionSize;
+                result.OrderType = "MARKET";
+                return result;
             }
 
             // Delegate to strategy-specific exit logic

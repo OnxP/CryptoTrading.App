@@ -12,7 +12,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
     /// - New: Once at 50% progress, activate a tight trailing stop that lets the
     ///   trade run if momentum continues, while protecting profit if it reverses.
     ///
-    /// The trailing stop uses 1.5x ATR initially, widening to 2.0x ATR as profit grows.
+    /// The trailing stop uses 2.5x ATR initially, widening to 3.0x ATR as profit grows.
+    /// Wider trail prevents premature exits from 1M noise while still protecting profit.
     /// If momentum exhausts near the target, exits cleanly rather than waiting for a reversal.
     /// </summary>
     public class FixedTargetExitStrategy : RegimeBasedExitStrategyBase
@@ -63,7 +64,8 @@ namespace CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies
             if (_trailingActivated && atr > 0)
             {
                 // Trail gets wider as we approach target (more room for the final push)
-                decimal trailMultiple = progressToTarget >= 0.75m ? 2.0m : 1.5m;
+                // Widened from 1.5/2.0 to 2.5/3.0 — 1M candles have significant noise
+                decimal trailMultiple = progressToTarget >= 0.75m ? 3.0m : 2.5m;
                 decimal trailingDistance = atr * trailMultiple;
 
                 decimal trailingStopLevel = Setup.Direction == TradeDirection.Long

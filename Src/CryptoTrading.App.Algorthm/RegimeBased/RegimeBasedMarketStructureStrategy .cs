@@ -238,16 +238,23 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             {
                 case MarketRegime.BullMarket:
                     setups.Add(SetupType.MacdTrendLong);
+                    // Also allow BB pullback entries for buying dips in a bull trend
+                    if (volatility == VolatilityRegime.High || volatility == VolatilityRegime.Normal)
+                        setups.Add(SetupType.BbMeanRevLong);
                     break;
 
                 case MarketRegime.BearMarket:
                     setups.Add(SetupType.MacdTrendShort);
+                    // Also allow BB pullback entries for shorting rallies in a bear trend
+                    if (volatility == VolatilityRegime.High || volatility == VolatilityRegime.Normal)
+                        setups.Add(SetupType.BbMeanRevShort);
                     break;
 
                 case MarketRegime.RangingMarket:
                     if (volatility == VolatilityRegime.High || volatility == VolatilityRegime.Normal)
                     {
-                        // Ranging + High/Normal vol = Bollinger mean reversion
+                        // Ranging + High/Normal vol = Bollinger mean reversion both directions
+                        // (4H EMA gradient filter in SetupStrategy will block counter-trend direction)
                         setups.Add(SetupType.BbMeanRevLong);
                         setups.Add(SetupType.BbMeanRevShort);
                     }
