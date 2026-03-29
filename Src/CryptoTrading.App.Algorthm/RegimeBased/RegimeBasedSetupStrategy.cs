@@ -356,11 +356,15 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         /// <summary>
         /// Bollinger Band mean reversion for ranging markets with high/normal volatility.
         ///
-        /// Long: Price at lower band + RSI oversold (&lt;35) → buy toward middle band.
-        /// Short: Price at upper band + RSI overbought (&gt;65) → sell toward middle band.
+        /// Long: Price at lower band + RSI oversold (&lt;25) → buy toward middle band.
+        /// Short: Price at upper band + RSI overbought (&gt;75) → sell toward middle band.
         /// Entry: StochRsiEntry (momentum confirmation) or LimitAtZoneEdge if near S/D zone.
         /// Target: Bollinger middle band.
         /// Stop: recent swing extreme ± ATR buffer.
+        ///
+        /// Trend filter: uses the 4H EMA gradient to avoid counter-trend BB trades.
+        /// If 4H gradient is bearish, only SHORT BB setups are allowed (no buying dips in a downtrend).
+        /// If 4H gradient is bullish, only LONG BB setups are allowed (no shorting rallies in an uptrend).
         /// </summary>
         private SetupResult EvaluateBbMeanReversion(TradeDirection direction, RegimeBasedMarketStructureResult regimeResult)
         {
@@ -373,6 +377,21 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             if (!HasSufficientData() || _bollingerBands == null || _rsi == null)
             {
                 result.Reasoning = "insufficient data for BB";
+                return result;
+            }
+
+            // Trend filter: use 4H EMA gradient to block counter-trend BB trades.
+            // Negative gradient (bearish macro) → block LONG BB (no buying dips in a downtrend)
+            // Positive gradient (bullish macro) → block SHORT BB (no shorting rallies in an uptrend)
+            // Threshold of 0.02 allows trades when gradient is near-zero (truly ranging)
+            if (regimeResult.EmaGradientNormalized < -0.02m && direction == TradeDirection.Long)
+            {
+                result.Reasoning = $"BB Long blocked by bearish 4H trend (grad:{regimeResult.EmaGradientNormalized:F3})";
+                return result;
+            }
+            if (regimeResult.EmaGradientNormalized > 0.02m && direction == TradeDirection.Short)
+            {
+                result.Reasoning = $"BB Short blocked by bullish 4H trend (grad:{regimeResult.EmaGradientNormalized:F3})";
                 return result;
             }
 
