@@ -16,11 +16,11 @@ SELECT
     NumberOfTrades,
     Symbol,
     Interval
-FROM CandleSticks
+FROM [dbo].[CandleStickDbs]
 WHERE Symbol = 'BTCUSDT'
   AND Interval = 7           -- Hours_4
   AND CloseTime >= '2025-07-01'
-  AND CloseTime < '2026-03-01'
+  AND CloseTime < '2026-04-01'
 ORDER BY CloseTime;
 
 -- 15M candles (setup detection)
@@ -36,9 +36,9 @@ SELECT
     NumberOfTrades,
     Symbol,
     Interval
-FROM CandleSticks
+FROM [dbo].[CandleStickDbs]
 WHERE Symbol = 'BTCUSDT'
   AND Interval = 3           -- Minutes_15
   AND CloseTime >= '2025-07-01'
-  AND CloseTime < '2026-03-01'
+  AND CloseTime < '2026-04-01'
 ORDER BY CloseTime;

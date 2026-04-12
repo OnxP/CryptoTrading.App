@@ -179,9 +179,12 @@ namespace CryptoTrading.App.DatabaseLoad
                 await _apiSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
+                    var startTime = current.ToUniversalTime();
+                    var endTime = batchEnd.ToUniversalTime();
+                    if (startTime > endTime) continue;
                     candles = await _api.GetCandlesticksAsync(
                         symbol, interval, BinanceMaxLimit,
-                        current.ToUniversalTime(), batchEnd.ToUniversalTime())
+                        startTime, endTime)
                         .ConfigureAwait(false);
                 }
                 catch (Exception ex)

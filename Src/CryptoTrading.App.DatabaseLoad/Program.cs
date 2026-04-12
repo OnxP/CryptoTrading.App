@@ -52,8 +52,8 @@ namespace CryptoTrading.App.DatabaseLoad
             var symbols = sym.Where(x => x.QuoteAsset.Symbol == "USDT").ToList();//count
 
             marketDate.Configure(Api);
-            marketDate.From = new DateTime(2025, 07, 01); 
-            marketDate.To = new DateTime(2026, 02, 28);
+            marketDate.From = new DateTime(2026, 02, 28,23,00,00); 
+            marketDate.To = new DateTime(2026, 04, 01,23,00,00);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()
             {
