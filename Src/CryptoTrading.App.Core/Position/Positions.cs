@@ -35,18 +35,25 @@ namespace CryptoTrading.App.Core.Position
 
         public bool CheckHasEnoughBalance(ITradeRequest what)
         {
-            // Decide which symbol we need to check based on side
-            var balanceSymbol = what.OrderSide == Binance.OrderSide.Buy
+            // Leveraged trades use quote asset (USDT) as collateral for both sides;
+            // only the margin portion needs to be available.
+            var balanceSymbol = what.Leverage > 1
                 ? what.QuoteSymbol
-                : what.BaseSymbol;
+                : (what.OrderSide == Binance.OrderSide.Buy
+                    ? what.QuoteSymbol
+                    : what.BaseSymbol);
+
+            var checkAmount = what.Leverage > 1
+                ? what.Amount / what.Leverage
+                : what.Amount;
 
             if (!_positions.TryGetValue(balanceSymbol, out var position))
                 return false;
 
             // Check main balance, including fee if fee asset is the same
             bool hasEnoughBalance = balanceSymbol == FeeAsset
-                ? position.CheckHasEnoughBalanceIncludingFee(what.Amount)
-                : position.CheckHasEnoughBalance(what.Amount);
+                ? position.CheckHasEnoughBalanceIncludingFee(checkAmount)
+                : position.CheckHasEnoughBalance(checkAmount);
 
             // If fee asset is *not* one of the legs, check separate fee balance on base symbol
             //need to convert symbol to fee asset using the latest price.(the broker will confirm the actual fee.)

@@ -26,7 +26,21 @@ namespace CryptoTrading.App.Core.Database
                 var symbolObject = Symbol.Cache.Get(symbol);
                 if (symbolObject == null)
                 {
-                    var assetString = symbol.Substring(0, symbol.Length - 3);
+                    // Determine base/quote assets from the symbol string
+                    // USDT-quoted pairs (e.g. "BTCUSDT") need 4-char quote strip
+                    string assetString;
+                    Asset quoteAsset;
+                    if (symbol.EndsWith("USDT"))
+                    {
+                        assetString = symbol.Substring(0, symbol.Length - 4);
+                        quoteAsset = Asset.USDT;
+                    }
+                    else
+                    {
+                        assetString = symbol.Substring(0, symbol.Length - 3);
+                        quoteAsset = Asset.BTC;
+                    }
+
                     var asset = Asset.Cache.Get(assetString);
 
                     if (asset == null)
@@ -36,7 +50,7 @@ namespace CryptoTrading.App.Core.Database
                     }
 
                     symbolObject = new Symbol(SymbolStatus.Trading,
-                        asset, Asset.BTC,
+                        asset, quoteAsset,
                         (1.00000000m, 90000000.00000000m, 1.00000000m), (0m, 0m, 0.00000001m), 0.00010000m, true,
                         new List<OrderType>
                         {
