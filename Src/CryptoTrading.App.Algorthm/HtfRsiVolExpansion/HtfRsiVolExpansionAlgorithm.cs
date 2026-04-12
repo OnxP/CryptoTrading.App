@@ -203,10 +203,11 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             }
 
             // Need enough data for indicators
-            if (_quoteHub4H.Quotes.Count < HtfRsiPeriod + 2 ||
-                _atrHub15M.Results.Count < VolExpansionLookback + LtfAtrPeriod + 1)
+            var atrCount = _atrHub15M?.Results?.Count ?? 0;
+            var htfCount = _quoteHub4H.Quotes.Count;
+            if (htfCount < HtfRsiPeriod + 2 || atrCount < VolExpansionLookback + LtfAtrPeriod + 1)
             {
-                _logger.LogDebug($"[HTF-RSI {ts}] Insufficient data: 4H={_quoteHub4H.Quotes.Count}, ATR={_atrHub15M.Results.Count}");
+                _logger.LogInformation($"[HTF-RSI {ts}] Insufficient data: 4H={htfCount} (need {HtfRsiPeriod + 2}), ATR={atrCount} (need {VolExpansionLookback + LtfAtrPeriod + 1})");
                 return;
             }
 
