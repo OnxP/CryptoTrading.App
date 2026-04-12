@@ -74,7 +74,7 @@ namespace CryptoTrading.App.Core.Database
             var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x => x.Symbol).Distinct().ToList();
 
             var list = new List<AccountBalance>();
-            list.Add(new AccountBalance(Asset.USDT, Convert.ToDecimal(Config.StartBtcAmount*100000), 0m));
+            list.Add(new AccountBalance(Asset.USDT, Convert.ToDecimal(Config.StartBtcAmount*200000), 0m));
             //list.Add(new AccountBalance(Asset.BTC, Convert.ToDecimal(Config.StartBtcAmount), 0m));
 
             foreach (var symbol in res)
