@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Algorithm.RegimeBased;
+﻿using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
+using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Algorithm.StopLimits;
 using CryptoTrading.App.Algorithm.TradingStrategies;
 using CryptoTrading.App.Core;
@@ -53,6 +54,17 @@ namespace CryptoTrading.App.Algorithm
             return services;
         }
 
+
+        public static IServiceCollection AddHtfRsiVolExpansionAlgorithm(this IServiceCollection services)
+        {
+            // Self-contained algorithm: aggregates 15M → 4H internally, no external regime/setup strategies
+            services.AddTransient<IAlgorithm, HtfRsiVolExpansionAlgorithm>();
+
+            // Use trailing stop limit (not actively used by this strategy but required by DI)
+            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
+
+            return services;
+        }
 
         public static IServiceCollection AddAlgorithm(this IServiceCollection services, double NoOfTrades, decimal Risk, decimal Increment)
         {
