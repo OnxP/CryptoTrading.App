@@ -13,7 +13,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
     {
         // Position tracking
         public bool IsInPosition { get; set; }
-        public int CandlesSinceLastExit { get; set; } = int.MaxValue;
+        public int CandlesSinceLastExit { get; set; } = 100;
 
         // Cooldown
         public int ConsecutiveLosses { get; set; }
@@ -46,7 +46,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         {
             if (!IsInPosition)
             {
-                CandlesSinceLastExit++;
+                if (CandlesSinceLastExit < 10000)
+                    CandlesSinceLastExit++;
                 if (CooldownCandlesRemaining > 0)
                     CooldownCandlesRemaining--;
             }
