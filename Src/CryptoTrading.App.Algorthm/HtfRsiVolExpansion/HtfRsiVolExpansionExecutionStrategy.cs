@@ -1,3 +1,4 @@
+using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
@@ -65,9 +66,20 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
 
             var currentPrice = (decimal)_quoteHub.Quotes.Last().Close;
 
-            // Not in trade - enter immediately
+            // Not in trade - enter if setup SL/TP haven't been breached by current price
             if (!trade.Open)
             {
+                // Don't re-enter with a stale setup whose SL/TP no longer make sense
+                bool slBreached = _setup.Direction == TradeDirection.Long
+                    ? currentPrice <= _setup.StopLoss
+                    : currentPrice >= _setup.StopLoss;
+                bool tpBreached = _setup.Direction == TradeDirection.Long
+                    ? currentPrice >= _setup.TakeProfit
+                    : currentPrice <= _setup.TakeProfit;
+
+                if (slBreached || tpBreached)
+                    return status; // setup is stale, wait for fresh one
+
                 var entryDetails = EntryStrategy.GetNextEntry(0, Quantity, currentPrice);
                 if (entryDetails.ShouldTrade)
                 {

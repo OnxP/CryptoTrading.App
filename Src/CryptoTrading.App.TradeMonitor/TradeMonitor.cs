@@ -44,9 +44,7 @@ namespace CryptoTrading.App.Monitor
         private readonly QuoteHub<IQuote> _quoteHub;
         private PositionState _positionState = PositionState.NoPosition;
         private ITradeRequest _pendingRequest;
-        // When true, the current setup's SL/TP are stale (from a previous trade).
-        // No new entries are allowed until a fresh 15M setup arrives via SetNewRequest.
-        private bool _setupStale = false;
+        // Stale setup detection moved to the execution strategy (SL/TP breach check).
 
         public async Task SubscribetToMarketData()
         {
@@ -81,7 +79,7 @@ namespace CryptoTrading.App.Monitor
                         Logger.LogInformation($"Updating setup for {Symbol} (same direction). New entry zone from 15M.");
                         Request = what;
                         Request.Strategy.SetQuotes(_quoteHub);
-                        _setupStale = false; // Fresh 15M setup received, allow new entries
+                        // Fresh 15M setup received
                     }
                     else
                     {
@@ -116,7 +114,7 @@ namespace CryptoTrading.App.Monitor
                     }
                     Request = what;
                     Request.Strategy.SetQuotes(_quoteHub);
-                    _setupStale = false; // Fresh setup on direction change
+                    // Fresh setup on direction change
                     break;
                 default:
                     break;
@@ -216,16 +214,6 @@ namespace CryptoTrading.App.Monitor
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
-                // Don't enter on a stale setup — SL/TP were calculated for a previous trade's price.
-                // Wait for a fresh 15M setup to arrive via SetNewRequest.
-                // TradeProcessor now routes SetNewRequest to ALL monitors (not just Live ones)
-                // so this flag WILL be cleared when the next 15M setup fires.
-                if (_setupStale)
-                {
-                    Logger.LogDebug($"[1M TM] Skipping entry for {Symbol}: setup is stale, waiting for fresh 15M signal.");
-                    return;
-                }
-
                 try
                 {
                     Logger.LogInformation($"Starting new position for {Symbol}");
@@ -577,14 +565,12 @@ namespace CryptoTrading.App.Monitor
                 Request = _pendingRequest;
                 Request.Strategy.SetQuotes(_quoteHub);
                 _pendingRequest = null;
-                _setupStale = false; // Fresh setup adopted
+                // Fresh setup adopted
             }
             else
             {
-                // No fresh setup available — mark as stale so we don't enter
-                // with SL/TP calculated for a different market price.
-                _setupStale = true;
-                Logger.LogDebug($"[1M TM] No pending setup for {Symbol} after trade close. Marking setup as stale.");
+                // No fresh setup available — execution strategy will check SL/TP validity
+                Logger.LogDebug($"[1M TM] No pending setup for {Symbol} after trade close.");
             }
 
             // Reset exit strategy state for the next trade
