@@ -18,6 +18,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private QuoteHub<IQuote> _quoteHub;
         private readonly HtfRsiVolExpansionSetup _setup;
         private ILogger _logger;
+        private bool _entryPriceAdjusted;
 
         public IEntryStrategy EntryStrategy { get; set; }
         public IExitStrategy ExitStrategy { get; set; }
@@ -69,6 +70,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             // Not in trade - enter if setup SL/TP haven't been breached by current price
             if (!trade.Open)
             {
+                _entryPriceAdjusted = false;
                 // Don't re-enter with a stale setup whose SL/TP no longer make sense
                 bool slBreached = _setup.Direction == TradeDirection.Long
                     ? currentPrice <= _setup.StopLoss
@@ -91,6 +93,32 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                     status.StrategyState = StrategyState.WaitingForEntry;
                 }
                 return status;
+            }
+
+            // On first candle after trade opens, recalculate SL/TP from actual fill price
+            if (!_entryPriceAdjusted)
+            {
+                _entryPriceAdjusted = true;
+                var actualEntry = currentPrice;
+                var risk = _setup.InitialRisk;
+
+                _logger?.LogInformation(
+                    $"[ADJUST] Rebasing SL/TP from setup entry {_setup.EntryPrice:F2} → actual {actualEntry:F2}");
+
+                _setup.EntryPrice = actualEntry;
+                if (_setup.Direction == TradeDirection.Long)
+                {
+                    _setup.StopLoss = actualEntry - risk;
+                    _setup.TakeProfit = actualEntry + risk;
+                }
+                else
+                {
+                    _setup.StopLoss = actualEntry + risk;
+                    _setup.TakeProfit = actualEntry - risk;
+                }
+
+                // Reset exit strategy tracking for the new price levels
+                ExitStrategy?.ResetForNewTrade();
             }
 
             // In trade - check exit conditions
