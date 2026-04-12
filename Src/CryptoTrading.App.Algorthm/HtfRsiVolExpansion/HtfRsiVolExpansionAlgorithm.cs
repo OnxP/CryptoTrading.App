@@ -203,10 +203,11 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             }
 
             // Need enough data for indicators
-            if (_quoteHub4H.Quotes.Count < HtfRsiPeriod + 2 ||
-                _atrHub15M.Results.Count < VolExpansionLookback + LtfAtrPeriod + 1)
+            var atrCount = _atrHub15M?.Results?.Count ?? 0;
+            var htfCount = _quoteHub4H.Quotes.Count;
+            if (htfCount < HtfRsiPeriod + 2 || atrCount < VolExpansionLookback + LtfAtrPeriod + 1)
             {
-                _logger.LogDebug($"[HTF-RSI {ts}] Insufficient data: 4H={_quoteHub4H.Quotes.Count}, ATR={_atrHub15M.Results.Count}");
+                _logger.LogInformation($"[HTF-RSI {ts}] Insufficient data: 4H={htfCount} (need {HtfRsiPeriod + 2}), ATR={atrCount} (need {VolExpansionLookback + LtfAtrPeriod + 1})");
                 return;
             }
 
@@ -222,10 +223,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             else if (currentRsi.Value < HtfRsiShortThreshold)
                 direction = TradeDirection.Short;
             else
-            {
-                _logger.LogDebug($"[HTF-RSI {ts}] RSI {currentRsi.Value:F1} in no-trade zone (35-65)");
-                return;
-            }
+                return; // RSI in no-trade zone (35-65)
 
             // 3. Get 15M ATR and check vol expansion
             var atrResults = _atrHub15M.Results;
@@ -243,11 +241,13 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             var pastAtr = (decimal)pastAtrResult.Atr.Value;
             var expansionRatio = currentAtr / pastAtr;
 
+            _logger.LogInformation(
+                $"[HTF-RSI {ts}] BIAS {direction} | RSI:{currentRsi.Value:F1} | " +
+                $"ATR:{currentAtr:F2} vs {pastAtr:F2} (20 ago) | VolExp:{expansionRatio:F2} | " +
+                $"Need:{VolExpansionRatio} | {_tradingState.GetStatus()}");
+
             if (expansionRatio < VolExpansionRatio)
-            {
-                _logger.LogDebug($"[HTF-RSI {ts}] Vol expansion {expansionRatio:F2} < {VolExpansionRatio} threshold");
                 return;
-            }
 
             // All conditions met - create setup
             var entryPrice = candle.Close;
