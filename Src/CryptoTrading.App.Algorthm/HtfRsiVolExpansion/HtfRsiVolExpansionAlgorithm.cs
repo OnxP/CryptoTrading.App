@@ -33,8 +33,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private readonly QuoteHub<IQuote> _quoteHub15M;
         private readonly QuoteHub<IQuote> _quoteHub4H;
 
-        // Streaming indicator hubs
-        private AtrHub<IQuote> _atrHub15M;
+        // Streaming indicator hubs (4H EMAs for probability scorer)
         private EmaHub<IQuote> _ema4H8;
         private EmaHub<IQuote> _ema4H21;
 
@@ -112,9 +111,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 quotes15M.Add(quote);
             }
 
-            // Initialize streaming ATR on 15M
-            _atrHub15M = _quoteHub15M.ToAtr(LtfAtrPeriod);
-
             // Aggregate 15M → 4H
             var candles4H = _aggregator.AggregateHistoric(quotes15M);
             foreach (var c in candles4H)
@@ -129,11 +125,12 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 ? _quoteHub4H.Quotes.ToRsi(HtfRsiPeriod)
                 : null;
             var lastRsi = rsiResults?.LastOrDefault()?.Rsi;
+            var initialAtr = _quoteHub15M.Quotes.ToAtr(LtfAtrPeriod).LastOrDefault()?.Atr;
 
             _logger.LogInformation(
                 $"[HTF-RSI] Loaded {candlesticks.Count()} 15M candles → {candles4H.Count} 4H candles | " +
                 $"4H RSI: {lastRsi?.ToString("F1") ?? "N/A"} | " +
-                $"15M ATR: {_atrHub15M.Results.LastOrDefault()?.Atr?.ToString("F2") ?? "N/A"}");
+                $"15M ATR: {initialAtr?.ToString("F2") ?? "N/A"}");
         }
 
         #endregion
@@ -202,14 +199,11 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 return;
             }
 
-            // Need enough data for indicators
-            var atrCount = _atrHub15M?.Results?.Count ?? 0;
+            // Need enough 15M quotes for ATR(14) + 20-bar lookback, and enough 4H quotes for RSI(14)
+            var quotesCount = _quoteHub15M.Quotes.Count;
             var htfCount = _quoteHub4H.Quotes.Count;
-            if (htfCount < HtfRsiPeriod + 2 || atrCount < VolExpansionLookback + LtfAtrPeriod + 1)
-            {
-                _logger.LogInformation($"[HTF-RSI {ts}] Insufficient data: 4H={htfCount} (need {HtfRsiPeriod + 2}), ATR={atrCount} (need {VolExpansionLookback + LtfAtrPeriod + 1})");
+            if (htfCount < HtfRsiPeriod + 2 || quotesCount < VolExpansionLookback + LtfAtrPeriod + 2)
                 return;
-            }
 
             // 1. Get 4H RSI
             var rsiResults = _quoteHub4H.Quotes.ToRsi(HtfRsiPeriod);
@@ -226,7 +220,10 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 return; // RSI in no-trade zone (35-65)
 
             // 3. Get 15M ATR and check vol expansion
-            var atrResults = _atrHub15M.Results;
+            // Compute ATR on-demand from the quote hub (streaming hub Results don't grow reliably)
+            var atrResults = _quoteHub15M.Quotes.ToAtr(LtfAtrPeriod);
+            if (atrResults.Count < VolExpansionLookback + 1) return;
+
             var currentAtrResult = atrResults.Last();
             if (!currentAtrResult.Atr.HasValue) return;
 
@@ -234,7 +231,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
 
             // ATR from 20 candles ago
             int lookbackIndex = atrResults.Count - 1 - VolExpansionLookback;
-            if (lookbackIndex < 0) return;
             var pastAtrResult = atrResults[lookbackIndex];
             if (!pastAtrResult.Atr.HasValue || pastAtrResult.Atr.Value <= 0) return;
 
