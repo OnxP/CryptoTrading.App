@@ -17,8 +17,10 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
     {
         private QuoteHub<IQuote> _quoteHub;
         private readonly HtfRsiVolExpansionSetup _setup;
+        private readonly HtfRsiTradingState _tradingState;
         private ILogger _logger;
         private bool _entryPriceAdjusted;
+        private bool _setupConsumed;
 
         public IEntryStrategy EntryStrategy { get; set; }
         public IExitStrategy ExitStrategy { get; set; }
@@ -29,6 +31,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             HtfRsiTradingState tradingState)
         {
             _setup = setup;
+            _tradingState = tradingState;
             Quantity = setup.Quantity;
 
             EntryStrategy = new HtfRsiVolExpansionEntryStrategy();
@@ -71,6 +74,16 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             if (!trade.Open)
             {
                 _entryPriceAdjusted = false;
+
+                // Each setup can only fire ONE trade. After that trade completes,
+                // the algorithm must provide a fresh setup via SetNewRequest.
+                if (_setupConsumed)
+                    return status;
+
+                // Enforce gap and cooldown from HtfRsiTradingState
+                if (!_tradingState.CanTrade)
+                    return status;
+
                 // Don't re-enter with a stale setup whose SL/TP no longer make sense
                 bool slBreached = _setup.Direction == TradeDirection.Long
                     ? currentPrice <= _setup.StopLoss
@@ -85,6 +98,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 var entryDetails = EntryStrategy.GetNextEntry(0, Quantity, currentPrice);
                 if (entryDetails.ShouldTrade)
                 {
+                    _setupConsumed = true;
+                    _tradingState.IsInPosition = true;
                     _logger?.LogInformation(
                         $"[ENTRY] {_setup.Direction} | Price:{currentPrice:F2} | Qty:{Quantity:F6} | " +
                         $"SL:{_setup.StopLoss:F2} | TP:{_setup.TakeProfit:F2} | " +
