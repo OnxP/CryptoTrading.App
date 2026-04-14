@@ -20,7 +20,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
     /// These tests demonstrate what the strategy SHOULD produce:
     ///   - How many candles a typical trade lasts
     ///   - What the P&L looks like at various exit types
-    ///   - How breakeven and trailing stop protect profits
+    ///   - How trailing stop protects profits (no breakeven — trailing at 1R does the job)
     ///   - How dynamic TP scales with signal quality
     ///
     /// Price action in each test is modelled on common BTC intraday patterns:
@@ -181,7 +181,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         /// Price action: BTC dumps $800 in 30 mins (vol expansion), bounces $200,
         /// then continues down. Trailing stop catches the trend.
         ///
-        /// Expected: Entry → breakeven at 1R → trailing at 1.5R → exit on bounce ~2R.
+        /// Expected: Entry → trailing at 1R → ride trend → exit on bounce.
         /// </summary>
         [Fact]
         public void Scenario_ShortSelloff_TrailingStopWin()
@@ -195,9 +195,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             var risk = 347m * 1.5m; // 520.50
             _output.WriteLine($"Setup: Short at 115,234 | Risk: {risk:F2} | ATR: 347");
-            _output.WriteLine($"SL: {115_234m + risk:F2} | TP (3R): {115_234m - risk * 3:F2}");
-            _output.WriteLine($"Breakeven at 1R: {115_234m - risk:F2}");
-            _output.WriteLine($"Trailing activation at 1.5R: {115_234m - risk * 1.5m:F2}");
+            _output.WriteLine($"SL: {115_234m + risk:F2} | TP (2R): {115_234m - risk * 2:F2}");
+            _output.WriteLine($"Trailing activation at 1R: {115_234m - risk:F2}");
             _output.WriteLine("---");
 
             // Bar 1: Entry signal
@@ -267,25 +266,25 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         #region Scenario 2: Long Breakout — Momentum Trend (Dynamic TP Win)
 
         /// <summary>
-        /// Strong long setup: 4H RSI at 72, score 50 (→ 2R TP).
+        /// Strong long setup: 4H RSI at 72, score 50 (→ 1.5R TP).
         /// BTC breaks out of consolidation and trends up steadily.
         ///
-        /// Expected: Entry → breakeven → TP hit at 2R.
+        /// Expected: Entry → TP hit at 1.5R.
         /// </summary>
         [Fact]
-        public void Scenario_LongBreakout_DynamicTpAt2R()
+        public void Scenario_LongBreakout_DynamicTpAt1_5R()
         {
             var pipeline = new BtcPipeline(
                 direction: TradeDirection.Long,
                 entryPrice: 97_500m,
                 atr: 280m,
-                probabilityScore: 50, // → 2R TP
+                probabilityScore: 50, // → 1.5R TP
                 startTime: new DateTime(2025, 8, 5, 12, 0, 0));
 
             var risk = 280m * 1.5m; // 420
-            var tp2R = 97_500m + risk * 2m; // 98,340
-            _output.WriteLine($"Setup: Long at 97,500 | Risk: {risk:F2} | Score: 50 → 2R TP");
-            _output.WriteLine($"SL: {97_500m - risk:F2} | TP (2R): {tp2R:F2}");
+            var tp1_5R = 97_500m + risk * 1.5m; // 98,130
+            _output.WriteLine($"Setup: Long at 97,500 | Risk: {risk:F2} | Score: 50 → 1.5R TP");
+            _output.WriteLine($"SL: {97_500m - risk:F2} | TP (1.5R): {tp1_5R:F2}");
             _output.WriteLine("---");
 
             // Entry
@@ -295,7 +294,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             // Rebase
             pipeline.Candle(97_530m, 97_550m, 97_510m, "Rebase");
-            var rebasedTp = pipeline.Setup.EntryPrice + risk * 2m;
+            var rebasedTp = pipeline.Setup.EntryPrice + risk * 1.5m;
             _output.WriteLine($"Rebased entry: {pipeline.Setup.EntryPrice:F2} | TP: {rebasedTp:F2}");
 
             // Steady uptrend — $20-40 per minute with small pullbacks
@@ -317,16 +316,16 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                     var pnl = pipeline.CalculatePnl(price);
                     _output.WriteLine($"TP HIT at bar {bar}: price {price:F2}");
                     _output.WriteLine($"Move from entry: +{price - pipeline.RebasedEntry:F0}");
-                    _output.WriteLine($"PnL: {pnl:F2} USDT (2R win)");
+                    _output.WriteLine($"PnL: {pnl:F2} USDT (1.5R win)");
 
                     pnl.Should().BeGreaterThan(0);
-                    (price - pipeline.RebasedEntry).Should().BeGreaterThanOrEqualTo(risk * 2m - 50m,
-                        "exit should be near 2R target");
+                    (price - pipeline.RebasedEntry).Should().BeGreaterThanOrEqualTo(risk * 1.5m - 50m,
+                        "exit should be near 1.5R target");
                     break;
                 }
             }
 
-            tpHit.Should().BeTrue("steady uptrend should reach 2R TP within 60 bars");
+            tpHit.Should().BeTrue("steady uptrend should reach 1.5R TP within 60 bars");
             _output.WriteLine($"\nTrade summary: {pipeline.Log.GetSummary()}");
         }
 
@@ -352,7 +351,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             var risk = 310m * 1.5m; // 465
             _output.WriteLine($"Setup: Long at 103,000 | Risk: {risk:F2} | Score: 45");
-            _output.WriteLine($"SL: {103_000m - risk:F2} | TP (2R): {103_000m + risk * 2:F2}");
+            _output.WriteLine($"SL: {103_000m - risk:F2} | TP (1.5R): {103_000m + risk * 1.5m:F2}");
             _output.WriteLine("---");
 
             // Entry
@@ -482,17 +481,17 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
         #endregion
 
-        #region Scenario 5: Breakeven Save — Rally Then Full Reversal
+        #region Scenario 5: Trailing Stop Save — Rally Then Full Reversal
 
         /// <summary>
-        /// Long entry, price rallies past 1R (breakeven activates), then reverses
-        /// all the way back. Without breakeven, this would be a full SL loss.
-        /// With breakeven, the trade exits at entry price — no loss.
+        /// Long entry, price rallies past 1R (trailing activates), then reverses.
+        /// The trailing stop (at highest - ATR) catches the reversal with partial profit
+        /// instead of the old breakeven ($0) or worse (full SL loss).
         ///
-        /// Expected: Entry → 1R reached → breakeven SL at entry → reversal → exit at breakeven.
+        /// Expected: Entry → 1R reached → trailing activates → reversal → trailing exit with profit.
         /// </summary>
         [Fact]
-        public void Scenario_BreakevenSave_RallyThenReversal()
+        public void Scenario_TrailingStopSave_RallyThenReversal()
         {
             var pipeline = new BtcPipeline(
                 direction: TradeDirection.Long,
@@ -502,8 +501,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 startTime: new DateTime(2025, 8, 1, 20, 0, 0));
 
             var risk = 350m * 1.5m; // 525
-            _output.WriteLine($"Setup: Long at 99,000 | Risk: {risk:F2}");
-            _output.WriteLine($"SL: {99_000m - risk:F2} | Breakeven at: {99_000m + risk:F2}");
+            _output.WriteLine($"Setup: Long at 99,000 | Risk: {risk:F2} | ATR: 350");
+            _output.WriteLine($"SL: {99_000m - risk:F2} | Trailing activation: 1R ({99_000m + risk:F2})");
             _output.WriteLine("---");
 
             // Entry and fill at entry price
@@ -513,48 +512,45 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             var rebasedEntry = pipeline.Setup.EntryPrice;
 
-            // Rally to 1R — $40/min for 15 bars
+            // Rally past 1R — $40/min for 15 bars = +600 (> 1R = 525)
             decimal price = 99_010m;
             for (int i = 0; i < 15; i++)
             {
                 price += 40m;
                 pipeline.Candle(price, price + 20m, price - 15m, "Rally");
             }
+            var peakPrice = price + 20m; // highest = last close + 20 (high wick)
             _output.WriteLine($"Peak: {price:F2} (+{price - rebasedEntry:F0} from entry)");
+            _output.WriteLine($"Trail level: {peakPrice - 350m:F2} (highest {peakPrice:F2} - ATR 350)");
 
-            // Breakeven should now be active
-            pipeline.Setup.StopLoss.Should().Be(rebasedEntry,
-                "breakeven SL should be at entry after 1R reached");
-            _output.WriteLine($"Breakeven active: SL moved to {pipeline.Setup.StopLoss:F2}");
+            // SL should NOT have moved to entry (old breakeven behavior removed)
+            pipeline.Setup.StopLoss.Should().NotBe(rebasedEntry,
+                "no breakeven — SL stays at original level");
 
-            // Full reversal back to entry
-            for (int i = 0; i < 20; i++)
+            // Full reversal — trailing stop should catch it
+            bool trailHit = false;
+            for (int i = 0; i < 30; i++)
             {
                 price -= 35m;
-                pipeline.Candle(price, price + 25m, price - 20m, "Reversal");
-            }
-            _output.WriteLine($"After reversal: {price:F2}");
-
-            // Price drops through breakeven
-            bool beHit = false;
-            for (int i = 0; i < 5; i++)
-            {
-                price -= 25m;
                 var low = price - 20m;
-                var action = pipeline.Candle(price, price + 15m, low, "Through BE");
+                var action = pipeline.Candle(price, price + 25m, low, "Reversal");
                 if (action == StrategyAction.CloseTrade)
                 {
-                    beHit = true;
-                    var pnl = pipeline.CalculatePnl(rebasedEntry); // exit at breakeven
-                    _output.WriteLine($"BREAKEVEN EXIT: price {price:F2}");
-                    _output.WriteLine($"PnL: {pnl:F2} USDT (saved from {-risk * pipeline.Setup.Quantity * pipeline.Setup.Leverage:F2} loss)");
+                    trailHit = true;
+                    // Exit at trailing stop level — partial profit locked in
+                    var trailLevel = peakPrice - 350m;
+                    var pnl = pipeline.CalculatePnl(trailLevel);
+                    _output.WriteLine($"TRAILING STOP EXIT at reversal bar {i + 1}: price {price:F2}");
+                    _output.WriteLine($"Exit at trail: {trailLevel:F2}");
+                    _output.WriteLine($"PnL: {pnl:F2} USDT (saved from {-risk * pipeline.Setup.Quantity * pipeline.Setup.Leverage:F2} full SL loss)");
 
-                    pnl.Should().BeApproximately(0m, 1m, "breakeven exit should be ~zero P&L");
+                    pnl.Should().BeGreaterThan(0,
+                        "trailing stop locks in partial profit instead of $0 breakeven or -1R SL");
                     break;
                 }
             }
 
-            beHit.Should().BeTrue("reversal should trigger breakeven stop at entry");
+            trailHit.Should().BeTrue("reversal should trigger trailing stop");
             _output.WriteLine($"\nTrade summary: {pipeline.Log.GetSummary()}");
         }
 
@@ -564,10 +560,10 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
         /// <summary>
         /// Score 90 setup (no hard TP). BTC has a sustained 2-hour downtrend.
-        /// Trailing stop rides the entire move, capturing 3R+ profit.
+        /// Trailing stop rides the entire move, capturing profit.
         /// This demonstrates why high-score setups shouldn't have a hard TP cap.
         ///
-        /// Expected: Entry → breakeven → trailing activation → ride trend → exit at 3R+.
+        /// Expected: Entry → trailing activation at 1R → ride trend → exit on bounce.
         /// </summary>
         [Fact]
         public void Scenario_HighScore_TrailingCapturesMultiR()
@@ -582,7 +578,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             var risk = 380m * 1.5m; // 570
             _output.WriteLine($"Setup: Short at 112,000 | Risk: {risk:F2} | Score: 90 (NO hard TP)");
             _output.WriteLine($"SL: {112_000m + risk:F2}");
-            _output.WriteLine($"Breakeven: {112_000m - risk:F2} | Trailing: {112_000m - risk * 1.5m:F2}");
+            _output.WriteLine($"Trailing activation at 1R: {112_000m - risk:F2}");
             _output.WriteLine("---");
 
             // Entry
@@ -657,24 +653,24 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         #region Scenario 7: Low Score Setup — Quick TP (Conservative Exit)
 
         /// <summary>
-        /// Score 25 setup (→ 1.5R TP). Weak signal, so the strategy takes
-        /// a conservative 1.5R profit quickly.
+        /// Score 25 setup (→ 1.0R TP). Weak signal, so the strategy takes
+        /// a conservative 1.0R profit quickly.
         ///
         /// Demonstrates why weak setups shouldn't be given wide targets.
         /// </summary>
         [Fact]
-        public void Scenario_LowScore_QuickTpAt1_5R()
+        public void Scenario_LowScore_QuickTpAt1R()
         {
             var pipeline = new BtcPipeline(
                 direction: TradeDirection.Long,
                 entryPrice: 95_000m,
                 atr: 250m,
-                probabilityScore: 25, // → 1.5R TP
+                probabilityScore: 25, // → 1.0R TP
                 startTime: new DateTime(2025, 9, 1, 10, 0, 0));
 
             var risk = 250m * 1.5m; // 375
-            var tp = 95_000m + risk * 1.5m; // 95,562.50
-            _output.WriteLine($"Setup: Long at 95,000 | Risk: {risk:F2} | Score: 25 → 1.5R TP");
+            var tp = 95_000m + risk * 1.0m; // 95,375
+            _output.WriteLine($"Setup: Long at 95,000 | Risk: {risk:F2} | Score: 25 → 1.0R TP");
             _output.WriteLine($"SL: {95_000m - risk:F2} | TP: {tp:F2}");
             _output.WriteLine("---");
 
@@ -702,13 +698,13 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                     _output.WriteLine($"R-multiple: {rMultiple:F1}R");
                     _output.WriteLine($"PnL: {pnl:F2} USDT");
 
-                    rMultiple.Should().BeApproximately(1.5m, 0.3m,
-                        "low-score setup should exit near 1.5R");
+                    rMultiple.Should().BeApproximately(1.0m, 0.3m,
+                        "low-score setup should exit near 1.0R");
                     break;
                 }
             }
 
-            tpHit.Should().BeTrue("uptrend should reach 1.5R TP for low-score setup");
+            tpHit.Should().BeTrue("uptrend should reach 1.0R TP for low-score setup");
             _output.WriteLine($"\nTrade summary: {pipeline.Log.GetSummary()}");
         }
 
@@ -736,11 +732,10 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             _output.WriteLine("Exit Type         | Trigger          | Typical R  | Typical P&L");
             _output.WriteLine("------------------+------------------+------------+------------");
             _output.WriteLine($"Stop Loss         | Price reverses   | -1.0R      | -{riskUsdt:F0} USDT");
-            _output.WriteLine($"Breakeven         | 1R then reversal | ~0R        | ~0 USDT");
-            _output.WriteLine($"TP (score <40)    | 1.5R reached     | +1.5R      | +{riskUsdt * 1.5m:F0} USDT");
-            _output.WriteLine($"TP (score 40-59)  | 2.0R reached     | +2.0R      | +{riskUsdt * 2.0m:F0} USDT");
-            _output.WriteLine($"TP (score 60-79)  | 3.0R reached     | +3.0R      | +{riskUsdt * 3.0m:F0} USDT");
-            _output.WriteLine($"Trailing (80+)    | 1.5R+ then pulls | +2-4R      | +{riskUsdt * 2.5m:F0}+ USDT");
+            _output.WriteLine($"TP (score <40)    | 1.0R reached     | +1.0R      | +{riskUsdt * 1.0m:F0} USDT");
+            _output.WriteLine($"TP (score 40-59)  | 1.5R reached     | +1.5R      | +{riskUsdt * 1.5m:F0} USDT");
+            _output.WriteLine($"TP (score 60-79)  | 2.0R reached     | +2.0R      | +{riskUsdt * 2.0m:F0} USDT");
+            _output.WriteLine($"Trailing (80+)    | 1R+ then pulls   | +0.3-4R    | +{riskUsdt * 1.5m:F0}+ USDT");
             _output.WriteLine($"Time Stop         | 240 bars (4hrs)  | ~0R        | Small +/-");
             _output.WriteLine("");
             _output.WriteLine("With 50% win rate and average 2R win vs 1R loss:");

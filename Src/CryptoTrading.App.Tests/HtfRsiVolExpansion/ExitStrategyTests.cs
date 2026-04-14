@@ -109,12 +109,12 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         [Theory]
         [InlineData(85, 0)]      // Score 80+: no hard TP
         [InlineData(80, 0)]      // Score exactly 80: no hard TP
-        [InlineData(75, 3.0)]    // Score 60-79: 3R
-        [InlineData(60, 3.0)]    // Score exactly 60: 3R
-        [InlineData(55, 2.0)]    // Score 40-59: 2R
-        [InlineData(40, 2.0)]    // Score exactly 40: 2R
-        [InlineData(30, 1.5)]    // Score <40: 1.5R
-        [InlineData(0, 1.5)]     // Score 0: 1.5R
+        [InlineData(75, 2.0)]    // Score 60-79: 2R
+        [InlineData(60, 2.0)]    // Score exactly 60: 2R
+        [InlineData(55, 1.5)]    // Score 40-59: 1.5R
+        [InlineData(40, 1.5)]    // Score exactly 40: 1.5R
+        [InlineData(30, 1.0)]    // Score <40: 1.0R
+        [InlineData(0, 1.0)]     // Score 0: 1.0R
         public void GetTakeProfitMultiplier_ReturnsCorrectR(int score, decimal expectedR)
         {
             HtfRsiVolExpansionExitStrategy.GetTakeProfitMultiplier(score)
@@ -122,63 +122,63 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         }
 
         [Fact]
-        public void Long_Score75_TakeProfitAt3R()
+        public void Long_Score75_TakeProfitAt2R()
         {
-            // Score 75 → 3.0R TP. Risk = 750. TP at entry + 2,250 = 102,250
+            // Score 75 → 2.0R TP. Risk = 750. TP at entry + 1,500 = 101,500
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m, probabilityScore: 75);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            // Price reaches 3R
-            AddQuote(hub, DateTime.Now, 102_300m, high: 102_300m, low: 102_200m);
-            var result = exit.GetNextExit(1.0m, 102_300m, 0m);
+            // Price reaches 2R
+            AddQuote(hub, DateTime.Now, 101_600m, high: 101_600m, low: 101_400m);
+            var result = exit.GetNextExit(1.0m, 101_600m, 0m);
 
             result.ShouldTrade.Should().BeTrue();
-            result.Price.Should().Be(100_000m + 750m * 3.0m, "TP at 3R for score 75");
+            result.Price.Should().Be(100_000m + 750m * 2.0m, "TP at 2R for score 75");
         }
 
         [Fact]
-        public void Long_Score75_NoExitBelow3R()
+        public void Long_Score75_NoExitBelow2R()
         {
-            // Score 75 → 3.0R TP = 102,250. Price at 2R (101,500) should NOT exit
+            // Score 75 → 2.0R TP = 101,500. Price at 1.5R (101,125) should NOT exit
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m, probabilityScore: 75);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            AddQuote(hub, DateTime.Now, 101_500m, high: 101_500m, low: 101_400m);
-            var result = exit.GetNextExit(1.0m, 101_500m, 0m);
+            AddQuote(hub, DateTime.Now, 101_100m, high: 101_100m, low: 101_000m);
+            var result = exit.GetNextExit(1.0m, 101_100m, 0m);
 
-            result.ShouldTrade.Should().BeFalse("price below 3R TP for score 75");
+            result.ShouldTrade.Should().BeFalse("price below 2R TP for score 75");
         }
 
         [Fact]
-        public void Short_Score50_TakeProfitAt2R()
+        public void Short_Score50_TakeProfitAt1_5R()
         {
-            // Score 50 → 2.0R TP. Risk = 750. TP at entry - 1,500 = 98,500
+            // Score 50 → 1.5R TP. Risk = 750. TP at entry - 1,125 = 98,875
             var setup = CreateSetup(TradeDirection.Short, 100_000m, 500m, probabilityScore: 50);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            AddQuote(hub, DateTime.Now, 98_400m, high: 98_500m, low: 98_400m);
-            var result = exit.GetNextExit(1.0m, 98_400m, 0m);
+            AddQuote(hub, DateTime.Now, 98_800m, high: 98_900m, low: 98_800m);
+            var result = exit.GetNextExit(1.0m, 98_800m, 0m);
 
             result.ShouldTrade.Should().BeTrue();
-            result.Price.Should().Be(100_000m - 750m * 2.0m, "TP at 2R for score 50");
+            result.Price.Should().Be(100_000m - 750m * 1.5m, "TP at 1.5R for score 50");
         }
 
         [Fact]
-        public void Long_Score30_TakeProfitAt1_5R()
+        public void Long_Score30_TakeProfitAt1R()
         {
-            // Score 30 → 1.5R TP. Risk = 750. TP at entry + 1,125 = 101,125
+            // Score 30 → 1.0R TP. Risk = 750. TP at entry + 750 = 100,750
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m, probabilityScore: 30);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            AddQuote(hub, DateTime.Now, 101_200m, high: 101_200m, low: 101_100m);
-            var result = exit.GetNextExit(1.0m, 101_200m, 0m);
+            AddQuote(hub, DateTime.Now, 100_800m, high: 100_800m, low: 100_700m);
+            var result = exit.GetNextExit(1.0m, 100_800m, 0m);
 
             result.ShouldTrade.Should().BeTrue();
-            result.Price.Should().Be(100_000m + 750m * 1.5m, "TP at 1.5R for score 30");
+            result.Price.Should().Be(100_000m + 750m * 1.0m, "TP at 1.0R for score 30");
         }
 
         [Fact]
@@ -199,41 +199,48 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
         #endregion
 
-        #region Breakeven Stop
+        #region Trailing Stop Activation at 1R
 
         [Fact]
-        public void Long_Breakeven_MovesSlToEntryAt1R()
+        public void Long_TrailingActivatesAt1R_LocksInPartialProfit()
         {
-            var setup = CreateSetup(TradeDirection.Long, probabilityScore: 85); // no hard TP
+            // Score 85 (no hard TP). Trailing at 1R locks in ~0.33R.
+            // Entry 100k, ATR 500, Risk 750.
+            // At 1R profit: close >= 100,750. Highest = 100,800.
+            // Trail = 100,800 - 500 = 100,300 → locks in 300 (0.4R).
+            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m, probabilityScore: 85);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            // Price moves up to 1R profit (close at 100,750)
+            // Price moves up to 1R — trailing activates
             AddQuote(hub, DateTime.Now, 100_750m, high: 100_800m, low: 100_700m);
-            var result = exit.GetNextExit(1.0m, 100_750m, 0m);
+            var result1 = exit.GetNextExit(1.0m, 100_750m, 0m);
+            result1.ShouldTrade.Should().BeFalse("trailing just activated, not triggered yet");
 
-            result.ShouldTrade.Should().BeFalse();
-            setup.StopLoss.Should().Be(setup.EntryPrice,
-                "SL should move to entry price (breakeven) at 1.0R profit");
+            // Price reverses — trail at 100,800 - 500 = 100,300
+            AddQuote(hub, DateTime.Now.AddMinutes(1), 100_200m, high: 100_300m, low: 100_200m);
+            var result2 = exit.GetNextExit(1.0m, 100_200m, 0m);
+            result2.ShouldTrade.Should().BeTrue("price dropped below trailing stop at 100,300");
+            result2.Price.Should().Be(100_300m, "trail exit at highest - ATR");
         }
 
         [Fact]
-        public void Long_AfterBreakeven_StopLossTriggersAtEntry()
+        public void Long_TrailingAt1R_SurvivesModerateRetracement()
         {
-            var setup = CreateSetup(TradeDirection.Long, probabilityScore: 85);
+            // Price goes to 1R, then pulls back slightly — should survive
+            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m, probabilityScore: 85);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            // Price reaches 1R to activate breakeven
+            // Activate trailing at 1R (close 100,750, high 100,800)
             AddQuote(hub, DateTime.Now, 100_750m, high: 100_800m, low: 100_700m);
             exit.GetNextExit(1.0m, 100_750m, 0m);
 
-            // Price reverses back to entry
-            AddQuote(hub, DateTime.Now.AddMinutes(1), 100_000m, high: 100_100m, low: 99_990m);
-            var result = exit.GetNextExit(1.0m, 100_000m, 0m);
-
-            result.ShouldTrade.Should().BeTrue("SL is now at entry, price hit it");
-            result.Price.Should().Be(100_000m, "exit at breakeven (entry price)");
+            // Trail = 100,800 - 500 = 100,300. Pull back to 100,400 — should survive
+            AddQuote(hub, DateTime.Now.AddMinutes(1), 100_400m, high: 100_500m, low: 100_350m);
+            var result = exit.GetNextExit(1.0m, 100_400m, 0m);
+            result.ShouldTrade.Should().BeFalse(
+                "price still above trailing stop at 100,300 — trade survives the bounce");
         }
 
         #endregion
@@ -241,16 +248,16 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         #region Trailing Stop
 
         [Fact]
-        public void Long_TrailingStop_ActivatesAt1_5R_AndTrails()
+        public void Long_TrailingStop_ActivatesAt1R_AndTrails()
         {
-            // Score 85 → no hard TP, trailing can activate
+            // Score 85 → no hard TP, trailing can activate at 1R
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m, probabilityScore: 85);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            // Price rises to 1.5R (101,125)
-            AddQuote(hub, DateTime.Now, 101_200m, high: 101_200m, low: 101_100m);
-            var result1 = exit.GetNextExit(1.0m, 101_200m, 0m);
+            // Price rises to 1R+ (100,800)
+            AddQuote(hub, DateTime.Now, 100_800m, high: 100_800m, low: 100_700m);
+            var result1 = exit.GetNextExit(1.0m, 100_800m, 0m);
             result1.ShouldTrade.Should().BeFalse("trailing just activated, not triggered yet");
 
             // Price continues up
@@ -265,15 +272,15 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         }
 
         [Fact]
-        public void Short_TrailingStop_ActivatesAt1_5R_AndTrails()
+        public void Short_TrailingStop_ActivatesAt1R_AndTrails()
         {
             var setup = CreateSetup(TradeDirection.Short, 100_000m, 500m, probabilityScore: 85);
             var (exit, hub) = CreateExitStrategy(setup);
             FillInitialQuotes(hub, 100_000m);
 
-            // Price drops to 1.5R (98,875)
-            AddQuote(hub, DateTime.Now, 98_800m, high: 98_900m, low: 98_800m);
-            var result1 = exit.GetNextExit(1.0m, 98_800m, 0m);
+            // Price drops to 1R+ (99,200)
+            AddQuote(hub, DateTime.Now, 99_200m, high: 99_300m, low: 99_200m);
+            var result1 = exit.GetNextExit(1.0m, 99_200m, 0m);
             result1.ShouldTrade.Should().BeFalse("trailing just activated, not triggered yet");
 
             // Price continues down
