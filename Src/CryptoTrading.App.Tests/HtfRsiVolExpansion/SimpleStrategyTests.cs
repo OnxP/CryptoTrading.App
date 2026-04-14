@@ -374,10 +374,10 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
         #endregion
 
-        #region Rebase
+        #region No Rebase
 
         [Fact]
-        public void Rebase_AdjustsSlTpToFillPrice()
+        public void NoRebase_SlTpUnchangedAfterFill()
         {
             var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
             var risk = 500m * 1.5m;
@@ -385,11 +385,12 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
 
+            // Price moves after fill — SL/TP must stay anchored to original setup
             pipeline.ProcessCandle(100_300m);
 
-            pipeline.Setup.EntryPrice.Should().Be(100_300m);
-            pipeline.Setup.StopLoss.Should().Be(100_300m - risk);
-            pipeline.Setup.TakeProfit.Should().Be(100_300m + risk);
+            pipeline.Setup.EntryPrice.Should().Be(100_000m, "entry stays at signal price");
+            pipeline.Setup.StopLoss.Should().Be(100_000m - risk, "SL unchanged");
+            pipeline.Setup.TakeProfit.Should().Be(100_000m + risk, "TP unchanged");
         }
 
         #endregion

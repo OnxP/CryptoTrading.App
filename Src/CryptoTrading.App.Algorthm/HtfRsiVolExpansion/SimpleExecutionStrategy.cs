@@ -24,7 +24,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private readonly HtfRsiVolExpansionSetup _setup;
         private readonly HtfRsiTradingState _tradingState;
         private ILogger _logger;
-        private bool _entryPriceAdjusted;
         private bool _setupConsumed;
 
         public IEntryStrategy EntryStrategy { get; set; }
@@ -78,8 +77,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             // Not in trade — enter immediately
             if (!trade.Open)
             {
-                _entryPriceAdjusted = false;
-
                 if (_setupConsumed)
                     return status;
 
@@ -104,30 +101,9 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 return status;
             }
 
-            // On first candle after fill, rebase SL/TP to actual fill price
-            if (!_entryPriceAdjusted)
-            {
-                _entryPriceAdjusted = true;
-                var actualEntry = currentPrice;
-                var risk = _setup.InitialRisk;
-
-                _logger?.LogInformation(
-                    $"[SIMPLE ADJUST] Rebasing from {_setup.EntryPrice:F2} → {actualEntry:F2}");
-
-                _setup.EntryPrice = actualEntry;
-                if (_setup.Direction == TradeDirection.Long)
-                {
-                    _setup.StopLoss = actualEntry - risk;
-                    _setup.TakeProfit = actualEntry + risk;
-                }
-                else
-                {
-                    _setup.StopLoss = actualEntry + risk;
-                    _setup.TakeProfit = actualEntry - risk;
-                }
-            }
-
-            // In trade — check SL and TP only
+            // SL/TP use the original setup levels from the 15M signal.
+            // No rebase — the setup's EntryPrice/SL/TP are pre-calculated
+            // at signal time and maintain correct 1:1 R:R symmetry.
             status.StrategyState = StrategyState.WaitingForExit;
             var exitDetails = ExitStrategy.GetNextExit(
                 trade.TotalOpenBaseQuantity, currentPrice, trade.ProfitPct);
