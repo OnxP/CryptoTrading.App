@@ -37,14 +37,14 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             };
         }
 
-        private (HtfRsiVolExpansionExecutionStrategy strategy, QuoteHub<IQuote> quoteHub)
-            CreateStrategy(HtfRsiVolExpansionSetup setup)
+        private (HtfRsiVolExpansionExecutionStrategy strategy, QuoteHub<IQuote> quoteHub, HtfRsiTradingState tradingState)
+            CreateStrategy(HtfRsiVolExpansionSetup setup, HtfRsiTradingState tradingState = null)
         {
-            var tradingState = new HtfRsiTradingState(100_000m);
+            tradingState ??= new HtfRsiTradingState(100_000m);
             var strategy = new HtfRsiVolExpansionExecutionStrategy(setup, tradingState);
             var quoteHub = new QuoteHub<IQuote>(100);
             strategy.SetQuotes(quoteHub);
-            return (strategy, quoteHub);
+            return (strategy, quoteHub, tradingState);
         }
 
         private void FillQuoteHub(QuoteHub<IQuote> quoteHub, decimal price, int count = 20)
@@ -71,7 +71,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             // Long setup at 100k, SL at 99,250 (100k - 500*1.5)
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Price dropped below SL
             FillQuoteHub(quoteHub, 99_000m);
@@ -90,7 +90,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             // Long setup at 100k, TP at 100,750 (100k + 500*1.5)
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Price surged above TP
             FillQuoteHub(quoteHub, 101_000m);
@@ -109,7 +109,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             // Short setup at 100k, SL at 100,750 (100k + 500*1.5)
             var setup = CreateSetup(TradeDirection.Short, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Price rose above SL
             FillQuoteHub(quoteHub, 101_000m);
@@ -128,7 +128,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             // Short setup at 100k, TP at 99,250 (100k - 500*1.5)
             var setup = CreateSetup(TradeDirection.Short, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Price dropped below TP
             FillQuoteHub(quoteHub, 99_000m);
@@ -151,7 +151,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             // Long setup at 100k, SL at 99,250, TP at 100,750
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Price is within SL-TP range
             FillQuoteHub(quoteHub, 100_000m);
@@ -169,7 +169,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             // Short setup at 100k, SL at 100,750, TP at 99,250
             var setup = CreateSetup(TradeDirection.Short, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Price is within TP-SL range
             FillQuoteHub(quoteHub, 100_000m);
@@ -190,7 +190,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         public void InsufficientQuotes_ReturnsNoAction()
         {
             var setup = CreateSetup(TradeDirection.Long);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Only add 10 quotes (need at least 15)
             FillQuoteHub(quoteHub, 100_000m, 10);
@@ -212,7 +212,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         public void TradeOpen_DelegatesToExitStrategy()
         {
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             FillQuoteHub(quoteHub, 100_000m);
 
@@ -237,7 +237,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Setup at 100k, but trade opens when price is at 100,300
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
             var originalRisk = setup.InitialRisk; // 750
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             // Fill with price at 100,300 (different from setup entry of 100k)
             FillQuoteHub(quoteHub, 100_300m);
@@ -261,7 +261,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Short setup at 100k, trade opens at 99,800
             var setup = CreateSetup(TradeDirection.Short, 100_000m, 500m);
             var originalRisk = setup.InitialRisk; // 750
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             FillQuoteHub(quoteHub, 99_800m);
 
@@ -281,7 +281,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         public void Rebase_OnlyHappensOnce_PerTrade()
         {
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, _) = CreateStrategy(setup);
 
             FillQuoteHub(quoteHub, 100_300m);
 
@@ -308,39 +308,98 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 "rebase should only happen once per trade, not every candle");
         }
 
+        #endregion
+
+        #region Setup Consumed (One Trade Per Setup)
+
         [Fact]
-        public void Rebase_ResetsOnTradeClose()
+        public void SetupConsumed_NoReEntryAfterTradeCompletes()
         {
             var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var (strategy, quoteHub) = CreateStrategy(setup);
+            var (strategy, quoteHub, tradingState) = CreateStrategy(setup);
 
-            FillQuoteHub(quoteHub, 100_300m);
+            FillQuoteHub(quoteHub, 100_000m);
 
             var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(true);
-            mockTrade.Setup(t => t.TotalOpenBaseQuantity).Returns(1.0m);
-            mockTrade.Setup(t => t.ProfitPct).Returns(0m);
-
-            // First trade opens, rebases to 100,300
-            strategy.ProcessStrategy(mockTrade.Object);
-            setup.EntryPrice.Should().Be(100_300m);
-
-            // Trade closes
             mockTrade.Setup(t => t.Open).Returns(false);
+
+            // First call: enters trade
+            var result1 = strategy.ProcessStrategy(mockTrade.Object);
+            result1.StrategyAction.Should().Be(StrategyAction.OpenTrade);
+
+            // Simulate trade completing (exit strategy records it)
+            tradingState.RecordTradeComplete("TakeProfit", 500m);
+
+            // Advance gap counter past MinGapCandles
+            for (int i = 0; i < 10; i++)
+                tradingState.OnNewCandle();
+
+            // Second call with trade closed: setup is consumed, should NOT re-enter
+            var result2 = strategy.ProcessStrategy(mockTrade.Object);
+            result2.StrategyAction.Should().Be(StrategyAction.NoAction,
+                "setup is consumed after one trade; algorithm must provide a fresh setup");
+        }
+
+        [Fact]
+        public void CanTrade_False_PreventsEntry()
+        {
+            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
+            var tradingState = new HtfRsiTradingState(100_000m);
+
+            // Simulate cooldown active
+            tradingState.CooldownCandlesRemaining = 10;
+
+            var (strategy, quoteHub, _) = CreateStrategy(setup, tradingState);
+
+            FillQuoteHub(quoteHub, 100_000m);
+
+            var mockTrade = new Mock<Core.Trade.ITrade>();
+            mockTrade.Setup(t => t.Open).Returns(false);
+
+            var result = strategy.ProcessStrategy(mockTrade.Object);
+
+            result.StrategyAction.Should().Be(StrategyAction.NoAction,
+                "cooldown should prevent entry");
+        }
+
+        [Fact]
+        public void GapTooSmall_PreventsEntry()
+        {
+            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
+            var tradingState = new HtfRsiTradingState(100_000m);
+
+            // Simulate just exited a trade (gap counter reset)
+            tradingState.CandlesSinceLastExit = 3; // Below MinGapCandles (8)
+
+            var (strategy, quoteHub, _) = CreateStrategy(setup, tradingState);
+
+            FillQuoteHub(quoteHub, 100_000m);
+
+            var mockTrade = new Mock<Core.Trade.ITrade>();
+            mockTrade.Setup(t => t.Open).Returns(false);
+
+            var result = strategy.ProcessStrategy(mockTrade.Object);
+
+            result.StrategyAction.Should().Be(StrategyAction.NoAction,
+                "gap too small should prevent entry");
+        }
+
+        [Fact]
+        public void Entry_SetsIsInPosition_True()
+        {
+            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
+            var tradingState = new HtfRsiTradingState(100_000m);
+            var (strategy, quoteHub, _) = CreateStrategy(setup, tradingState);
+
+            FillQuoteHub(quoteHub, 100_000m);
+
+            var mockTrade = new Mock<Core.Trade.ITrade>();
+            mockTrade.Setup(t => t.Open).Returns(false);
+
             strategy.ProcessStrategy(mockTrade.Object);
 
-            // New trade opens at 100,500
-            quoteHub.Add(new Quote
-            {
-                Timestamp = DateTime.Now.AddMinutes(1),
-                Open = 100_500m, High = 100_510m, Low = 100_490m,
-                Close = 100_500m, Volume = 100
-            });
-            mockTrade.Setup(t => t.Open).Returns(true);
-            strategy.ProcessStrategy(mockTrade.Object);
-
-            setup.EntryPrice.Should().Be(100_500m,
-                "rebase should happen again for the new trade");
+            tradingState.IsInPosition.Should().BeTrue(
+                "entry should mark trading state as in position");
         }
 
         #endregion
