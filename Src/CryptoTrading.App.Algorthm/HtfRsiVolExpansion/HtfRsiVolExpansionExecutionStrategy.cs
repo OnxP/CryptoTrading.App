@@ -80,10 +80,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 if (_setupConsumed)
                     return status;
 
-                // Enforce gap and cooldown from HtfRsiTradingState
-                if (!_tradingState.CanTrade)
-                    return status;
-
                 // Don't re-enter with a stale setup whose SL/TP no longer make sense
                 bool slBreached = _setup.Direction == TradeDirection.Long
                     ? currentPrice <= _setup.StopLoss
@@ -99,7 +95,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 if (entryDetails.ShouldTrade)
                 {
                     _setupConsumed = true;
-                    _tradingState.IsInPosition = true;
                     _logger?.LogInformation(
                         $"[ENTRY] {_setup.Direction} | Price:{currentPrice:F2} | Qty:{Quantity:F6} | " +
                         $"SL:{_setup.StopLoss:F2} | TP:{_setup.TakeProfit:F2} | " +

@@ -340,67 +340,10 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 "setup is consumed after one trade; algorithm must provide a fresh setup");
         }
 
-        [Fact]
-        public void CanTrade_False_PreventsEntry()
-        {
-            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var tradingState = new HtfRsiTradingState(100_000m);
-
-            // Simulate cooldown active
-            tradingState.CooldownCandlesRemaining = 10;
-
-            var (strategy, quoteHub, _) = CreateStrategy(setup, tradingState);
-
-            FillQuoteHub(quoteHub, 100_000m);
-
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
-
-            result.StrategyAction.Should().Be(StrategyAction.NoAction,
-                "cooldown should prevent entry");
-        }
-
-        [Fact]
-        public void GapTooSmall_PreventsEntry()
-        {
-            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var tradingState = new HtfRsiTradingState(100_000m);
-
-            // Simulate just exited a trade (gap counter reset)
-            tradingState.CandlesSinceLastExit = 3; // Below MinGapCandles (8)
-
-            var (strategy, quoteHub, _) = CreateStrategy(setup, tradingState);
-
-            FillQuoteHub(quoteHub, 100_000m);
-
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
-
-            result.StrategyAction.Should().Be(StrategyAction.NoAction,
-                "gap too small should prevent entry");
-        }
-
-        [Fact]
-        public void Entry_SetsIsInPosition_True()
-        {
-            var setup = CreateSetup(TradeDirection.Long, 100_000m, 500m);
-            var tradingState = new HtfRsiTradingState(100_000m);
-            var (strategy, quoteHub, _) = CreateStrategy(setup, tradingState);
-
-            FillQuoteHub(quoteHub, 100_000m);
-
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            strategy.ProcessStrategy(mockTrade.Object);
-
-            tradingState.IsInPosition.Should().BeTrue(
-                "entry should mark trading state as in position");
-        }
+        // Note: Gap/cooldown checks (CanTrade) are enforced by the algorithm
+        // before the setup reaches the execution strategy. The algorithm sets
+        // IsInPosition = true when firing a setup, so the execution strategy
+        // does not duplicate that check.
 
         #endregion
     }
