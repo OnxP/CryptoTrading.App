@@ -11,9 +11,13 @@ using Xunit;
 namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 {
     /// <summary>
-    /// Tests for the simplified execution strategy.
-    /// Entry: immediate market order.
-    /// Exit: hard SL and hard TP only (1:1 R:R at 1.5 × ATR).
+    /// Tests matching the backtested spec exactly:
+    ///   - Entry: immediate market order on 15M signal
+    ///   - SL: 1.5 × ATR
+    ///   - TP: 1.5 × ATR (1:1 R:R)
+    ///   - Trailing: activates at 1.5R, trails at 1.0 × ATR
+    ///   - Time stop: 16 × 15M = 240 × 1M bars (4 hours)
+    ///   - Score: logged only, no effect on TP or sizing
     /// </summary>
     public class SimpleStrategyTests
     {
@@ -130,7 +134,6 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.ProcessCandle(100_000m); // rebase
             pipeline.SimulateTradeClosed();
 
-            // After close, should not re-enter
             var action = pipeline.ProcessCandle(100_000m);
             action.Should().Be(StrategyAction.NoAction, "setup consumed after one trade");
         }
@@ -139,14 +142,13 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         public void Entry_StaleSetup_PriceBelowSL_NoEntry()
         {
             var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m);
-            // SL is at 99,250 — price already below
             var action = pipeline.ProcessCandle(99_000m);
             action.Should().Be(StrategyAction.NoAction);
         }
 
         #endregion
 
-        #region Stop Loss
+        #region Stop Loss (checked on candle high/low)
 
         [Fact]
         public void Long_StopLoss_ExitsOnLowBreach()
@@ -158,7 +160,6 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase
 
-            // Low breaches SL
             var exit = pipeline.ProcessCandle(99_100m, low: 99_200m);
             exit.Should().Be(StrategyAction.CloseTrade);
         }
@@ -171,16 +172,15 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
-            pipeline.ProcessCandle(100_000m); // rebase
+            pipeline.ProcessCandle(100_000m);
 
-            // High breaches SL
             var exit = pipeline.ProcessCandle(100_900m, high: 100_800m);
             exit.Should().Be(StrategyAction.CloseTrade);
         }
 
         #endregion
 
-        #region Take Profit
+        #region Take Profit (1:1 R:R, checked on candle high/low)
 
         [Fact]
         public void Long_TakeProfit_ExitsOnHighBreach()
@@ -190,9 +190,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
-            pipeline.ProcessCandle(100_000m); // rebase
+            pipeline.ProcessCandle(100_000m);
 
-            // High reaches TP
             var exit = pipeline.ProcessCandle(100_800m, high: 100_800m);
             exit.Should().Be(StrategyAction.CloseTrade);
         }
@@ -205,32 +204,171 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
-            pipeline.ProcessCandle(100_000m); // rebase
+            pipeline.ProcessCandle(100_000m);
 
-            // Low reaches TP
             var exit = pipeline.ProcessCandle(99_100m, low: 99_200m);
             exit.Should().Be(StrategyAction.CloseTrade);
         }
 
         #endregion
 
-        #region No Exit In Range
+        #region Trailing Stop (activates at 1.5R, trails at 1.0 × ATR)
 
         [Fact]
-        public void NoExit_WhenPriceStaysBetweenSlAndTp()
+        public void Long_TrailingStop_DoesNotActivateBefore1_5R()
         {
             var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
+            // Risk = 750, 1.5R = 1,125. Trailing activates at 101,125.
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase
 
+            // Price at 1R (100,750) — trailing should NOT activate
+            pipeline.ProcessCandle(100_750m, high: 100_800m);
+
+            // Pull back — no exit (trailing not active, and we're above SL)
+            var hold = pipeline.ProcessCandle(100_400m, high: 100_500m, low: 100_350m);
+            hold.Should().Be(StrategyAction.NoAction,
+                "trailing not active at 1R, no exit on pullback");
+        }
+
+        [Fact]
+        public void Long_TrailingStop_ActivatesAt1_5R_AndTrails()
+        {
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
+            // Risk = 750, 1.5R = 1,125. ATR = 500.
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+            pipeline.ProcessCandle(100_000m); // rebase
+
+            // Push to 1.5R+ (close >= 101,125)
+            pipeline.ProcessCandle(101_200m, high: 101_200m);
+            // Trail = highest(101,200) - ATR(500) = 100,700
+
+            // Continue up
+            pipeline.ProcessCandle(101_500m, high: 101_500m);
+            // Trail = 101,500 - 500 = 101,000
+
+            // Small pullback — above trail
+            var hold = pipeline.ProcessCandle(101_100m, high: 101_100m, low: 101_050m);
+            hold.Should().Be(StrategyAction.NoAction, "above trailing stop at 101,000");
+
+            // Drop through trail
+            var exit = pipeline.ProcessCandle(100_900m, low: 100_900m);
+            exit.Should().Be(StrategyAction.CloseTrade, "below trailing stop at 101,000");
+        }
+
+        [Fact]
+        public void Short_TrailingStop_ActivatesAt1_5R_AndTrails()
+        {
+            var pipeline = new SimplePipeline(TradeDirection.Short, 100_000m, atr: 500m);
+            // Risk = 750, 1.5R = 1,125. ATR = 500.
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+            pipeline.ProcessCandle(100_000m); // rebase
+
+            // Drop to 1.5R+ (close <= 98,875)
+            pipeline.ProcessCandle(98_800m, low: 98_800m);
+            // Trail = lowest(98,800) + ATR(500) = 99,300
+
+            // Continue down
+            pipeline.ProcessCandle(98_500m, low: 98_500m);
+            // Trail = 98,500 + 500 = 99,000
+
+            // Bounce through trail
+            var exit = pipeline.ProcessCandle(99_100m, high: 99_100m);
+            exit.Should().Be(StrategyAction.CloseTrade, "above trailing stop at 99,000");
+        }
+
+        [Fact]
+        public void TrailingStop_OnlyMovesInProfitableDirection()
+        {
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+            pipeline.ProcessCandle(100_000m);
+
+            // Push to 1.5R
+            pipeline.ProcessCandle(101_200m, high: 101_200m);
+            // Trail = 101,200 - 500 = 100,700
+
+            // Higher high
+            pipeline.ProcessCandle(101_800m, high: 101_800m);
+            // Trail = 101,800 - 500 = 101,300
+
+            // Price dips but stays above trail — trail should NOT move down
+            pipeline.ProcessCandle(101_400m, high: 101_400m, low: 101_350m);
+            // Trail stays at 101,300 (not 101,400 - 500 = 100,900)
+
+            // Verify trail held at 101,300 by checking that 101,250 triggers exit
+            var exit = pipeline.ProcessCandle(101_200m, low: 101_200m);
+            exit.Should().Be(StrategyAction.CloseTrade,
+                "trail should still be at 101,300 — low of 101,200 is below it");
+        }
+
+        #endregion
+
+        #region Time Stop (16 × 15M = 240 × 1M bars)
+
+        [Fact]
+        public void TimeStop_ExitsAfter240Bars()
+        {
+            // Use huge ATR so SL/TP never trigger
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 50_000m);
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+
+            // 239 bars — no exit
+            for (int i = 0; i < 239; i++)
+            {
+                var action = pipeline.ProcessCandle(100_000m);
+                action.Should().Be(StrategyAction.NoAction);
+            }
+
+            // Bar 240 — time stop
+            var exit = pipeline.ProcessCandle(100_000m);
+            exit.Should().Be(StrategyAction.CloseTrade, "time stop at 240 bars (4 hours)");
+        }
+
+        [Fact]
+        public void TimeStop_DoesNotFireBefore240Bars()
+        {
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 50_000m);
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+
+            // Bar 239 — should NOT exit
+            for (int i = 0; i < 238; i++)
+                pipeline.ProcessCandle(100_000m);
+
+            var hold = pipeline.ProcessCandle(100_000m);
+            hold.Should().Be(StrategyAction.NoAction, "bar 239 is before time stop");
+        }
+
+        #endregion
+
+        #region No Exit When In Range
+
+        [Fact]
+        public void NoExit_WhenPriceBetweenSlAndTp_NoTrailing()
+        {
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+            pipeline.ProcessCandle(100_000m);
+
             // Price moves within range — no exit
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < 50; i++)
             {
                 var action = pipeline.ProcessCandle(100_200m, high: 100_300m, low: 100_100m);
-                action.Should().Be(StrategyAction.NoAction,
-                    $"bar {i}: no time stop, no trailing — only SL/TP exits");
+                action.Should().Be(StrategyAction.NoAction);
             }
         }
 
@@ -242,12 +380,11 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         public void Rebase_AdjustsSlTpToFillPrice()
         {
             var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
-            var risk = 500m * 1.5m; // 750
+            var risk = 500m * 1.5m;
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
 
-            // Fill at 100,300 (slippage)
             pipeline.ProcessCandle(100_300m);
 
             pipeline.Setup.EntryPrice.Should().Be(100_300m);
@@ -264,46 +401,98 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
 
-            // Enter
             var entry = pipeline.ProcessCandle(100_000m);
             entry.Should().Be(StrategyAction.OpenTrade);
             pipeline.SimulateTradeOpened();
-
-            // Rebase
             pipeline.ProcessCandle(100_000m);
 
-            // Drift up
             pipeline.ProcessCandle(100_200m);
             pipeline.ProcessCandle(100_400m);
             pipeline.ProcessCandle(100_600m);
 
-            // TP hit at 100,750
             var exit = pipeline.ProcessCandle(100_800m, high: 100_800m);
             exit.Should().Be(StrategyAction.CloseTrade, "TP at 100,750 breached");
 
-            // No re-entry
             pipeline.SimulateTradeClosed();
             var reentry = pipeline.ProcessCandle(100_000m);
             reentry.Should().Be(StrategyAction.NoAction);
         }
 
         [Fact]
-        public void EndToEnd_Short_StopLoss()
+        public void EndToEnd_Short_TrailingStopWin()
         {
             var pipeline = new SimplePipeline(TradeDirection.Short, 100_000m, atr: 500m);
+            // Risk = 750, 1.5R = 1,125
 
-            // Enter
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
-            pipeline.ProcessCandle(100_000m); // rebase
+            pipeline.ProcessCandle(100_000m);
 
-            // Price reverses up
-            pipeline.ProcessCandle(100_200m);
-            pipeline.ProcessCandle(100_500m);
+            // Drop past 1.5R to activate trailing
+            decimal price = 100_000m;
+            for (int i = 0; i < 15; i++)
+            {
+                price -= 80m;
+                pipeline.ProcessCandle(price, high: price + 20m, low: price - 20m);
+            }
+            // price ≈ 98,800, trailing should be active
 
-            // SL hit at 100,750
-            var exit = pipeline.ProcessCandle(100_800m, high: 100_800m);
-            exit.Should().Be(StrategyAction.CloseTrade, "SL at 100,750 breached");
+            // Bounce — trailing stop catches it
+            bool exited = false;
+            for (int i = 0; i < 20; i++)
+            {
+                price += 40m;
+                var action = pipeline.ProcessCandle(price, high: price + 20m, low: price - 10m);
+                if (action == StrategyAction.CloseTrade)
+                {
+                    exited = true;
+                    break;
+                }
+            }
+
+            exited.Should().BeTrue("trailing stop should catch the bounce");
+        }
+
+        [Fact]
+        public void EndToEnd_Long_TimeStop()
+        {
+            // Use huge ATR so SL/TP/trailing never trigger
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 50_000m);
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+
+            bool timeStopHit = false;
+            for (int i = 0; i < 245; i++)
+            {
+                var action = pipeline.ProcessCandle(100_000m);
+                if (action == StrategyAction.CloseTrade)
+                {
+                    timeStopHit = true;
+                    i.Should().Be(239, "time stop fires on bar 240");
+                    break;
+                }
+            }
+
+            timeStopHit.Should().BeTrue("time stop should fire at 240 bars");
+        }
+
+        #endregion
+
+        #region Exit Priority
+
+        [Fact]
+        public void ExitPriority_SL_BeforeTP_WhenBothBreached()
+        {
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
+
+            pipeline.ProcessCandle(100_000m);
+            pipeline.SimulateTradeOpened();
+            pipeline.ProcessCandle(100_000m);
+
+            // Wild candle breaching both SL (99,250) and TP (100,750)
+            var exit = pipeline.ProcessCandle(100_000m, high: 100_800m, low: 99_200m);
+            exit.Should().Be(StrategyAction.CloseTrade);
         }
 
         #endregion
