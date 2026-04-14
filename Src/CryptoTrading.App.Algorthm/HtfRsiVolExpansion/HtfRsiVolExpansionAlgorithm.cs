@@ -326,8 +326,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 Leverage = Leverage
             };
 
-            // Create execution strategy
-            var executionStrategy = new HtfRsiVolExpansionExecutionStrategy(setup, _tradingState);
+            // Create execution strategy (simple: just SL/TP, no trailing/breakeven/time stop)
+            var executionStrategy = new SimpleExecutionStrategy(setup, _tradingState);
             executionStrategy.SetLogger(_logger);
 
             // Create strategy result
