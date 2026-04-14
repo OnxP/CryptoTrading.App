@@ -11,13 +11,15 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
     /// Exit strategy for HTF RSI + Vol Expansion.
     /// Runs on the 1M timeframe (called by TradeMonitor on each 1M candle).
     /// Manages four exit types checked in order:
-    ///   a) Stop Loss - hard stop at 1.5 × ATR from entry, moves to breakeven at 1.0R
+    ///   a) Stop Loss - hard stop at 1.5 × ATR from entry
     ///   b) Dynamic Take Profit - R:R scales with ProbabilityScore:
     ///        Score 80+: no hard TP (trail only)
-    ///        Score 60-79: 3.0R
-    ///        Score 40-59: 2.0R
-    ///        Score &lt;40: 1.5R
-    ///   c) Trailing Stop - activates at 1.5R profit, trails at 1.0 × 15M ATR
+    ///        Score 60-79: 2.0R
+    ///        Score 40-59: 1.5R
+    ///        Score &lt;40: 1.0R
+    ///   c) Trailing Stop - activates at 1.0R profit, trails at 1.0 × 15M ATR
+    ///        (replaces the old breakeven stop — at 1R profit the trail naturally
+    ///         locks in ~0.33R, giving the trade room to breathe in volatile markets)
     ///   d) Time Stop - closes after 240 bars (4 hours on 1M)
     /// Note: SL and trailing distance use 15M ATR from the setup,
     /// not 1M ATR from the execution quote hub.
@@ -37,12 +39,10 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         // Trailing stop state
         private bool _trailingActive;
         private decimal _trailingStop;
-        private bool _breakevenActive;
 
         // Parameters (time stop is 4 hours = 240 × 1M bars, since TradeMonitor feeds 1M candles)
         private const int MaxHoldBars = 240;
-        private const decimal BreakevenActivationR = 1.0m;
-        private const decimal TrailingActivationR = 1.5m;
+        private const decimal TrailingActivationR = 1.0m;
         private const decimal TrailingDistanceAtrMult = 1.0m;
 
         public HtfRsiVolExpansionExitStrategy(
@@ -70,7 +70,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _highestSinceEntry = _setup?.EntryPrice ?? 0;
             _lowestSinceEntry = _setup?.EntryPrice ?? decimal.MaxValue;
             _trailingActive = false;
-            _breakevenActive = false;
             _trailingStop = _setup?.Direction == TradeDirection.Long
                 ? decimal.MinValue
                 : decimal.MaxValue;
@@ -127,30 +126,24 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 }
             }
 
-            // c) Breakeven + Trailing Stop
+            // c) Trailing Stop (replaces the old breakeven + trailing)
+            // Activates at 1.0R profit and trails at 1.0 × ATR behind the extreme.
+            // At activation (1R), the trail sits ~0.33R in profit, giving the trade
+            // room to breathe through normal volatility while still protecting gains.
             if (trailingAtr > 0)
             {
                 var unrealizedProfit = _setup.Direction == TradeDirection.Long
                     ? close - _setup.EntryPrice
                     : _setup.EntryPrice - close;
 
-                // Move SL to breakeven at 1.0R profit
-                if (!_breakevenActive && unrealizedProfit >= _setup.InitialRisk * BreakevenActivationR)
-                {
-                    _breakevenActive = true;
-                    _setup.StopLoss = _setup.EntryPrice;
-                    _logger?.LogInformation(
-                        $"[EXIT] Breakeven activated — SL moved to entry {_setup.EntryPrice:F2}");
-                }
-
-                // Activate trailing stop at 1.5R
+                // Activate trailing stop at 1.0R
                 if (unrealizedProfit >= _setup.InitialRisk * TrailingActivationR)
                 {
                     if (!_trailingActive)
                     {
                         _trailingActive = true;
                         _logger?.LogInformation(
-                            $"[EXIT] Trailing stop activated at {unrealizedProfit:F2} profit (1.5R = {_setup.InitialRisk * TrailingActivationR:F2})");
+                            $"[EXIT] Trailing stop activated at {unrealizedProfit:F2} profit (1.0R = {_setup.InitialRisk * TrailingActivationR:F2})");
                     }
                 }
 
@@ -197,15 +190,17 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         /// Returns the R-multiple for take profit based on the setup's probability score.
         /// Higher-conviction setups get wider targets to let winners run.
         /// Returns 0 for scores ≥ 80 (no hard TP — trailing stop only).
+        /// Multipliers are calibrated so that TP is reachable within the 4-hour
+        /// time stop window without being prematurely clipped by the trailing stop.
         /// </summary>
         public static decimal GetTakeProfitMultiplier(int probabilityScore)
         {
             return probabilityScore switch
             {
                 >= 80 => 0m,    // No hard TP — let trailing stop manage
-                >= 60 => 3.0m,  // Strong setup: 3:1 R:R
-                >= 40 => 2.0m,  // Moderate setup: 2:1 R:R
-                _ => 1.5m       // Weak setup: 1.5:1 R:R
+                >= 60 => 2.0m,  // Strong setup: 2:1 R:R (3.0 ATR target)
+                >= 40 => 1.5m,  // Moderate setup: 1.5:1 R:R (2.25 ATR target)
+                _ => 1.0m       // Weak setup: 1:1 R:R (1.5 ATR target)
             };
         }
 

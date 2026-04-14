@@ -335,9 +335,9 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
         [Theory]
         [InlineData(85, 0)]      // No hard TP
-        [InlineData(75, 3.0)]    // 3R
-        [InlineData(50, 2.0)]    // 2R
-        [InlineData(30, 1.5)]    // 1.5R
+        [InlineData(75, 2.0)]    // 2R
+        [InlineData(50, 1.5)]    // 1.5R
+        [InlineData(30, 1.0)]    // 1.0R
         public void DynamicTP_MultiplierMatchesScore(int score, decimal expectedR)
         {
             HtfRsiVolExpansionExitStrategy.GetTakeProfitMultiplier(score)
@@ -345,9 +345,9 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         }
 
         [Fact]
-        public void DynamicTP_Score75_ExitsAt3R_NotAt1R()
+        public void DynamicTP_Score75_ExitsAt2R_NotAt1R()
         {
-            // Score 75 → 3R TP. Risk = 750. TP at entry + 2,250 = 102,250
+            // Score 75 → 2R TP. Risk = 750. TP at entry + 1,500 = 101,500
             var pipeline = new StrategyPipeline(TradeDirection.Long, 100_000m, probabilityScore: 75);
 
             // Enter and fill at entry price
@@ -355,20 +355,15 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase at entry price
 
-            // Price at 1R (old TP level) — should NOT exit
+            // Price at 1R — should NOT exit
             var at1R = pipeline.ProcessCandle(100_750m, high: 100_800m);
             at1R.Should().Be(StrategyAction.NoAction,
-                "1R is not enough for score 75 — needs 3R");
+                "1R is not enough for score 75 — needs 2R");
 
-            // Price at 2R — still not enough
-            var at2R = pipeline.ProcessCandle(101_500m, high: 101_600m);
-            at2R.Should().Be(StrategyAction.NoAction,
-                "2R is not enough for score 75 — needs 3R");
-
-            // Price at 3R — should exit
-            var at3R = pipeline.ProcessCandle(102_300m, high: 102_300m);
-            at3R.Should().Be(StrategyAction.CloseTrade,
-                "3R reached — score 75 exits here");
+            // Price at 2R — should exit
+            var at2R = pipeline.ProcessCandle(101_600m, high: 101_600m);
+            at2R.Should().Be(StrategyAction.CloseTrade,
+                "2R reached — score 75 exits here");
         }
 
         [Fact]
@@ -388,63 +383,73 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         }
 
         [Fact]
-        public void DynamicTP_Score30_ExitsAt1_5R()
+        public void DynamicTP_Score30_ExitsAt1R()
         {
-            // Score 30 → 1.5R TP. Risk = 750. TP at entry + 1,125 = 101,125
+            // Score 30 → 1.0R TP. Risk = 750. TP at entry + 750 = 100,750
             var pipeline = new StrategyPipeline(TradeDirection.Long, 100_000m, probabilityScore: 30);
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase
 
-            var at1_5R = pipeline.ProcessCandle(101_200m, high: 101_200m);
-            at1_5R.Should().Be(StrategyAction.CloseTrade,
-                "1.5R reached — weak score exits early");
+            var at1R = pipeline.ProcessCandle(100_800m, high: 100_800m);
+            at1R.Should().Be(StrategyAction.CloseTrade,
+                "1.0R reached — weak score exits early");
         }
 
         #endregion
 
-        #region 6. Breakeven Stop — SL moves to entry at 1R
+        #region 6. Trailing Stop at 1R — Replaces old breakeven
 
         [Fact]
-        public void Breakeven_SlMovesToEntryAt1R_ThenProtectsOnReversal()
+        public void TrailingAt1R_ActivatesAndLocksPartialProfit()
         {
-            // Score 85 (no hard TP) so we can test breakeven without TP interference
-            var pipeline = new StrategyPipeline(TradeDirection.Long, 100_000m, probabilityScore: 85);
+            // Score 85 (no hard TP). ATR 500, Risk 750.
+            // At 1R profit (close 100,750), trailing activates.
+            // Trail = highest(100,800) - ATR(500) = 100,300.
+            // This gives the trade room to breathe (300 point buffer)
+            // instead of the old breakeven which exited at $0 on any bounce.
+            var pipeline = new StrategyPipeline(TradeDirection.Long, 100_000m, atr: 500m, probabilityScore: 85);
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase at entry
-            var entryPrice = pipeline.Setup.EntryPrice;
 
-            // Price moves to 1R — breakeven should activate
+            // Price moves to 1R — trailing activates
             pipeline.ProcessCandle(100_750m, high: 100_800m);
-            pipeline.Setup.StopLoss.Should().Be(entryPrice,
-                "SL should move to entry at 1R profit (breakeven)");
 
-            // Price reverses back to entry — should trigger breakeven stop
-            var reversal = pipeline.ProcessCandle(entryPrice, high: entryPrice + 50, low: entryPrice - 10);
-            reversal.Should().Be(StrategyAction.CloseTrade,
-                "breakeven stop should fire when price returns to entry");
+            // SL should NOT move to entry (old breakeven behavior removed)
+            pipeline.Setup.StopLoss.Should().NotBe(100_000m,
+                "breakeven is removed — SL stays at original level");
+
+            // Small pullback — trail at 100,300 should survive
+            var hold = pipeline.ProcessCandle(100_400m, high: 100_500m, low: 100_350m);
+            hold.Should().Be(StrategyAction.NoAction,
+                "price above trail at 100,300 — trade survives normal volatility");
+
+            // Deeper pullback below trail
+            var exit = pipeline.ProcessCandle(100_200m, high: 100_250m, low: 100_200m);
+            exit.Should().Be(StrategyAction.CloseTrade,
+                "price dropped below trailing stop at 100,300");
         }
 
         #endregion
 
-        #region 7. Trailing Stop — Activates at 1.5R, trails at 1×ATR
+        #region 7. Trailing Stop — Activates at 1R, trails at 1×ATR
 
         [Fact]
-        public void TrailingStop_ActivatesAt1_5R_ExitsOnReversal()
+        public void TrailingStop_ActivatesAt1R_ExitsOnReversal()
         {
-            // Score 85 (no hard TP), ATR = 500
+            // Score 85 (no hard TP), ATR = 500, Risk = 750
             var pipeline = new StrategyPipeline(TradeDirection.Long, 100_000m, atr: 500m, probabilityScore: 85);
 
             pipeline.ProcessCandle(100_000m);
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase
 
-            // Move to 1.5R profit (1,125 above entry = 101,125)
-            pipeline.ProcessCandle(101_200m, high: 101_200m);
-            // Trail is at: highest(101,200) - ATR(500) = 100,700
+            // Move to 1R profit (750 above entry = 100,750)
+            pipeline.ProcessCandle(100_800m, high: 100_800m);
+            // Trail is at: highest(100,800) - ATR(500) = 100,300
 
             // Continue up
             pipeline.ProcessCandle(101_500m, high: 101_500m);
@@ -462,7 +467,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         }
 
         [Fact]
-        public void TrailingStop_Short_ActivatesAndTrails()
+        public void TrailingStop_Short_ActivatesAt1R_AndTrails()
         {
             var pipeline = new StrategyPipeline(TradeDirection.Short, 100_000m, atr: 500m, probabilityScore: 85);
 
@@ -470,9 +475,9 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.SimulateTradeOpened();
             pipeline.ProcessCandle(100_000m); // rebase
 
-            // Move to 1.5R profit (1,125 below entry = 98,875)
-            pipeline.ProcessCandle(98_800m, low: 98_800m);
-            // Trail is at: lowest(98,800) + ATR(500) = 99,300
+            // Move to 1R profit (750 below entry = 99,250)
+            pipeline.ProcessCandle(99_200m, low: 99_200m);
+            // Trail is at: lowest(99,200) + ATR(500) = 99,700
 
             // Continue down
             pipeline.ProcessCandle(98_500m, low: 98_500m);
@@ -630,13 +635,13 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         #region 12. Full End-to-End Scenario
 
         [Fact]
-        public void EndToEnd_LongTrade_Entry_Breakeven_TrailingStop_Exit()
+        public void EndToEnd_LongTrade_Entry_TrailingStop_Exit()
         {
-            // Complete lifecycle: entry → breakeven → trailing activation → trailing exit
+            // Complete lifecycle: entry → trailing activation at 1R → trailing exit
             var pipeline = new StrategyPipeline(
                 TradeDirection.Long, 100_000m, atr: 500m, probabilityScore: 85);
             // Risk = 750. No hard TP (score 85).
-            // SL at 99,250. Breakeven at 1R (100,750). Trailing at 1.5R (101,125).
+            // SL at 99,250. Trailing activates at 1R (100,750).
 
             // 1. Entry
             var entry = pipeline.ProcessCandle(100_000m);
@@ -650,12 +655,13 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.ProcessCandle(100_200m);
             pipeline.ProcessCandle(100_400m);
 
-            // 4. Hit 1R — breakeven activates
-            pipeline.ProcessCandle(100_750m, high: 100_800m);
-            pipeline.Setup.StopLoss.Should().Be(100_000m, "breakeven: SL at entry");
+            // 4. Hit 1R — trailing activates
+            pipeline.ProcessCandle(100_800m, high: 100_800m);
+            // Trail: 100,800 - 500 = 100,300
 
-            // 5. Continue up to 1.5R — trailing activates
+            // 5. Continue up — trailing follows
             pipeline.ProcessCandle(101_200m, high: 101_200m);
+            // Trail: 101,200 - 500 = 100,700
 
             // 6. Strong trend continues
             pipeline.ProcessCandle(101_800m, high: 101_800m);
@@ -686,7 +692,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Short trade that hits stop loss
             var pipeline = new StrategyPipeline(
                 TradeDirection.Short, 100_000m, atr: 500m, probabilityScore: 50);
-            // Risk = 750. TP at 2R (98,500). SL at 100,750.
+            // Risk = 750. TP at 1.5R (98,875). SL at 100,750.
 
             // 1. Entry
             var entry = pipeline.ProcessCandle(100_000m);

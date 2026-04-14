@@ -22,8 +22,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
     /// All data comes from a single 15M subscription. 4H candles are aggregated
     /// internally from 15M data using the FourHourCandleAggregator.
     ///
-    /// Position management: 1.5 × ATR SL/TP (1:1 R:R), trailing stop at 1.5R,
-    /// time stop at 16 candles, 8-candle min gap, 3-loss cooldown.
+    /// Position management: 1.5 × ATR SL, dynamic TP by score (1-2R), trailing stop at 1R,
+    /// time stop at 240 1M bars (4 hours), 8-candle min gap, 3-loss cooldown.
     /// </summary>
     public class HtfRsiVolExpansionAlgorithm : IAlgorithm
     {
@@ -379,10 +379,11 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _logger.LogInformation($"  Vol Expansion Ratio:  {VolExpansionRatio}");
             _logger.LogInformation($"  Vol Expansion Lookback: {VolExpansionLookback} candles");
             _logger.LogInformation("  -- Risk Management --");
-            _logger.LogInformation($"  SL/TP:                {SlTpAtrMultiplier} × ATR (1:1 R:R)");
-            _logger.LogInformation($"  Trailing Activation:  1.5R");
+            _logger.LogInformation($"  SL:                   {SlTpAtrMultiplier} × ATR");
+            _logger.LogInformation($"  Dynamic TP:           80+→trail, 60-79→2R, 40-59→1.5R, <40→1R");
+            _logger.LogInformation($"  Trailing Activation:  1.0R");
             _logger.LogInformation($"  Trailing Distance:    1.0 × ATR");
-            _logger.LogInformation($"  Max Hold:             16 candles (4 hours)");
+            _logger.LogInformation($"  Max Hold:             240 bars (4 hours on 1M)");
             _logger.LogInformation($"  Min Gap:              8 candles (2 hours)");
             _logger.LogInformation($"  Cooldown:             3 consecutive losses → 16 candle pause");
             _logger.LogInformation($"  Leverage:             {Leverage}x (fixed)");
