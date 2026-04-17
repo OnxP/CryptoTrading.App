@@ -29,7 +29,9 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private readonly List<bool> _recentResults = new List<bool>();
 
         // Parameters
-        public int MinGapCandles { get; set; } = 8;
+        // 9 × 15M = 135 min — matches the observed minimum inter-trade gap in
+        // the target backtest (all 435 consecutive gaps ≥ 135 min).
+        public int MinGapCandles { get; set; } = 9;
         public int CooldownTriggerLosses { get; set; } = 3;
         public int CooldownDurationCandles { get; set; } = 16;
 
