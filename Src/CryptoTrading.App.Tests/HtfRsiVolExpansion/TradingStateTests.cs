@@ -67,7 +67,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             var state = new HtfRsiTradingState(10_000m);
             state.IsInPosition = false;
-            state.CandlesSinceLastExit = 3; // Below MinGapCandles (8)
+            state.CandlesSinceLastExit = 3; // Below MinGapCandles (9)
 
             state.CanTrade.Should().BeFalse();
         }
@@ -77,7 +77,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             var state = new HtfRsiTradingState(10_000m);
             state.IsInPosition = false;
-            state.CandlesSinceLastExit = 8; // Exactly MinGapCandles
+            state.CandlesSinceLastExit = 9; // Exactly MinGapCandles
 
             state.CanTrade.Should().BeTrue();
         }
