@@ -519,4 +519,5 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine("  --out       Optional CSV path for trade list");
         }
     }
+
 }
