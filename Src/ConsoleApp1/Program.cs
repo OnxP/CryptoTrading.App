@@ -1,9 +1,11 @@
 using Binance;
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
+using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Strategies;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -16,15 +18,20 @@ namespace CryptoTrading.App.BackTesting
 {
     /// <summary>
     /// Backtest console app: replays 4H / 15M / 1M BTCUSDT history from SQL
-    /// through the HtfRsiVolExpansion strategy. Signals are produced by the
-    /// real algorithm; execution is simulated on 1M candles with a best-entry
-    /// pullback limit and the strategy's SL/TP/trailing/time-stop rules.
-    /// Leverage is fixed at 5x (matches the strategy's internal constant).
+    /// through one of the HTF RSI Vol Expansion strategies. Signals come from
+    /// the real strategy; execution is simulated on 1M candles with a best-entry
+    /// pullback limit and SL/TP/trailing/time-stop rules. Leverage = 5x.
+    ///
+    /// Two strategy modes:
+    ///   --strategy existing  HtfRsiVolExpansionAlgorithm (native 4H, Cutler's RSI)
+    ///   --strategy sma       HtfRsiVolExpansionStrategy (15M-aggregated 4H, SMA RSI)
     /// </summary>
     internal static class Program
     {
         private const int Leverage = 5;
         private const string DefaultSymbol = "BTCUSDT";
+
+        private enum StrategyMode { Existing, Sma }
 
         private static int Main(string[] args)
         {
@@ -35,6 +42,7 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine("================================================================");
                 Console.WriteLine("  HTF RSI Vol Expansion — BACKTEST");
                 Console.WriteLine("================================================================");
+                Console.WriteLine($"  Strategy:      {opts.Strategy}");
                 Console.WriteLine($"  Symbol:        {opts.Symbol}");
                 Console.WriteLine($"  Range:         {opts.From:yyyy-MM-dd} → {opts.To:yyyy-MM-dd}");
                 Console.WriteLine($"  Start BTC:     {opts.StartBtc}");
@@ -42,9 +50,14 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine($"  Trade CSV:     {opts.OutputCsv ?? "(none)"}");
                 Console.WriteLine("----------------------------------------------------------------");
 
-                Console.Write("  Loading 4H...  ");
-                var candles4H = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Hours_4, opts.From.AddDays(-30), opts.To);
-                Console.WriteLine($"{candles4H.Count} bars");
+                // 4H only needed for the Existing strategy (native 4H feed).
+                List<Candlestick> candles4H = new();
+                if (opts.Strategy == StrategyMode.Existing)
+                {
+                    Console.Write("  Loading 4H...  ");
+                    candles4H = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Hours_4, opts.From.AddDays(-30), opts.To);
+                    Console.WriteLine($"{candles4H.Count} bars");
+                }
 
                 Console.Write("  Loading 15M... ");
                 var candles15M = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Minutes_15, opts.From, opts.To);
@@ -54,14 +67,18 @@ namespace CryptoTrading.App.BackTesting
                 var candles1M = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Minute, opts.From, opts.To);
                 Console.WriteLine($"{candles1M.Count} bars");
 
-                if (candles15M.Count == 0 || candles1M.Count == 0 || candles4H.Count == 0)
+                if (candles15M.Count == 0 || candles1M.Count == 0
+                    || (opts.Strategy == StrategyMode.Existing && candles4H.Count == 0))
                 {
                     Console.Error.WriteLine("Insufficient data for one or more timeframes.");
                     return 2;
                 }
 
                 Console.WriteLine("----------------------------------------------------------------");
-                var result = Replay(opts, candles4H, candles15M, candles1M);
+                var result = opts.Strategy == StrategyMode.Existing
+                    ? ReplayExisting(opts, candles4H, candles15M, candles1M)
+                    : ReplaySma(opts, candles15M, candles1M);
+
                 PrintResults(result, opts);
                 return 0;
             }
@@ -73,7 +90,7 @@ namespace CryptoTrading.App.BackTesting
             }
         }
 
-        // ---- Replay ------------------------------------------------------
+        // ---- Replay result -----------------------------------------------
 
         private sealed record ReplayResult(
             List<SimulatedTrade> Trades,
@@ -83,13 +100,14 @@ namespace CryptoTrading.App.BackTesting
             DateTime FirstBar,
             DateTime LastBar);
 
-        private static ReplayResult Replay(
+        // ---- Replay: existing HtfRsiVolExpansionAlgorithm ----------------
+
+        private static ReplayResult ReplayExisting(
             BacktestOptions opts,
             List<Candlestick> candles4H,
             List<Candlestick> candles15M,
             List<Candlestick> candles1M)
         {
-            // Clean RequestTracker singleton state.
             _ = RequestTracker.Instance;
             RequestTracker.Requests.Clear();
 
@@ -107,7 +125,6 @@ namespace CryptoTrading.App.BackTesting
             var md = new FakeMarketData();
             algo.Subscribe(Symbol.BTC_USDT, md);
 
-            // Seed 4H historic — bars before first 15M; live-stream the rest.
             var firstStreamTime = candles15M[0].CloseTime;
             var seed4H = candles4H.Where(c => c.CloseTime < firstStreamTime).ToList();
             var live4H = candles4H
@@ -118,14 +135,10 @@ namespace CryptoTrading.App.BackTesting
             md.FireHistoric15M(Array.Empty<Candlestick>());
             md.FireHistoric4H(seed4H);
 
-            // Access the algo's private _tradingState so we can record trade
-            // completion when our simulator closes a 1M-level trade, keeping
-            // the gap-counter / cooldown consistent with live behavior.
             var tsField = typeof(HtfRsiVolExpansionAlgorithm)
                 .GetField("_tradingState", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?? throw new InvalidOperationException("Cannot access HtfRsiVolExpansionAlgorithm._tradingState");
 
-            // Index 15M by CloseTime for fast join with 1M stream.
             var by15M = candles15M.ToDictionary(c => c.CloseTime, c => c);
 
             var sim = new TradeSimulator(Leverage);
@@ -134,13 +147,10 @@ namespace CryptoTrading.App.BackTesting
 
             foreach (var m1 in candles1M)
             {
-                // 4H candle closes at this instant → fire to algo first.
                 if (live4H.TryGetValue(m1.CloseTime, out var c4))
                     md.FireLive4H(c4);
 
-                // 15M candle closes at this instant → fire to algo, may generate signal.
-                bool is15MBoundary = by15M.TryGetValue(m1.CloseTime, out var c15);
-                if (is15MBoundary)
+                if (by15M.TryGetValue(m1.CloseTime, out var c15))
                     md.FireLive15M(c15);
 
                 if (!equitySeeded)
@@ -149,7 +159,6 @@ namespace CryptoTrading.App.BackTesting
                     equitySeeded = true;
                 }
 
-                // Harvest any new signal fired on this bar.
                 if (RequestTracker.Requests.TryRemove(opts.Symbol, out var pair) && !sim.HasActive)
                 {
                     var request = pair.Item2;
@@ -173,21 +182,17 @@ namespace CryptoTrading.App.BackTesting
                     }
                 }
 
-                // Drive any pending/open trade with this 1M candle (best-entry
-                // means we only act on candles strictly AFTER the signal bar,
-                // which TradeSimulator.Step enforces via elapsed-time check).
                 if (sim.HasActive)
                 {
                     var done = sim.Step(m1);
                     if (done != null)
                     {
                         var ts = (HtfRsiTradingState)tsField.GetValue(algo);
-                        ApplyCompletion(ts, done);
+                        ApplyCompletionExisting(ts, done);
                     }
                 }
             }
 
-            // End-of-data: force-close anything still open at last 1M close.
             if (sim.HasActive)
             {
                 var last = candles1M[^1];
@@ -195,7 +200,7 @@ namespace CryptoTrading.App.BackTesting
                 if (done != null)
                 {
                     var ts = (HtfRsiTradingState)tsField.GetValue(algo);
-                    ApplyCompletion(ts, done);
+                    ApplyCompletionExisting(ts, done);
                 }
             }
 
@@ -207,6 +212,161 @@ namespace CryptoTrading.App.BackTesting
                 SignalCount: sim.Completed.Count,
                 FirstBar: candles1M[0].CloseTime,
                 LastBar: candles1M[^1].CloseTime);
+        }
+
+        // ---- Replay: HtfRsiVolExpansionStrategy (SMA RSI) ----------------
+
+        /// <summary>
+        /// Drives HtfRsiVolExpansionStrategy on 15M candles but executes
+        /// on 1M candles via the TradeSimulator for best-entry + precise
+        /// SL/TP detection. The strategy's internal trade state is the
+        /// signal-side bookkeeper; whenever our 1M sim closes a trade we
+        /// reflectively sync the strategy's _currentTrade / _lastExitIndex /
+        /// _tradeResults so its gap + cooldown logic remains coherent.
+        /// </summary>
+        private static ReplayResult ReplaySma(
+            BacktestOptions opts,
+            List<Candlestick> candles15M,
+            List<Candlestick> candles1M)
+        {
+            var strategy = new HtfRsiVolExpansionStrategy { Leverage = Leverage };
+
+            var stratType = typeof(HtfRsiVolExpansionStrategy);
+            var currentTradeField = stratType.GetField("_currentTrade", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("Cannot access HtfRsiVolExpansionStrategy._currentTrade");
+            var lastExitIdxField = stratType.GetField("_lastExitIndex", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("Cannot access HtfRsiVolExpansionStrategy._lastExitIndex");
+            var tradeResultsField = stratType.GetField("_tradeResults", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("Cannot access HtfRsiVolExpansionStrategy._tradeResults");
+
+            var by15M = candles15M.ToDictionary(c => c.CloseTime, c => c);
+            var indexBy15M = new Dictionary<DateTime, int>(candles15M.Count);
+            for (int i = 0; i < candles15M.Count; i++)
+                indexBy15M[candles15M[i].CloseTime] = i;
+
+            var sim = new TradeSimulator(Leverage);
+            decimal startEquityUsdt = 0m;
+            decimal currentEquityUsdt = 0m;
+            bool equitySeeded = false;
+            int latest15MIdx = -1;
+
+            foreach (var m1 in candles1M)
+            {
+                if (!equitySeeded)
+                {
+                    startEquityUsdt = (decimal)opts.StartBtc * m1.Close;
+                    currentEquityUsdt = startEquityUsdt;
+                    equitySeeded = true;
+                }
+
+                // Fire the strategy on 15M boundary candles only.
+                if (by15M.TryGetValue(m1.CloseTime, out var c15))
+                {
+                    latest15MIdx = indexBy15M[m1.CloseTime];
+
+                    var signal = strategy.OnCandle(
+                        (double)c15.Open, (double)c15.High,
+                        (double)c15.Low, (double)c15.Close,
+                        (double)c15.Volume, c15.CloseTime, latest15MIdx);
+
+                    // Entry signals (BUY/SELL, not a close) open a 1M sim trade.
+                    // The strategy's own close signals are ignored — our 1M sim
+                    // owns the exit. The strategy's internal _currentTrade may
+                    // or may not have closed on a 15M bar; we force-sync below
+                    // when our sim closes.
+                    if (signal.HasAction && !signal.IsClose && !sim.HasActive)
+                    {
+                        var dir = signal.Direction == "long" ? TradeDirection.Long : TradeDirection.Short;
+                        var signalPrice = (decimal)signal.Price;
+                        var stopLoss = (decimal)signal.StopLoss;
+                        var takeProfit = (decimal)signal.TakeProfit;
+                        var initialRisk = Math.Abs(signalPrice - stopLoss);
+                        var atr = initialRisk / (decimal)strategy.SlAtrMult;
+
+                        sim.OpenFromSignal(
+                            signalTime: c15.CloseTime,
+                            direction: dir,
+                            signalPrice: signalPrice,
+                            stopLoss: stopLoss,
+                            takeProfit: takeProfit,
+                            atrAtSignal: atr,
+                            initialRisk: initialRisk,
+                            htfRsi: 0,
+                            volExpansion: 0,
+                            probabilityScore: 0,
+                            equityUsdt: currentEquityUsdt);
+                    }
+                }
+
+                if (sim.HasActive)
+                {
+                    var done = sim.Step(m1);
+                    if (done != null)
+                    {
+                        currentEquityUsdt += done.PnlUsdt;
+                        SyncStrategyOnClose(strategy, currentTradeField, lastExitIdxField, tradeResultsField,
+                            done, latest15MIdx);
+                    }
+                }
+            }
+
+            if (sim.HasActive)
+            {
+                var last = candles1M[^1];
+                var done = sim.ForceCloseAtEnd(last.Close, last.CloseTime);
+                if (done != null)
+                {
+                    currentEquityUsdt += done.PnlUsdt;
+                    SyncStrategyOnClose(strategy, currentTradeField, lastExitIdxField, tradeResultsField,
+                        done, latest15MIdx);
+                }
+            }
+
+            return new ReplayResult(
+                Trades: sim.Completed,
+                StartEquity: startEquityUsdt,
+                EndEquity: currentEquityUsdt,
+                SignalCount: sim.Completed.Count,
+                FirstBar: candles1M[0].CloseTime,
+                LastBar: candles1M[^1].CloseTime);
+        }
+
+        // ---- State-sync helpers ------------------------------------------
+
+        private static void ApplyCompletionExisting(HtfRsiTradingState ts, SimulatedTrade done)
+        {
+            if (ts == null) return;
+            if (done.ExitReason != null && done.ExitReason.StartsWith("EntryCancelled"))
+            {
+                ts.IsInPosition = false;
+                ts.CandlesSinceLastExit = 0;
+                return;
+            }
+            ts.RecordTradeComplete(done.ExitReason, done.PnlUsdt);
+        }
+
+        /// <summary>
+        /// After our 1M simulator closes a trade, clear the SMA strategy's
+        /// internal position (it may still be open from its POV) and update
+        /// its exit-gap / cooldown state to match our actual close.
+        /// </summary>
+        private static void SyncStrategyOnClose(
+            HtfRsiVolExpansionStrategy strategy,
+            FieldInfo currentTradeField,
+            FieldInfo lastExitIdxField,
+            FieldInfo tradeResultsField,
+            SimulatedTrade done,
+            int current15MIdx)
+        {
+            currentTradeField.SetValue(strategy, null);
+            if (current15MIdx >= 0)
+                lastExitIdxField.SetValue(strategy, current15MIdx);
+
+            if (done.ExitReason != null && !done.ExitReason.StartsWith("EntryCancelled"))
+            {
+                var results = (List<bool>)tradeResultsField.GetValue(strategy);
+                results?.Add(done.PnlUsdt > 0);
+            }
         }
 
         // ---- Output ------------------------------------------------------
@@ -239,6 +399,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine("================================================================");
             Console.WriteLine("  SUMMARY");
             Console.WriteLine("================================================================");
+            Console.WriteLine($"  Strategy:               {opts.Strategy}");
             Console.WriteLine($"  Period:                 {r.FirstBar:yyyy-MM-dd HH:mm} → {r.LastBar:yyyy-MM-dd HH:mm}");
             Console.WriteLine($"  Signals fired:          {r.Trades.Count}");
             Console.WriteLine($"  Filled trades:          {filled.Count}");
@@ -260,7 +421,6 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine($"  Avg holding (hours):    {metrics.AverageHoldingPeriodHours:F2}");
             Console.WriteLine();
 
-            // Exit-reason breakdown
             Console.WriteLine("  Exit reasons:");
             foreach (var grp in r.Trades.GroupBy(t => t.ExitReason).OrderByDescending(g => g.Count()))
                 Console.WriteLine($"    {grp.Key,-20} {grp.Count(),4}   P&L: {grp.Sum(x => x.PnlUsdt),10:F2}");
@@ -304,6 +464,7 @@ namespace CryptoTrading.App.BackTesting
 
         private sealed class BacktestOptions
         {
+            public StrategyMode Strategy = StrategyMode.Existing;
             public string Symbol = DefaultSymbol;
             public DateTime From = new DateTime(2024, 1, 1);
             public DateTime To = new DateTime(2025, 1, 1);
@@ -320,6 +481,14 @@ namespace CryptoTrading.App.BackTesting
                 string Next() => (++i < args.Length) ? args[i] : throw new ArgumentException($"Missing value for {a}");
                 switch (a.ToLowerInvariant())
                 {
+                    case "--strategy":
+                        opts.Strategy = Next().ToLowerInvariant() switch
+                        {
+                            "existing" or "htf" or "algo" => StrategyMode.Existing,
+                            "sma" or "sma-rsi" or "new" => StrategyMode.Sma,
+                            var x => throw new ArgumentException($"Unknown strategy '{x}'. Use 'existing' or 'sma'.")
+                        };
+                        break;
                     case "--symbol": opts.Symbol = Next().ToUpperInvariant(); break;
                     case "--from": opts.From = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--to": opts.To = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
@@ -337,26 +506,12 @@ namespace CryptoTrading.App.BackTesting
             return opts;
         }
 
-        /// <summary>
-        /// Apply a completed simulated trade to the strategy's trading state.
-        /// For cancelled pre-fill trades we just clear the position flag —
-        /// no P&L, no win/loss bookkeeping, since no actual trade happened.
-        /// </summary>
-        private static void ApplyCompletion(HtfRsiTradingState ts, SimulatedTrade done)
-        {
-            if (ts == null) return;
-            if (done.ExitReason != null && done.ExitReason.StartsWith("EntryCancelled"))
-            {
-                ts.IsInPosition = false;
-                ts.CandlesSinceLastExit = 0;
-                return;
-            }
-            ts.RecordTradeComplete(done.ExitReason, done.PnlUsdt);
-        }
-
         private static void PrintHelp()
         {
             Console.WriteLine("CryptoTrading.App.BackTesting");
+            Console.WriteLine("  --strategy  existing | sma   (default: existing)");
+            Console.WriteLine("                existing = HtfRsiVolExpansionAlgorithm (native 4H, Cutler's RSI)");
+            Console.WriteLine("                sma      = HtfRsiVolExpansionStrategy (15M-aggregated 4H, SMA RSI)");
             Console.WriteLine("  --symbol    Symbol to backtest (default BTCUSDT)");
             Console.WriteLine("  --from      Start date (yyyy-MM-dd, inclusive)");
             Console.WriteLine("  --to        End date   (yyyy-MM-dd, exclusive)");
