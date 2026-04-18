@@ -33,9 +33,19 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private readonly QuoteHub<IQuote> _quoteHub15M;
         private readonly QuoteHub<IQuote> _quoteHub4H;
 
-        // Streaming indicator hubs (4H EMAs for probability scorer)
+        // Streaming indicator hubs (Skender)
         private EmaHub<IQuote> _ema4H8;
         private EmaHub<IQuote> _ema4H21;
+        private AtrHub<IQuote> _atr15M;
+
+        // Partial 4H bar tracking (for provisional RSI)
+        // Quote is init-only so we rebuild each tick; track running H/L in separate fields.
+        private DateTime _provisional4HCloseTime;
+        private decimal _provisional4HOpen;
+        private decimal _provisional4HHigh;
+        private decimal _provisional4HLow;
+        private decimal _provisional4HVolume;
+        private DateTime _last4HCloseTime;
 
         // Shared state
         private HtfRsiTradingState _tradingState;
@@ -112,10 +122,13 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 _quoteHub15M.Add(quote);
             }
 
-            var initialAtr = _quoteHub15M.Quotes.ToAtr(LtfAtrPeriod).LastOrDefault()?.Atr;
+            // Streaming Wilder ATR on 15M
+            _atr15M = _quoteHub15M.ToAtr(LtfAtrPeriod);
+
+            var initialAtr = _atr15M.Results.LastOrDefault()?.Atr;
             _logger.LogInformation(
                 $"[HTF-RSI] Loaded {candlesticks.Count()} 15M candles | " +
-                $"15M ATR: {initialAtr?.ToString("F2") ?? "N/A"}");
+                $"15M ATR(Wilder): {initialAtr?.ToString("F2") ?? "N/A"}");
         }
 
         private void ProcessHistoricData4H(IEnumerable<Candlestick> candlesticks)
@@ -134,14 +147,18 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 _quoteHub4H.Add(quote);
             }
 
-            // Initialize 4H EMAs for probability scorer
-            _ema4H8 = _quoteHub4H.ToEma(8);
+            // Streaming EMAs on 4H (Skender hubs); RSI computed on-demand with provisional bar
+            _ema4H8  = _quoteHub4H.ToEma(8);
             _ema4H21 = _quoteHub4H.ToEma(21);
 
-            var rsi = ComputeCutlersRsi(_quoteHub4H.Quotes, HtfRsiPeriod);
+            _last4HCloseTime = _quoteHub4H.Quotes.Count > 0
+                ? _quoteHub4H.Quotes[_quoteHub4H.Quotes.Count - 1].Timestamp
+                : DateTime.MinValue;
+
+            var rsi = _quoteHub4H.Quotes.ToRsi(HtfRsiPeriod).LastOrDefault()?.Rsi;
             _logger.LogInformation(
                 $"[HTF-RSI] Loaded {candlesticks.Count()} 4H candles | " +
-                $"4H RSI(Cutler): {rsi?.ToString("F1") ?? "N/A"}");
+                $"4H RSI(Wilder): {rsi?.ToString("F1") ?? "N/A"}");
         }
 
         #endregion
@@ -180,6 +197,9 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 // Advance trading state counters
                 _tradingState.OnNewCandle();
 
+                // Push provisional 4H bar so _rsi4H reflects the partial close
+                UpdateProvisional4HBar(args.Candlestick);
+
                 // Check entry conditions
                 EvaluateEntry(args.Candlestick, ts);
             }
@@ -205,11 +225,13 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                     Volume = args.Candlestick.Volume
                 };
                 _quoteHub4H.Add(quote);
+                _last4HCloseTime = quote.Timestamp;
+                _provisional4HCloseTime = DateTime.MinValue; // reset; next 15M tick starts fresh
 
-                var rsi = ComputeCutlersRsi(_quoteHub4H.Quotes, HtfRsiPeriod);
+                var rsi = _quoteHub4H.Quotes.ToRsi(HtfRsiPeriod).LastOrDefault()?.Rsi;
                 _logger.LogInformation(
                     $"[HTF-RSI 4H {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}] " +
-                    $"New 4H candle | RSI(Cutler): {rsi?.ToString("F1") ?? "N/A"} | " +
+                    $"New 4H candle | RSI(Wilder): {rsi?.ToString("F1") ?? "N/A"} | " +
                     $"Close: {args.Candlestick.Close:F2}");
             }
             catch (Exception e)
@@ -228,23 +250,37 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             }
 
             // Need enough 15M quotes for ATR(14) + 20-bar lookback, and enough
-            // 4H quotes for Cutler's RSI(14) which needs `period + 1` bars.
+            // 4H quotes for Wilder RSI(14) which needs `period + 1` bars.
             var quotesCount = _quoteHub15M.Quotes.Count;
             var htfCount = _quoteHub4H.Quotes.Count;
             if (htfCount < HtfRsiPeriod + 1 || quotesCount < VolExpansionLookback + LtfAtrPeriod + 2)
                 return;
 
-            // 1. Get 4H RSI — use Cutler's (SMA of gains/losses) variant
-            // with a partial-bar extension: the current 15M close acts as
-            // the in-progress 4H bar's close.
-            //
-            // NOTE: The target backtest has look-ahead bias — it uses the
-            // RSI of the COMPLETED 4H bar containing the entry, which
-            // wouldn't be available in real-time. Our partial-bar approach
-            // is the correct live-trading implementation. This causes ~4%
-            // of target trades to fail our RSI gate (17/436), which are
-            // trades the target shouldn't have taken without future data.
-            var currentRsi = ComputeCutlersRsi(_quoteHub4H.Quotes, HtfRsiPeriod, candle.Close);
+            // 1. Get 4H RSI (Wilder) including the in-progress partial bar.
+            // Build a temporary list: completed bars + one provisional bar whose
+            // close equals the current 15M close. Skender's ToRsi runs on this
+            // snapshot without modifying the hub.
+            var quotes4H = _quoteHub4H.Quotes;
+            List<IQuote> rsiInput;
+            if (_provisional4HCloseTime > _last4HCloseTime)
+            {
+                rsiInput = new List<IQuote>(quotes4H.Count + 1);
+                rsiInput.AddRange(quotes4H);
+                rsiInput.Add(new Quote
+                {
+                    Timestamp = _provisional4HCloseTime,
+                    Open      = _provisional4HOpen,
+                    High      = _provisional4HHigh,
+                    Low       = _provisional4HLow,
+                    Close     = candle.Close,
+                    Volume    = _provisional4HVolume
+                });
+            }
+            else
+            {
+                rsiInput = new List<IQuote>(quotes4H);
+            }
+            var currentRsi = rsiInput.ToRsi(HtfRsiPeriod).LastOrDefault()?.Rsi;
             if (!currentRsi.HasValue) return;
 
             // 2. Determine direction
@@ -254,19 +290,18 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             else if (currentRsi.Value < HtfRsiShortThreshold)
                 direction = TradeDirection.Short;
             else
-                return; // RSI in no-trade zone (35-65)
+                return; // RSI in no-trade zone (40-60)
 
-            // 3. Get 15M ATR and check vol expansion
-            // Use SMA-based ATR (simple mean of the last 14 TR values), NOT
-            // Wilder's smoothed ATR. The backtest spec this algorithm is
-            // calibrated against uses the SMA variant — matching it to 100%
-            // precision across the target trade list.
-            var ltfQuotes = _quoteHub15M.Quotes;
-            var ltfCount = ltfQuotes.Count;
-            if (ltfCount < LtfAtrPeriod + VolExpansionLookback + 1) return;
+            // 3. Get 15M ATR (Wilder) and check vol expansion
+            var atrResults = _atr15M?.Results;
+            if (atrResults == null || atrResults.Count < VolExpansionLookback + 1) return;
 
-            var currentAtr = ComputeSmaAtr(ltfQuotes, ltfCount - 1, LtfAtrPeriod);
-            var pastAtr = ComputeSmaAtr(ltfQuotes, ltfCount - 1 - VolExpansionLookback, LtfAtrPeriod);
+            var currentAtrVal = atrResults[atrResults.Count - 1].Atr;
+            var pastAtrVal = atrResults[atrResults.Count - 1 - VolExpansionLookback].Atr;
+            if (!currentAtrVal.HasValue || !pastAtrVal.HasValue) return;
+
+            var currentAtr = (decimal)currentAtrVal.Value;
+            var pastAtr = (decimal)pastAtrVal.Value;
             if (currentAtr <= 0 || pastAtr <= 0) return;
 
             var expansionRatio = currentAtr / pastAtr;
@@ -311,14 +346,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 quantity = Math.Floor(quantity / _symbol.Quantity.Increment) * _symbol.Quantity.Increment;
             }
 
-            // Get 15M RSI for probability score
-            double rsi15M = 50;
-            try
-            {
-                var rsi15MResults = _quoteHub15M.Quotes.ToRsi(14);
-                rsi15M = rsi15MResults.Last()?.Rsi ?? 50;
-            }
-            catch { }
+            // Get 15M RSI (Wilder) for probability score
+            double rsi15M = _quoteHub15M.Quotes.ToRsi(14).LastOrDefault()?.Rsi ?? 50;
 
             // Compute 20-period volume average
             decimal avgVolume20 = 0;
@@ -392,94 +421,55 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         }
 
         /// <summary>
-        /// Cutler's RSI(period) on the final bar of the supplied quote buffer.
-        /// Unlike Wilder's smoothed RSI (what Skender's ToRsi returns), this
-        /// uses simple arithmetic means of the last `period` gains and losses.
-        /// Returns null if the buffer doesn't have `period + 1` quotes yet.
+        /// Builds a provisional 4H quote for the in-progress bar and pushes it into
+        /// <see cref="_quoteHub4H"/> using the same timestamp each tick. Skender
+        /// replaces any existing quote with that timestamp in place, so <c>ToRsi</c>
+        /// on the hub's quotes always reflects the partial close.
         ///
-        /// The target backtest uses Cutler's RSI but with look-ahead bias:
-        /// it reads the RSI of the completed 4H bar containing the entry,
-        /// which isn't available in real-time. Our partial-bar extension
-        /// is the correct live-trading equivalent — it uses only data
-        /// available at entry time.
+        /// Skipped if the real 4H close for this period has already arrived.
         /// </summary>
-        /// <param name="partialClose">
-        /// Close price of the current partially-formed 4H bar (the latest
-        /// 15M close). An extra price change from the last closed bar's
-        /// close to this value is included in the RSI window (covering
-        /// period-1 closed changes + 1 partial change). This gives the
-        /// best real-time approximation of the in-progress 4H bar's RSI.
-        /// </param>
-        private static double? ComputeCutlersRsi(
-            System.Collections.Generic.IReadOnlyList<IQuote> quotes,
-            int period,
-            decimal? partialClose = null)
+        private void UpdateProvisional4HBar(Candlestick ltf)
         {
-            int n = quotes.Count;
-            int needed = partialClose.HasValue ? period : period + 1;
-            if (n < needed) return null;
+            var closeTime = Get4HBarCloseTime(ltf.CloseTime);
+            if (closeTime <= _last4HCloseTime) return;
 
-            double gainSum = 0, lossSum = 0;
-
-            if (partialClose.HasValue)
+            if (_provisional4HCloseTime != closeTime)
             {
-                // Use period-1 closed changes + 1 partial change
-                for (int i = n - period + 1; i < n; i++)
-                {
-                    var diff = (double)(quotes[i].Close - quotes[i - 1].Close);
-                    if (diff > 0) gainSum += diff;
-                    else lossSum += -diff;
-                }
-                // Add partial change: last closed bar → partial bar
-                var partialDiff = (double)(partialClose.Value - quotes[n - 1].Close);
-                if (partialDiff > 0) gainSum += partialDiff;
-                else lossSum += -partialDiff;
+                // First 15M bar of a new 4H period — seed OHLV
+                _provisional4HCloseTime = closeTime;
+                _provisional4HOpen      = ltf.Open;
+                _provisional4HHigh      = ltf.High;
+                _provisional4HLow       = ltf.Low;
+                _provisional4HVolume    = ltf.Volume;
             }
             else
             {
-                for (int i = n - period; i < n; i++)
-                {
-                    var diff = (double)(quotes[i].Close - quotes[i - 1].Close);
-                    if (diff > 0) gainSum += diff;
-                    else lossSum += -diff;
-                }
+                // Subsequent 15M bars — extend running H/L/V
+                if (ltf.High > _provisional4HHigh) _provisional4HHigh = ltf.High;
+                if (ltf.Low  < _provisional4HLow)  _provisional4HLow  = ltf.Low;
+                _provisional4HVolume += ltf.Volume;
             }
 
-            var avgGain = gainSum / period;
-            var avgLoss = lossSum / period;
-            if (avgLoss == 0) return 100.0;
-            var rs = avgGain / avgLoss;
-            return 100.0 - 100.0 / (1.0 + rs);
+            // Do NOT push to _quoteHub4H — only real completed bars live there.
+            // EvaluateEntry calls ToRsi on a temporary list that appends this bar.
         }
 
         /// <summary>
-        /// Simple-mean ATR at `endIndex` in the quotes buffer. Computes the
-        /// mean of the last `period` True Range values where TR[i] =
-        /// max(high-low, |high-prevClose|, |low-prevClose|). Returns 0 if
-        /// there aren't enough quotes (caller must check).
-        ///
-        /// This is the SMA-based ATR variant used by the backtest spec —
-        /// different from Wilder's smoothed ATR (which Skender implements).
+        /// Returns the close-time of the 4H bar that contains the given 15M close-time.
+        /// Binance 4H bars start on 4-hour UTC boundaries (00, 04, 08, 12, 16, 20).
         /// </summary>
-        private static decimal ComputeSmaAtr(
-            System.Collections.Generic.IReadOnlyList<IQuote> quotes,
-            int endIndex,
-            int period)
+        private static DateTime Get4HBarCloseTime(DateTime ltfCloseTime)
         {
-            if (endIndex < period) return 0m;
-
-            decimal sum = 0m;
-            for (int i = endIndex - period + 1; i <= endIndex; i++)
+            // 15M close-time is the END of the bar; open = close - 15 min
+            var openTime = ltfCloseTime.AddMinutes(-15);
+            var nextBoundaryHour = ((openTime.Hour / 4) + 1) * 4;
+            var date = openTime.Date;
+            if (nextBoundaryHour >= 24)
             {
-                var h = quotes[i].High;
-                var l = quotes[i].Low;
-                var pc = quotes[i - 1].Close;
-                var t1 = h - l;
-                var t2 = Math.Abs(h - pc);
-                var t3 = Math.Abs(l - pc);
-                sum += Math.Max(t1, Math.Max(t2, t3));
+                date = date.AddDays(1);
+                nextBoundaryHour -= 24;
             }
-            return sum / period;
+            return new DateTime(date.Year, date.Month, date.Day, nextBoundaryHour, 0, 0, DateTimeKind.Utc);
         }
 
         #endregion

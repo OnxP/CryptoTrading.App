@@ -7,14 +7,19 @@ using System.Linq;
 namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
 {
     /// <summary>
-    /// Exit strategy matching the backtested spec exactly.
-    /// Checked on each 1M candle (TradeMonitor feeds 1M data).
+    /// Exit strategy matching the backtested spec.
     ///
-    /// Exit priority:
-    ///   a) Stop Loss  — 1.5 × ATR from entry (candle low/high)
-    ///   b) Take Profit — 1.5 × ATR from entry, 1:1 R:R (candle high/low)
-    ///   c) Trailing Stop — activates at 1.5R profit, trails at 1.0 × ATR
-    ///   d) Time Stop  — 16 × 15M candles = 240 × 1M bars (4 hours)
+    /// The 15M strategy is authoritative for exit decisions. Between 15M
+    /// boundaries, this strategy returns NoTrade and only accumulates
+    /// rolling high/low so the trail level (when activated at the next
+    /// 15M close) sees the full interim range. On a 15M boundary it
+    /// evaluates the full exit ladder against the 15M close.
+    ///
+    /// Exit priority (at 15M close):
+    ///   a) Stop Loss  — close ≤ SL (long) / close ≥ SL (short)
+    ///   b) Take Profit — only when trailing is inactive
+    ///   c) Trailing Stop — activates at 1.5R, trails at 1.0 × ATR
+    ///   d) Time Stop  — 16 × 15M bars (4 hours)
     ///
     /// Probability score is logged only — does not affect TP or sizing.
     /// </summary>
@@ -35,8 +40,10 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private decimal _trailingStop;
 
         // Parameters
-        private const int MaxHoldBars = 240;           // 16 × 15M = 240 × 1M
-        private const decimal TrailingActivationR = 1.5m; // Activate at 1.5R profit
+        // BarsHeld counts 15M boundaries (not 1M ticks) because exit decisions
+        // only fire on 15M closes — 4 hours == 16 × 15M bars.
+        private const int MaxHoldBars15M = 16;
+        private const decimal TrailingActivationR = 1.5m;     // Activate at 1.5R profit
         private const decimal TrailingDistanceAtrMult = 1.0m; // Trail at 1.0 × ATR
 
         public SimpleExitStrategy(
@@ -74,34 +81,41 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             if (currentPositionSize <= 0 || _quoteHub?.Quotes == null || _quoteHub.Quotes.Count < 15)
                 return new TradeDetails { ShouldTrade = false };
 
-            _barsHeld++;
-
             var lastQuote = _quoteHub.Quotes.Last();
             var high = (decimal)lastQuote.High;
             var low = (decimal)lastQuote.Low;
 
-            // Track price extremes since entry
+            // Always accumulate rolling high/low so the trailing stop sees the
+            // full interim range when it activates at the next 15M close.
             if (high > _highestSinceEntry) _highestSinceEntry = high;
             if (low < _lowestSinceEntry) _lowestSinceEntry = low;
 
-            // Use 15M ATR captured at entry (the quote hub has 1M data,
-            // so computing ATR here would give 14-minute ATR, not 15M ATR)
+            // Exit decisions are gated to 15M bar closes. Between boundaries
+            // return NoTrade — the 1M layer keeps the position untouched.
+            var closeTime = lastQuote.Timestamp;
+            bool is15MBoundary = closeTime.Minute % 15 == 0;
+            if (!is15MBoundary)
+                return new TradeDetails { ShouldTrade = false };
+
+            _barsHeld++;
+
+            // Use 15M ATR captured at entry.
             var atr = _setup.AtrAtEntry;
 
-            // a) Stop Loss
-            if (_setup.Direction == TradeDirection.Long && low <= _setup.StopLoss)
+            // a) Stop Loss — 15M close beyond SL
+            if (_setup.Direction == TradeDirection.Long && close <= _setup.StopLoss)
             {
                 RecordExit("StopLoss", _setup.StopLoss, currentPositionSize);
                 return MakeExit(currentPositionSize, _setup.StopLoss);
             }
-            if (_setup.Direction == TradeDirection.Short && high >= _setup.StopLoss)
+            if (_setup.Direction == TradeDirection.Short && close >= _setup.StopLoss)
             {
                 RecordExit("StopLoss", _setup.StopLoss, currentPositionSize);
                 return MakeExit(currentPositionSize, _setup.StopLoss);
             }
 
             // c) Trailing Stop — check activation first so we know whether to use TP or trail.
-            //    Activates at 1.5R profit (based on close), trails at 1.0 × ATR.
+            //    Activates at 1.5R profit (based on 15M close), trails at 1.0 × ATR.
             //    Once trailing is active, TP is superseded — the trail manages the exit.
             if (atr > 0)
             {
@@ -120,16 +134,15 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                     }
                 }
 
-                // b) Take Profit — only when trailing is NOT active.
-                //    Once trailing activates it supersedes TP, letting winners run.
+                // b) Take Profit — only when trailing is NOT active, evaluated on 15M close.
                 if (!_trailingActive)
                 {
-                    if (_setup.Direction == TradeDirection.Long && high >= _setup.TakeProfit)
+                    if (_setup.Direction == TradeDirection.Long && close >= _setup.TakeProfit)
                     {
                         RecordExit("TakeProfit", _setup.TakeProfit, currentPositionSize);
                         return MakeExit(currentPositionSize, _setup.TakeProfit);
                     }
-                    if (_setup.Direction == TradeDirection.Short && low <= _setup.TakeProfit)
+                    if (_setup.Direction == TradeDirection.Short && close <= _setup.TakeProfit)
                     {
                         RecordExit("TakeProfit", _setup.TakeProfit, currentPositionSize);
                         return MakeExit(currentPositionSize, _setup.TakeProfit);
@@ -146,7 +159,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                         var newTrail = _highestSinceEntry - trailDistance;
                         if (newTrail > _trailingStop)
                             _trailingStop = newTrail;
-                        if (low <= _trailingStop)
+                        if (close <= _trailingStop)
                         {
                             RecordExit("TrailingStop", _trailingStop, currentPositionSize);
                             return MakeExit(currentPositionSize, _trailingStop);
@@ -158,7 +171,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                         var newTrail = _lowestSinceEntry + trailDistance;
                         if (newTrail < _trailingStop)
                             _trailingStop = newTrail;
-                        if (high >= _trailingStop)
+                        if (close >= _trailingStop)
                         {
                             RecordExit("TrailingStop", _trailingStop, currentPositionSize);
                             return MakeExit(currentPositionSize, _trailingStop);
@@ -167,8 +180,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 }
             }
 
-            // d) Time Stop — 16 × 15M candles = 240 × 1M bars
-            if (_barsHeld >= MaxHoldBars)
+            // d) Time Stop — 16 × 15M candles (4 hours)
+            if (_barsHeld >= MaxHoldBars15M)
             {
                 RecordExit("TimeStop", close, currentPositionSize);
                 return MakeExit(currentPositionSize, close);

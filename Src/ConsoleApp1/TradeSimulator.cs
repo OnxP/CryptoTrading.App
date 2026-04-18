@@ -52,7 +52,12 @@ namespace CryptoTrading.App.BackTesting
         private const decimal EntryPullbackFraction = 0.10m;
 
         // Exit rules (match HtfRsiVolExpansion/SimpleExitStrategy)
-        private const int MaxHoldBars1M = 240;             // 4 hours on 1M
+        // The 15M strategy is authoritative for BOTH entries and exits.
+        // Between 15M boundaries, the 1M layer only accumulates high/low for
+        // trailing-stop tracking and resolves entry fills — it does NOT
+        // evaluate SL/TP/trailing/time stops. Exit decisions fire only on
+        // the 15M bar close, which eliminates 1M intra-bar wick whipsaws.
+        private const int MaxHoldBars15M = 16;             // 4 hours on 15M
         private const decimal TrailingActivationR = 1.5m;  // activate at 1.5R profit
         private const decimal TrailingAtrMult = 1.0m;      // trail distance = 1.0 × 15M ATR
 
@@ -195,34 +200,50 @@ namespace CryptoTrading.App.BackTesting
         }
 
         /// <summary>
-        /// Apply exit rules for one 1M candle. Returns true if trade closed.
-        /// Order: SL → trailing activation / update → TP (only if not trailing) → trailing hit → time stop.
+        /// Process one 1M candle while the trade is open.
+        ///
+        /// Between 15M boundaries: ONLY update rolling high/low. No exit check.
+        /// On a 15M boundary (m1.CloseTime minute ∈ {0,15,30,45}): evaluate the
+        /// full exit ladder using this 1M bar's close as the 15M close proxy.
+        ///
+        /// Order at 15M close: SL → trailing activation → TP (if not trailing)
+        /// → trailing stop → time stop.
+        ///
+        /// Returns true if the trade closed on this candle.
         /// </summary>
         private bool CheckExit(Candlestick m1)
         {
             var t = _active;
-            t.BarsHeld++;
-
             var high = m1.High;
             var low = m1.Low;
             var close = m1.Close;
 
+            // Always accumulate path-dependent extremes so the trailing stop
+            // that activates at the next 15M close sees the full interim range.
             if (high > t.HighestSinceEntry) t.HighestSinceEntry = high;
             if (low < t.LowestSinceEntry) t.LowestSinceEntry = low;
 
-            // (a) Hard stop loss
-            if (t.Direction == TradeDirection.Long && low <= t.StopLoss)
+            // Exit decisions are gated to 15M bar closes.
+            bool is15MBoundary = m1.CloseTime.Minute % 15 == 0;
+            if (!is15MBoundary)
+                return false;
+
+            t.BarsHeld++;
+
+            // (a) Hard stop loss — evaluated on the 15M close only. If the 15M
+            // close has crossed the stop level we exit at the stop price.
+            if (t.Direction == TradeDirection.Long && close <= t.StopLoss)
             {
                 CloseAt(t.StopLoss, m1.CloseTime, "StopLoss");
                 return true;
             }
-            if (t.Direction == TradeDirection.Short && high >= t.StopLoss)
+            if (t.Direction == TradeDirection.Short && close >= t.StopLoss)
             {
                 CloseAt(t.StopLoss, m1.CloseTime, "StopLoss");
                 return true;
             }
 
-            // (b) Trailing activation (at 1.5R profit, measured on close)
+            // (b) Trailing activation (at 1.5R profit, measured on 15M close)
             if (t.AtrAtSignal > 0)
             {
                 var unrealized = t.Direction == TradeDirection.Long
@@ -232,22 +253,23 @@ namespace CryptoTrading.App.BackTesting
                 if (unrealized >= t.InitialRisk * TrailingActivationR)
                     t.TrailingActive = true;
 
-                // (c) Take profit (only while trailing is NOT active)
+                // (c) Take profit (only while trailing is NOT active) — on 15M close.
                 if (!t.TrailingActive)
                 {
-                    if (t.Direction == TradeDirection.Long && high >= t.TakeProfit)
+                    if (t.Direction == TradeDirection.Long && close >= t.TakeProfit)
                     {
                         CloseAt(t.TakeProfit, m1.CloseTime, "TakeProfit");
                         return true;
                     }
-                    if (t.Direction == TradeDirection.Short && low <= t.TakeProfit)
+                    if (t.Direction == TradeDirection.Short && close <= t.TakeProfit)
                     {
                         CloseAt(t.TakeProfit, m1.CloseTime, "TakeProfit");
                         return true;
                     }
                 }
 
-                // (d) Trailing stop
+                // (d) Trailing stop — trail level updates from accumulated extremes,
+                //     exit triggered on the 15M close breaching the trail.
                 if (t.TrailingActive)
                 {
                     var trailDist = t.AtrAtSignal * TrailingAtrMult;
@@ -255,7 +277,7 @@ namespace CryptoTrading.App.BackTesting
                     {
                         var newTrail = t.HighestSinceEntry - trailDist;
                         if (newTrail > t.TrailingStop) t.TrailingStop = newTrail;
-                        if (low <= t.TrailingStop)
+                        if (close <= t.TrailingStop)
                         {
                             CloseAt(t.TrailingStop, m1.CloseTime, "TrailingStop");
                             return true;
@@ -265,7 +287,7 @@ namespace CryptoTrading.App.BackTesting
                     {
                         var newTrail = t.LowestSinceEntry + trailDist;
                         if (newTrail < t.TrailingStop) t.TrailingStop = newTrail;
-                        if (high >= t.TrailingStop)
+                        if (close >= t.TrailingStop)
                         {
                             CloseAt(t.TrailingStop, m1.CloseTime, "TrailingStop");
                             return true;
@@ -274,8 +296,8 @@ namespace CryptoTrading.App.BackTesting
                 }
             }
 
-            // (e) Time stop
-            if (t.BarsHeld >= MaxHoldBars1M)
+            // (e) Time stop — 4 hours = 16 × 15M bars.
+            if (t.BarsHeld >= MaxHoldBars15M)
             {
                 CloseAt(close, m1.CloseTime, "TimeStop");
                 return true;
