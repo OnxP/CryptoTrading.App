@@ -82,6 +82,13 @@ namespace CryptoTrading.App.Strategies
         /// <summary>Leverage for all trades</summary>
         public double Leverage { get; set; } = 5.0;
 
+        /// <summary>
+        /// When true, OnCandle skips internal 15M→4H aggregation and expects
+        /// 4H bars to be supplied separately via OnHtfCandle. Default false
+        /// preserves the original self-contained behaviour.
+        /// </summary>
+        public bool UseNativeHtf { get; set; } = false;
+
         // ============================================================
         // INTERNAL STATE
         // ============================================================
@@ -114,13 +121,17 @@ namespace CryptoTrading.App.Strategies
             // 1. Update 15M indicators
             UpdateLtfIndicators(open, high, low, close);
 
-            // 2. Aggregate into 4H bar
-            _ltfBuffer.Add(new LtfCandle { O = open, H = high, L = low, C = close, V = volume, Dt = timestamp });
-
-            if (_ltfBuffer.Count >= HtfMultiplier)
+            // 2. Aggregate into 4H bar (skipped when native 4H is supplied
+            //    separately via OnHtfCandle).
+            if (!UseNativeHtf)
             {
-                BuildHtfBar();
-                _ltfBuffer.Clear();
+                _ltfBuffer.Add(new LtfCandle { O = open, H = high, L = low, C = close, V = volume, Dt = timestamp });
+
+                if (_ltfBuffer.Count >= HtfMultiplier)
+                {
+                    BuildHtfBar();
+                    _ltfBuffer.Clear();
+                }
             }
 
             // 3. Not enough data yet
@@ -136,6 +147,29 @@ namespace CryptoTrading.App.Strategies
 
             // 5. Check for new entry
             return CheckEntry(open, high, low, close, volume, timestamp, candleIndex);
+        }
+
+        /// <summary>
+        /// Feed a closed 4H candle directly. Only used when UseNativeHtf = true.
+        /// Call once per 4H close, in chronological order, strictly BEFORE the
+        /// 15M OnCandle that closes at the same timestamp so the freshly-
+        /// computed RSI is visible to that bar's entry check.
+        /// </summary>
+        public void OnHtfCandle(double open, double high, double low, double close,
+                                 double volume, DateTime timestamp)
+        {
+            var bar = new HtfBar
+            {
+                Index = _htfBars.Count,
+                Dt = timestamp,
+                Open = open,
+                High = high,
+                Low = low,
+                Close = close,
+                Volume = volume,
+            };
+            _htfBars.Add(bar);
+            bar.Rsi = ComputeHtfSmaRsi();
         }
 
         // ============================================================
