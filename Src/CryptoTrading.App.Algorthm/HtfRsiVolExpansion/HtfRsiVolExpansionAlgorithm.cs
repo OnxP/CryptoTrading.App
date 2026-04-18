@@ -61,10 +61,22 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
 
         // Strategy parameters
         private const int HtfRsiPeriod = 14;
-        private const double HtfRsiLongThreshold = 60.0;
+        // Longs are historically weaker than shorts on BTC. Phase 1 at 65
+        // cut the worst longs but RSI 65-70 still bled (PF 0.74, net -$7.6M
+        // in-sample). Phase 2 raises the floor to 70 to keep only the
+        // RSI 70-75 window that actually wins (WR 75%, PF 2.77).
+        private const double HtfRsiLongThreshold = 70.0;
+        // Sweet-spot short zone is RSI 35-40. RSI < 35 shorts underperform
+        // (Phase 1 sub-bucket 30-35: WR 52%, PF 0.67, net -$19.2M).
         private const double HtfRsiShortThreshold = 40.0;
+        private const double HtfRsiShortFloor = 35.0;
         private const int LtfAtrPeriod = 14;
+        // Lower bound = entry qualifier. Upper bound filters out blow-off
+        // bars. Phase 3 tightens from 1.75 to 1.5 because the 1.5-1.75 band
+        // in-sample still ran PF 0.53 net -$29.7M — the same mean-reversion
+        // pathology as the 1.75+ zone. Below 1.5 runs PF 4.27.
         private const decimal VolExpansionRatio = 1.2m;
+        private const decimal VolExpansionMaxRatio = 1.5m;
         private const int VolExpansionLookback = 20;
         private const decimal SlTpAtrMultiplier = 1.5m;
         private const int Leverage = 5;
@@ -283,14 +295,18 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             var currentRsi = rsiInput.ToRsi(HtfRsiPeriod).LastOrDefault()?.Rsi;
             if (!currentRsi.HasValue) return;
 
-            // 2. Determine direction
+            // 2. Determine direction.
+            // Long zone: RSI > 65 (strong HTF uptrend).
+            // Short zone: 30 ≤ RSI < 40 (HTF weakness, but not already blown out).
+            // RSI < 30 is the "oversold can stay oversold" zone — historically
+            // shorts there mean-revert against us.
             TradeDirection direction;
             if (currentRsi.Value > HtfRsiLongThreshold)
                 direction = TradeDirection.Long;
-            else if (currentRsi.Value < HtfRsiShortThreshold)
+            else if (currentRsi.Value < HtfRsiShortThreshold && currentRsi.Value >= HtfRsiShortFloor)
                 direction = TradeDirection.Short;
             else
-                return; // RSI in no-trade zone (40-60)
+                return; // RSI outside productive zones
 
             // 3. Get 15M ATR (Wilder) and check vol expansion
             var atrResults = _atr15M?.Results;
@@ -309,9 +325,11 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _logger.LogInformation(
                 $"[HTF-RSI {ts}] BIAS {direction} | RSI:{currentRsi.Value:F1} | " +
                 $"ATR:{currentAtr:F2} vs {pastAtr:F2} (20 ago) | VolExp:{expansionRatio:F2} | " +
-                $"Need:{VolExpansionRatio} | {_tradingState.GetStatus()}");
+                $"Band:[{VolExpansionRatio},{VolExpansionMaxRatio}) | {_tradingState.GetStatus()}");
 
-            if (expansionRatio < VolExpansionRatio)
+            // Vol expansion must be in-band: low end filters chop, high end
+            // rejects blow-off / climax bars which historically mean-revert.
+            if (expansionRatio < VolExpansionRatio || expansionRatio >= VolExpansionMaxRatio)
                 return;
 
             // All conditions met - create setup
@@ -487,11 +505,11 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _logger.LogInformation("  -- Higher Timeframe (4H from 15M aggregation) --");
             _logger.LogInformation($"  HTF RSI Period:       {HtfRsiPeriod}");
             _logger.LogInformation($"  HTF RSI Long:         > {HtfRsiLongThreshold}");
-            _logger.LogInformation($"  HTF RSI Short:        < {HtfRsiShortThreshold}");
+            _logger.LogInformation($"  HTF RSI Short:        {HtfRsiShortFloor} <= RSI < {HtfRsiShortThreshold}");
             _logger.LogInformation($"  HTF Multiplier:       16 (15M → 4H)");
             _logger.LogInformation("  -- Lower Timeframe (15M) --");
             _logger.LogInformation($"  LTF ATR Period:       {LtfAtrPeriod}");
-            _logger.LogInformation($"  Vol Expansion Ratio:  {VolExpansionRatio}");
+            _logger.LogInformation($"  Vol Expansion Band:   [{VolExpansionRatio}, {VolExpansionMaxRatio})");
             _logger.LogInformation($"  Vol Expansion Lookback: {VolExpansionLookback} candles");
             _logger.LogInformation("  -- Risk Management --");
             _logger.LogInformation($"  SL:                   {SlTpAtrMultiplier} × ATR");
