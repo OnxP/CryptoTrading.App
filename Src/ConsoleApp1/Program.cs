@@ -50,14 +50,9 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine($"  Trade CSV:     {opts.OutputCsv ?? "(none)"}");
                 Console.WriteLine("----------------------------------------------------------------");
 
-                // 4H only needed for the Existing strategy (native 4H feed).
-                List<Candlestick> candles4H = new();
-                if (opts.Strategy == StrategyMode.Existing)
-                {
-                    Console.Write("  Loading 4H...  ");
-                    candles4H = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Hours_4, opts.From.AddDays(-30), opts.To);
-                    Console.WriteLine($"{candles4H.Count} bars");
-                }
+                Console.Write("  Loading 4H...  ");
+                var candles4H = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Hours_4, opts.From.AddDays(-30), opts.To);
+                Console.WriteLine($"{candles4H.Count} bars");
 
                 Console.Write("  Loading 15M... ");
                 var candles15M = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Minutes_15, opts.From, opts.To);
@@ -67,8 +62,7 @@ namespace CryptoTrading.App.BackTesting
                 var candles1M = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Minute, opts.From, opts.To);
                 Console.WriteLine($"{candles1M.Count} bars");
 
-                if (candles15M.Count == 0 || candles1M.Count == 0
-                    || (opts.Strategy == StrategyMode.Existing && candles4H.Count == 0))
+                if (candles4H.Count == 0 || candles15M.Count == 0 || candles1M.Count == 0)
                 {
                     Console.Error.WriteLine("Insufficient data for one or more timeframes.");
                     return 2;
@@ -77,7 +71,7 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine("----------------------------------------------------------------");
                 var result = opts.Strategy == StrategyMode.Existing
                     ? ReplayExisting(opts, candles4H, candles15M, candles1M)
-                    : ReplaySma(opts, candles15M, candles1M);
+                    : ReplaySma(opts, candles4H, candles15M, candles1M);
 
                 PrintResults(result, opts);
                 return 0;
@@ -127,10 +121,7 @@ namespace CryptoTrading.App.BackTesting
 
             var firstStreamTime = candles15M[0].CloseTime;
             var seed4H = candles4H.Where(c => c.CloseTime < firstStreamTime).ToList();
-            var live4H = candles4H
-                .Where(c => c.CloseTime >= firstStreamTime)
-                .GroupBy(c => c.CloseTime)
-                .ToDictionary(g => g.Key, g => g.First());
+            var live4H = candles4H.Where(c => c.CloseTime >= firstStreamTime).ToList();
 
             md.FireHistoric15M(Array.Empty<Candlestick>());
             md.FireHistoric4H(seed4H);
@@ -139,57 +130,67 @@ namespace CryptoTrading.App.BackTesting
                 .GetField("_tradingState", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?? throw new InvalidOperationException("Cannot access HtfRsiVolExpansionAlgorithm._tradingState");
 
-            var by15M = candles15M.ToDictionary(c => c.CloseTime, c => c);
-
             var sim = new TradeSimulator(Leverage);
             decimal startEquityUsdt = 0m;
             bool equitySeeded = false;
 
-            foreach (var m1 in candles1M)
+            // Merged-stream replay: events fire in strict chronological order,
+            // and at ties the priority 4H → 15M → 1M is enforced. This keeps
+            // the algorithm's higher-timeframe indicators current before any
+            // 15M signal check, and before the 1M candle drives exit logic.
+            foreach (var ev in MergeCandleStreams(live4H, candles15M, candles1M))
             {
-                if (live4H.TryGetValue(m1.CloseTime, out var c4))
-                    md.FireLive4H(c4);
-
-                if (by15M.TryGetValue(m1.CloseTime, out var c15))
-                    md.FireLive15M(c15);
-
-                if (!equitySeeded)
+                switch (ev.Type)
                 {
-                    startEquityUsdt = (decimal)opts.StartBtc * m1.Close;
-                    equitySeeded = true;
-                }
+                    case EvType.Hours4:
+                        md.FireLive4H(ev.Candle);
+                        break;
 
-                if (RequestTracker.Requests.TryRemove(opts.Symbol, out var pair) && !sim.HasActive)
-                {
-                    var request = pair.Item2;
-                    var srProp = request.GetType().GetProperty("StrategyResult");
-                    var sr = srProp?.GetValue(request) as HtfRsiVolExpansionStrategyResult;
-                    if (sr?.Setup != null)
-                    {
-                        var ts = (HtfRsiTradingState)tsField.GetValue(algo);
-                        sim.OpenFromSignal(
-                            signalTime: sr.Setup.EntryTime,
-                            direction: sr.Setup.Direction,
-                            signalPrice: sr.Setup.EntryPrice,
-                            stopLoss: sr.Setup.StopLoss,
-                            takeProfit: sr.Setup.TakeProfit,
-                            atrAtSignal: sr.Setup.AtrAtEntry,
-                            initialRisk: sr.Setup.InitialRisk,
-                            htfRsi: sr.Setup.HtfRsi,
-                            volExpansion: sr.Setup.VolExpansionRatio,
-                            probabilityScore: sr.Setup.ProbabilityScore,
-                            equityUsdt: ts?.CurrentEquity ?? startEquityUsdt);
-                    }
-                }
+                    case EvType.Minutes15:
+                        md.FireLive15M(ev.Candle);
 
-                if (sim.HasActive)
-                {
-                    var done = sim.Step(m1);
-                    if (done != null)
-                    {
-                        var ts = (HtfRsiTradingState)tsField.GetValue(algo);
-                        ApplyCompletionExisting(ts, done);
-                    }
+                        // Capture any signal the algorithm fired on this bar.
+                        if (RequestTracker.Requests.TryRemove(opts.Symbol, out var pair) && !sim.HasActive)
+                        {
+                            var request = pair.Item2;
+                            var srProp = request.GetType().GetProperty("StrategyResult");
+                            var sr = srProp?.GetValue(request) as HtfRsiVolExpansionStrategyResult;
+                            if (sr?.Setup != null)
+                            {
+                                var ts = (HtfRsiTradingState)tsField.GetValue(algo);
+                                sim.OpenFromSignal(
+                                    signalTime: sr.Setup.EntryTime,
+                                    direction: sr.Setup.Direction,
+                                    signalPrice: sr.Setup.EntryPrice,
+                                    stopLoss: sr.Setup.StopLoss,
+                                    takeProfit: sr.Setup.TakeProfit,
+                                    atrAtSignal: sr.Setup.AtrAtEntry,
+                                    initialRisk: sr.Setup.InitialRisk,
+                                    htfRsi: sr.Setup.HtfRsi,
+                                    volExpansion: sr.Setup.VolExpansionRatio,
+                                    probabilityScore: sr.Setup.ProbabilityScore,
+                                    equityUsdt: ts?.CurrentEquity ?? startEquityUsdt);
+                            }
+                        }
+                        break;
+
+                    case EvType.Minute1:
+                        if (!equitySeeded)
+                        {
+                            startEquityUsdt = (decimal)opts.StartBtc * ev.Candle.Close;
+                            equitySeeded = true;
+                        }
+
+                        if (sim.HasActive)
+                        {
+                            var done = sim.Step(ev.Candle);
+                            if (done != null)
+                            {
+                                var ts = (HtfRsiTradingState)tsField.GetValue(algo);
+                                ApplyCompletionExisting(ts, done);
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -226,10 +227,15 @@ namespace CryptoTrading.App.BackTesting
         /// </summary>
         private static ReplayResult ReplaySma(
             BacktestOptions opts,
+            List<Candlestick> candles4H,
             List<Candlestick> candles15M,
             List<Candlestick> candles1M)
         {
-            var strategy = new HtfRsiVolExpansionStrategy { Leverage = Leverage };
+            var strategy = new HtfRsiVolExpansionStrategy
+            {
+                Leverage = Leverage,
+                UseNativeHtf = true,
+            };
 
             var stratType = typeof(HtfRsiVolExpansionStrategy);
             var currentTradeField = stratType.GetField("_currentTrade", BindingFlags.NonPublic | BindingFlags.Instance)
@@ -239,7 +245,20 @@ namespace CryptoTrading.App.BackTesting
             var tradeResultsField = stratType.GetField("_tradeResults", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?? throw new InvalidOperationException("Cannot access HtfRsiVolExpansionStrategy._tradeResults");
 
-            var by15M = candles15M.ToDictionary(c => c.CloseTime, c => c);
+            // Seed native 4H bars that close before the 15M stream starts —
+            // gives the SMA RSI its 15-bar warm-up without relying on
+            // aggregated data that hasn't happened yet.
+            var firstStreamTime = candles15M[0].CloseTime;
+            foreach (var c4 in candles4H.Where(c => c.CloseTime < firstStreamTime))
+            {
+                strategy.OnHtfCandle(
+                    (double)c4.Open, (double)c4.High, (double)c4.Low, (double)c4.Close,
+                    (double)c4.Volume, c4.CloseTime);
+            }
+            var live4H = candles4H.Where(c => c.CloseTime >= firstStreamTime).ToList();
+
+            // Pre-build a CloseTime → index lookup for 15M so we can stamp
+            // the SMA strategy's candleIndex without a second pass.
             var indexBy15M = new Dictionary<DateTime, int>(candles15M.Count);
             for (int i = 0; i < candles15M.Count; i++)
                 indexBy15M[candles15M[i].CloseTime] = i;
@@ -250,63 +269,68 @@ namespace CryptoTrading.App.BackTesting
             bool equitySeeded = false;
             int latest15MIdx = -1;
 
-            foreach (var m1 in candles1M)
+            // Merged-stream replay: 4H → 15M → 1M at each instant.
+            foreach (var ev in MergeCandleStreams(live4H, candles15M, candles1M))
             {
-                if (!equitySeeded)
+                switch (ev.Type)
                 {
-                    startEquityUsdt = (decimal)opts.StartBtc * m1.Close;
-                    currentEquityUsdt = startEquityUsdt;
-                    equitySeeded = true;
-                }
+                    case EvType.Hours4:
+                        strategy.OnHtfCandle(
+                            (double)ev.Candle.Open, (double)ev.Candle.High,
+                            (double)ev.Candle.Low, (double)ev.Candle.Close,
+                            (double)ev.Candle.Volume, ev.Candle.CloseTime);
+                        break;
 
-                // Fire the strategy on 15M boundary candles only.
-                if (by15M.TryGetValue(m1.CloseTime, out var c15))
-                {
-                    latest15MIdx = indexBy15M[m1.CloseTime];
+                    case EvType.Minutes15:
+                        latest15MIdx = indexBy15M[ev.Candle.CloseTime];
+                        var signal = strategy.OnCandle(
+                            (double)ev.Candle.Open, (double)ev.Candle.High,
+                            (double)ev.Candle.Low, (double)ev.Candle.Close,
+                            (double)ev.Candle.Volume, ev.Candle.CloseTime, latest15MIdx);
 
-                    var signal = strategy.OnCandle(
-                        (double)c15.Open, (double)c15.High,
-                        (double)c15.Low, (double)c15.Close,
-                        (double)c15.Volume, c15.CloseTime, latest15MIdx);
+                        if (signal.HasAction && !signal.IsClose && !sim.HasActive)
+                        {
+                            var dir = signal.Direction == "long" ? TradeDirection.Long : TradeDirection.Short;
+                            var signalPrice = (decimal)signal.Price;
+                            var stopLoss = (decimal)signal.StopLoss;
+                            var takeProfit = (decimal)signal.TakeProfit;
+                            var initialRisk = Math.Abs(signalPrice - stopLoss);
+                            var atr = initialRisk / (decimal)strategy.SlAtrMult;
 
-                    // Entry signals (BUY/SELL, not a close) open a 1M sim trade.
-                    // The strategy's own close signals are ignored — our 1M sim
-                    // owns the exit. The strategy's internal _currentTrade may
-                    // or may not have closed on a 15M bar; we force-sync below
-                    // when our sim closes.
-                    if (signal.HasAction && !signal.IsClose && !sim.HasActive)
-                    {
-                        var dir = signal.Direction == "long" ? TradeDirection.Long : TradeDirection.Short;
-                        var signalPrice = (decimal)signal.Price;
-                        var stopLoss = (decimal)signal.StopLoss;
-                        var takeProfit = (decimal)signal.TakeProfit;
-                        var initialRisk = Math.Abs(signalPrice - stopLoss);
-                        var atr = initialRisk / (decimal)strategy.SlAtrMult;
+                            sim.OpenFromSignal(
+                                signalTime: ev.Candle.CloseTime,
+                                direction: dir,
+                                signalPrice: signalPrice,
+                                stopLoss: stopLoss,
+                                takeProfit: takeProfit,
+                                atrAtSignal: atr,
+                                initialRisk: initialRisk,
+                                htfRsi: 0,
+                                volExpansion: 0,
+                                probabilityScore: 0,
+                                equityUsdt: currentEquityUsdt);
+                        }
+                        break;
 
-                        sim.OpenFromSignal(
-                            signalTime: c15.CloseTime,
-                            direction: dir,
-                            signalPrice: signalPrice,
-                            stopLoss: stopLoss,
-                            takeProfit: takeProfit,
-                            atrAtSignal: atr,
-                            initialRisk: initialRisk,
-                            htfRsi: 0,
-                            volExpansion: 0,
-                            probabilityScore: 0,
-                            equityUsdt: currentEquityUsdt);
-                    }
-                }
+                    case EvType.Minute1:
+                        if (!equitySeeded)
+                        {
+                            startEquityUsdt = (decimal)opts.StartBtc * ev.Candle.Close;
+                            currentEquityUsdt = startEquityUsdt;
+                            equitySeeded = true;
+                        }
 
-                if (sim.HasActive)
-                {
-                    var done = sim.Step(m1);
-                    if (done != null)
-                    {
-                        currentEquityUsdt += done.PnlUsdt;
-                        SyncStrategyOnClose(strategy, currentTradeField, lastExitIdxField, tradeResultsField,
-                            done, latest15MIdx);
-                    }
+                        if (sim.HasActive)
+                        {
+                            var done = sim.Step(ev.Candle);
+                            if (done != null)
+                            {
+                                currentEquityUsdt += done.PnlUsdt;
+                                SyncStrategyOnClose(strategy, currentTradeField, lastExitIdxField, tradeResultsField,
+                                    done, latest15MIdx);
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -329,6 +353,58 @@ namespace CryptoTrading.App.BackTesting
                 SignalCount: sim.Completed.Count,
                 FirstBar: candles1M[0].CloseTime,
                 LastBar: candles1M[^1].CloseTime);
+        }
+
+        // ---- Candle stream merge -----------------------------------------
+
+        /// <summary>
+        /// Priority assigned to each candle type when multiple close at the
+        /// same instant. Lower values fire first: 4H → 15M → 1M.
+        /// </summary>
+        private enum EvType { Hours4 = 0, Minutes15 = 1, Minute1 = 2 }
+
+        /// <summary>
+        /// Three-way merge of sorted candle streams by CloseTime ascending.
+        /// Callers rely on the inputs being sorted (BacktestDataLoader orders
+        /// by OpenTime, which for a fixed interval matches CloseTime order).
+        ///
+        /// At a tie on CloseTime the priority is 4H → 15M → 1M so indicators
+        /// on the higher timeframe are updated BEFORE the 15M bar that could
+        /// fire a signal, and BEFORE the 1M bar that could drive exit logic.
+        /// </summary>
+        private static IEnumerable<(Candlestick Candle, EvType Type)> MergeCandleStreams(
+            IEnumerable<Candlestick> candles4H,
+            IEnumerable<Candlestick> candles15M,
+            IEnumerable<Candlestick> candles1M)
+        {
+            using var e4 = candles4H.GetEnumerator();
+            using var e15 = candles15M.GetEnumerator();
+            using var e1 = candles1M.GetEnumerator();
+            bool h4 = e4.MoveNext(), h15 = e15.MoveNext(), h1 = e1.MoveNext();
+
+            while (h4 || h15 || h1)
+            {
+                var t4 = h4 ? e4.Current.CloseTime : DateTime.MaxValue;
+                var t15 = h15 ? e15.Current.CloseTime : DateTime.MaxValue;
+                var t1 = h1 ? e1.Current.CloseTime : DateTime.MaxValue;
+
+                // 4H wins on <= because of priority at ties.
+                if (t4 <= t15 && t4 <= t1)
+                {
+                    yield return (e4.Current, EvType.Hours4);
+                    h4 = e4.MoveNext();
+                }
+                else if (t15 <= t1)
+                {
+                    yield return (e15.Current, EvType.Minutes15);
+                    h15 = e15.MoveNext();
+                }
+                else
+                {
+                    yield return (e1.Current, EvType.Minute1);
+                    h1 = e1.MoveNext();
+                }
+            }
         }
 
         // ---- State-sync helpers ------------------------------------------
