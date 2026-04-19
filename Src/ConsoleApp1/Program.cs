@@ -33,6 +33,9 @@ namespace CryptoTrading.App.BackTesting
             {
                 var opts = ParseArgs(args);
 
+                if (!string.IsNullOrEmpty(opts.AnalyzeSlCsv))
+                    return SlPostmortem.Run(opts.Symbol, opts.AnalyzeSlCsv, opts.OutputCsv);
+
                 Console.WriteLine("================================================================");
                 Console.WriteLine("  HTF RSI Vol Expansion — BACKTEST");
                 Console.WriteLine("================================================================");
@@ -125,6 +128,46 @@ namespace CryptoTrading.App.BackTesting
             decimal startEquityUsdt = 0m;
             bool equitySeeded = false;
 
+            // Pre-aggregate 30M bars from the 15M stream. Used by the
+            // TradeSimulator structure-break exit to know the entry-30M-bar's
+            // adverse extreme. Aggregation is deterministic and cheap, so we
+            // compute it once up front rather than tracking incrementally.
+            var bars30M = Build30MBars(candles15M);
+
+            // Rolling 15M EMA20 for the entry classifier. Seeded as a simple
+            // mean of the first 20 closes, then smoothed with k = 2/21. The
+            // current value is read when a 15M signal fires and passed into
+            // TradeSimulator.OpenFromSignal, where it becomes the Extension
+            // measure that picks Early / Neutral / Late mode.
+            const int Ema20Period = 20;
+            decimal ema20_15M = 0m;
+            int ema20SeedCount = 0;
+            decimal ema20SeedSum = 0m;
+            const decimal Ema20K = 2m / (Ema20Period + 1m);
+
+            // Rolling 15M MACD(12,26,9) — classic defaults. Each leg is an EMA
+            // over 15M closes, SMA-seeded. The signal line is an EMA of the
+            // MACD line itself. Histogram = MACD - signal; its sign (relative
+            // to the signal direction) drives the regime classifier.
+            const int MacdFast = 12, MacdSlow = 26, MacdSignal = 9;
+            decimal emaFast = 0m, emaSlow = 0m, macdSignalEma = 0m;
+            int emaFastSeed = 0, emaSlowSeed = 0, macdSignalSeed = 0;
+            decimal emaFastSum = 0m, emaSlowSum = 0m, macdSignalSum = 0m;
+            const decimal MacdFastK = 2m / (MacdFast + 1m);
+            const decimal MacdSlowK = 2m / (MacdSlow + 1m);
+            const decimal MacdSignalK = 2m / (MacdSignal + 1m);
+            decimal macdHist = 0m;
+
+            // Rolling 15M Bollinger Bands(20, 2). Middle = SMA(20), bands =
+            // middle ± 2 × stddev (population-style sigma over the window).
+            // A 20-close ring buffer is cheaper than re-summing every bar and
+            // keeps the stddev numerically stable across the backtest.
+            const int BbPeriod = 20;
+            const decimal BbSigma = 2m;
+            var bbWindow = new decimal[BbPeriod];
+            int bbFill = 0, bbIndex = 0;
+            decimal bbMiddle = 0m, bbUpper = 0m, bbLower = 0m;
+
             // Merged-stream replay: events fire in strict chronological order,
             // and at ties the priority 4H → 15M → 1M is enforced. This keeps
             // the algorithm's higher-timeframe indicators current before any
@@ -140,15 +183,120 @@ namespace CryptoTrading.App.BackTesting
                     case EvType.Minutes15:
                         md.FireLive15M(ev.Candle);
 
+                        // Update rolling EMA20 before signal capture so the
+                        // value we pass in reflects this bar's close — the
+                        // same close that triggered the signal.
+                        if (ema20SeedCount < Ema20Period)
+                        {
+                            ema20SeedSum += ev.Candle.Close;
+                            ema20SeedCount++;
+                            if (ema20SeedCount == Ema20Period)
+                                ema20_15M = ema20SeedSum / Ema20Period;
+                        }
+                        else
+                        {
+                            ema20_15M = ev.Candle.Close * Ema20K + ema20_15M * (1m - Ema20K);
+                        }
+
+                        // --- Rolling 15M MACD(12,26,9) ---
+                        // Seed each EMA from the mean of its first N closes,
+                        // then smooth with k = 2/(N+1). The signal line seeds
+                        // from the mean of the first 9 MACD-line values AFTER
+                        // both fast/slow EMAs have seeded — so the first
+                        // meaningful histogram prints after slow+signal bars.
+                        {
+                            decimal close = ev.Candle.Close;
+                            if (emaFastSeed < MacdFast)
+                            {
+                                emaFastSum += close; emaFastSeed++;
+                                if (emaFastSeed == MacdFast) emaFast = emaFastSum / MacdFast;
+                            }
+                            else
+                            {
+                                emaFast = close * MacdFastK + emaFast * (1m - MacdFastK);
+                            }
+                            if (emaSlowSeed < MacdSlow)
+                            {
+                                emaSlowSum += close; emaSlowSeed++;
+                                if (emaSlowSeed == MacdSlow) emaSlow = emaSlowSum / MacdSlow;
+                            }
+                            else
+                            {
+                                emaSlow = close * MacdSlowK + emaSlow * (1m - MacdSlowK);
+                            }
+                            if (emaSlowSeed >= MacdSlow && emaFastSeed >= MacdFast)
+                            {
+                                decimal macdLine = emaFast - emaSlow;
+                                if (macdSignalSeed < MacdSignal)
+                                {
+                                    macdSignalSum += macdLine; macdSignalSeed++;
+                                    if (macdSignalSeed == MacdSignal)
+                                        macdSignalEma = macdSignalSum / MacdSignal;
+                                }
+                                else
+                                {
+                                    macdSignalEma = macdLine * MacdSignalK + macdSignalEma * (1m - MacdSignalK);
+                                }
+                                macdHist = macdLine - macdSignalEma;
+                            }
+                        }
+
+                        // --- Rolling 15M Bollinger Bands(20, 2) ---
+                        // Ring-buffer the last 20 closes, compute SMA and
+                        // population stddev directly. At 20 closes per update
+                        // this is trivially fast and avoids numerical drift
+                        // that would accumulate in incremental stddev.
+                        {
+                            bbWindow[bbIndex] = ev.Candle.Close;
+                            bbIndex = (bbIndex + 1) % BbPeriod;
+                            if (bbFill < BbPeriod) bbFill++;
+                            if (bbFill == BbPeriod)
+                            {
+                                decimal sum = 0m;
+                                for (int k = 0; k < BbPeriod; k++) sum += bbWindow[k];
+                                decimal mean = sum / BbPeriod;
+                                decimal varSum = 0m;
+                                for (int k = 0; k < BbPeriod; k++)
+                                {
+                                    decimal d = bbWindow[k] - mean;
+                                    varSum += d * d;
+                                }
+                                decimal variance = varSum / BbPeriod;
+                                decimal stdev = (decimal)Math.Sqrt((double)variance);
+                                bbMiddle = mean;
+                                bbUpper = mean + BbSigma * stdev;
+                                bbLower = mean - BbSigma * stdev;
+                            }
+                        }
+
                         // Capture any signal the algorithm fired on this bar.
                         if (RequestTracker.Requests.TryRemove(opts.Symbol, out var pair) && !sim.HasActive)
                         {
+                            // Loss-cooldown gate: if the sim is serving a
+                            // post-losing-streak skip, burn one slot and drop
+                            // this signal. Also reset the algorithm's in-
+                            // position flag so it's free to evaluate the next
+                            // setup (same pattern as EntryCancelled trades in
+                            // ApplyCompletionExisting).
+                            if (sim.InCooldown)
+                            {
+                                sim.ConsumeCooldownSkip();
+                                var tsGate = (HtfRsiTradingState)tsField.GetValue(algo);
+                                if (tsGate != null)
+                                {
+                                    tsGate.IsInPosition = false;
+                                    tsGate.CandlesSinceLastExit = 0;
+                                }
+                                break;
+                            }
+
                             var request = pair.Item2;
                             var srProp = request.GetType().GetProperty("StrategyResult");
                             var sr = srProp?.GetValue(request) as HtfRsiVolExpansionStrategyResult;
                             if (sr?.Setup != null)
                             {
                                 var ts = (HtfRsiTradingState)tsField.GetValue(algo);
+                                var (entry30mLow, entry30mHigh) = Last30MBarAtOrBefore(bars30M, sr.Setup.EntryTime);
                                 sim.OpenFromSignal(
                                     signalTime: sr.Setup.EntryTime,
                                     direction: sr.Setup.Direction,
@@ -160,7 +308,14 @@ namespace CryptoTrading.App.BackTesting
                                     htfRsi: sr.Setup.HtfRsi,
                                     volExpansion: sr.Setup.VolExpansionRatio,
                                     probabilityScore: sr.Setup.ProbabilityScore,
-                                    equityUsdt: ts?.CurrentEquity ?? startEquityUsdt);
+                                    equityUsdt: ts?.CurrentEquity ?? startEquityUsdt,
+                                    entry30mBarLow: entry30mLow,
+                                    entry30mBarHigh: entry30mHigh,
+                                    ema20_15M: ema20_15M,
+                                    macdHist: macdHist,
+                                    bbMiddle: bbMiddle,
+                                    bbUpper: bbUpper,
+                                    bbLower: bbLower);
                             }
                         }
                         break;
@@ -172,7 +327,9 @@ namespace CryptoTrading.App.BackTesting
                             equitySeeded = true;
                         }
 
-                        if (sim.HasActive)
+                        // Always step, even with no active trade, so the
+                        // simulator's continuous 1M RSI stays warm for the
+                        // next Late-mode fill decision.
                         {
                             var done = sim.Step(ev.Candle);
                             if (done != null)
@@ -260,6 +417,65 @@ namespace CryptoTrading.App.BackTesting
 
         // ---- State-sync helpers ------------------------------------------
 
+        // ---- 30M aggregation (for structure-break exit) -----------------
+        //
+        // Folds consecutive 15M candles into 30M bars on wall-clock
+        // boundaries (minute % 30 == 0). In this codebase 15M candles
+        // already have CloseTime.Minute divisible by 15, so boundary
+        // detection is exact.
+        private sealed class Bar30M
+        {
+            public DateTime CloseTime;
+            public decimal High;
+            public decimal Low;
+        }
+
+        private static List<Bar30M> Build30MBars(List<Candlestick> src15M)
+        {
+            var result = new List<Bar30M>();
+            decimal high = 0, low = 0;
+            DateTime closeTime = default;
+            bool started = false;
+            foreach (var c in src15M)
+            {
+                if (!started)
+                {
+                    if (c.OpenTime.Minute % 30 != 0) continue; // wait for 30M alignment
+                    high = c.High; low = c.Low; closeTime = c.CloseTime;
+                    started = true;
+                }
+                else
+                {
+                    if (c.High > high) high = c.High;
+                    if (c.Low < low) low = c.Low;
+                    closeTime = c.CloseTime;
+                }
+                if (c.CloseTime.Minute % 30 == 0)
+                {
+                    result.Add(new Bar30M { CloseTime = closeTime, High = high, Low = low });
+                    started = false;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Binary search for the last 30M bar whose CloseTime is at or before
+        /// the given timestamp. Returns (0,0) if no such bar exists.
+        /// </summary>
+        private static (decimal Low, decimal High) Last30MBarAtOrBefore(List<Bar30M> bars, DateTime t)
+        {
+            int lo = 0, hi = bars.Count - 1, found = -1;
+            while (lo <= hi)
+            {
+                int mid = (lo + hi) >> 1;
+                if (bars[mid].CloseTime <= t) { found = mid; lo = mid + 1; }
+                else hi = mid - 1;
+            }
+            if (found < 0) return (0m, 0m);
+            return (bars[found].Low, bars[found].High);
+        }
+
         private static void ApplyCompletionExisting(HtfRsiTradingState ts, SimulatedTrade done)
         {
             if (ts == null) return;
@@ -335,7 +551,7 @@ namespace CryptoTrading.App.BackTesting
         private static void WriteCsv(string path, IEnumerable<SimulatedTrade> trades)
         {
             using var w = new StreamWriter(path);
-            w.WriteLine("Index,Direction,SignalTime,SignalPrice,EntryTime,EntryPrice,ExitTime,ExitPrice,ExitReason,Bars,Quantity,StopLoss,TakeProfit,AtrAtSignal,HtfRsi,VolExpansion,ProbabilityScore,PnlUsdt");
+            w.WriteLine("Index,Direction,SignalTime,SignalPrice,EntryTime,EntryPrice,ExitTime,ExitPrice,ExitReason,Bars,Quantity,StopLoss,TakeProfit,AtrAtSignal,HtfRsi,VolExpansion,ProbabilityScore,Ema20_15M,Extension,EntryMode,Regime,EffectiveLeverage,MacdHist,BBUpper,BBMiddle,BBLower,BBW,PnlUsdt");
             int i = 1;
             foreach (var t in trades)
             {
@@ -357,6 +573,16 @@ namespace CryptoTrading.App.BackTesting
                     t.HtfRsi.ToString("F1", CultureInfo.InvariantCulture),
                     t.VolExpansion.ToString("F2", CultureInfo.InvariantCulture),
                     t.ProbabilityScore,
+                    t.Ema20_15M_AtSignal.ToString("F2", CultureInfo.InvariantCulture),
+                    t.Extension_AtSignal.ToString("F3", CultureInfo.InvariantCulture),
+                    t.EntryMode ?? "",
+                    t.Regime ?? "",
+                    t.EffectiveLeverage.ToString("F2", CultureInfo.InvariantCulture),
+                    t.MacdHist_AtSignal.ToString("F4", CultureInfo.InvariantCulture),
+                    t.BBUpper_AtSignal.ToString("F2", CultureInfo.InvariantCulture),
+                    t.BBMiddle_AtSignal.ToString("F2", CultureInfo.InvariantCulture),
+                    t.BBLower_AtSignal.ToString("F2", CultureInfo.InvariantCulture),
+                    t.BBW_AtSignal.ToString("F5", CultureInfo.InvariantCulture),
                     t.PnlUsdt.ToString("F2", CultureInfo.InvariantCulture)));
             }
             Console.WriteLine($"  Trade CSV written: {path}");
@@ -371,6 +597,7 @@ namespace CryptoTrading.App.BackTesting
             public DateTime To = new DateTime(2025, 1, 1);
             public double StartBtc = 2.0;
             public string OutputCsv;
+            public string AnalyzeSlCsv;
         }
 
         private static BacktestOptions ParseArgs(string[] args)
@@ -393,6 +620,7 @@ namespace CryptoTrading.App.BackTesting
                     case "--to": opts.To = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--startbtc": opts.StartBtc = double.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--out": opts.OutputCsv = Next(); break;
+                    case "--analyze-sl": opts.AnalyzeSlCsv = Next(); break;
                     case "-h":
                     case "--help":
                         PrintHelp();
@@ -401,7 +629,8 @@ namespace CryptoTrading.App.BackTesting
                     default: throw new ArgumentException($"Unknown argument: {a}");
                 }
             }
-            if (opts.To <= opts.From) throw new ArgumentException("--to must be after --from");
+            if (string.IsNullOrEmpty(opts.AnalyzeSlCsv) && opts.To <= opts.From)
+                throw new ArgumentException("--to must be after --from");
             return opts;
         }
 

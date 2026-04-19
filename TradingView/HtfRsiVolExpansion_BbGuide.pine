@@ -1,0 +1,293 @@
+// ============================================================================
+// HTF RSI + 15M Vol Expansion, with 1M BbGuide entry
+// ============================================================================
+//
+// Visualises the strategy that was backtested in CryptoTrading.App:
+//   • 4H Wilder RSI(14) gates direction
+//       - RSI > 70               → LONG bias
+//       - 35 ≤ RSI < 40          → SHORT bias
+//       - everything else        → stand aside
+//   • 15M Wilder ATR(14), ratio vs 20 bars ago must be in [1.2, 1.5)
+//       → "vol expansion in-band": expanding enough to matter, not a blow-off.
+//   • When both gates are satisfied at a 15M bar close, a SIGNAL fires.
+//   • Entry timing on the 1M chart uses the BbGuide rule:
+//       - if 1M close > prev close (long) / close < prev close (short): FILL now
+//       - else wait; fill the first 1M bar that turns in our favour, or
+//         market-fill at the end of the 30-minute budget.
+//   • Risk: SL / TP = entry ± 1.5 × ATR (1 : 1 R).
+//   • Trailing stop activates at 1.5 R profit, trails at 1.0 × ATR.
+//   • Time stop at 16 × 15M bars (= 4h).
+//
+// Intended use: attach to the 1M BTCUSDT chart. The BbGuide fill rule
+// compares the current 1M close to the previous 1M close — on any other
+// timeframe that comparison loses its meaning.
+//
+// All request.security() calls use lookahead_off so the indicator does not
+// repaint: values update only once the HTF / LTF bar has fully closed.
+// ============================================================================
+
+//@version=5
+indicator("HTF-RSI + Vol Expansion + BbGuide Entry",
+          shorttitle="HTF-RSI BbGuide",
+          overlay=true,
+          max_lines_count=500,
+          max_labels_count=500)
+
+// ---------------------------------------------------------------------------
+// Inputs — defaults match HtfRsiVolExpansionAlgorithm.cs / TradeSimulator.cs
+// ---------------------------------------------------------------------------
+htfTf           = input.timeframe("240", "HTF (RSI gate)",          group="Timeframes")
+ltfTf           = input.timeframe("15",  "LTF (ATR / vol expansion)", group="Timeframes")
+
+rsiPeriod       = input.int(14,  "RSI period (4H)",                group="HTF RSI")
+rsiLongMin      = input.float(70.0, "Long if RSI >",               group="HTF RSI")
+rsiShortMax     = input.float(40.0, "Short if RSI <",              group="HTF RSI")
+rsiShortFloor   = input.float(35.0, "Short floor (skip below)",    group="HTF RSI")
+
+atrPeriod       = input.int(14, "ATR period (15M)",                group="Vol expansion")
+volExpLookback  = input.int(20, "Lookback bars",                   group="Vol expansion")
+volExpMin       = input.float(1.2,  "Min ratio (qualifier)",       group="Vol expansion")
+volExpMax       = input.float(1.5,  "Max ratio (blow-off cap)",    group="Vol expansion")
+
+slTpMult        = input.float(1.5, "SL/TP = ATR ×",                group="Risk")
+trailActR       = input.float(1.5, "Trailing activates at R",      group="Risk")
+trailAtrMult    = input.float(1.0, "Trailing distance (× ATR)",    group="Risk")
+maxHold15M      = input.int(16,    "Max hold (15M bars)",          group="Risk")
+
+entryBudgetMin  = input.int(30, "BbGuide budget (1M bars)",        group="BbGuide entry")
+bbPeriod        = input.int(20, "1M BB period (context only)",     group="BbGuide entry")
+bbSigma         = input.float(2.0, "1M BB sigma",                  group="BbGuide entry")
+
+showBb          = input.bool(true,  "Plot 1M Bollinger Bands",     group="Display")
+showTable       = input.bool(true,  "Show state table",            group="Display")
+
+// ---------------------------------------------------------------------------
+// Higher-timeframe state (RSI on 4H, ATR + close on 15M)
+// lookahead_off ⇒ these values update only when the HTF/LTF bar closes.
+// ---------------------------------------------------------------------------
+htfRsi     = request.security(syminfo.tickerid, htfTf, ta.rsi(close, rsiPeriod),
+                              barmerge.gaps_off, barmerge.lookahead_off)
+
+ltfAtr     = request.security(syminfo.tickerid, ltfTf, ta.atr(atrPeriod),
+                              barmerge.gaps_off, barmerge.lookahead_off)
+ltfAtrPast = request.security(syminfo.tickerid, ltfTf, ta.atr(atrPeriod)[volExpLookback],
+                              barmerge.gaps_off, barmerge.lookahead_off)
+ltfClose   = request.security(syminfo.tickerid, ltfTf, close,
+                              barmerge.gaps_off, barmerge.lookahead_off)
+
+// A 15M bar has just closed iff the security value changed since last bar.
+ltfBarClosed = not na(ltfClose) and ltfClose != ltfClose[1]
+
+volExpRatio  = ltfAtrPast > 0 ? ltfAtr / ltfAtrPast : na
+
+// ---------------------------------------------------------------------------
+// Signal detection: fires once per 15M close when both gates are satisfied.
+// ---------------------------------------------------------------------------
+rsiLong   = htfRsi > rsiLongMin
+rsiShort  = htfRsi < rsiShortMax and htfRsi >= rsiShortFloor
+volInBand = not na(volExpRatio) and volExpRatio >= volExpMin and volExpRatio < volExpMax
+
+longSignal  = ltfBarClosed and rsiLong  and volInBand
+shortSignal = ltfBarClosed and rsiShort and volInBand
+
+// ---------------------------------------------------------------------------
+// 1M Bollinger Bands (context only — BbGuide decides on price direction,
+// the bands are here as a visual reference the way they were discussed.)
+// ---------------------------------------------------------------------------
+bbBasis = ta.sma(close, bbPeriod)
+bbDev   = bbSigma * ta.stdev(close, bbPeriod)
+bbUp    = bbBasis + bbDev
+bbDn    = bbBasis - bbDev
+
+plot(showBb ? bbUp    : na, "BB upper",  color=color.new(color.purple, 60))
+plot(showBb ? bbBasis : na, "BB middle", color=color.new(color.purple, 40))
+plot(showBb ? bbDn    : na, "BB lower",  color=color.new(color.purple, 60))
+
+// ---------------------------------------------------------------------------
+// State machine — mirrors the simulator:
+//   phase 0 = flat
+//   phase 1 = pending (signal fired, waiting for BbGuide trigger)
+//   phase 2 = open (position alive, SL/TP/trailing/time-stop tracked)
+// ---------------------------------------------------------------------------
+var int   phase         = 0
+var int   posDir        = 0        //  1 long, -1 short
+var float signalPrice   = na
+var float entryPrice    = na
+var float slLevel       = na
+var float tpLevel       = na
+var float initialRisk   = na
+var float atrAtSignal   = na
+var int   signalBarIdx  = na
+var int   entryBarIdx   = na
+var float highestSince  = na
+var float lowestSince   = na
+var bool  trailActive   = false
+var float trailStop     = na
+
+// --- Enter Pending on a fresh signal (ignored while phase > 0) ---
+if phase == 0 and (longSignal or shortSignal)
+    posDir       := longSignal ? 1 : -1
+    signalPrice  := close
+    atrAtSignal  := ltfAtr
+    initialRisk  := ltfAtr * slTpMult
+    slLevel      := posDir == 1 ? close - initialRisk : close + initialRisk
+    tpLevel      := posDir == 1 ? close + initialRisk : close - initialRisk
+    signalBarIdx := bar_index
+    trailActive  := false
+    trailStop    := na
+    phase        := 1
+
+// --- BbGuide fill logic (phase 1, evaluated from bar after signal) ---
+justFilledLong  = false
+justFilledShort = false
+if phase == 1 and bar_index > signalBarIdx
+    // SL abort: price breached stop before we ever filled → cancel.
+    slBreached = (posDir == 1 and low  <= slLevel) or
+                 (posDir == -1 and high >= slLevel)
+    if slBreached
+        phase  := 0
+        posDir := 0
+    else
+        aligned = (posDir == 1 and close > close[1]) or
+                  (posDir == -1 and close < close[1])
+        budgetExpired = (bar_index - signalBarIdx) >= entryBudgetMin
+        if aligned or budgetExpired
+            entryPrice   := close
+            entryBarIdx  := bar_index
+            highestSince := close
+            lowestSince  := close
+            // Re-anchor SL/TP to the fill price — keeps risk = 1.5×ATR from entry.
+            slLevel      := posDir == 1 ? close - initialRisk : close + initialRisk
+            tpLevel      := posDir == 1 ? close + initialRisk : close - initialRisk
+            phase        := 2
+            justFilledLong  := posDir == 1
+            justFilledShort := posDir == -1
+
+// --- Exit logic: intra-bar accumulate extremes; decisions on 15M close only ---
+var float prevLtfClose = na
+is15MClose = ltfClose != prevLtfClose
+prevLtfClose := ltfClose
+
+if phase == 2
+    // Accumulate path extremes every 1M bar.
+    highestSince := math.max(nz(highestSince, high), high)
+    lowestSince  := math.min(nz(lowestSince,  low),  low)
+
+    if is15MClose
+        barsHeld15 = math.floor((bar_index - entryBarIdx) / 15)
+
+        // (a) Hard SL on the 15M close.
+        slHit = (posDir == 1  and close <= slLevel) or
+                (posDir == -1 and close >= slLevel)
+
+        // (b) Trailing activation.
+        unrealized = posDir == 1 ? close - entryPrice : entryPrice - close
+        if unrealized >= initialRisk * trailActR
+            trailActive := true
+
+        // (c) TP — only while trailing is NOT active.
+        tpHit = not trailActive and
+                ((posDir == 1  and close >= tpLevel) or
+                 (posDir == -1 and close <= tpLevel))
+
+        // (d) Trailing stop.
+        if trailActive
+            trailDist = atrAtSignal * trailAtrMult
+            newTrail  = posDir == 1 ? highestSince - trailDist
+                                    : lowestSince  + trailDist
+            trailStop := na(trailStop) ? newTrail :
+                         posDir == 1 ? math.max(trailStop, newTrail)
+                                     : math.min(trailStop, newTrail)
+        trailHit = trailActive and
+                   ((posDir == 1  and close <= trailStop) or
+                    (posDir == -1 and close >= trailStop))
+
+        // (e) Time stop.
+        timeUp = barsHeld15 >= maxHold15M
+
+        if slHit or tpHit or trailHit or timeUp
+            phase       := 0
+            posDir      := 0
+            trailActive := false
+            trailStop   := na
+            entryPrice  := na
+
+// ---------------------------------------------------------------------------
+// Visual markers
+// ---------------------------------------------------------------------------
+plotshape(longSignal,  title="Long signal",
+          style=shape.triangleup,   location=location.belowbar,
+          color=color.new(color.green, 0), size=size.small)
+plotshape(shortSignal, title="Short signal",
+          style=shape.triangledown, location=location.abovebar,
+          color=color.new(color.red, 0),   size=size.small)
+
+plotshape(justFilledLong,  title="Long entry",
+          style=shape.arrowup,   location=location.belowbar,
+          color=color.new(color.lime, 0), size=size.normal, text="FILL")
+plotshape(justFilledShort, title="Short entry",
+          style=shape.arrowdown, location=location.abovebar,
+          color=color.new(color.orange, 0), size=size.normal, text="FILL")
+
+// SL / TP / trail lines while a trade is live.
+plot(phase == 2 ? slLevel : na,  "SL",    color=color.red,
+     style=plot.style_linebr, linewidth=2)
+plot(phase == 2 ? tpLevel : na,  "TP",    color=color.green,
+     style=plot.style_linebr, linewidth=2)
+plot(phase == 2 and trailActive ? trailStop : na, "Trail",
+     color=color.yellow, style=plot.style_linebr, linewidth=1)
+
+// Subtle background tint while waiting for BbGuide fill — lets you see the
+// "wait and see what price does" window at a glance.
+bgcolor(phase == 1 ? color.new(color.yellow, 90) : na, title="Pending tint")
+
+// ---------------------------------------------------------------------------
+// State table (top-right). Colour-codes each gate so you can see at a glance
+// which condition is missing when no signal is firing.
+// ---------------------------------------------------------------------------
+var table infoT = table.new(position.top_right, 2, 7,
+                            bgcolor=color.new(color.black, 75),
+                            border_width=1, border_color=color.new(color.gray, 50))
+
+if showTable and barstate.islast
+    rsiColor = rsiLong ? color.lime :
+               rsiShort ? color.red : color.gray
+    volColor = volInBand ? color.lime : color.gray
+    phaseText = phase == 0 ? "flat" :
+                phase == 1 ? (posDir == 1 ? "pending LONG" : "pending SHORT") :
+                             (posDir == 1 ? "LONG open"   : "SHORT open")
+    phaseColor = phase == 2 ? (posDir == 1 ? color.lime : color.red) :
+                 phase == 1 ? color.yellow : color.gray
+
+    table.cell(infoT, 0, 0, "4H RSI",  text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 0, str.tostring(htfRsi, "#.0"), text_color=rsiColor)
+
+    table.cell(infoT, 0, 1, "Vol exp", text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 1, na(volExpRatio) ? "—" : str.tostring(volExpRatio, "#.##"), text_color=volColor)
+
+    table.cell(infoT, 0, 2, "15M ATR", text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 2, str.tostring(ltfAtr, "#.##"), text_color=color.white)
+
+    table.cell(infoT, 0, 3, "Phase",   text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 3, phaseText, text_color=phaseColor)
+
+    table.cell(infoT, 0, 4, "Entry",   text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 4, phase == 2 ? str.tostring(entryPrice, "#.##") : "—", text_color=color.white)
+
+    table.cell(infoT, 0, 5, "SL",      text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 5, phase > 0 ? str.tostring(slLevel, "#.##") : "—", text_color=color.red)
+
+    table.cell(infoT, 0, 6, "TP",      text_color=color.white, bgcolor=color.new(color.gray, 60))
+    table.cell(infoT, 1, 6, phase > 0 ? str.tostring(tpLevel, "#.##") : "—", text_color=color.green)
+
+// ---------------------------------------------------------------------------
+// Alerts — wire these into TradingView alerts so you see signals live.
+// ---------------------------------------------------------------------------
+alertcondition(longSignal,      title="HTF-RSI LONG signal",
+               message="HTF-RSI + Vol exp: LONG signal on {{ticker}} at {{close}}")
+alertcondition(shortSignal,     title="HTF-RSI SHORT signal",
+               message="HTF-RSI + Vol exp: SHORT signal on {{ticker}} at {{close}}")
+alertcondition(justFilledLong,  title="BbGuide LONG fill",
+               message="BbGuide LONG entry on {{ticker}} at {{close}}")
+alertcondition(justFilledShort, title="BbGuide SHORT fill",
+               message="BbGuide SHORT entry on {{ticker}} at {{close}}")

@@ -296,10 +296,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             if (!currentRsi.HasValue) return;
 
             // 2. Determine direction.
-            // Long zone: RSI > 65 (strong HTF uptrend).
-            // Short zone: 30 ≤ RSI < 40 (HTF weakness, but not already blown out).
-            // RSI < 30 is the "oversold can stay oversold" zone — historically
-            // shorts there mean-revert against us.
+            // Long zone: RSI > 70 (strong HTF uptrend).
+            // Short zone: 35 ≤ RSI < 40 (HTF weakness, but not already blown out).
             TradeDirection direction;
             if (currentRsi.Value > HtfRsiLongThreshold)
                 direction = TradeDirection.Long;
@@ -388,6 +386,15 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 ema4H8: _ema4H8?.Results.LastOrDefault()?.Value,
                 ema4H21: _ema4H21?.Results.LastOrDefault()?.Value,
                 recentWinRate: _tradingState.RecentWinRate);
+
+            // Note: a surgical Direction × Score filter was tested (block Long 60-79
+            // and/or Short 80+ per the Phase 1 loss postmortem). Results on Phase 3:
+            //   - Short 80+ filter: fires ZERO times — Phase 3's RSI floor + vol cap
+            //     already suppresses every setup that would have scored 80+ for a short.
+            //   - Long 60-79 filter: halves trade count AND halves profit (DD halves too,
+            //     so Calmar is unchanged — no edge added, just lower variance).
+            // Conclusion: Phase 3's threshold tightening already captures this edge
+            // implicitly. No additional filter here.
 
             // Create setup
             var setup = new HtfRsiVolExpansionSetup
