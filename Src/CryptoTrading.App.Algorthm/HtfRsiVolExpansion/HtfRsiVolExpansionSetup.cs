@@ -30,6 +30,13 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         // Position sizing
         public decimal Quantity { get; set; }
         public int Leverage { get; set; } = 5;
+
+        // When true, EntryPrice/StopLoss/TakeProfit are the caller's final
+        // values and must NOT be rebased by the execution strategy on the
+        // first 15M bar after fill. Set by the BbGuide deferred-entry path
+        // (HtfRsiVolExpansionAlgorithm) which computes the rebase off the
+        // actual 1M fill price rather than the next 15M close.
+        public bool EntryPriceFinal { get; set; }
     }
 
     /// <summary>

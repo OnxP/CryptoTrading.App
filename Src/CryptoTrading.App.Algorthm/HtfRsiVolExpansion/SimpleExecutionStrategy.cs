@@ -104,26 +104,41 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 return status;
             }
 
-            // On first candle after fill, rebase SL/TP to actual fill price
+            // On first candle after fill, rebase SL/TP to actual fill price.
+            // Skipped when the caller has already pinned EntryPrice/SL/TP to
+            // the true fill (e.g. the BbGuide deferred-entry path, which
+            // rebases off the 1M close at alignment — closer to the actual
+            // market fill than the next 15M close would be).
             if (!_entryPriceAdjusted)
             {
                 _entryPriceAdjusted = true;
-                var actualEntry = currentPrice;
-                var risk = _setup.InitialRisk;
 
-                _logger?.LogInformation(
-                    $"[SIMPLE ADJUST] Rebasing from {_setup.EntryPrice:F2} → {actualEntry:F2}");
-
-                _setup.EntryPrice = actualEntry;
-                if (_setup.Direction == TradeDirection.Long)
+                if (_setup.EntryPriceFinal)
                 {
-                    _setup.StopLoss = actualEntry - risk;
-                    _setup.TakeProfit = actualEntry + risk;
+                    _logger?.LogInformation(
+                        $"[SIMPLE ADJUST] Skipping rebase — caller pinned " +
+                        $"EntryPrice:{_setup.EntryPrice:F2} SL:{_setup.StopLoss:F2} " +
+                        $"TP:{_setup.TakeProfit:F2}");
                 }
                 else
                 {
-                    _setup.StopLoss = actualEntry + risk;
-                    _setup.TakeProfit = actualEntry - risk;
+                    var actualEntry = currentPrice;
+                    var risk = _setup.InitialRisk;
+
+                    _logger?.LogInformation(
+                        $"[SIMPLE ADJUST] Rebasing from {_setup.EntryPrice:F2} → {actualEntry:F2}");
+
+                    _setup.EntryPrice = actualEntry;
+                    if (_setup.Direction == TradeDirection.Long)
+                    {
+                        _setup.StopLoss = actualEntry - risk;
+                        _setup.TakeProfit = actualEntry + risk;
+                    }
+                    else
+                    {
+                        _setup.StopLoss = actualEntry + risk;
+                        _setup.TakeProfit = actualEntry - risk;
+                    }
                 }
             }
 
