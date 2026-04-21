@@ -102,13 +102,12 @@ namespace CryptoTrading.App.BackTesting
             var logger = NullLogger<HtfRsiVolExpansionAlgorithm>.Instance;
             var algo = new HtfRsiVolExpansionAlgorithm(logger);
 
-            // BbGuide lives inside TradeSimulator for the backtest — it's
-            // baked into the sim so we can drive entry-mode A/B tests without
-            // touching the algorithm. Turn the algo's BbGuide off so the
-            // signal is NOT deferred twice (the sim would never get it,
-            // because Program.cs only polls RequestTracker on 15M events
-            // and the 1M stream isn't plumbed through md here).
-            algo.EnableBbGuide = false;
+            // NOTE: the algorithm fires setups immediately on 15M close —
+            // no BbGuide defer lives here anymore. The backtest's own
+            // BbGuide (inside TradeSimulator) still governs entry timing
+            // for this harness. Commit-2 replaces TradeSimulator with the
+            // real entry/exit strategies, at which point the entry-strategy
+            // BbGuide takes over.
 
             var config = new CryptoConfig
             {

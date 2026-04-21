@@ -34,8 +34,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         // When true, EntryPrice/StopLoss/TakeProfit are the caller's final
         // values and must NOT be rebased by the execution strategy on the
         // first 15M bar after fill. Set by the BbGuide deferred-entry path
-        // (HtfRsiVolExpansionAlgorithm) which computes the rebase off the
-        // actual 1M fill price rather than the next 15M close.
+        // in HtfRsiVolExpansionEntryStrategy, which pins these fields to
+        // the 1M fill price at alignment rather than the 15M signal close.
         public bool EntryPriceFinal { get; set; }
     }
 

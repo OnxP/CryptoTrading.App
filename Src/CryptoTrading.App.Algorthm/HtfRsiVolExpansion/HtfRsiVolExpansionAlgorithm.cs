@@ -47,16 +47,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private decimal _provisional4HVolume;
         private DateTime _last4HCloseTime;
 
-        // BbGuide 1M entry-timing state.
-        // _priorClose1m  — previous 1M close, used to detect direction turns.
-        // _pending       — setup stashed while we wait for the 1M alignment
-        //                  trigger. While non-null, _tradingState.IsInPosition
-        //                  is held true so EvaluateEntry won't fire a second
-        //                  setup on subsequent 15M closes.
-        private decimal _priorClose1m;
-        private bool _priorClose1mSet;
-        private PendingSetup _pending;
-
         // Shared state
         private HtfRsiTradingState _tradingState;
 
@@ -91,30 +81,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private const decimal SlTpAtrMultiplier = 1.5m;
         private const int Leverage = 5;
 
-        // BbGuide 1M entry-timing sub-algorithm.
-        //
-        // When enabled, a fired 15M setup is not market-filled immediately.
-        // Instead the setup is stashed as "pending" and we wait on the 1M
-        // stream for the trade's direction to confirm — fill on the first 1M
-        // close that moves with us (close > prev for long, close < prev for
-        // short). If the 1M tape moves against us we wait; on budget expiry
-        // (30 min == 2 × 15M bars) we market-fill at the current 1M close
-        // rather than cancel, because the 15M signal is still live and we'd
-        // rather have the trade at a slightly worse price than miss it.
-        //
-        // Backtest (BTCUSDT, Nov-2023→Nov-2024, 142 trades): +65% net PnL
-        // vs. immediate 15M-close fills, WR +1.8pp, PF 1.35, Calmar 0.91.
-        //
-        // If the price blows through the setup's stop-loss while we are
-        // still waiting, the pending setup is cancelled (no trade taken).
-        //
-        // Exposed as a settable property so the backtest harness (which runs
-        // its own BbGuide inside TradeSimulator) can turn the algo-level one
-        // off — otherwise the signal would be deferred twice. Live / paper
-        // runs keep the default (true).
-        public bool EnableBbGuide { get; set; } = true;
-        private const int BbGuideBudgetMinutes = 30;
-
         public HtfRsiVolExpansionAlgorithm(
             ILogger<HtfRsiVolExpansionAlgorithm> logger)
         {
@@ -147,20 +113,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Hours_4, ProcessHistoricData4H);
             marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Hours_4, ProcessLiveCandle4H);
 
-            // Subscribe to 1M only for BbGuide deferred-entry timing. The
-            // 1M stream is a pure "did price turn in our favour?" oracle —
-            // it does NOT drive SL/TP/trailing (those live on the 15M bar
-            // via SimpleExitStrategy). With BbGuide off this subscription
-            // is harmless (the handler becomes a no-op).
-            if (EnableBbGuide)
-            {
-                marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minute, ProcessHistoricData1M);
-                marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minute, ProcessLiveCandle1M);
-            }
-
-            _logger.LogInformation(
-                $"[HTF-RSI] Subscribed to {symbol} on 15M + 4H" +
-                (EnableBbGuide ? " + 1M (BbGuide entry)" : ""));
+            _logger.LogInformation($"[HTF-RSI] Subscribed to {symbol} on 15M + 4H");
         }
 
         #region Historic Data Loading
@@ -377,11 +330,37 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             if (expansionRatio < VolExpansionRatio || expansionRatio >= VolExpansionMaxRatio)
                 return;
 
-            // All conditions met — gather inputs shared by both the immediate
-            // and the deferred (BbGuide) entry paths. Fill price is determined
-            // later: for immediate, it's the 15M close here; for BbGuide, it's
-            // whichever 1M close first prints a favourable direction turn.
+            // All conditions met - create setup
+            var entryPrice = candle.Close;
             var initialRisk = currentAtr * SlTpAtrMultiplier;
+
+            decimal stopLoss, takeProfit;
+            if (direction == TradeDirection.Long)
+            {
+                stopLoss = entryPrice - initialRisk;
+                takeProfit = entryPrice + initialRisk;
+            }
+            else
+            {
+                stopLoss = entryPrice + initialRisk;
+                takeProfit = entryPrice - initialRisk;
+            }
+
+            // Position sizing: full equity × leverage / price
+            var equity = _tradingState.CurrentEquity;
+            var notional = equity * Leverage;
+            var quantity = notional / entryPrice;
+
+            // Respect symbol constraints
+            if (_symbol?.Quantity?.Minimum > 0 && quantity < _symbol.Quantity.Minimum)
+            {
+                _logger.LogWarning($"[HTF-RSI {ts}] Quantity {quantity:F6} below minimum {_symbol.Quantity.Minimum}. Skipping.");
+                return;
+            }
+            if (_symbol?.Quantity?.Increment > 0)
+            {
+                quantity = Math.Floor(quantity / _symbol.Quantity.Increment) * _symbol.Quantity.Increment;
+            }
 
             // Get 15M RSI (Wilder) for probability score
             double rsi15M = _quoteHub15M.Quotes.ToRsi(14).LastOrDefault()?.Rsi ?? 50;
@@ -417,261 +396,53 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             // Conclusion: Phase 3's threshold tightening already captures this edge
             // implicitly. No additional filter here.
 
-            if (EnableBbGuide)
-            {
-                // Defer the fill — stash the setup and wait on 1M for a
-                // direction turn in our favour. ProcessLiveCandle1M is the
-                // fill arbiter from here on.
-                _pending = new PendingSetup
-                {
-                    SignalTime = candle.CloseTime,
-                    Direction = direction,
-                    SignalPrice = candle.Close,
-                    AtrAtEntry = currentAtr,
-                    InitialRisk = initialRisk,
-                    HtfRsi = currentRsi.Value,
-                    VolExpansionRatio = (double)expansionRatio,
-                    Rsi15M = rsi15M,
-                    ProbabilityScore = score,
-                    // Original SL captured from the signal close — used to
-                    // abort if the market runs through our stop while waiting.
-                    SignalStopLoss = direction == TradeDirection.Long
-                        ? candle.Close - initialRisk
-                        : candle.Close + initialRisk
-                };
-
-                // Block further setups while pending. Cleared on fill
-                // (SimpleExecutionStrategy takes over) or on cancel.
-                _tradingState.IsInPosition = true;
-
-                _logger.LogInformation(
-                    $"[HTF-RSI {ts}] SETUP PENDING (BbGuide): {direction} | " +
-                    $"Signal:{candle.Close:F2} | SL:{_pending.SignalStopLoss:F2} | " +
-                    $"ATR:{currentAtr:F2} | 4H RSI:{currentRsi.Value:F1} | " +
-                    $"Score:{score} | waiting 1M turn (budget {BbGuideBudgetMinutes}min)");
-                return;
-            }
-
-            // Immediate-fill path (BbGuide disabled) — market-fill at this
-            // 15M close, same behaviour as before the sub-algo was added.
-            FireSetup(
-                fillPrice: candle.Close,
-                fillTime: candle.CloseTime,
-                direction: direction,
-                atr: currentAtr,
-                initialRisk: initialRisk,
-                htfRsi: currentRsi.Value,
-                volExpansion: (double)expansionRatio,
-                rsi15M: rsi15M,
-                score: score,
-                symbolName: candle.Symbol,
-                reason: "immediate");
-        }
-
-        /// <summary>
-        /// Builds the HtfRsiVolExpansionSetup + execution strategy at the given
-        /// fill price/time and hands it to RequestTracker. Used both by the
-        /// immediate-fill path (from EvaluateEntry) and the deferred BbGuide
-        /// path (from ProcessLiveCandle1M).
-        ///
-        /// Sizing runs off the fill price, not the signal price, because
-        /// BbGuide can shift the effective entry by up to 30 minutes of 1M
-        /// ticks. Sizing off the stale signal price would under/over-leverage
-        /// by whatever the drift is.
-        /// </summary>
-        private void FireSetup(
-            decimal fillPrice,
-            DateTime fillTime,
-            TradeDirection direction,
-            decimal atr,
-            decimal initialRisk,
-            double htfRsi,
-            double volExpansion,
-            double rsi15M,
-            int score,
-            string symbolName,
-            string reason)
-        {
-            decimal stopLoss, takeProfit;
-            if (direction == TradeDirection.Long)
-            {
-                stopLoss = fillPrice - initialRisk;
-                takeProfit = fillPrice + initialRisk;
-            }
-            else
-            {
-                stopLoss = fillPrice + initialRisk;
-                takeProfit = fillPrice - initialRisk;
-            }
-
-            // Position sizing: full equity × leverage / fill price
-            var equity = _tradingState.CurrentEquity;
-            var notional = equity * Leverage;
-            var quantity = notional / fillPrice;
-
-            if (_symbol?.Quantity?.Minimum > 0 && quantity < _symbol.Quantity.Minimum)
-            {
-                _logger.LogWarning(
-                    $"[HTF-RSI {fillTime:yyyy-MM-dd HH:mm}] Quantity {quantity:F6} " +
-                    $"below minimum {_symbol.Quantity.Minimum}. Skipping.");
-                // Release the in-position block set at pending time.
-                _tradingState.IsInPosition = false;
-                return;
-            }
-            if (_symbol?.Quantity?.Increment > 0)
-            {
-                quantity = Math.Floor(quantity / _symbol.Quantity.Increment) * _symbol.Quantity.Increment;
-            }
-
+            // Create setup
             var setup = new HtfRsiVolExpansionSetup
             {
                 Direction = direction,
-                EntryPrice = fillPrice,
+                EntryPrice = entryPrice,
                 StopLoss = stopLoss,
                 TakeProfit = takeProfit,
-                AtrAtEntry = atr,
+                AtrAtEntry = currentAtr,
                 InitialRisk = initialRisk,
-                HtfRsi = htfRsi,
-                VolExpansionRatio = volExpansion,
+                HtfRsi = currentRsi.Value,
+                VolExpansionRatio = (double)expansionRatio,
                 Rsi15M = rsi15M,
                 ProbabilityScore = score,
-                EntryTime = fillTime,
+                EntryTime = candle.CloseTime,
                 Quantity = quantity,
-                Leverage = Leverage,
-                // BbGuide paths set this via reason-prefix "bbguide_"; the
-                // immediate path lets SimpleExecutionStrategy rebase as before.
-                EntryPriceFinal = reason.StartsWith("bbguide_", StringComparison.Ordinal)
+                Leverage = Leverage
             };
 
+            // Create execution strategy (simple: just SL/TP, no trailing/breakeven/time stop)
             var executionStrategy = new SimpleExecutionStrategy(setup, _tradingState);
             executionStrategy.SetLogger(_logger);
 
+            // Create strategy result
             var strategyResult = new HtfRsiVolExpansionStrategyResult
             {
                 PostTrade = true,
-                Amount = quantity * fillPrice, // USDT notional
+                Amount = quantity * entryPrice, // USDT notional
                 Leverage = Leverage,
                 OrderSide = direction == TradeDirection.Long ? OrderSide.Buy : OrderSide.Sell,
                 Setup = setup
             };
 
-            // For the immediate path this is the first time IsInPosition is
-            // set. For the deferred path it's already true from PendingSetup
-            // creation — setting it again is a no-op.
+            // Mark as in position
             _tradingState.IsInPosition = true;
 
+            // Fire setup
             _logger.LogInformation(
-                $"[HTF-RSI {fillTime:yyyy-MM-dd HH:mm}] SETUP FIRED ({reason}): {direction} | " +
-                $"Price:{fillPrice:F2} | SL:{stopLoss:F2} | TP:{takeProfit:F2} | " +
-                $"ATR:{atr:F2} | VolExp:{volExpansion:F2} | 4H RSI:{htfRsi:F1} | " +
+                $"[HTF-RSI {ts}] SETUP FIRED: {direction} | Price:{entryPrice:F2} | " +
+                $"SL:{stopLoss:F2} | TP:{takeProfit:F2} | ATR:{currentAtr:F2} | " +
+                $"VolExp:{expansionRatio:F2} | 4H RSI:{currentRsi.Value:F1} | " +
                 $"15M RSI:{rsi15M:F1} | Score:{score} | Qty:{quantity:F6} | " +
                 $"Equity:{equity:F2} | {_tradingState.GetStatus()}");
 
             RequestTracker.Instance.Add(
-                symbolName,
-                new TradeRequest(strategyResult, executionStrategy, _symbol, fillTime),
+                candle.Symbol,
+                new TradeRequest(strategyResult, executionStrategy, _symbol, candle.CloseTime),
                 KeyValue);
-        }
-
-        /// <summary>
-        /// Captured 15M-setup inputs needed to fire the trade at a later 1M
-        /// bar when BbGuide aligns. Only the inputs that don't depend on the
-        /// final fill price live here — stopLoss/takeProfit/quantity are
-        /// recomputed off the fill price inside FireSetup.
-        /// </summary>
-        private sealed class PendingSetup
-        {
-            public DateTime SignalTime;
-            public TradeDirection Direction;
-            public decimal SignalPrice;
-            public decimal AtrAtEntry;
-            public decimal InitialRisk;
-            public double HtfRsi;
-            public double VolExpansionRatio;
-            public double Rsi15M;
-            public int ProbabilityScore;
-            public decimal SignalStopLoss;
-        }
-
-        /// <summary>
-        /// Warm the prior-close tracker from the last historic 1M bar so the
-        /// very first live 1M tick has a valid comparator.
-        /// </summary>
-        private void ProcessHistoricData1M(IEnumerable<Candlestick> candlesticks)
-        {
-            var last = candlesticks.LastOrDefault();
-            if (last != null)
-            {
-                _priorClose1m = last.Close;
-                _priorClose1mSet = true;
-            }
-        }
-
-        /// <summary>
-        /// BbGuide fill arbiter. Updates the prior-close tracker on every 1M
-        /// bar and, if a setup is pending, checks whether the current 1M close
-        /// (a) has moved in our favour vs the previous close (fill), (b) has
-        /// blown through the original stop (cancel), or (c) has exhausted the
-        /// budget (force-fill at current close).
-        /// </summary>
-        private void ProcessLiveCandle1M(CandlestickEventArgs args)
-        {
-            try
-            {
-                if (!args.IsFinal) return;
-
-                var m1 = args.Candlestick;
-                decimal previousClose = _priorClose1mSet ? _priorClose1m : m1.Close;
-                _priorClose1m = m1.Close;
-                _priorClose1mSet = true;
-
-                if (_pending == null) return;
-
-                // Guard — the market has already run through our SL while we
-                // were waiting. No point filling only to stop out immediately.
-                bool slBreached = _pending.Direction == TradeDirection.Long
-                    ? m1.Close <= _pending.SignalStopLoss
-                    : m1.Close >= _pending.SignalStopLoss;
-                if (slBreached)
-                {
-                    _logger.LogInformation(
-                        $"[HTF-RSI BBGUIDE {m1.CloseTime:yyyy-MM-dd HH:mm}] SL breached during wait — " +
-                        $"cancelling pending. Close:{m1.Close:F2} vs SL:{_pending.SignalStopLoss:F2}");
-                    _pending = null;
-                    _tradingState.IsInPosition = false;
-                    return;
-                }
-
-                // Alignment = the 1M tape printed a bar that moves with us.
-                bool aligned = _pending.Direction == TradeDirection.Long
-                    ? m1.Close > previousClose
-                    : m1.Close < previousClose;
-
-                var elapsed = (m1.CloseTime - _pending.SignalTime).TotalMinutes;
-                bool budgetExpired = elapsed >= BbGuideBudgetMinutes;
-
-                if (!aligned && !budgetExpired) return;
-
-                var p = _pending;
-                _pending = null;
-
-                FireSetup(
-                    fillPrice: m1.Close,
-                    fillTime: m1.CloseTime,
-                    direction: p.Direction,
-                    atr: p.AtrAtEntry,
-                    initialRisk: p.InitialRisk,
-                    htfRsi: p.HtfRsi,
-                    volExpansion: p.VolExpansionRatio,
-                    rsi15M: p.Rsi15M,
-                    score: p.ProbabilityScore,
-                    symbolName: m1.Symbol,
-                    reason: aligned ? $"bbguide_aligned after {elapsed:F1}min" : "bbguide_budget_expired");
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"[HTF-RSI] Error processing 1M candle at {args.Candlestick.CloseTime:yyyy-MM-dd HH:mm}");
-            }
         }
 
         /// <summary>
@@ -747,11 +518,6 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _logger.LogInformation($"  LTF ATR Period:       {LtfAtrPeriod}");
             _logger.LogInformation($"  Vol Expansion Band:   [{VolExpansionRatio}, {VolExpansionMaxRatio})");
             _logger.LogInformation($"  Vol Expansion Lookback: {VolExpansionLookback} candles");
-            _logger.LogInformation("  -- Entry Timing --");
-            _logger.LogInformation(
-                EnableBbGuide
-                    ? $"  Entry Mode:           BbGuide (1M wait for turn, {BbGuideBudgetMinutes}min budget, force-fill on expiry)"
-                    : "  Entry Mode:           Immediate (market-fill at 15M close)");
             _logger.LogInformation("  -- Risk Management --");
             _logger.LogInformation($"  SL:                   {SlTpAtrMultiplier} × ATR");
             _logger.LogInformation($"  Dynamic TP:           80+→trail, 60-79→2R, 40-59→1.5R, <40→1R");

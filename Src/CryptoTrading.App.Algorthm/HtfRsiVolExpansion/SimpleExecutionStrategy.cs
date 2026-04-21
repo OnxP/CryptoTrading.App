@@ -39,7 +39,9 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _tradingState = tradingState;
             Quantity = setup.Quantity;
 
-            EntryStrategy = new HtfRsiVolExpansionEntryStrategy();
+            // Setup-aware ctor → BbGuide mode (defers fill until the 1M
+            // tape confirms direction; force-fills at 30-min budget expiry).
+            EntryStrategy = new HtfRsiVolExpansionEntryStrategy(setup);
             ExitStrategy = new SimpleExitStrategy(setup, tradingState);
         }
 
