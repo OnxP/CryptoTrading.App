@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CryptoTrading.App.BackTesting": {
+      "commandName": "Project",
+      "commandLineArgs": "--strategy sma --from 2025-08-01 --to 2026-02-28 --startBtc 2.0 --out trades_sma.csv"
+    }
+  }
+}

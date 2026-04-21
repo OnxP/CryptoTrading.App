@@ -41,21 +41,25 @@ namespace CryptoTrading.App.Process
 
             var bodyText = GenerateEmailBody(completedTrades);
             var textPart = new TextPart(TextFormat.Plain) { Text = bodyText };
-
-            // Attach trade list as CSV
-            var csvContent = GenerateCsv(completedTrades);
-            var csvBytes = Encoding.UTF8.GetBytes(csvContent);
-            var attachment = new MimePart("text", "csv")
-            {
-                Content = new MimeContent(new MemoryStream(csvBytes)),
-                ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
-                ContentTransferEncoding = ContentEncoding.Base64,
-                FileName = $"TradeList_{completedTrades.Min(x => x.StartDate):yyyyMMdd}_{completedTrades.Max(x => x.CloseDate):yyyyMMdd}.csv"
-            };
-
             var multipart = new Multipart("mixed");
             multipart.Add(textPart);
-            multipart.Add(attachment);
+            // Attach trade list as CSV
+            if (completedTrades.Any())
+
+
+            {
+                var csvContent = GenerateCsv(completedTrades);
+                var csvBytes = Encoding.UTF8.GetBytes(csvContent);
+                var attachment = new MimePart("text", "csv")
+                {
+                    Content = new MimeContent(new MemoryStream(csvBytes)),
+                    ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
+                    ContentTransferEncoding = ContentEncoding.Base64,
+                    FileName = $"TradeList_{completedTrades.Min(x => x.StartDate):yyyyMMdd}_{completedTrades.Max(x => x.CloseDate):yyyyMMdd}.csv"
+                };
+                multipart.Add(attachment);
+
+            }
             mail.Body = multipart;
 
             return mail;
