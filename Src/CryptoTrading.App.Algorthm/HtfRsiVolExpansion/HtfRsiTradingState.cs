@@ -25,6 +25,13 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         public decimal CurrentEquity { get; set; }
         public decimal PeakEquity { get; set; }
 
+        // Last exit reason / PnL recorded. Production code ignores these; the
+        // backtest harness reads them immediately after seeing a CloseTrade
+        // action to populate its trade log, since TradeDetails carries only
+        // the exit price.
+        public string LastExitReason { get; private set; }
+        public decimal LastExitPnl { get; private set; }
+
         // Recent results for probability scorer (last 5 trades)
         private readonly List<bool> _recentResults = new List<bool>();
 
@@ -71,6 +78,8 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             IsInPosition = false;
             CandlesSinceLastExit = 0;
             TotalTrades++;
+            LastExitReason = exitReason;
+            LastExitPnl = pnlUsdt;
 
             bool isWin = exitReason switch
             {

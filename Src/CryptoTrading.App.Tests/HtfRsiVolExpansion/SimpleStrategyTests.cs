@@ -379,14 +379,22 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         [Fact]
         public void Rebase_AdjustsSlTpToFillPrice()
         {
+            // BbGuide pins EntryPrice/SL/TP to the 1M close at alignment (or
+            // budget expiry) inside the entry strategy itself, and marks the
+            // setup final so SimpleExecutionStrategy skips its own rebase.
+            // The first ProcessCandle here trips budget expiry (Setup.EntryTime
+            // defaults to DateTime.MinValue), so the fill price is pinned to
+            // that bar's close.
             var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
             var risk = 500m * 1.5m;
 
-            pipeline.ProcessCandle(100_000m);
+            pipeline.ProcessCandle(100_300m);
             pipeline.SimulateTradeOpened();
 
-            pipeline.ProcessCandle(100_300m);
+            // Second bar — rebase should be skipped (EntryPriceFinal=true).
+            pipeline.ProcessCandle(100_500m);
 
+            pipeline.Setup.EntryPriceFinal.Should().BeTrue();
             pipeline.Setup.EntryPrice.Should().Be(100_300m);
             pipeline.Setup.StopLoss.Should().Be(100_300m - risk);
             pipeline.Setup.TakeProfit.Should().Be(100_300m + risk);
