@@ -400,6 +400,41 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             pipeline.Setup.TakeProfit.Should().Be(100_300m + risk);
         }
 
+        [Fact]
+        public void Entry_IdempotentWithinBar_ProductionTwoCallPattern()
+        {
+            // Regression guard for the production TradeMonitor pattern, which
+            // calls GetNextEntry twice per 1M tick:
+            //   1. SimpleExecutionStrategy.ProcessStrategy calls it to decide
+            //      whether to return OpenTrade.
+            //   2. TradeMonitor.ExecuteEntryStrategy calls it again on the
+            //      same bar to get the actual fill details it submits.
+            //
+            // Both calls must agree on ShouldTrade=true and the same price on
+            // the firing bar — otherwise ProcessStrategy returns OpenTrade,
+            // marks _setupConsumed, and then ExecuteEntryStrategy silently
+            // drops the order because the entry strategy's internal de-dupe
+            // fires. The setup then dies permanently because _setupConsumed
+            // blocks further attempts. This was the "no trades in main-app
+            // BackTesting" bug.
+            var pipeline = new SimplePipeline(TradeDirection.Long, 100_000m, atr: 500m);
+
+            // First call — goes through ProcessStrategy → GetNextEntry, fires
+            // OpenTrade via budget-expiry fill (Setup.EntryTime = MinValue).
+            var first = pipeline.ProcessCandle(100_300m);
+            first.Should().Be(StrategyAction.OpenTrade);
+
+            // Second call on the same bar (no new quote pushed) — the direct
+            // GetNextEntry call the production TradeMonitor makes must return
+            // the same ShouldTrade=true decision so the order actually submits.
+            var second = pipeline.ExecutionStrategy.EntryStrategy
+                .GetNextEntry(0m, pipeline.Setup.Quantity, 100_300m);
+            second.ShouldTrade.Should().BeTrue(
+                "second call on same bar must replay cached decision");
+            second.Price.Should().Be(100_300m);
+            second.Quantity.Should().Be(pipeline.Setup.Quantity);
+        }
+
         #endregion
 
         #region End to End
