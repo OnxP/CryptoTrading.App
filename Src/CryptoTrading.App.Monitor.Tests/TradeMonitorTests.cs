@@ -2,6 +2,7 @@
 using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
@@ -296,13 +297,13 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var mockTransaction = new Mock<ITransaction>();
             var order = OrderHelper.CreateOrder(12345, OrderStatus.Filled);
-            var payload = new MessagePayload<Order>(order, mockTransaction.Object);
+            var payload = new MessagePayload<ExchangeOrder>(order, mockTransaction.Object);
 
             // Act
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
             method?.Invoke(monitor, new[] { payload });
 
@@ -558,13 +559,13 @@ namespace CryptoTrading.App.Tests.Monitor
             var mockTransaction = new Mock<ITransaction>();
             var partialOrder = OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled,0,0.5m,1.0m,25000);
 
-            var payload = new MessagePayload<Order>(partialOrder, mockTransaction.Object);
+            var payload = new MessagePayload<ExchangeOrder>(partialOrder, mockTransaction.Object);
 
             // Act
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
             method?.Invoke(monitor, new[] { payload });
 
@@ -591,23 +592,23 @@ namespace CryptoTrading.App.Tests.Monitor
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
 
             // Act - First partial fill
-            var payload1 = new MessagePayload<Order>(partialFill1, mockTransaction.Object);
+            var payload1 = new MessagePayload<ExchangeOrder>(partialFill1, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload1 });
 
             // Act - Second partial fill
-            var payload2 = new MessagePayload<Order>(partialFill2, mockTransaction.Object);
+            var payload2 = new MessagePayload<ExchangeOrder>(partialFill2, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload2 });
 
             // Act - Full fill
-            var payload3 = new MessagePayload<Order>(fullyFilled, mockTransaction.Object);
+            var payload3 = new MessagePayload<ExchangeOrder>(fullyFilled, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload3 });
 
             // Assert
-            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<Order>()), Times.Exactly(3));
+            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<ExchangeOrder>()), Times.Exactly(3));
             mockTransaction.Verify(t => t.UpdateOrder(partialFill1), Times.Once);
             mockTransaction.Verify(t => t.UpdateOrder(partialFill2), Times.Once);
             mockTransaction.Verify(t => t.UpdateOrder(fullyFilled), Times.Once);
@@ -666,14 +667,14 @@ namespace CryptoTrading.App.Tests.Monitor
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
 
             // Act
-            var payload1 = new MessagePayload<Order>(firstFill, mockTransaction.Object);
+            var payload1 = new MessagePayload<ExchangeOrder>(firstFill, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload1 });
 
-            var payload2 = new MessagePayload<Order>(secondFill, mockTransaction.Object);
+            var payload2 = new MessagePayload<ExchangeOrder>(secondFill, mockTransaction.Object);
             method?.Invoke(monitor, new[] { payload2 });
 
             // Assert
@@ -728,7 +729,7 @@ namespace CryptoTrading.App.Tests.Monitor
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
             var mockTransaction = new Mock<ITransaction>();
-            var fillSequence = new List<Order>
+            var fillSequence = new List<ExchangeOrder>
             {
                 OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50000, 0.2m),
                 OrderHelper.CreateOrder(12345, OrderStatus.PartiallyFilled, 50100, 0.5m),
@@ -739,43 +740,57 @@ namespace CryptoTrading.App.Tests.Monitor
             var method = monitor.GetType().GetMethod("ProcessMessageAction",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
-                new[] { typeof(MessagePayload<Order>) },
+                new[] { typeof(MessagePayload<ExchangeOrder>) },
                 null);
 
             // Act
             foreach (var order in fillSequence)
             {
-                var payload = new MessagePayload<Order>(order, mockTransaction.Object);
+                var payload = new MessagePayload<ExchangeOrder>(order, mockTransaction.Object);
                 method?.Invoke(monitor, new[] { payload });
             }
 
             // Assert
-            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<Order>()), Times.Exactly(4));
+            mockTransaction.Verify(t => t.UpdateOrder(It.IsAny<ExchangeOrder>()), Times.Exactly(4));
         }
 
         #endregion
     }
     class OrderHelper
     {
-        public static Order CreateOrder(long id, OrderStatus filled = OrderStatus.Filled,decimal price = 0, decimal executingQuantity = 0, decimal originalQuantity = 0, int cumulativeQuoteQuantity = 0)
+        // Produces a neutral ExchangeOrder so test assertions don't depend on
+        // the bundled-Binance Order constructor surface.
+        public static ExchangeOrder CreateOrder(long id, OrderStatus filled = OrderStatus.Filled, decimal price = 0, decimal executingQuantity = 0, decimal originalQuantity = 0, decimal cumulativeQuoteQuantity = 0)
         {
-            return new Order(new BinanceApiUser("Test"),
-                             "BTC_USDT",
-                             id,
-                             "",
-                             price,
-                             executingQuantity,
-                             originalQuantity,
-                             cumulativeQuoteQuantity,
-                             filled,
-                             TimeInForce.IOC,
-                             OrderType.Market,
-                             OrderSide.Buy,
-                             0,
-                             0,
-                             DateTime.Now,
-                             DateTime.Now,
-                             true);
+            return new ExchangeOrder
+            {
+                ExchangeId = "Test",
+                OrderId = id.ToString(),
+                ClientOrderId = string.Empty,
+                Symbol = "BTC_USDT",
+                Side = ExchangeOrderSide.Buy,
+                Type = ExchangeOrderType.Market,
+                Status = MapStatus(filled),
+                Price = price,
+                Quantity = originalQuantity,
+                FilledQuantity = executingQuantity,
+                QuoteQuantity = cumulativeQuoteQuantity,
+                Timestamp = DateTime.Now
+            };
+        }
+
+        private static ExchangeOrderStatus MapStatus(OrderStatus status)
+        {
+            return status switch
+            {
+                OrderStatus.New => ExchangeOrderStatus.New,
+                OrderStatus.PartiallyFilled => ExchangeOrderStatus.PartiallyFilled,
+                OrderStatus.Filled => ExchangeOrderStatus.Filled,
+                OrderStatus.Canceled or OrderStatus.PendingCancel => ExchangeOrderStatus.Cancelled,
+                OrderStatus.Rejected => ExchangeOrderStatus.Rejected,
+                OrderStatus.Expired => ExchangeOrderStatus.Expired,
+                _ => ExchangeOrderStatus.New,
+            };
         }
     }
     class CandleStickHelper

@@ -1,4 +1,4 @@
-﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 
@@ -24,7 +24,7 @@ namespace CryptoTrading.App.Core.Trade
         decimal FeeBnb { get; }
 
         void CancelCurrentTransaction();
-        void UpdateCurrentTransaction(Order order);
+        void UpdateCurrentTransaction(ExchangeOrder order);
         ITransaction CompleteTrade();
         ITransaction CreateOpenTransaction(decimal price, DateTime closeTime, decimal amount);
         ITransaction CreateCloseTransaction(decimal price, DateTime closeTime, decimal amount);

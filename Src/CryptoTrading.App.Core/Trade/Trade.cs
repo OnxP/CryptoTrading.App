@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Position;
 using System;
 using System.Collections.Generic;
@@ -43,14 +43,14 @@ namespace CryptoTrading.App.Core.Trade
 
         public string Pair => BasePosition.Symbol + QuotePosition.Symbol;
 
-        public OrderSide OrderType
+        public ExchangeOrderSide OrderType
         {
             get
             {
                 var currentTx = GetCurrentTransaction();
                 return currentTx != null && Math.Sign(currentTx.Base.Quantity) > 0
-                    ? OrderSide.Buy
-                    : OrderSide.Sell;
+                    ? ExchangeOrderSide.Buy
+                    : ExchangeOrderSide.Sell;
             }
         }
 
@@ -233,17 +233,17 @@ namespace CryptoTrading.App.Core.Trade
             return t;
         }
 
-        public void UpdateCurrentTransaction(Order order)
+        public void UpdateCurrentTransaction(ExchangeOrder order)
         {
             GetCurrentTransaction()?.UpdateOrder(order);
         }
 
-        public void UpdateCurrentOpenTransaction(Order order)
+        public void UpdateCurrentOpenTransaction(ExchangeOrder order)
         {
             GetCurrentOpenTransaction()?.UpdateOrder(order);
         }
 
-        public void UpdateCurrentCloseTransaction(Order order)
+        public void UpdateCurrentCloseTransaction(ExchangeOrder order)
         {
             GetCurrentCloseTransaction()?.UpdateOrder(order);
         }

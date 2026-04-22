@@ -9,6 +9,7 @@ using Binance.WebSocket;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Exchange.BinanceAdapter;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
@@ -51,7 +52,7 @@ namespace CryptoTrading.App.MarketData
         {
 /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
             var newOrder = await _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).ConfigureAwait(false);
-            transaction.UpdateOrder(newOrder);
+            transaction.UpdateOrder(BinanceMapper.ToExchangeOrder(newOrder));
             return newOrder.Status == OrderStatus.Filled;
         }
         
