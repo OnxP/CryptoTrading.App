@@ -51,8 +51,10 @@ namespace CryptoTrading.App.DatabaseLoad
             var sym = await Api.GetSymbolsAsync().ConfigureAwait(false);
             var symbols = sym.Where(x => x.QuoteAsset.Symbol == "USDT").ToList();//count
 
-            marketDate.Configure(Api);
-            marketDate.From = new DateTime(2026, 02, 28,23,00,00); 
+            // PR 5b: HistoricalMarketData no longer needs an IBinanceApi passed in;
+            // it resolves IExchangeProvider from DI. Configure(IConfig) is a no-op
+            // and only stays on the interface for back-compat.
+            marketDate.From = new DateTime(2026, 02, 28,23,00,00);
             marketDate.To = new DateTime(2026, 04, 01,23,00,00);
 
             List<CandlestickInterval> intervals = new List<CandlestickInterval>()

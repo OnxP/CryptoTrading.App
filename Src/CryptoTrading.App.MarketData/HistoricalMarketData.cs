@@ -1,97 +1,58 @@
-﻿using Binance;
-using Binance.Client;
+using Binance;
 using Binance.Utility;
-using Binance.WebSocket;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Extensions;
-using CryptoTrading.App.Core.TradeRequest;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
-using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity.Core.Metadata.Edm;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
+    /// <summary>
+    /// Historic bar loader for backtests / calibration. Fetches closed bars
+    /// via <see cref="IExchangeProvider"/> (Binance.Net under the hood) and
+    /// fans them out to the <c>historicDataSubscribers</c> map populated by
+    /// <see cref="AbstractMarketData.InitialDataLoadSubscribe"/>.
+    ///
+    /// PR 5b: the old implementation held onto <c>IBinanceApi</c> /
+    /// <c>ICandlestickClient</c> / <c>IBinanceWebSocketStream</c> from the
+    /// bundled SDK and called <c>GetCandlesticksAsync</c> directly. We now
+    /// go through the neutral <see cref="IExchangeProvider"/> seam and
+    /// translate <see cref="ExchangeCandlestick"/> back to the bundled
+    /// <see cref="Candlestick"/> type at the boundary so consumers
+    /// (algorithms, tests) that still take bundled types keep working
+    /// unchanged. The interface migration lands in a follow-up PR.
+    /// </summary>
     public class HistoricalMarketData : AbstractMarketData, IMarketData
     {
         public DateTime From { get; set; }
         public DateTime To { get; set; }
 
-        ICandlestickClient _client;
-        IBinanceWebSocketStream _webSocket;
-        IBinanceApi _api;
+        private readonly IExchangeProvider _exchange;
         public ILogger<HistoricalMarketData> Logger { get; set; }
 
-        public HistoricalMarketData(ILogger<HistoricalMarketData> logger)
+        public HistoricalMarketData(ILogger<HistoricalMarketData> logger, IExchangeProvider exchange)
         {
             Logger = logger;
+            _exchange = exchange;
         }
 
-        public HistoricalMarketData(ILogger<HistoricalMarketData> logger,DateTime from,DateTime to):this(logger)
+        public HistoricalMarketData(ILogger<HistoricalMarketData> logger, IExchangeProvider exchange,
+            DateTime from, DateTime to) : this(logger, exchange)
         {
             From = from;
             To = to;
         }
 
-        public void Configure(IRequest request)
-        {
-            var configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json", true, false)
-                    .Build();
-
-            // Configure services.
-            var services = new ServiceCollection()
-                .AddBinance() // add default Binance services.
-                .AddLogging(builder => builder // configure logging.
-                    .SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(configuration.GetSection("Logging:File")))
-                .BuildServiceProvider();
-
-            // Initialize client.
-            _client = services.GetService<ICandlestickClient>();
-            _api = services.GetService<IBinanceApi>();
-            // Initialize the stream.
-            _webSocket = services.GetService<IBinanceWebSocketStream>();
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
-
-        }
-
-        public void Configure(IBinanceApi api)
-        {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, false)
-                .Build();
-
-            // Configure services.
-            var services = new ServiceCollection()
-                .AddBinance() // add default Binance services.
-                .AddLogging(builder => builder // configure logging.
-                    .SetMinimumLevel(LogLevel.Trace)
-                    .AddFile(configuration.GetSection("Logging:File")))
-                .BuildServiceProvider();
-
-            // Initialize client.
-            _client = services.GetService<ICandlestickClient>();
-            _api = api;
-            // Initialize the stream.
-            _webSocket = services.GetService<IBinanceWebSocketStream>();
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
-        }
-
         public override void Configure(IConfig request)
         {
-            Configure(new CancelRequest("0","TEST"));
+            // No-op: the old Configure() constructed its own DI container to
+            // resolve bundled-SDK services. With IExchangeProvider injected,
+            // there is nothing to wire up here — Configure is only on the
+            // interface for back-compat with the Live path.
         }
 
         public Task StartStream(CancellationToken ct)
@@ -101,32 +62,38 @@ namespace CryptoTrading.App.MarketData
 
         public ITaskController GetTaskController()
         {
-            var controller = new TaskController(StartStream);
-            return controller;
+            return new TaskController(StartStream);
         }
-        
+
         public async Task StartStream()
         {
             try
             {
-                //Logger.LogInformation("Loading Historic Candlesticks");
-                var histtasks = new List<Task<IEnumerable<Candlestick>>>();
-                var action = historicDataSubscribers.First().Value.First();
-                //foreach (var item in historicDataSubscribers)
-                //{
-                //    histtasks.Add(LoadHistoricData(_api, item.Key, From, item.Value));
-                //}
-                //Task.WaitAll(histtasks.ToArray());
-                //var hisSticks = histtasks.SelectMany(x => x.Result).ToList();
-                //action.Invoke(hisSticks);
-                //Logger.LogInformation("Finished loading Historic Candlesticks");
+                if (!historicDataSubscribers.Any() && !subscribers.Any())
+                {
+                    Logger.LogWarning("StartStream called with no subscribers; nothing to load.");
+                    return;
+                }
+
+                // All callbacks currently share a single action — preserve the
+                // legacy behaviour of fanning to historicDataSubscribers.First().
+                // This is what the bundled-SDK implementation did and the
+                // algorithms rely on.
+                var action = historicDataSubscribers.Any()
+                    ? historicDataSubscribers.First().Value.First()
+                    : null;
+
+                if (action == null)
+                {
+                    Logger.LogWarning("StartStream: no historic-data subscribers registered; skipping load.");
+                    return;
+                }
+
+                var semaphore = new SemaphoreSlim(10);
                 var tasks = new List<Task>();
 
-                //LoadData
-                var semaphore = new SemaphoreSlim(10);
                 Logger.LogInformation("Loading Candlesticks");
 
-                //StreamHistoricData
                 foreach (var item in subscribers)
                 {
                     var from = From;
@@ -134,97 +101,56 @@ namespace CryptoTrading.App.MarketData
                     var localItem = item;
                     foreach (var to in list)
                     {
-                        var localFrom = from;  // Capture current value
-                        var localTo = to;      // Capture current value
+                        var localFrom = from;
+                        var localTo = to;
                         tasks.Add(Task.Run(async () =>
                         {
                             await semaphore.WaitAsync();
                             try
                             {
-                                var candlesticks = await StreamData(_api, localItem.Key, localFrom, localTo);
-                                action.Invoke(candlesticks.ToList());                                
+                                var candlesticks = await StreamData(localItem.Key, localFrom, localTo);
+                                action.Invoke(candlesticks.ToList());
                             }
                             finally
                             {
                                 semaphore.Release();
                             }
-                        }));                        
+                        }));
 
                         from = to;
-                        //while (time.ElapsedMilliseconds <= 1000)
-                        //{ }
                     }
                 }
-                //Task.WaitAll(tasks.ToArray());
-                Logger.LogInformation("Finished Loading Candlesticks");
 
-                //sort the list
                 await Task.WhenAll(tasks);
-
-
+                Logger.LogInformation("Finished Loading Candlesticks");
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine();
-                Console.WriteLine("  ...press any key to close window.");
-                Console.ReadKey(true);
+                Logger.LogError(e, "HistoricalMarketData.StartStream failed");
+                throw;
             }
         }
 
-        List<(Candlestick candlestick, CandlestickInterval interval)> candleSticksToStream = new List<(Candlestick, CandlestickInterval interval)>();
-
-        private async Task<IEnumerable<Candlestick>> StreamData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private async Task<IEnumerable<Candlestick>> StreamData(
+            (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
         {
-            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var candlesticks =  await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 1000, from.ToUniversalTime(), to.ToUniversalTime()).ConfigureAwait(false);
-            Logger.LogInformation($"Loading Candlesticks for {symbol.symbol}-{symbol.interval} From:{from.ToString("dd MM yy hh:mm")} To: {to.ToString("dd MM yy hh:mm")} Number of candleSticks:{candlesticks.Count()}");
-            return candlesticks;
-        }
+            var neutralInterval = BundledSdkBridge.ToNeutralInterval(symbol.interval);
+            var neutralCandles = await _exchange.GetCandlesticksAsync(
+                symbol.symbol,
+                neutralInterval,
+                from.ToUniversalTime(),
+                to.ToUniversalTime()).ConfigureAwait(false);
 
-        void liveStream()
-        {
-            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
+            var list = neutralCandles
+                .Select(c => BundledSdkBridge.ToBundledCandlestick(c, symbol.interval))
+                .ToList();
 
-            using var controller = new RetryTaskController(_webSocket.StreamAsync);
-            controller.Error += (s, e) => HandleError(e.Exception);
-            controller.Begin();
-        }
+            Logger.LogInformation(
+                $"Loading Candlesticks for {symbol.symbol}-{symbol.interval} " +
+                $"From:{from:dd MM yy hh:mm} To: {to:dd MM yy hh:mm} " +
+                $"Number of candleSticks:{list.Count}");
 
-        private DateTime CalculateFrom(DateTime dateTime, CandlestickInterval interval)
-        {
-            int candleSticksToLoad = 200;
-            return interval switch
-            {
-                CandlestickInterval.Minute => dateTime.AddMinutes(-1 * candleSticksToLoad),
-                CandlestickInterval.Minutes_3 => dateTime.AddMinutes(-3 * candleSticksToLoad),
-                CandlestickInterval.Minutes_5 => dateTime.AddMinutes(-5 * candleSticksToLoad),
-                CandlestickInterval.Minutes_15 => dateTime.AddMinutes(-15 * candleSticksToLoad),
-                CandlestickInterval.Minutes_30 => dateTime.AddMinutes(-30 * candleSticksToLoad),
-                CandlestickInterval.Hour => dateTime.AddHours(-1 * candleSticksToLoad),
-                CandlestickInterval.Hours_2 => dateTime.AddHours(-2 * candleSticksToLoad),
-                CandlestickInterval.Hours_4 => dateTime.AddHours(-4 * candleSticksToLoad),
-                CandlestickInterval.Hours_6 => dateTime.AddHours(-6 * candleSticksToLoad),
-                CandlestickInterval.Hours_8 => dateTime.AddHours(-8 * candleSticksToLoad),
-                CandlestickInterval.Hours_12 => dateTime.AddHours(-12 * candleSticksToLoad),
-                CandlestickInterval.Day => dateTime.AddDays(-1 * candleSticksToLoad),
-                CandlestickInterval.Days_3 => dateTime.AddDays(-3 * candleSticksToLoad),
-                CandlestickInterval.Week => dateTime.AddDays(-7 * candleSticksToLoad),
-                CandlestickInterval.Month => dateTime.AddMonths(-12 * candleSticksToLoad),
-                _ => dateTime,
-            };
-        }
-        private async Task<IEnumerable<Candlestick>> LoadHistoricData(IBinanceApi api, (string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
-        {
-            var calculatedFrom = CalculateFrom(from, symbol.interval).ToUniversalTime();
-            var candleSticks = await api.GetCandlesticksAsync(symbol.symbol, symbol.interval, 0, calculatedFrom, from.ToUniversalTime()).ConfigureAwait(false);
-            //need to drop first candle
-            var sticks = candleSticks.Reverse().Skip(1);
-            return sticks;
-            foreach (var action in callback)
-            {
-                action.Invoke(sticks);
-            }
+            return list;
         }
 
         protected IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)
@@ -254,7 +180,7 @@ namespace CryptoTrading.App.MarketData
                 case CandlestickInterval.Hours_12:
                     return GenerateTimeList(12 * 60, from, to);
                 default:
-                    return new List<DateTime>() { to } ;
+                    return new List<DateTime> { to };
             }
         }
 
@@ -318,7 +244,5 @@ namespace CryptoTrading.App.MarketData
                 yield return from.AddDays(daysdiff - j);
             }
         }
-
     }
 }
-
