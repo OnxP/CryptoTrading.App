@@ -275,9 +275,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell); // Different from original
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell); // Different from original
             newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -445,9 +445,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
             newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -479,9 +479,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
             newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -504,9 +504,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
             newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -636,9 +636,9 @@ namespace CryptoTrading.App.Tests.Monitor
 
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
             newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Act
             await monitor.SetNewRequest(newRequest.Object);
@@ -703,12 +703,12 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockTrade.Setup(t => t.Pair).Returns("BTCUSDT");
 
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
-            _mockTradeRequest.Setup(r => r.OrderSide).Returns(OrderSide.Buy);
+            _mockTradeRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Buy);
 
             // Create new sell request (strategy flip)
             var newRequest = new Mock<ITradeRequest>();
             newRequest.Setup(r => r.Strategy).Returns(_mockStrategy.Object);
-            newRequest.Setup(r => r.OrderSide).Returns(OrderSide.Sell);
+            newRequest.Setup(r => r.OrderSide).Returns(ExchangeOrderSide.Sell);
             newRequest.Setup(r => r.Symbol).Returns(Symbol.BTC_USDT);
 
             // Act

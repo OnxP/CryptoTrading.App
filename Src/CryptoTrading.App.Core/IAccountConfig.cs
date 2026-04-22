@@ -1,12 +1,24 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
+    /// <summary>
+    /// Account-side configuration surface. Returns neutral types so
+    /// consumers never have to know whether the backend is bundled
+    /// Binance, Binance.Net, Bitfinex or an in-memory DB stub.
+    /// </summary>
     public interface IAccountConfig
     {
-        Task<List<Symbol>> LoadCurrencies();
-        Task<List<AccountBalance>> LoadPositions();
+        /// <summary>
+        /// Pair strings (e.g. "BTCUSDT") that this account will trade.
+        /// </summary>
+        Task<List<string>> LoadCurrencies();
+
+        /// <summary>
+        /// Per-asset balances available to this account.
+        /// </summary>
+        Task<List<ExchangeBalance>> LoadPositions();
     }
 }
