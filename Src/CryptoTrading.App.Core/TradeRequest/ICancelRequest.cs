@@ -1,12 +1,14 @@
-﻿namespace CryptoTrading.App.Core.TradeRequest
+namespace CryptoTrading.App.Core.TradeRequest
 {
     public interface ICancelRequest : IRequest
     {
-        long ClientOrderId { get; set; }
+        // Exchange-neutral order identifier. Binance numeric order IDs and
+        // Bitfinex UUIDs both serialize through this string safely.
+        string ClientOrderId { get; set; }
     }
 
     public interface ICancelTradeRequest : IRequest
     {
-        long ClientOrderId { get; set; }
+        string ClientOrderId { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 using Binance;
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using Skender.Stock.Indicators;
@@ -249,7 +250,7 @@ namespace CryptoTrading.App.BackTesting
 
         public ITransaction GetCurrentTransaction() => null;
         public void CancelCurrentTransaction() { }
-        public void UpdateCurrentTransaction(Order order) { }
+        public void UpdateCurrentTransaction(ExchangeOrder order) { }
         public ITransaction CompleteTrade() => null;
         public ITransaction CreateOpenTransaction(decimal price, DateTime closeTime, decimal amount) => null;
         public ITransaction CreateCloseTransaction(decimal price, DateTime closeTime, decimal amount) => null;

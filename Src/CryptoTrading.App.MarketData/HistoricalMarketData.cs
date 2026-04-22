@@ -91,7 +91,7 @@ namespace CryptoTrading.App.MarketData
 
         public override void Configure(IConfig request)
         {
-            Configure(new CancelRequest(0,"TEST"));
+            Configure(new CancelRequest("0","TEST"));
         }
 
         public Task StartStream(CancellationToken ct)

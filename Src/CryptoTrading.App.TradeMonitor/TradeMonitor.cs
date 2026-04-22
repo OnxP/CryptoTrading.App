@@ -4,6 +4,7 @@ using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.StoreTrades;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Position;
@@ -391,7 +392,7 @@ namespace CryptoTrading.App.Monitor
                 // fill worse than the current market price.
                 var marketPrice = candleStick.Candlestick.Close;
                 var fillPrice = string.Equals(entryDecision.OrderType?.ToString(), "LIMIT", StringComparison.OrdinalIgnoreCase)
-                    ? (Request.OrderSide == Binance.OrderSide.Buy
+                    ? (Request.OrderSide == OrderSide.Buy
                         ? Math.Min(entryDecision.Price, marketPrice)
                         : Math.Max(entryDecision.Price, marketPrice))
                     : marketPrice;
@@ -476,10 +477,9 @@ namespace CryptoTrading.App.Monitor
 
         private async Task CancelOrder(ITransaction transaction)
         {
-            // FIX: Remove null check for long, just check if Order is not null
             if (transaction.Order != null)
             {
-                var orderId = transaction.Order.Id;
+                var orderId = transaction.Order.OrderId;
                 ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
                 await MessageBroker.Instance.Publish(KeyValue, transaction, request);
             }
@@ -504,7 +504,7 @@ namespace CryptoTrading.App.Monitor
             HistoricTrades.Add(trade);
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Func<MessagePayload<Order>, Task> newTradeMesssage = ProcessMessageAction;
+            Func<MessagePayload<ExchangeOrder>, Task> newTradeMesssage = ProcessMessageAction;
             messageBroker.Subscribe(Request.Symbol, newTradeMesssage);
 
             Func<MessagePayload<string>, Task> CancelTradeMessage = ProcessMessageAction;
@@ -512,7 +512,7 @@ namespace CryptoTrading.App.Monitor
         }
 
         //Order Placed Message
-        private Task ProcessMessageAction(MessagePayload<Order> obj)
+        private Task ProcessMessageAction(MessagePayload<ExchangeOrder> obj)
         {
             if (obj.Who is ITransaction transaction)
             {
