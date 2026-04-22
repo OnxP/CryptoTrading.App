@@ -6,6 +6,7 @@ using Xunit;
 using BinanceSpotOrderType = Binance.Net.Enums.SpotOrderType;
 using BinanceFuturesOrderType = Binance.Net.Enums.FuturesOrderType;
 using BinancePositionSide = Binance.Net.Enums.PositionSide;
+using BinanceSideEffectType = Binance.Net.Enums.SideEffectType;
 // Both Binance.Net.Enums and CryptoTrading.App.Core.Exchange declare a
 // PositionSide enum; alias the neutral one so test InlineData doesn't have
 // to fully qualify every case.
@@ -145,6 +146,26 @@ namespace CryptoTrading.App.Tests.Exchange.Providers
             BinancePositionSide input, NeutralPositionSide expected)
         {
             BinanceNetMapper.MapFromBinancePositionSide(input).Should().Be(expected);
+        }
+
+        // ---- Margin mapping coverage (PR 4) ----
+
+        [Fact]
+        public void MapToBinanceSideEffectType_None_ReturnsNull()
+        {
+            // None must project to null so the caller can omit the
+            // sideEffectType parameter on PlaceMarginOrderAsync — Binance
+            // defaults to NO_SIDE_EFFECT when absent.
+            BinanceNetMapper.MapToBinanceSideEffectType(MarginSideEffect.None).Should().BeNull();
+        }
+
+        [Theory]
+        [InlineData(MarginSideEffect.AutoBorrow, BinanceSideEffectType.MarginBuy)]
+        [InlineData(MarginSideEffect.AutoRepay, BinanceSideEffectType.AutoRepay)]
+        public void MapToBinanceSideEffectType_ExplicitValues(
+            MarginSideEffect input, BinanceSideEffectType expected)
+        {
+            BinanceNetMapper.MapToBinanceSideEffectType(input).Should().Be(expected);
         }
     }
 }
