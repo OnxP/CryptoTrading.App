@@ -1,10 +1,16 @@
 using System;
 using Binance.Net.Enums;
 using Binance.Net.Interfaces;
+using Binance.Net.Objects.Models.Futures;
+using Binance.Net.Objects.Models.Futures.Socket;
 using Binance.Net.Objects.Models.Spot;
 using Binance.Net.Objects.Models.Spot.Socket;
 using CryptoTrading.App.Core.Exchange;
 using BinanceSpotOrderType = Binance.Net.Enums.SpotOrderType;
+// Neutral PositionSide lives in CryptoTrading.App.Core.Exchange; Binance.Net
+// ships its own enum of the same name. Alias the Binance one so futures
+// mappings can convert cleanly without renaming the neutral side anywhere.
+using BinancePositionSide = Binance.Net.Enums.PositionSide;
 
 namespace CryptoTrading.App.Exchange.BinanceNet
 {
@@ -256,6 +262,191 @@ namespace CryptoTrading.App.Exchange.BinanceNet
                 case CandleInterval.Month_1: return KlineInterval.OneMonth;
                 default: return KlineInterval.OneHour;
             }
+        }
+
+        #endregion
+
+        #region Futures Order / Position / Balance mapping
+
+        /// <summary>
+        /// Map a USD-M futures order (BinanceFuturesOrder) to the neutral
+        /// ExchangeOrder. Shared by REST place / get / cancel responses.
+        /// </summary>
+        public static ExchangeOrder ToExchangeOrder(BinanceFuturesOrder order)
+        {
+            return new ExchangeOrder
+            {
+                ExchangeId = ExchangeName,
+                OrderId = order.Id.ToString(),
+                ClientOrderId = order.ClientOrderId,
+                Symbol = order.Symbol,
+                Side = MapOrderSide(order.Side),
+                Type = MapFuturesOrderType(order.Type),
+                Status = MapOrderStatus(order.Status),
+                Price = order.Price,
+                // StopPrice on futures is nullable (only set for stop/TP
+                // variants); coalesce to 0 so the neutral field matches the
+                // convention of the spot mapping above.
+                StopPrice = order.StopPrice ?? 0m,
+                Quantity = order.Quantity,
+                FilledQuantity = order.QuantityFilled,
+                QuoteQuantity = order.QuoteQuantityFilled ?? 0m,
+                // Futures CreateTime is documented to be populated on every
+                // response — unlike the spot BinancePlacedOrder where it's
+                // nullable and sometimes empty on fresh placements.
+                Timestamp = order.CreateTime
+            };
+        }
+
+        public static ExchangeOrderType MapFuturesOrderType(FuturesOrderType type)
+        {
+            switch (type)
+            {
+                case FuturesOrderType.Market:
+                case FuturesOrderType.StopMarket:
+                case FuturesOrderType.TakeProfitMarket:
+                case FuturesOrderType.TrailingStopMarket:
+                case FuturesOrderType.Liquidation:
+                    return ExchangeOrderType.Market;
+                case FuturesOrderType.Limit:
+                    return ExchangeOrderType.Limit;
+                case FuturesOrderType.Stop:
+                case FuturesOrderType.TakeProfit:
+                    return ExchangeOrderType.StopLimit;
+                default:
+                    return ExchangeOrderType.Market;
+            }
+        }
+
+        /// <summary>
+        /// Pick the USD-M futures enum value to send on PlaceOrder. Futures
+        /// has no "StopLimit" — it has Stop (stop-limit) and StopMarket
+        /// (stop-market); we mirror the bundled adapter by emitting the
+        /// limit variants unless the caller asked for a market order.
+        /// </summary>
+        public static FuturesOrderType MapToBinanceFuturesOrderType(ExchangeOrderType type)
+        {
+            switch (type)
+            {
+                case ExchangeOrderType.Market: return FuturesOrderType.Market;
+                case ExchangeOrderType.Limit: return FuturesOrderType.Limit;
+                case ExchangeOrderType.StopLimit: return FuturesOrderType.Stop;
+                default: return FuturesOrderType.Market;
+            }
+        }
+
+        public static BinancePositionSide MapToBinancePositionSide(Core.Exchange.PositionSide side)
+        {
+            switch (side)
+            {
+                case Core.Exchange.PositionSide.Long: return BinancePositionSide.Long;
+                case Core.Exchange.PositionSide.Short: return BinancePositionSide.Short;
+                default: return BinancePositionSide.Both;
+            }
+        }
+
+        public static Core.Exchange.PositionSide MapFromBinancePositionSide(BinancePositionSide side)
+        {
+            switch (side)
+            {
+                case BinancePositionSide.Long: return Core.Exchange.PositionSide.Long;
+                case BinancePositionSide.Short: return Core.Exchange.PositionSide.Short;
+                default: return Core.Exchange.PositionSide.Both;
+            }
+        }
+
+        /// <summary>
+        /// Map one /fapi/v2/positionRisk row (BinancePositionDetailsUsdt) to
+        /// a neutral ExchangePosition. Binance returns one row per
+        /// (symbol, positionSide) even when flat; callers are typically
+        /// interested in open exposure and can filter via
+        /// <see cref="ExchangePosition.IsFlat"/>.
+        /// </summary>
+        public static ExchangePosition ToExchangePosition(BinancePositionDetailsUsdt position)
+        {
+            return new ExchangePosition
+            {
+                ExchangeId = ExchangeName,
+                Symbol = position.Symbol,
+                Side = MapFromBinancePositionSide(position.PositionSide),
+                Quantity = position.Quantity,
+                EntryPrice = position.EntryPrice,
+                MarkPrice = position.MarkPrice,
+                Leverage = (int)position.Leverage,
+                UnrealizedPnl = position.UnrealizedPnl,
+                Notional = position.Notional,
+                Timestamp = position.UpdateTime
+            };
+        }
+
+        /// <summary>
+        /// Map a USD-M futures balance row. Futures has a single free-margin
+        /// number (AvailableBalance) rather than the spot Free/Locked split,
+        /// so Locked = 0. Consumers that need unrealized PnL should read
+        /// positions directly.
+        /// </summary>
+        public static ExchangeBalance ToExchangeBalance(BinanceFuturesAccountBalance balance)
+        {
+            return new ExchangeBalance(ExchangeName, balance.Asset, balance.AvailableBalance, 0m);
+        }
+
+        /// <summary>
+        /// Map a USD-M futures symbol definition. Reuses the same filter
+        /// extraction as spot so sizing logic doesn't need to special-case.
+        /// Futures symbols don't expose a Status field on this SDK version,
+        /// so IsActive defaults to true — delivery dates can be checked via
+        /// the DeliveryDate raw field if callers need to filter expired.
+        /// </summary>
+        public static ExchangeSymbol ToExchangeSymbol(BinanceFuturesSymbol symbol)
+        {
+            var exchangeSymbol = new ExchangeSymbol(
+                ExchangeName,
+                symbol.Name,
+                symbol.BaseAsset,
+                symbol.QuoteAsset);
+
+            if (symbol.LotSizeFilter != null)
+            {
+                exchangeSymbol.MinQuantity = symbol.LotSizeFilter.MinQuantity;
+                exchangeSymbol.MaxQuantity = symbol.LotSizeFilter.MaxQuantity;
+                exchangeSymbol.StepSize = symbol.LotSizeFilter.StepSize;
+            }
+            if (symbol.PriceFilter != null)
+            {
+                exchangeSymbol.TickSize = symbol.PriceFilter.TickSize;
+            }
+            if (symbol.MinNotionalFilter != null)
+            {
+                exchangeSymbol.MinNotional = symbol.MinNotionalFilter.MinNotional;
+            }
+
+            return exchangeSymbol;
+        }
+
+        /// <summary>
+        /// Map a futures user-stream order-update event to a neutral fill.
+        /// The inner UpdateData carries the per-execution fields (last
+        /// filled qty/price, fee, fee asset, timestamp); TradeId &gt; 0 is
+        /// the exchange's signal that this event corresponds to an actual
+        /// fill rather than a lifecycle-only transition (NEW/CANCELED).
+        /// </summary>
+        public static ExchangeFill ToExchangeFill(BinanceFuturesStreamOrderUpdate update)
+        {
+            var data = update.UpdateData;
+            return new ExchangeFill
+            {
+                ExchangeId = ExchangeName,
+                OrderId = data.OrderId.ToString(),
+                ClientOrderId = data.ClientOrderId,
+                Symbol = data.Symbol,
+                Side = MapOrderSide(data.Side),
+                Status = MapOrderStatus(data.Status),
+                Price = data.PriceLastFilledTrade,
+                FilledQuantity = data.QuantityOfLastFilledTrade,
+                Commission = data.Fee,
+                CommissionAsset = data.FeeAsset,
+                Timestamp = data.UpdateTime
+            };
         }
 
         #endregion

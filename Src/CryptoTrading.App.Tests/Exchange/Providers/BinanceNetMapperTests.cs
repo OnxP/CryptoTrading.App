@@ -4,6 +4,12 @@ using CryptoTrading.App.Exchange.BinanceNet;
 using FluentAssertions;
 using Xunit;
 using BinanceSpotOrderType = Binance.Net.Enums.SpotOrderType;
+using BinanceFuturesOrderType = Binance.Net.Enums.FuturesOrderType;
+using BinancePositionSide = Binance.Net.Enums.PositionSide;
+// Both Binance.Net.Enums and CryptoTrading.App.Core.Exchange declare a
+// PositionSide enum; alias the neutral one so test InlineData doesn't have
+// to fully qualify every case.
+using NeutralPositionSide = CryptoTrading.App.Core.Exchange.PositionSide;
 
 namespace CryptoTrading.App.Tests.Exchange.Providers
 {
@@ -92,6 +98,53 @@ namespace CryptoTrading.App.Tests.Exchange.Providers
             // two adapters ever diverge on the ID, a system running with
             // both registered would split into "two Binances" silently.
             BinanceNetMapper.ExchangeName.Should().Be("Binance");
+        }
+
+        // ---- Futures mapping coverage (PR 3) ----
+
+        [Theory]
+        [InlineData(BinanceFuturesOrderType.Market, ExchangeOrderType.Market)]
+        [InlineData(BinanceFuturesOrderType.StopMarket, ExchangeOrderType.Market)]
+        [InlineData(BinanceFuturesOrderType.TakeProfitMarket, ExchangeOrderType.Market)]
+        [InlineData(BinanceFuturesOrderType.TrailingStopMarket, ExchangeOrderType.Market)]
+        [InlineData(BinanceFuturesOrderType.Liquidation, ExchangeOrderType.Market)]
+        [InlineData(BinanceFuturesOrderType.Limit, ExchangeOrderType.Limit)]
+        [InlineData(BinanceFuturesOrderType.Stop, ExchangeOrderType.StopLimit)]
+        [InlineData(BinanceFuturesOrderType.TakeProfit, ExchangeOrderType.StopLimit)]
+        public void MapFuturesOrderType_AllValues_Covered(
+            BinanceFuturesOrderType input, ExchangeOrderType expected)
+        {
+            BinanceNetMapper.MapFuturesOrderType(input).Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData(ExchangeOrderType.Market, BinanceFuturesOrderType.Market)]
+        [InlineData(ExchangeOrderType.Limit, BinanceFuturesOrderType.Limit)]
+        [InlineData(ExchangeOrderType.StopLimit, BinanceFuturesOrderType.Stop)]
+        public void MapToBinanceFuturesOrderType_NeutralToExchange(
+            ExchangeOrderType input, BinanceFuturesOrderType expected)
+        {
+            BinanceNetMapper.MapToBinanceFuturesOrderType(input).Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData(NeutralPositionSide.Long, BinancePositionSide.Long)]
+        [InlineData(NeutralPositionSide.Short, BinancePositionSide.Short)]
+        [InlineData(NeutralPositionSide.Both, BinancePositionSide.Both)]
+        public void MapToBinancePositionSide_AllValues_Covered(
+            NeutralPositionSide input, BinancePositionSide expected)
+        {
+            BinanceNetMapper.MapToBinancePositionSide(input).Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData(BinancePositionSide.Long, NeutralPositionSide.Long)]
+        [InlineData(BinancePositionSide.Short, NeutralPositionSide.Short)]
+        [InlineData(BinancePositionSide.Both, NeutralPositionSide.Both)]
+        public void MapFromBinancePositionSide_RoundTrips(
+            BinancePositionSide input, NeutralPositionSide expected)
+        {
+            BinanceNetMapper.MapFromBinancePositionSide(input).Should().Be(expected);
         }
     }
 }
