@@ -8,6 +8,7 @@ using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.MarketDataValidation
 {
@@ -54,7 +55,9 @@ namespace CryptoTrading.App.MarketDataValidation
                         first = false;
                         continue;
                     }
-                    var nextOpenTime = CandleStickIntervalHelper.NextCandleStickTime(openTime, candlestick.Interval);
+                    // CandleStickDb.Interval is still bundled until PR 5f — ordinals match 0-14,
+                    // so the cast is safe for the time-arithmetic lookup.
+                    var nextOpenTime = CandleStickIntervalHelper.NextCandleStickTime(openTime, (CandleInterval)(int)candlestick.Interval);
 
                     if (nextOpenTime == candlestick.OpenTime)
                     {

@@ -124,11 +124,8 @@ namespace CryptoTrading.App.MarketData
             // 200 bars of 1m data preserves the shape the legacy bundled-SDK
             // implementation returned; downstream indicators (TradeMonitor.QuoteHub
             // seed) don't see a behavioural change from this PR.
-            // CandleStickIntervalHelper still speaks bundled CandlestickInterval;
-            // translate via the bridge (ordinal-preserving so lossless) until PR 5d.
-            var bundledStreamInterval = BundledSdkBridge.ToBundledInterval(StreamInterval);
             var calculatedFrom = CandleStickIntervalHelper
-                .CalculateCandleStickTimeFrom(DateTime.Now, bundledStreamInterval, 200)
+                .CalculateCandleStickTimeFrom(DateTime.Now, StreamInterval, 200)
                 .ToUniversalTime();
 
             var neutralCandles = await _exchange.GetCandlesticksAsync(
