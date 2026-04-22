@@ -23,7 +23,7 @@ namespace CryptoTrading.App.Core.Database
         public async Task<List<string>> LoadCurrencies()
         {
             using var context = new CryptoDbContext();
-            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval)
+            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, (int)Config.Interval)
                 .Select(x => x.Symbol).Distinct().ToList();
 
             // Warm the Binance.Symbol cache for any downstream code that still
@@ -77,7 +77,7 @@ namespace CryptoTrading.App.Core.Database
         public async Task<List<ExchangeBalance>> LoadPositions()
         {
             using var context = new CryptoDbContext();
-            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval)
+            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, (int)Config.Interval)
                 .Select(x => x.Symbol).Distinct().ToList();
 
             var list = new List<ExchangeBalance>

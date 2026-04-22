@@ -44,9 +44,7 @@ namespace CryptoTrading.App.Calibration
         }
         public void RemoveMarketDataEvents(List<Symbol> removeSymbols)
         {
-            // Bridge IConfig.Interval (bundled) to neutral CandleInterval for the
-            // PR 5c IMarketDataEvents surface. PR 5d retypes IConfig.Interval.
-            var interval = (CandleInterval)(int)Config.Interval;
+            var interval = Config.Interval;
             foreach (var symbol in removeSymbols)
             {
                 MarketData.InitialDataLoadUnSubscribe(symbol, interval);

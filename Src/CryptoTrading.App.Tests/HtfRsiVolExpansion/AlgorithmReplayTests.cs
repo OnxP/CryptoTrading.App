@@ -249,7 +249,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             var config = new CryptoConfig
             {
-                Interval = CandlestickInterval.Minutes_15,
+                Interval = CandleInterval.Minute_15,
                 RunType = RunTypeEnum.BackTesting,
                 StartBtcAmount = 2.0 // → ~200k USDT equity at BTC ~100k
             };

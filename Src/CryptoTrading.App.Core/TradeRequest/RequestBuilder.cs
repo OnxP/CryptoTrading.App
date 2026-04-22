@@ -35,7 +35,7 @@ namespace CryptoTrading.App.Core.TradeRequest
         public int Leverage { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public ExchangeOrderSide OrderSide { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime? RequestDateTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public CandlestickInterval Interval { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public CandleInterval Interval { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IExecutionStrategy Strategy { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public bool Validate(decimal freeAmount, decimal nonFreeAmount)

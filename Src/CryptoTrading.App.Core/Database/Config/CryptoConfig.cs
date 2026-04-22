@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
-using Binance;
 using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core.Database.Config
@@ -32,7 +31,7 @@ namespace CryptoTrading.App.Core.Database.Config
             DbContext.SaveChanges();
         }
 
-        public CandlestickInterval Interval { get; set; }
+        public CandleInterval Interval { get; set; }
         public bool EndProcess { get; set; }
         public RunTypeEnum RunType { get; set; }
         public string StoreTradesConnectionString { get; set; }

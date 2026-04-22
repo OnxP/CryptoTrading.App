@@ -2,6 +2,7 @@ using Binance;
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -98,7 +99,7 @@ namespace CryptoTrading.App.BackTesting
 
             var config = new CryptoConfig
             {
-                Interval = CandlestickInterval.Minutes_15,
+                Interval = CandleInterval.Minute_15,
                 RunType = RunTypeEnum.BackTesting,
                 StartBtcAmount = opts.StartBtc
             };
