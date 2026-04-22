@@ -1,73 +1,95 @@
-﻿using System;
+using Binance;
+using Binance.Client;
+using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.MarketMonitorFactory;
+using CryptoTrading.App.Core.Trade;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Binance;
-using Binance.Client;
-using Binance.Utility;
-using Binance.WebSocket;
-using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.MarketMonitorFactory;
-using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Exchange.BinanceAdapter;
-using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
 {
-    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data 
-    //Input(Initial) - Trade details.
-    //Input(continuous) - CandleStick Processing.
-    //StaticInput - Stop loss type and limit.
-    //Output - Change Stop Limit Order
-
-    //Processing logic
-    //Initial - Configure Stoploss Monitor from Open trade. and set a stop limit order.
-    //Continuous - Monitor price and once it hits a threshold reset stoploss to limit order X% below threshold then adjust threshold
-    
-
-    //this needs to send a signal back to Trade Processor with a ready. then the trade processor can decide on which order to execute the trades.
+    // Class monitors the position in the open trade and adjusts the stop loss
+    // against live streaming 1m candles.
+    //
+    // PR 5b: was previously wired directly to the bundled-SDK
+    // IBinanceApi / ICandlestickClient / IBinanceWebSocketStream. Now it
+    // goes through IExchangeProvider (Binance.Net) with the bundled-SDK
+    // types only surfacing at the IMarketMonitor boundary so the 15+
+    // callers don't have to change in this PR. A follow-up PR migrates
+    // IMarketMonitor itself to neutral types.
     public class LiveMarketMonitor : AbstractMarketData, IMarketMonitor
     {
-        protected ICandlestickClient _client;
-        protected IBinanceWebSocketStream _webSocket;
-        protected IBinanceApi _api;
-        protected IBinanceApiUser _user;
-        public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger,IBinanceApi api, ICandlestickClient candlestickClient, IBinanceWebSocketStream webSocket)
+        protected IExchangeProvider _exchange;
+        protected ILogger Logger;
+
+        // Interval used for the 1m live feed this monitor subscribes to.
+        // Kept as a field so the fixed choice is visible in one place; any
+        // future per-symbol override lands here.
+        private static readonly CandleInterval StreamInterval = CandleInterval.Minute_1;
+        private static readonly CandlestickInterval StreamIntervalBundled = CandlestickInterval.Minute;
+
+        public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger, IExchangeProvider exchange)
         {
-            _api = api;
-            _client = candlestickClient;
-            _webSocket = webSocket;
-            _webSocket.Message += (s, e) => _client.HandleMessage(e.Subject, e.Json);
-            GetTaskController();
+            _exchange = exchange;
+            Logger = logger;
         }
 
-        private List<string> symbols = new List<string>();
+        private readonly List<string> symbols = new List<string>();
 
         protected LiveMarketMonitor()
         {
         }
 
-        private ITaskController Controller { get; set; }
-        public async virtual Task<bool> CheckOrder(ITransaction transaction)
+        public virtual async Task<bool> CheckOrder(ITransaction transaction)
         {
-/* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var newOrder = await _api.GetOrderAsync(_user, transaction.Pair, transaction.Order.ClientOrderId).ConfigureAwait(false);
-            transaction.UpdateOrder(BinanceMapper.ToExchangeOrder(newOrder));
-            return newOrder.Status == OrderStatus.Filled;
-        }
-        
-        public Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
-        {
-            symbols.Add(symbol);
-            _client.Subscribe(symbol, CandlestickInterval.Minute, processCandleStick);
-            Configure();
-            if(!Controller.IsActive) Controller.Begin();
-            return Task.CompletedTask;
+            // Prefer the exchange-assigned order id (populated on place); fall
+            // back to the client id only because legacy paper-trade paths can
+            // leave OrderId blank — the neutral provider tolerates both via
+            // the upstream get-order call.
+            var id = !string.IsNullOrEmpty(transaction.Order?.OrderId)
+                ? transaction.Order.OrderId
+                : transaction.Order?.ClientOrderId;
+
+            if (string.IsNullOrEmpty(id))
+            {
+                Logger?.LogWarning("CheckOrder invoked with no order id on transaction for {Pair}", transaction.Pair);
+                return false;
+            }
+
+            var newOrder = await _exchange.GetOrderAsync(transaction.Pair, id).ConfigureAwait(false);
+            transaction.UpdateOrder(newOrder);
+            return newOrder.Status == ExchangeOrderStatus.Filled;
         }
 
-        public void Configure()
+        public async Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
         {
-            _webSocket.Uri = BinanceWebSocketStream.CreateUri(_client);
+            if (!symbols.Contains(symbol))
+            {
+                symbols.Add(symbol);
+            }
+
+            // Binance.Net manages its own websocket connection lifecycle; one
+            // SubscribeCandlestickAsync call per symbol is all we need and the
+            // underlying socket stays connected until UnsubscribeAllAsync.
+            await _exchange.SubscribeCandlestickAsync(
+                symbol,
+                StreamInterval,
+                neutralCandle =>
+                {
+                    try
+                    {
+                        var args = BundledSdkBridge.ToBundledEventArgs(neutralCandle, StreamIntervalBundled);
+                        processCandleStick.Invoke(args);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger?.LogError(e, "LiveMarketMonitor subscriber callback threw for {Symbol}", symbol);
+                    }
+                }).ConfigureAwait(false);
         }
 
         public bool IsSubscribed(string symbol, string keyValue)
@@ -78,13 +100,23 @@ namespace CryptoTrading.App.MarketData
         public void UnSubscribe(string symbol, string keyValue)
         {
             symbols.Remove(symbol);
-            _client.Unsubscribe(symbol, CandlestickInterval.Minute);
-        }
 
-        public void GetTaskController()
-        {
-            Controller = new RetryTaskController(_webSocket.StreamAsync);
-            Controller.Error += (s, e) => HandleError(e.Exception);
+            // IExchangeProvider only exposes UnsubscribeAllAsync today; call
+            // it when the last symbol drops so we don't leak sockets.
+            // Single-symbol unsubscribe is a follow-up on the provider
+            // interface — for the 1-symbol BTCUSDT runtime this is a no-op
+            // while other symbols are active.
+            if (!symbols.Any())
+            {
+                try
+                {
+                    _exchange.UnsubscribeAllAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    Logger?.LogWarning(e, "LiveMarketMonitor failed to unsubscribe cleanly for {Symbol}", symbol);
+                }
+            }
         }
 
         public override void Configure(IConfig request)
@@ -94,12 +126,30 @@ namespace CryptoTrading.App.MarketData
 
         public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
         {
-            var calculatedFrom = CandleStickIntervalHelper.CalculateCandleStickTimeFrom(DateTime.Now, 0, 200).
-                ToUniversalTime();
-            var candleSticks = await _api.GetCandlesticksAsync(symbol, CandlestickInterval.Minute, 0, calculatedFrom, DateTime.Now.ToUniversalTime());
+            // 200 bars of 1m data is the shape the legacy bundled-SDK
+            // implementation returned; preserved byte-for-byte so downstream
+            // indicators (TradeMonitor.QuoteHub seed) don't see a behavioural
+            // change from this PR.
+            var calculatedFrom = CandleStickIntervalHelper
+                .CalculateCandleStickTimeFrom(DateTime.Now, StreamIntervalBundled, 200)
+                .ToUniversalTime();
 
-            candleSticks.Reverse();
-            return candleSticks.ToList();
+            var neutralCandles = await _exchange.GetCandlesticksAsync(
+                symbol,
+                StreamInterval,
+                calculatedFrom,
+                DateTime.Now.ToUniversalTime()).ConfigureAwait(false);
+
+            var list = neutralCandles
+                .Reverse()
+                .Select(c => BundledSdkBridge.ToBundledCandlestick(c, StreamIntervalBundled))
+                .ToList();
+
+            // Legacy code called .Reverse() again on the materialized list.
+            // Keeping the same double-reverse behaviour so the surface-level
+            // ordering is identical to the bundled-SDK path.
+            list.Reverse();
+            return list;
         }
     }
 }

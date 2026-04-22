@@ -15,9 +15,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Binance.csproj (bundled SDK) is still referenced because the public
+      IMarketData / IMarketDataEvents / IMarketMonitor contracts surface
+      bundled-SDK types (Candlestick, CandlestickInterval, CandlestickEventArgs)
+      to 15+ algorithm / monitor consumers. The implementation classes have
+      been rewired to IExchangeProvider (Binance.Net) in PR 5b — a follow-up
+      PR migrates the interfaces themselves and drops the two bundled deps
+      below along with Src/Samples.
+    -->
     <ProjectReference Include="..\Binance\Binance.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
-    <ProjectReference Include="..\CryptoTrading.App.Exchange.Binance\CryptoTrading.App.Exchange.Binance.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Exchange.BinanceNet\CryptoTrading.App.Exchange.BinanceNet.csproj" />
     <ProjectReference Include="..\Samples\Binance.Application\Binance.Application.csproj" />
   </ItemGroup>
 
