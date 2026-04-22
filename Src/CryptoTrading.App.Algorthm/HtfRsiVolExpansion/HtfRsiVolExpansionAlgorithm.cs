@@ -1,7 +1,7 @@
 using Binance;
-using Binance.Client;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.Logging;
@@ -103,22 +103,22 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _symbol = symbol;
 
             // Subscribe to 15M for ATR / vol expansion
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricData15M);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandle15M);
+            marketData.InitialDataLoadSubscribe(symbol, CandleInterval.Minute_15, ProcessHistoricData15M);
+            marketData.InitialDataStreamSubscribe(symbol, CandleInterval.Minute_15, ProcessLiveCandle15M);
 
             // Subscribe to native 4H for RSI direction gate — the exchange's
             // 4H candles start earlier than 15M aggregation can produce and may
             // have slightly different close values, so using the real feed gives
             // more accurate RSI and earlier warmup.
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Hours_4, ProcessHistoricData4H);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Hours_4, ProcessLiveCandle4H);
+            marketData.InitialDataLoadSubscribe(symbol, CandleInterval.Hour_4, ProcessHistoricData4H);
+            marketData.InitialDataStreamSubscribe(symbol, CandleInterval.Hour_4, ProcessLiveCandle4H);
 
             _logger.LogInformation($"[HTF-RSI] Subscribed to {symbol} on 15M + 4H");
         }
 
         #region Historic Data Loading
 
-        private void ProcessHistoricData15M(IEnumerable<Candlestick> candlesticks)
+        private void ProcessHistoricData15M(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             foreach (var candle in candlesticks)
             {
@@ -143,7 +143,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 $"15M ATR(Wilder): {initialAtr?.ToString("F2") ?? "N/A"}");
         }
 
-        private void ProcessHistoricData4H(IEnumerable<Candlestick> candlesticks)
+        private void ProcessHistoricData4H(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             foreach (var candle in candlesticks)
             {
@@ -177,7 +177,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
 
         #region Live Data Processing
 
-        private void ProcessLiveCandle15M(CandlestickEventArgs args)
+        private void ProcessLiveCandle15M(ExchangeCandlestickEvent args)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             }
         }
 
-        private void ProcessLiveCandle4H(CandlestickEventArgs args)
+        private void ProcessLiveCandle4H(ExchangeCandlestickEvent args)
         {
             try
             {
@@ -252,7 +252,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             }
         }
 
-        private void EvaluateEntry(Candlestick candle, string ts)
+        private void EvaluateEntry(ExchangeCandlestick candle, string ts)
         {
             // Pre-checks
             if (!_tradingState.CanTrade)
@@ -453,7 +453,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         ///
         /// Skipped if the real 4H close for this period has already arrived.
         /// </summary>
-        private void UpdateProvisional4HBar(Candlestick ltf)
+        private void UpdateProvisional4HBar(ExchangeCandlestick ltf)
         {
             var closeTime = Get4HBarCloseTime(ltf.CloseTime);
             if (closeTime <= _last4HCloseTime) return;

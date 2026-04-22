@@ -180,7 +180,7 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockPositions.Setup(p => p.CreateTrade(It.IsAny<ITradeRequest>())).Returns(_mockTrade.Object);
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
-            var candleSticks = new List<Candlestick>
+            var candleSticks = new List<ExchangeCandlestick>
             {
                 CandleStickHelper.CreateCandlestick(DateTime.Now, 50000, 51000, 49000, 50500, 100)
             };
@@ -193,7 +193,7 @@ namespace CryptoTrading.App.Tests.Monitor
 
             // Assert
             _mockMarketMonitor.Verify(m => m.GetHistoricCandleSticks("BTCUSDT"), Times.Once);
-            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<CandlestickEventArgs>>()), Times.Once);
+            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<ExchangeCandlestickEvent>>()), Times.Once);
             _mockStrategy.Verify(s => s.SetQuotes(It.IsAny<QuoteHub<IQuote>>()), Times.Once);
         }
 
@@ -212,7 +212,7 @@ namespace CryptoTrading.App.Tests.Monitor
 
             // Assert
             _mockMarketMonitor.Verify(m => m.GetHistoricCandleSticks(It.IsAny<string>()), Times.Never);
-            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<CandlestickEventArgs>>()), Times.Never);
+            _mockMarketMonitor.Verify(m => m.Subscribe(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<ExchangeCandlestickEvent>>()), Times.Never);
         }
 
         //commented out as this method is void and has limited testable outcomes and context is required.
@@ -405,7 +405,7 @@ namespace CryptoTrading.App.Tests.Monitor
             _mockPositions.Setup(p => p.CreateTrade(It.IsAny<ITradeRequest>())).Returns(_mockTrade.Object);
             monitor.AddRequest(_mockTradeRequest.Object, _mockPositions.Object);
 
-            var candleSticks = new List<Candlestick>
+            var candleSticks = new List<ExchangeCandlestick>
             {
                 CandleStickHelper.CreateCandlestick(DateTime.Now.AddMinutes(-2), 50000, 51000, 49000, 50500, 100),
                 CandleStickHelper.CreateCandlestick(DateTime.Now.AddMinutes(-1), 50500, 51500, 50000, 51000, 100)
@@ -802,23 +802,23 @@ namespace CryptoTrading.App.Tests.Monitor
         public int Close { get; internal set; }
         public int Volume { get; internal set; }
 
-        public static Candlestick CreateCandlestick(DateTime closeTime, decimal open, decimal high, decimal low, decimal close, decimal volume)
+        public static ExchangeCandlestick CreateCandlestick(DateTime closeTime, decimal open, decimal high, decimal low, decimal close, decimal volume)
         {
-            return new Candlestick(
-
-                "BTC_USDT",
-                CandlestickInterval.Minute,
-                closeTime.AddMinutes(-1),
-                open,
-                high,
-                low,
-                close,
-                volume,
-                closeTime,
-                0,
-                0,
-                0,
-                0);
+            return new ExchangeCandlestick
+            {
+                Symbol = "BTC_USDT",
+                Interval = CandleInterval.Minute_1,
+                OpenTime = closeTime.AddMinutes(-1),
+                Open = open,
+                High = high,
+                Low = low,
+                Close = close,
+                Volume = volume,
+                CloseTime = closeTime,
+                QuoteVolume = 0m,
+                NumberOfTrades = 0,
+                IsClosed = true,
+            };
         }
     }
 }

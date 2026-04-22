@@ -1,10 +1,14 @@
-﻿using Binance;
-using Binance.Client;
 using System.Collections.Concurrent;
 using System.Linq;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core.RequestTracker
 {
+    /// <summary>
+    /// Per-symbol "latest candle event" cache used by the request-tracker
+    /// flush path. PR 5c: retyped off the bundled <c>CandlestickEventArgs</c>
+    /// onto the neutral <see cref="ExchangeCandlestickEvent"/>.
+    /// </summary>
     public class CandleStickTracker
     {
         private static CandleStickTracker _instance;
@@ -13,7 +17,7 @@ namespace CryptoTrading.App.Core.RequestTracker
         {
             get
             {
-                if (_instance == null) CandleSticks = new ConcurrentDictionary<string, CandlestickEventArgs>();
+                if (_instance == null) CandleSticks = new ConcurrentDictionary<string, ExchangeCandlestickEvent>();
                 return _instance ??= new CandleStickTracker();
             }
         }
@@ -28,7 +32,7 @@ namespace CryptoTrading.App.Core.RequestTracker
         }
 
         //store up the request here.
-        public static ConcurrentDictionary<string, CandlestickEventArgs> CandleSticks 
+        public static ConcurrentDictionary<string, ExchangeCandlestickEvent> CandleSticks
         {
             get;
             set;
@@ -44,9 +48,9 @@ namespace CryptoTrading.App.Core.RequestTracker
             }
         }
 
-        public void UpdateCandleStick(CandlestickEventArgs candlestick)
+        public void UpdateCandleStick(ExchangeCandlestickEvent candlestick)
         {
-            if (CandleSticks.ContainsKey(candlestick.Candlestick.Symbol)) 
+            if (CandleSticks.ContainsKey(candlestick.Candlestick.Symbol))
                 CandleSticks.TryRemove(candlestick.Candlestick.Symbol, out _);
             CandleSticks.TryAdd(candlestick.Candlestick.Symbol, candlestick);
         }

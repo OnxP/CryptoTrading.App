@@ -1,5 +1,6 @@
 ﻿using System;
 using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
@@ -13,6 +14,29 @@ namespace CryptoTrading.App.Core
         public static DateTime PreviousCandleStickTime(DateTime dateTime, CandlestickInterval interval)
         {
             return CalculateCandleStickTimeFrom(dateTime, interval, 1);
+        }
+
+        // Neutral overloads: CandleInterval shares ordinals 0-14 with CandlestickInterval,
+        // so the cast is safe. Bundled overloads stay alive during PR 5c; PR 5d retypes
+        // the helper to neutral-only and deletes the bundled overloads.
+        public static DateTime NextCandleStickTime(DateTime dateTime, CandleInterval interval)
+        {
+            return CalculateCandleStickTimeFrom(dateTime, (CandlestickInterval)(int)interval, -1);
+        }
+
+        public static DateTime PreviousCandleStickTime(DateTime dateTime, CandleInterval interval)
+        {
+            return CalculateCandleStickTimeFrom(dateTime, (CandlestickInterval)(int)interval, 1);
+        }
+
+        public static DateTime CalculateCandleStickTimeFrom(DateTime dateTime, CandleInterval interval, int number)
+        {
+            return CalculateCandleStickTimeFrom(dateTime, (CandlestickInterval)(int)interval, number);
+        }
+
+        public static int CalculateNumberBetweenDates(DateTime earliestDate, DateTime currentDate, CandleInterval interval, int indicatorMultiplier)
+        {
+            return CalculateNumberBetweenDates(earliestDate, currentDate, (CandlestickInterval)(int)interval, indicatorMultiplier);
         }
 
         public static DateTime CalculateCandleStickTimeFrom(DateTime dateTime, CandlestickInterval interval, int number)

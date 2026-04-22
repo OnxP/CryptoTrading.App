@@ -1,17 +1,26 @@
-﻿using Binance;
-using Binance.Client;
+using Binance;
+using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Binance.Utility;
-using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
 {
+    /// <summary>
+    /// Backtest market-data feed backed by the <c>CandleStickDbs</c> SQL
+    /// table via <see cref="IDbData"/>. PR 5c: subscriber fan-out is now
+    /// neutral (<see cref="ExchangeCandlestickEvent"/> /
+    /// <see cref="ExchangeCandlestick"/>); the DB boundary (EF row shape)
+    /// keeps the bundled <see cref="Candlestick"/> type for this PR and we
+    /// translate at the seam via <see cref="BundledSdkBridge"/>. The EF
+    /// layer migrates to neutral types in PR 5e (not scheduled for 5c).
+    /// </summary>
     public class DbMarketData : AbstractMarketData, IMarketData
     {
         ICandleStickManagement _mangement;
@@ -23,7 +32,7 @@ namespace CryptoTrading.App.MarketData
             _data = data;
         }
 
-        public DbMarketData(ILogger<DbMarketData> logger,ICandleStickManagement management, IDbData data,DateTime from, DateTime to) : this(management, data)
+        public DbMarketData(ILogger<DbMarketData> logger, ICandleStickManagement management, IDbData data, DateTime from, DateTime to) : this(management, data)
         {
             From = from;
             To = to;
@@ -32,7 +41,8 @@ namespace CryptoTrading.App.MarketData
 
         public DateTime From { get; set; }
         public DateTime To { get; set; }
-        public Dictionary<CandlestickInterval, int> pageNumber { get; set; } = new Dictionary<CandlestickInterval, int>();
+        // Interval key keyed on neutral CandleInterval to match AbstractMarketData dicts.
+        public Dictionary<CandleInterval, int> pageNumber { get; set; } = new Dictionary<CandleInterval, int>();
 
         private CancellationToken CancellationToken { get; set; }
 
@@ -50,7 +60,7 @@ with candlestick as (SELECT [ID]
       ,[QuoteAssetVolume]
       ,[NumberOfTrades]
       ,[TakerBuyBaseAssetVolume]
-      ,[TakerBuyQuoteAssetVolume]	
+      ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
   WHERE OpenTime >= @p0 AND OpenTime < @p1 AND Interval=@p2
   ORDER BY OpenTime
@@ -71,7 +81,7 @@ select * from candlestick order by Opentime
       ,[QuoteAssetVolume]
       ,[NumberOfTrades]
       ,[TakerBuyBaseAssetVolume]
-      ,[TakerBuyQuoteAssetVolume]	
+      ,[TakerBuyQuoteAssetVolume]
   FROM [dbo].[CandleStickDbs]
   WHERE OpenTime >= @p0 AND OpenTime <= @p1 AND Interval=@p2
   ORDER BY OpenTime
@@ -96,12 +106,6 @@ select * from candlestick order by Opentime
             }
         }
 
-        //public Task StartStream(CancellationToken ct)
-        //{
-        //    CancellationToken = ct;
-        //    return new Task(StartStream);
-        //}
-
         public ITaskController GetTaskController()
         {
             var controller = new TaskController(StartStream);
@@ -114,9 +118,12 @@ select * from candlestick order by Opentime
 
             _mangement.AddMarketStream(InvokeCandleStick);
             foreach (var interval in subscribers.Keys.Select(x => x.interval).Distinct())
-            {                
+            {
+                // The DB column Interval stores the bundled enum's ordinal. The
+                // neutral CandleInterval ordinals were defined to be 1:1 with
+                // bundled CandlestickInterval so (int)neutral is safe to pass.
                 var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
-                subscribers.Keys.Select(x => x.symbol).ToList(), (int)interval, 0);
+                    subscribers.Keys.Select(x => x.symbol).ToList(), (int)interval, 0);
 
                 pageNumber.TryAdd(interval, 0);
             }
@@ -130,20 +137,26 @@ select * from candlestick order by Opentime
             var candleSticks = _data.GetData(_mangement.CurrentTick).Values.ToList();//gets all the data for the current tick
             if (candleSticks.Any())
             {
-
-                foreach (var interval in candleSticks.Select(x => x.Interval).Distinct())
+                foreach (var bundledInterval in candleSticks.Select(x => x.Interval).Distinct())
                 {
-                    if (interval == CandlestickInterval.Minute) continue;
-                    candleSticks.Where(x=>x.Interval==interval).OrderByDescending(x=>x.Interval).OrderBy(x => x.Volume).ToList().ForEach
-                    (x =>
-                    {
-                        if (!subscribers.TryGetValue((x.Symbol, x.Interval), out var list)) return;
-                        foreach (var action in list)
+                    if (bundledInterval == CandlestickInterval.Minute) continue;
+                    var neutralInterval = BundledSdkBridge.ToNeutralInterval(bundledInterval);
+
+                    candleSticks.Where(x => x.Interval == bundledInterval)
+                        .OrderByDescending(x => x.Interval)
+                        .OrderBy(x => x.Volume)
+                        .ToList()
+                        .ForEach(x =>
                         {
-                            action.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, x, 0, 0, true));
-                        }
-                    });
-                    await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(),interval);
+                            if (!subscribers.TryGetValue((x.Symbol, neutralInterval), out var list)) return;
+                            var neutralCandle = BundledSdkBridge.ToNeutralCandle(x);
+                            var evt = new ExchangeCandlestickEvent(neutralCandle, _mangement.CurrentTick);
+                            foreach (var action in list)
+                            {
+                                action.Invoke(evt);
+                            }
+                        });
+                    await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(), bundledInterval);
                 }
 
                 _data.ClearHistoric(_mangement.PreviousTick);
@@ -151,49 +164,53 @@ select * from candlestick order by Opentime
         }
 
 
-        private async Task LoadNextCandleSticks(List<string> toList,CandlestickInterval interval)
+        private async Task LoadNextCandleSticks(List<string> toList, CandlestickInterval interval)
         {
             if (_data.Count() == 0)
             {
                 throw new Exception();
             }
-            if(DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, interval, 1)>_mangement.FinalTick) return;
+            if (DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, interval, 1) > _mangement.FinalTick) return;
 
             if (_data.CheckNextTick(DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, interval, 1),
-                    toList.FirstOrDefault(),interval)) return;
+                    toList.FirstOrDefault(), interval)) return;
 
-            var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick,_mangement.FinalTick,
-                toList, (int)interval, pageNumber[interval]);
-            pageNumber[interval] += 1;
+            var neutralInterval = BundledSdkBridge.ToNeutralInterval(interval);
+            var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick, _mangement.FinalTick,
+                toList, (int)interval, pageNumber[neutralInterval]);
+            pageNumber[neutralInterval] += 1;
         }
 
         private async Task LoadHistoricData()
         {
             foreach (var sub in historicDataSubscribers.Keys.Select(x => x.interval).Distinct())
             {
+                var bundledSub = BundledSdkBridge.ToBundledInterval(sub);
                 await _data.LoadData(SQL_HISTORIC_QUERY,
-                DbMarketDataHelpers.CalculateFrom(From, sub, -201), From,
-                historicDataSubscribers.Keys.Select(x => x.symbol).Distinct().ToList(),
-                (int)sub, -1);
+                    DbMarketDataHelpers.CalculateFrom(From, bundledSub, -201), From,
+                    historicDataSubscribers.Keys.Select(x => x.symbol).Distinct().ToList(),
+                    (int)sub, -1);
             }
-           
+
             foreach (var item in historicDataSubscribers)
             {
-                LoadHistoricData( item.Key, From, item.Value);
+                LoadHistoricData(item.Key, From, item.Value);
             }
 
             _data.ClearHistoric(From);
 
         }
-        private void LoadHistoricData((string symbol, CandlestickInterval interval) symbol, DateTime from, IList<Action<IEnumerable<Candlestick>>> callback)
+        private void LoadHistoricData((string symbol, CandleInterval interval) symbol, DateTime from, IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
             try
             {
-                var candleSticks = _data.GetData(symbol.symbol,symbol.interval);
-                if (!candleSticks.Any()) return;
+                var bundledInterval = BundledSdkBridge.ToBundledInterval(symbol.interval);
+                var bundledCandles = _data.GetData(symbol.symbol, bundledInterval);
+                if (!bundledCandles.Any()) return;
+                var neutralCandles = bundledCandles.Select(BundledSdkBridge.ToNeutralCandle).ToList();
                 foreach (var action in callback)
                 {
-                    action.Invoke(candleSticks);
+                    action.Invoke(neutralCandles);
                 }
             }
             catch
@@ -202,7 +219,7 @@ select * from candlestick order by Opentime
 
         public override void Configure(IConfig request)
         {
-            
+
         }
     }
 }

@@ -4,6 +4,7 @@ using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.Config;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -160,32 +161,32 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         /// </summary>
         private class FakeMarketData : IMarketDataEvents
         {
-            public Action<IEnumerable<Candlestick>> HistoricLoad15M;
-            public Action<CandlestickEventArgs> LiveStream15M;
-            public Action<IEnumerable<Candlestick>> HistoricLoad4H;
-            public Action<CandlestickEventArgs> LiveStream4H;
+            public Action<IEnumerable<ExchangeCandlestick>> HistoricLoad15M;
+            public Action<ExchangeCandlestickEvent> LiveStream15M;
+            public Action<IEnumerable<ExchangeCandlestick>> HistoricLoad4H;
+            public Action<ExchangeCandlestickEvent> LiveStream4H;
 
-            public void InitialDataLoadSubscribe(string symbol, CandlestickInterval interval,
-                Action<IEnumerable<Candlestick>> callback)
+            public void InitialDataLoadSubscribe(string symbol, CandleInterval interval,
+                Action<IEnumerable<ExchangeCandlestick>> callback)
             {
-                if (interval == CandlestickInterval.Minutes_15)
+                if (interval == CandleInterval.Minute_15)
                     HistoricLoad15M = callback;
-                else if (interval == CandlestickInterval.Hours_4)
+                else if (interval == CandleInterval.Hour_4)
                     HistoricLoad4H = callback;
             }
 
-            public void InitialDataLoadUnSubscribe(string symbol, CandlestickInterval interval) { }
+            public void InitialDataLoadUnSubscribe(string symbol, CandleInterval interval) { }
 
-            public void InitialDataStreamSubscribe(string symbol, CandlestickInterval interval,
-                Action<CandlestickEventArgs> callback)
+            public void InitialDataStreamSubscribe(string symbol, CandleInterval interval,
+                Action<ExchangeCandlestickEvent> callback)
             {
-                if (interval == CandlestickInterval.Minutes_15)
+                if (interval == CandleInterval.Minute_15)
                     LiveStream15M = callback;
-                else if (interval == CandlestickInterval.Hours_4)
+                else if (interval == CandleInterval.Hour_4)
                     LiveStream4H = callback;
             }
 
-            public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval) { }
+            public void InitialDataStreamUnSubscribe(string symbol, CandleInterval interval) { }
         }
 
         #endregion
@@ -277,9 +278,9 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m));
 
             // Empty 15M historic load — algorithm warms up from the live stream
-            fakeMd.HistoricLoad15M?.Invoke(Enumerable.Empty<Candlestick>());
+            fakeMd.HistoricLoad15M?.Invoke(Enumerable.Empty<ExchangeCandlestick>());
             // Seed 4H historic — bars before the 15M data starts
-            fakeMd.HistoricLoad4H?.Invoke(seedCandlesticks4H);
+            fakeMd.HistoricLoad4H?.Invoke(seedCandlesticks4H.Select(ExchangeCandlestickBridge.ToNeutral));
 
             // Reflect to access the private _tradingState so we can reset
             // the "in position" flag after each captured setup.
@@ -304,9 +305,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                         volume: htf.Volume, closeTime: htf.Timestamp,
                         quoteAssetVolume: 0m, numberOfTrades: 0,
                         takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m);
-                    fakeMd.LiveStream4H?.Invoke(new CandlestickEventArgs(
-                        time: DateTime.UtcNow, candlestick: cs4H,
-                        firstTradeId: 0, lastTradeId: 0, isFinal: true));
+                    fakeMd.LiveStream4H?.Invoke(new ExchangeCandlestickEvent(
+                        ExchangeCandlestickBridge.ToNeutral(cs4H), DateTime.UtcNow));
                 }
 
                 // Feed the 15M candle
@@ -326,12 +326,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                     takerBuyBaseAssetVolume: 0m,
                     takerBuyQuoteAssetVolume: 0m);
 
-                var args = new CandlestickEventArgs(
-                    time: DateTime.UtcNow,
-                    candlestick: cs,
-                    firstTradeId: 0,
-                    lastTradeId: 0,
-                    isFinal: true);
+                var args = new ExchangeCandlestickEvent(
+                    ExchangeCandlestickBridge.ToNeutral(cs), DateTime.UtcNow);
 
                 fakeMd.LiveStream15M?.Invoke(args);
 

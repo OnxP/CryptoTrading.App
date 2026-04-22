@@ -1,4 +1,3 @@
-using Binance;
 using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
@@ -17,14 +16,11 @@ namespace CryptoTrading.App.MarketData
     /// fans them out to the <c>historicDataSubscribers</c> map populated by
     /// <see cref="AbstractMarketData.InitialDataLoadSubscribe"/>.
     ///
-    /// PR 5b: the old implementation held onto <c>IBinanceApi</c> /
-    /// <c>ICandlestickClient</c> / <c>IBinanceWebSocketStream</c> from the
-    /// bundled SDK and called <c>GetCandlesticksAsync</c> directly. We now
-    /// go through the neutral <see cref="IExchangeProvider"/> seam and
-    /// translate <see cref="ExchangeCandlestick"/> back to the bundled
-    /// <see cref="Candlestick"/> type at the boundary so consumers
-    /// (algorithms, tests) that still take bundled types keep working
-    /// unchanged. The interface migration lands in a follow-up PR.
+    /// PR 5c: IMarketDataEvents is now neutral so this file no longer
+    /// translates to bundled <c>Candlestick</c> at the subscriber seam —
+    /// neutral candles from the provider flow straight through. The interval
+    /// splitter <see cref="SplitDates"/> stays keyed on the neutral
+    /// <see cref="CandleInterval"/>.
     /// </summary>
     public class HistoricalMarketData : AbstractMarketData, IMarketData
     {
@@ -77,8 +73,6 @@ namespace CryptoTrading.App.MarketData
 
                 // All callbacks currently share a single action — preserve the
                 // legacy behaviour of fanning to historicDataSubscribers.First().
-                // This is what the bundled-SDK implementation did and the
-                // algorithms rely on.
                 var action = historicDataSubscribers.Any()
                     ? historicDataSubscribers.First().Value.First()
                     : null;
@@ -131,19 +125,16 @@ namespace CryptoTrading.App.MarketData
             }
         }
 
-        private async Task<IEnumerable<Candlestick>> StreamData(
-            (string symbol, CandlestickInterval interval) symbol, DateTime from, DateTime to)
+        private async Task<IEnumerable<ExchangeCandlestick>> StreamData(
+            (string symbol, CandleInterval interval) symbol, DateTime from, DateTime to)
         {
-            var neutralInterval = BundledSdkBridge.ToNeutralInterval(symbol.interval);
             var neutralCandles = await _exchange.GetCandlesticksAsync(
                 symbol.symbol,
-                neutralInterval,
+                symbol.interval,
                 from.ToUniversalTime(),
                 to.ToUniversalTime()).ConfigureAwait(false);
 
-            var list = neutralCandles
-                .Select(c => BundledSdkBridge.ToBundledCandlestick(c, symbol.interval))
-                .ToList();
+            var list = neutralCandles.ToList();
 
             Logger.LogInformation(
                 $"Loading Candlesticks for {symbol.symbol}-{symbol.interval} " +
@@ -153,31 +144,31 @@ namespace CryptoTrading.App.MarketData
             return list;
         }
 
-        protected IEnumerable<DateTime> SplitDates(CandlestickInterval interval, DateTime from, DateTime to)
+        protected IEnumerable<DateTime> SplitDates(CandleInterval interval, DateTime from, DateTime to)
         {
             switch (interval)
             {
-                case CandlestickInterval.Minute:
+                case CandleInterval.Minute_1:
                     return GenerateTimeList(1, from, to);
-                case CandlestickInterval.Minutes_3:
+                case CandleInterval.Minute_3:
                     return GenerateTimeList(3, from, to);
-                case CandlestickInterval.Minutes_5:
+                case CandleInterval.Minute_5:
                     return GenerateTimeList(5, from, to);
-                case CandlestickInterval.Minutes_15:
+                case CandleInterval.Minute_15:
                     return GenerateTimeList(15, from, to);
-                case CandlestickInterval.Minutes_30:
+                case CandleInterval.Minute_30:
                     return GenerateTimeList(30, from, to);
-                case CandlestickInterval.Hour:
+                case CandleInterval.Hour_1:
                     return GenerateTimeList(1 * 60, from, to);
-                case CandlestickInterval.Hours_2:
+                case CandleInterval.Hour_2:
                     return GenerateTimeList(2 * 60, from, to);
-                case CandlestickInterval.Hours_4:
+                case CandleInterval.Hour_4:
                     return GenerateTimeList(4 * 60, from, to);
-                case CandlestickInterval.Hours_6:
+                case CandleInterval.Hour_6:
                     return GenerateTimeList(6 * 60, from, to);
-                case CandlestickInterval.Hours_8:
+                case CandleInterval.Hour_8:
                     return GenerateTimeList(8 * 60, from, to);
-                case CandlestickInterval.Hours_12:
+                case CandleInterval.Hour_12:
                     return GenerateTimeList(12 * 60, from, to);
                 default:
                     return new List<DateTime> { to };

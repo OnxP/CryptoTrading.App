@@ -1,9 +1,8 @@
-﻿using Binance;
-using Binance.Client;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using MailKit.Net.Smtp;
 using MimeKit;
 using MimeKit.Text;
@@ -28,36 +27,40 @@ namespace CryptoTrading.App.MarketData
                 //also email!
             }
         }
-        protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>> historicDataSubscribers = 
-            new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<IEnumerable<Candlestick>>>>();
 
-        protected IDictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>> subscribers = 
-            new Dictionary<(string symbol, CandlestickInterval interval), IList<Action<CandlestickEventArgs>>>();
-        //public events 
+        // PR 5c: dictionaries now key on the neutral CandleInterval and store
+        // callbacks in terms of ExchangeCandlestick / ExchangeCandlestickEvent.
+        // Concrete implementations (Live / Historical / Db) emit these types
+        // directly; no boundary translation happens at the subscribe seam.
+        protected IDictionary<(string symbol, CandleInterval interval), IList<Action<IEnumerable<ExchangeCandlestick>>>> historicDataSubscribers =
+            new Dictionary<(string symbol, CandleInterval interval), IList<Action<IEnumerable<ExchangeCandlestick>>>>();
 
-        public void InitialDataLoadSubscribe(string symbol, CandlestickInterval interval, Action<IEnumerable<Candlestick>> callback)
+        protected IDictionary<(string symbol, CandleInterval interval), IList<Action<ExchangeCandlestickEvent>>> subscribers =
+            new Dictionary<(string symbol, CandleInterval interval), IList<Action<ExchangeCandlestickEvent>>>();
+
+        public void InitialDataLoadSubscribe(string symbol, CandleInterval interval, Action<IEnumerable<ExchangeCandlestick>> callback)
         {
             if (!historicDataSubscribers.ContainsKey((symbol, interval)))
             {
-                historicDataSubscribers.Add((symbol, interval), new List<Action<IEnumerable<Candlestick>>>());
+                historicDataSubscribers.Add((symbol, interval), new List<Action<IEnumerable<ExchangeCandlestick>>>());
             }
             historicDataSubscribers[(symbol, interval)].Add(callback);
         }
-        public void InitialDataLoadUnSubscribe(string symbol, CandlestickInterval interval)
+        public void InitialDataLoadUnSubscribe(string symbol, CandleInterval interval)
         {
             historicDataSubscribers.Remove((symbol, interval));
         }
 
-        public void InitialDataStreamSubscribe(string symbol, CandlestickInterval interval, Action<CandlestickEventArgs> callback)
+        public void InitialDataStreamSubscribe(string symbol, CandleInterval interval, Action<ExchangeCandlestickEvent> callback)
         {
             if (!subscribers.ContainsKey((symbol, interval)))
             {
-                subscribers.Add((symbol, interval), new List<Action<CandlestickEventArgs>>());
+                subscribers.Add((symbol, interval), new List<Action<ExchangeCandlestickEvent>>());
             }
             subscribers[(symbol, interval)].Add(callback);
         }
 
-        public void InitialDataStreamUnSubscribe(string symbol, CandlestickInterval interval)
+        public void InitialDataStreamUnSubscribe(string symbol, CandleInterval interval)
         {
             subscribers.Remove((symbol, interval));
         }

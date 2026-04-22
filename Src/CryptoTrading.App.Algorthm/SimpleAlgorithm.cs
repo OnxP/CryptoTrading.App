@@ -1,6 +1,6 @@
 ﻿using Binance;
-using Binance.Client;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
@@ -40,7 +40,7 @@ namespace CryptoTrading.App.Algorithm
             KeyValue = key.KeyValue;
         }
 
-        public void ProcessHistoricMarketData(IEnumerable<Candlestick> candlesticks)
+        public void ProcessHistoricMarketData(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             //want to reduce dependancy on the candle stick object=> may need to create my own.
             _candleSticks.AddRange(candlesticks);
@@ -55,7 +55,7 @@ namespace CryptoTrading.App.Algorithm
 
 
 
-        public void ProcessLiveCandleStick(CandlestickEventArgs candlestickEventArgs)
+        public void ProcessLiveCandleStick(ExchangeCandlestickEvent candlestickEventArgs)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace CryptoTrading.App.Algorithm
                 if (!candlestickEventArgs.IsFinal) return;
                 _candleSticks.Add(candlestickEventArgs.Candlestick);
                 //Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteAssetVolume,candlestickEventArgs.Candlestick.NumberOfTrades);
+                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteVolume, candlestickEventArgs.Candlestick.NumberOfTrades);
                 //Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
                 if (request==null) return;
                 if (request.Amount <= 0) return;
@@ -104,8 +104,8 @@ namespace CryptoTrading.App.Algorithm
 
         public void Subscribe(Symbol symbol, IMarketDataEvents marketData)
         {
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricMarketData);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandleStick);
+            marketData.InitialDataLoadSubscribe(symbol, CandleInterval.Minute_15, ProcessHistoricMarketData);
+            marketData.InitialDataStreamSubscribe(symbol, CandleInterval.Minute_15, ProcessLiveCandleStick);
         }
     }
 }

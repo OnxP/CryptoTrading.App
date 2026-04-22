@@ -1,4 +1,3 @@
-using Binance;
 using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
@@ -16,11 +15,9 @@ namespace CryptoTrading.App.MarketData
     /// Live market data feed. Loads historic candles then subscribes to
     /// live kline streams via <see cref="IExchangeProvider"/>.
     ///
-    /// PR 5b: previously held <c>ICandlestickClient</c> + <c>IBinanceWebSocketStream</c>
-    /// + <c>IBinanceApi</c> from the bundled SDK; now routes everything
-    /// through the neutral <see cref="IExchangeProvider"/> seam and
-    /// translates back to bundled types at the IMarketDataEvents boundary
-    /// so the 15+ algorithm consumers don't have to change in this PR.
+    /// PR 5c: IMarketDataEvents is now fully neutral so the bundled-SDK
+    /// bridge calls at the candle/event seams are gone — neutral candles
+    /// from the provider flow straight to subscribers.
     /// </summary>
     public class LiveMarketData : AbstractMarketData, IMarketData
     {
@@ -46,8 +43,7 @@ namespace CryptoTrading.App.MarketData
             }
             // Live subscriptions are established inside the TaskController's
             // action (GetTaskController) so that Begin()/CancelAsync() own the
-            // stream lifecycle. No per-Configure action needed any more — the
-            // bundled SDK required a Uri rebuild, Binance.Net manages its own.
+            // stream lifecycle.
         }
 
         public ITaskController GetTaskController()
@@ -69,20 +65,21 @@ namespace CryptoTrading.App.MarketData
                 {
                     var key = entry.Key;
                     var callbacks = entry.Value.ToList();
-                    var neutralInterval = BundledSdkBridge.ToNeutralInterval(key.interval);
-                    var bundledInterval = key.interval;
 
                     await _exchange.SubscribeCandlestickAsync(
                         key.symbol,
-                        neutralInterval,
+                        key.interval,
                         neutralCandle =>
                         {
                             try
                             {
-                                var args = BundledSdkBridge.ToBundledEventArgs(neutralCandle, bundledInterval);
+                                var eventTime = neutralCandle.CloseTime == default
+                                    ? DateTime.UtcNow
+                                    : neutralCandle.CloseTime;
+                                var evt = new ExchangeCandlestickEvent(neutralCandle, eventTime);
                                 foreach (var cb in callbacks)
                                 {
-                                    cb.Invoke(args);
+                                    cb.Invoke(evt);
                                 }
                                 // Flush any pending request-tracker submits,
                                 // preserving the legacy behaviour the bundled
@@ -126,28 +123,27 @@ namespace CryptoTrading.App.MarketData
         }
 
         private async Task LoadHistoricData(
-            (string symbol, CandlestickInterval interval) symbol,
+            (string symbol, CandleInterval interval) symbol,
             int numberOfCandleSticks,
-            IList<Action<IEnumerable<Candlestick>>> callback)
+            IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
+            // CandleStickIntervalHelper still takes the bundled CandlestickInterval
+            // (retyped in PR 5d). Translate the neutral interval here via the
+            // bridge; translation is ordinal-preserving so this is lossless.
+            var bundledInterval = BundledSdkBridge.ToBundledInterval(symbol.interval);
             var calculatedFrom = CandleStickIntervalHelper
-                .CalculateCandleStickTimeFrom(DateTime.Now, symbol.interval, numberOfCandleSticks)
+                .CalculateCandleStickTimeFrom(DateTime.Now, bundledInterval, numberOfCandleSticks)
                 .ToUniversalTime();
-
-            var neutralInterval = BundledSdkBridge.ToNeutralInterval(symbol.interval);
 
             var neutralCandles = await _exchange.GetCandlesticksAsync(
                 symbol.symbol,
-                neutralInterval,
+                symbol.interval,
                 calculatedFrom,
                 DateTime.Now.ToUniversalTime()).ConfigureAwait(false);
 
             // Match the old implementation's reversal so downstream consumers
             // that assumed "newest first → oldest last" see the same ordering.
-            var sticks = neutralCandles
-                .Reverse()
-                .Select(c => BundledSdkBridge.ToBundledCandlestick(c, symbol.interval))
-                .ToList();
+            var sticks = neutralCandles.Reverse().ToList();
 
             foreach (var action in callback)
             {

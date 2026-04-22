@@ -4,6 +4,7 @@ using System.IO;
 using Binance;
 using Binance.Client;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using IMarketDataEvents = CryptoTrading.App.Core.IMarketDataEvents;
@@ -60,7 +61,7 @@ namespace CryptoTrading.App.MarketDataTesting
         static StreamWriter writer;
         private static readonly object _sync = new object();
 
-        private static void DisplayCandleStick(CandlestickEventArgs obj)
+        private static void DisplayCandleStick(ExchangeCandlestickEvent obj)
         {
             lock (_sync)
             {
@@ -70,7 +71,7 @@ namespace CryptoTrading.App.MarketDataTesting
             }
         }
 
-        private static void DisplayHistoricCandleStick(IEnumerable<Candlestick> obj)
+        private static void DisplayHistoricCandleStick(IEnumerable<ExchangeCandlestick> obj)
         {
             lock (_sync)
             {
@@ -155,7 +156,7 @@ namespace CryptoTrading.App.MarketDataTesting
 
         private static void AddEvents(IMarketDataEvents marketDate)
         {
-            marketDate.InitialDataLoadSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayHistoricCandleStick);
+            marketDate.InitialDataLoadSubscribe(Symbol.ETH_BTC, CandleInterval.Minute_15, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayHistoricCandleStick);
@@ -164,7 +165,7 @@ namespace CryptoTrading.App.MarketDataTesting
             //marketDate.InitialDataLoadSubscribe(Symbol.NEO_BTC, CandlestickInterval.Hours_6, DisplayHistoricCandleStick);
             //marketDate.InitialDataLoadSubscribe(Symbol.LTC_BTC, CandlestickInterval.Hour, DisplayHistoricCandleStick);
 
-            marketDate.InitialDataStreamSubscribe(Symbol.ETH_BTC, CandlestickInterval.Minutes_15, DisplayCandleStick);
+            marketDate.InitialDataStreamSubscribe(Symbol.ETH_BTC, CandleInterval.Minute_15, DisplayCandleStick);
             //marketDate.InitialDataStreamSubscribe(Symbol.XRP_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);
             //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hour, DisplayCandleStick);
             //marketDate.InitialDataStreamSubscribe(Symbol.SYS_BTC, CandlestickInterval.Hours_2, DisplayCandleStick);

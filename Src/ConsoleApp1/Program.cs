@@ -111,8 +111,8 @@ namespace CryptoTrading.App.BackTesting
             var seed4H = candles4H.Where(c => c.CloseTime < firstStreamTime).ToList();
             var live4H = candles4H.Where(c => c.CloseTime >= firstStreamTime).ToList();
 
-            md.FireHistoric15M(Array.Empty<Candlestick>());
-            md.FireHistoric4H(seed4H);
+            md.FireHistoric15M(Array.Empty<CryptoTrading.App.Core.Exchange.ExchangeCandlestick>());
+            md.FireHistoric4H(seed4H.Select(ExchangeCandlestickBridge.ToNeutral));
 
             // Reach into the algorithm for its trading state — the harness
             // needs to read/mutate equity on the same instance the algorithm
@@ -142,11 +142,11 @@ namespace CryptoTrading.App.BackTesting
                 switch (ev.Type)
                 {
                     case EvType.Hours4:
-                        md.FireLive4H(ev.Candle);
+                        md.FireLive4H(ExchangeCandlestickBridge.ToNeutral(ev.Candle));
                         break;
 
                     case EvType.Minutes15:
-                        md.FireLive15M(ev.Candle);
+                        md.FireLive15M(ExchangeCandlestickBridge.ToNeutral(ev.Candle));
 
                         if (sim == null)
                         {

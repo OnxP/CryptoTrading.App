@@ -37,7 +37,8 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             //take last 10 candle sticks work out the min and max and select the closest one.
 
-            lastMinima = LastMaxCalc(closePrice,ClosePrices.GetCandlesticks.Skip(1).Take(10));
+            lastMinima = LastMaxCalc(closePrice,ClosePrices.GetCandlesticks.Skip(1).Take(10)
+                .Select(c => ExchangeCandlestickBridge.ToBundled(c, (CandlestickInterval)(int)ClosePrices.Interval)));
 
             if (lastMinima)
             {

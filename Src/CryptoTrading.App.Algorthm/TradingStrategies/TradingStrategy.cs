@@ -93,10 +93,11 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
 
             var symbol = closePrices.Current.Symbol;
-            Last10Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(10).Min(x => x.Low); 
+            Last10Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(10).Min(x => x.Low);
             Last5Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(5).Min(x => x.Low);
             ClosePrices = closePrices;
-            return Calculate(indicatorOutputs, closePrices.Current, stopLimitTrackers) * StrategyWeight;
+            var bundledCurrent = ExchangeCandlestickBridge.ToBundled(closePrices.Current, (CandlestickInterval)(int)closePrices.Interval);
+            return Calculate(indicatorOutputs, bundledCurrent, stopLimitTrackers) * StrategyWeight;
         }
         //indicators work in reverse order, so the first item is the earliest candlestick.
         private double[][] BuildInputs(IndicatorSetUp indicator, CandleStickDictionary closePrices)
