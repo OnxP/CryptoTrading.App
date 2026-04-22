@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Entity;
 using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core
 {
@@ -10,6 +11,19 @@ namespace CryptoTrading.App.Core
         CandlestickInterval Interval { get; set; }
         bool EndProcess { get; set; }
         RunTypeEnum RunType { get; set; }
+
+        /// <summary>
+        /// Venue the runtime routes orders through. Spot = no leverage.
+        /// Margin = leveraged spot with borrow/auto-repay. Futures = USD-M
+        /// perpetuals. Defaults to Spot for back-compat with pre-PR1a configs.
+        /// </summary>
+        TradingVenue TradingVenue { get; set; }
+
+        /// <summary>
+        /// Target leverage for Margin / Futures venues. Ignored on Spot (must be 1).
+        /// Applied to the exchange on startup via <see cref="Exchange.IExchangeProvider.SetLeverageAsync"/>.
+        /// </summary>
+        int Leverage { get; set; }
         string StoreTradesConnectionString { get; set; }
         string EmailServer { get; set; }
         string EmailFrom { get; set; }

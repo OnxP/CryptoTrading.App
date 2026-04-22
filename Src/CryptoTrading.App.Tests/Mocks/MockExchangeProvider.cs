@@ -14,6 +14,7 @@ namespace CryptoTrading.App.Tests.Mocks
     public class MockExchangeProvider : IExchangeProvider
     {
         public string ExchangeId { get; }
+        public TradingVenue Venue { get; set; } = TradingVenue.Spot;
 
         // Configurable state
         public List<ExchangeBalance> Balances { get; set; } = new List<ExchangeBalance>();
@@ -47,14 +48,30 @@ namespace CryptoTrading.App.Tests.Mocks
         public Task<ExchangeFeeSchedule> GetFeeScheduleAsync()
             => Task.FromResult(FeeSchedule);
 
-        public Task<ExchangeOrder> PlaceMarketOrderAsync(string symbol, ExchangeOrderSide side, decimal quantity)
+        public Task<ExchangeOrder> PlaceMarketOrderAsync(
+            string symbol,
+            ExchangeOrderSide side,
+            decimal quantity,
+            PositionSide positionSide = PositionSide.Both,
+            MarginSideEffect marginSideEffect = MarginSideEffect.None,
+            bool reduceOnly = false)
         {
             var order = ExchangeOrder.CreateFilledOrder(ExchangeId, symbol, side, 50000m, quantity, DateTime.UtcNow);
+            LastPositionSide = positionSide;
+            LastMarginSideEffect = marginSideEffect;
+            LastReduceOnly = reduceOnly;
             PlacedOrders.Add(order);
             return Task.FromResult(order);
         }
 
-        public Task<ExchangeOrder> PlaceLimitOrderAsync(string symbol, ExchangeOrderSide side, decimal price, decimal quantity)
+        public Task<ExchangeOrder> PlaceLimitOrderAsync(
+            string symbol,
+            ExchangeOrderSide side,
+            decimal price,
+            decimal quantity,
+            PositionSide positionSide = PositionSide.Both,
+            MarginSideEffect marginSideEffect = MarginSideEffect.None,
+            bool reduceOnly = false)
         {
             var order = new ExchangeOrder
             {
@@ -68,12 +85,23 @@ namespace CryptoTrading.App.Tests.Mocks
                 Quantity = quantity,
                 Timestamp = DateTime.UtcNow
             };
+            LastPositionSide = positionSide;
+            LastMarginSideEffect = marginSideEffect;
+            LastReduceOnly = reduceOnly;
             PlacedOrders.Add(order);
             OpenOrders.Add(order);
             return Task.FromResult(order);
         }
 
-        public Task<ExchangeOrder> PlaceStopLimitOrderAsync(string symbol, ExchangeOrderSide side, decimal stopPrice, decimal limitPrice, decimal quantity)
+        public Task<ExchangeOrder> PlaceStopLimitOrderAsync(
+            string symbol,
+            ExchangeOrderSide side,
+            decimal stopPrice,
+            decimal limitPrice,
+            decimal quantity,
+            PositionSide positionSide = PositionSide.Both,
+            MarginSideEffect marginSideEffect = MarginSideEffect.None,
+            bool reduceOnly = false)
         {
             var order = new ExchangeOrder
             {
@@ -88,10 +116,19 @@ namespace CryptoTrading.App.Tests.Mocks
                 Quantity = quantity,
                 Timestamp = DateTime.UtcNow
             };
+            LastPositionSide = positionSide;
+            LastMarginSideEffect = marginSideEffect;
+            LastReduceOnly = reduceOnly;
             PlacedOrders.Add(order);
             OpenOrders.Add(order);
             return Task.FromResult(order);
         }
+
+        // Venue-aware parameter recording — tests can assert the last
+        // positionSide / marginSideEffect / reduceOnly the algorithm emitted.
+        public PositionSide LastPositionSide { get; private set; }
+        public MarginSideEffect LastMarginSideEffect { get; private set; }
+        public bool LastReduceOnly { get; private set; }
 
         public Task<ExchangeOrder> GetOrderAsync(string symbol, string orderId)
         {
@@ -136,6 +173,28 @@ namespace CryptoTrading.App.Tests.Mocks
         public Task UnsubscribeAllAsync()
         {
             _candlestickCallbacks.Clear();
+            _userStreamCallback = null;
+            return Task.CompletedTask;
+        }
+
+        // Configurable positions (for futures/margin tests)
+        public List<ExchangePosition> Positions { get; set; } = new List<ExchangePosition>();
+        public Dictionary<string, int> AppliedLeverage { get; } = new Dictionary<string, int>();
+
+        public Task<IEnumerable<ExchangePosition>> GetPositionsAsync()
+            => Task.FromResult<IEnumerable<ExchangePosition>>(Positions);
+
+        public Task SetLeverageAsync(string symbol, int leverage)
+        {
+            AppliedLeverage[symbol] = leverage;
+            return Task.CompletedTask;
+        }
+
+        private Action<ExchangeFill> _userStreamCallback;
+
+        public Task SubscribeUserStreamAsync(Action<ExchangeFill> onFill)
+        {
+            _userStreamCallback = onFill;
             return Task.CompletedTask;
         }
 
@@ -152,7 +211,9 @@ namespace CryptoTrading.App.Tests.Mocks
         }
 
         /// <summary>
-        /// Simulate filling an open order
+        /// Simulate filling an open order. Also pushes an <see cref="ExchangeFill"/>
+        /// through the user-stream callback if one is registered, mirroring
+        /// how real exchanges notify on execution.
         /// </summary>
         public void SimulateFill(string orderId, decimal fillPrice)
         {
@@ -164,6 +225,21 @@ namespace CryptoTrading.App.Tests.Mocks
                 order.FilledQuantity = order.Quantity;
                 order.QuoteQuantity = fillPrice * order.Quantity;
                 OpenOrders.Remove(order);
+
+                _userStreamCallback?.Invoke(new ExchangeFill
+                {
+                    ExchangeId = ExchangeId,
+                    OrderId = order.OrderId,
+                    ClientOrderId = order.ClientOrderId,
+                    Symbol = order.Symbol,
+                    Side = order.Side,
+                    FilledQuantity = order.Quantity,
+                    Price = fillPrice,
+                    Commission = 0m,
+                    CommissionAsset = null,
+                    Status = ExchangeOrderStatus.Filled,
+                    Timestamp = DateTime.UtcNow
+                });
             }
         }
     }

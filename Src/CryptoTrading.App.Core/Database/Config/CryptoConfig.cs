@@ -1,11 +1,13 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using Binance;
+using CryptoTrading.App.Core.Exchange;
 
 namespace CryptoTrading.App.Core.Database.Config
 {
     public class CryptoConfig: IConfig
-    { 
+    {
         private DbContext DbContext { get; set; }
         public int Id { get; set; }
 
@@ -48,6 +50,24 @@ namespace CryptoTrading.App.Core.Database.Config
         public DateTime To { get; set; }
         public double StartBtcAmount { get; set; }
         public double StartBnbAmount { get; set; }
-        
+
+        // ---- Venue routing (added PR 1a) ----
+        // Stored as int in the DB so the schema stays compatible with the
+        // existing CryptoConfigs table — callers set TradingVenue via the
+        // enum property below, and EF persists the underlying int.
+
+        [Column("TradingVenue")]
+        public int TradingVenueRaw { get; set; }
+
+        /// <inheritdoc />
+        [NotMapped]
+        public TradingVenue TradingVenue
+        {
+            get => (TradingVenue)TradingVenueRaw;
+            set => TradingVenueRaw = (int)value;
+        }
+
+        /// <inheritdoc />
+        public int Leverage { get; set; } = 1;
     }
 }

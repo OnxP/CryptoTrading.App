@@ -21,6 +21,14 @@ namespace CryptoTrading.App.Core.Exchange
         public decimal QuoteVolume { get; set; }
         public long NumberOfTrades { get; set; }
 
+        /// <summary>
+        /// True when this candle represents a closed bar. Websocket streams
+        /// emit intra-bar updates (IsClosed=false) plus the final close event
+        /// (IsClosed=true). Consumers that need bar-close semantics must gate
+        /// on this flag. REST-sourced historical candles are always closed.
+        /// </summary>
+        public bool IsClosed { get; set; } = true;
+
         public ExchangeCandlestick() { }
 
         public ExchangeCandlestick(
