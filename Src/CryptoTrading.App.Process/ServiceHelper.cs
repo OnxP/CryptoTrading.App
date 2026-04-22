@@ -24,7 +24,12 @@ namespace CryptoTrading.App.Process
 
             var services = new ServiceCollection()
                 .AddMarketData(config)
-                .AddBinance()
+                // Fully qualified: both the bundled SDK and Binance.Net
+                // expose AddBinance extensions, and Broker now transitively
+                // surfaces the Binance.Net one. Explicit bool picks the
+                // bundled overload, which is still required by MarketData /
+                // Monitor / AccountService. They migrate in PR 5b.
+                .AddBinance(useSingleCombinedStream: false)
                 .AddTradingCore(config)
                 .AddTradeMonitor(config)
                 .AddBroker(config)

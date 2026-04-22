@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -10,9 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Binance\Binance.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
-    <ProjectReference Include="..\CryptoTrading.App.Exchange.Binance\CryptoTrading.App.Exchange.Binance.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Exchange.BinanceNet\CryptoTrading.App.Exchange.BinanceNet.csproj" />
   </ItemGroup>
 
 </Project>
