@@ -1,92 +1,100 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Binance;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.TradeRequest;
-using CryptoTrading.App.Exchange.BinanceAdapter;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Broker
 {
     /// <summary>
-    /// Paper-trading IMarket that hits Binance TEST endpoints (no real fills).
-    /// Same adapter pattern as LiveMarket — returns neutral types only.
+    /// Paper-trading IMarket. Account queries hit the real exchange (so the
+    /// algorithm sees a real balance), but order placement is simulated:
+    /// we log the intent and return a synthetic <see cref="ExchangeOrder"/>
+    /// in Filled state without calling any live trade endpoint.
+    ///
+    /// This replaces the earlier bundled-SDK implementation that called
+    /// <c>_api.TestPlaceAsync</c> — Binance's /order/test endpoint only
+    /// validates payloads, it doesn't return a useful order object, and
+    /// routing through a synthetic fill here lets the rest of the algorithm
+    /// observe a realistic order lifecycle during paper runs.
     /// </summary>
     public class TestLiveMarket : IMarket
     {
-        private readonly IBinanceApi _api;
-        private readonly IBinanceApiUser _user;
+        private readonly IExchangeProvider _exchange;
         private readonly ILogger<TestLiveMarket> _logger;
-        public TestLiveMarket(ILogger<TestLiveMarket> logger,IBinanceApi api,IBinanceApiUser user)
+        private static long _syntheticOrderIdSeed = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        public TestLiveMarket(ILogger<TestLiveMarket> logger, IExchangeProvider exchange)
         {
-            _api = api;
-            _user = user;
+            _exchange = exchange;
             _logger = logger;
         }
-        public async Task<IEnumerable<ExchangeBalance>> GetAccountBalances()
+
+        public Task<IEnumerable<ExchangeBalance>> GetAccountBalances()
         {
-            var accountBalances = await _api.GetAccountInfoAsync(_user);
-            return accountBalances.Balances
-                .Where(x => x.Free > 0)
-                .Select(BinanceMapper.ToExchangeBalance);
+            // Read the real wallet so the algorithm's sizing decisions match
+            // what it would see in live mode.
+            return _exchange.GetBalancesAsync();
         }
 
         public Task<IEnumerable<ExchangeOrder>> GetAllOpenOrders()
         {
-            throw new NotImplementedException();
+            // Paper mode never creates open orders — every synthetic fill is
+            // immediately terminal. Return empty rather than hitting REST.
+            return Task.FromResult<IEnumerable<ExchangeOrder>>(Array.Empty<ExchangeOrder>());
         }
 
-        public async Task<ExchangeOrder> SetMarketOrder(IMarketRequest trade)
+        public Task<ExchangeOrder> SetMarketOrder(IMarketRequest trade)
         {
-            var clientOrder = new MarketOrder(_user)
+            return PaperFill(trade.Symbol, trade.OrderType, ExchangeOrderType.Market,
+                price: trade.Price, quantity: trade.Quantity, stopPrice: 0m);
+        }
+
+        public Task<ExchangeOrder> SetLimitOrder(ILimitRequest trade)
+        {
+            return PaperFill(trade.Symbol, trade.OrderType, ExchangeOrderType.Limit,
+                price: trade.Price, quantity: trade.Quantity, stopPrice: 0m);
+        }
+
+        public Task<ExchangeOrder> SetStopLimitOrder(IStopLimitRequest trade)
+        {
+            return PaperFill(trade.Symbol, trade.OrderType, ExchangeOrderType.StopLimit,
+                price: trade.StopPrice, quantity: trade.Quantity, stopPrice: trade.StopPrice);
+        }
+
+        public Task<string> CancelOrder(ICancelRequest order)
+        {
+            _logger.LogInformation($"[paper] {order.Symbol} - {order.ClientOrderId} Cancelled");
+            return Task.FromResult(order.ClientOrderId ?? string.Empty);
+        }
+
+        private Task<ExchangeOrder> PaperFill(
+            string symbol, ExchangeOrderSide? orderType, ExchangeOrderType type,
+            decimal price, decimal quantity, decimal stopPrice)
+        {
+            var id = Interlocked.Increment(ref _syntheticOrderIdSeed);
+            var side = orderType ?? ExchangeOrderSide.Buy;
+            var order = new ExchangeOrder
             {
-                Symbol = trade.Symbol,
-                Side = BinanceMapper.MapToBinanceOrderSide(trade.OrderType ?? ExchangeOrderSide.Buy),
-                Quantity = trade.Quantity
+                ExchangeId = _exchange.ExchangeId,
+                OrderId = id.ToString(),
+                ClientOrderId = $"paper-{id}",
+                Symbol = symbol,
+                Side = side,
+                Type = type,
+                Status = ExchangeOrderStatus.Filled,
+                Price = price,
+                StopPrice = stopPrice,
+                Quantity = quantity,
+                FilledQuantity = quantity,
+                QuoteQuantity = price * quantity,
+                Timestamp = DateTime.UtcNow
             };
-
-            var order = await _api.TestPlaceAsync(clientOrder);
-            return BinanceMapper.ToExchangeOrder(order);
-        }
-
-        public async Task<ExchangeOrder> SetStopLimitOrder(IStopLimitRequest trade)
-        {
-            var clientOrder = new LimitOrder(_user)
-            {
-                Symbol = trade.Symbol,
-                Side = BinanceMapper.MapToBinanceOrderSide(trade.OrderType ?? ExchangeOrderSide.Buy),
-                Price = trade.StopPrice,
-                Quantity = trade.Quantity
-            };
-
-            var order = await _api.TestPlaceAsync(clientOrder);
-            return BinanceMapper.ToExchangeOrder(order);
-        }
-
-        private void LogOrder(string symbol, string order, OrderStatus filled)
-        {
-            _logger.LogInformation($"{symbol} - {order} {filled.ToString()}");
-        }
-
-        public async Task<string> CancelOrder(ICancelRequest order)
-        {
-            _logger.LogInformation($"{order.Symbol} - {order.ClientOrderId} Cancelled");
-            return await Task.Run(() => "");
-        }
-
-        public async Task<ExchangeOrder> SetLimitOrder(ILimitRequest trade)
-        {
-            var clientOrder = new LimitOrder(_user)
-            {
-                Symbol = trade.Symbol,
-                Side = BinanceMapper.MapToBinanceOrderSide(trade.OrderType ?? ExchangeOrderSide.Buy),
-                Quantity = trade.Quantity
-            };
-
-            var order = await _api.TestPlaceAsync(clientOrder);
-            return BinanceMapper.ToExchangeOrder(order);
+            _logger.LogInformation(
+                $"[paper] {symbol} {side} {type} qty={quantity} price={price} -> synthetic {order.Status}");
+            return Task.FromResult(order);
         }
     }
 }

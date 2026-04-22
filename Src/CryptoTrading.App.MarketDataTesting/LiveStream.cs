@@ -28,7 +28,11 @@ namespace CryptoTrading.App.MarketDataTesting
 
                 // Configure services.
                 var services = new ServiceCollection()
-                    .AddBinance() // add default Binance services.
+                    // Fully qualified — both the bundled SDK and Binance.Net
+                    // ship an AddBinance extension, and transitively we now
+                    // see both. The bundled one is still the active path
+                    // for this utility until MarketData is rewritten.
+                    .AddBinance(useSingleCombinedStream: false) // add default Binance services.
                     .AddLogging(builder => builder // configure logging.
                         .SetMinimumLevel(LogLevel.Trace)
                         .AddFile(configuration.GetSection("Logging:File")))

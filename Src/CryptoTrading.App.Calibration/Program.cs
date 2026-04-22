@@ -46,7 +46,10 @@ namespace CryptoTrading.App.Calibration
 
             var services = new ServiceCollection()
                 .AddMarketData(config)
-                .AddBinance()
+                // Bundled SDK AddBinance; qualified because Binance.Net is
+                // now a transitive dep via TradingCore → Broker and ships
+                // its own AddBinance.
+                .AddBinance(useSingleCombinedStream: false)
                 .AddTradingCore(config)
                 .AddAlgorithm(config)
                 .AddLogging(builder => builder // configure logging.
