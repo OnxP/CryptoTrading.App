@@ -4,9 +4,11 @@ using Binance.Net.Interfaces;
 using Binance.Net.Objects.Models.Futures;
 using Binance.Net.Objects.Models.Futures.Socket;
 using Binance.Net.Objects.Models.Spot;
+using Binance.Net.Objects.Models.Spot.Margin;
 using Binance.Net.Objects.Models.Spot.Socket;
 using CryptoTrading.App.Core.Exchange;
 using BinanceSpotOrderType = Binance.Net.Enums.SpotOrderType;
+using BinanceSideEffectType = Binance.Net.Enums.SideEffectType;
 // Neutral PositionSide lives in CryptoTrading.App.Core.Exchange; Binance.Net
 // ships its own enum of the same name. Alias the Binance one so futures
 // mappings can convert cleanly without renaming the neutral side anywhere.
@@ -447,6 +449,44 @@ namespace CryptoTrading.App.Exchange.BinanceNet
                 CommissionAsset = data.FeeAsset,
                 Timestamp = data.UpdateTime
             };
+        }
+
+        #endregion
+
+        #region Margin mapping
+
+        /// <summary>
+        /// Map a cross-margin balance row. Cross margin exposes the same
+        /// Free/Locked pair as spot plus Borrowed / Interest / NetAsset; the
+        /// neutral ExchangeBalance only carries Free/Locked so the borrowed
+        /// exposure is intentionally left to callers that need it (they can
+        /// read the margin account snapshot directly for liquidation math).
+        /// </summary>
+        public static ExchangeBalance ToExchangeBalance(BinanceMarginBalance balance)
+        {
+            return new ExchangeBalance(ExchangeName, balance.Asset, balance.Available, balance.Locked);
+        }
+
+        /// <summary>
+        /// Translate the neutral margin side-effect flag to the Binance.Net
+        /// <see cref="BinanceSideEffectType"/> enum. Returns null for
+        /// <see cref="MarginSideEffect.None"/> so the caller can omit the
+        /// parameter entirely (Binance defaults to NO_SIDE_EFFECT).
+        ///
+        /// Neutral enum has only AutoBorrow / AutoRepay; Binance also offers
+        /// AutoBorrowRepay ("buy and auto-repay on fill"). We map AutoBorrow
+        /// to MarginBuy (the classic borrow-to-enter flow) — callers who want
+        /// the combined variant must add a neutral enum value in a later PR.
+        /// </summary>
+        public static BinanceSideEffectType? MapToBinanceSideEffectType(MarginSideEffect effect)
+        {
+            switch (effect)
+            {
+                case MarginSideEffect.None: return null;
+                case MarginSideEffect.AutoBorrow: return BinanceSideEffectType.MarginBuy;
+                case MarginSideEffect.AutoRepay: return BinanceSideEffectType.AutoRepay;
+                default: return null;
+            }
         }
 
         #endregion

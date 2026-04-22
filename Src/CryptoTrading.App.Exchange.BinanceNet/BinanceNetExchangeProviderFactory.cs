@@ -9,8 +9,9 @@ namespace CryptoTrading.App.Exchange.BinanceNet
 {
     /// <summary>
     /// Builds a Binance.Net-backed IExchangeProvider for a given venue.
-    /// This PR wires spot only — the switch statement is the single
-    /// place PR 3 (futures) and PR 4 (margin) plug in.
+    /// All three venues (spot, margin, USD-M futures) are now wired; this
+    /// factory is the single construction seam for composition roots that
+    /// don't use the DI extension in <see cref="ServiceCollectionExtensions"/>.
     /// </summary>
     public class BinanceNetExchangeProviderFactory : IExchangeProviderFactory
     {
@@ -43,8 +44,7 @@ namespace CryptoTrading.App.Exchange.BinanceNet
                 case TradingVenue.Futures:
                     return new BinanceNetUsdFuturesExchangeProvider(rest, socket);
                 case TradingVenue.Margin:
-                    throw new NotSupportedException(
-                        "Margin venue is implemented in PR 4 (BinanceNetMarginExchangeProvider).");
+                    return new BinanceNetMarginExchangeProvider(rest, socket);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(venue), venue, "Unknown trading venue.");
             }

@@ -9,9 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace CryptoTrading.App.Exchange.BinanceNet
 {
     /// <summary>
-    /// DI glue for the Binance.Net adapter. In this PR only spot is wired;
-    /// the (RunType, Venue) switch here is the one place PR 3 (futures)
-    /// and PR 4 (margin) plug in. The bundled-SDK path in
+    /// DI glue for the Binance.Net adapter. All three venues (spot, margin,
+    /// USD-M futures) are wired; the (RunType, Venue) switch below is the
+    /// sole seam the composition roots hit. The bundled-SDK path in
     /// <c>CryptoTrading.App.Broker.ServiceCollectionExtensions.AddBroker</c>
     /// is untouched — this registers an <see cref="IExchangeProvider"/>
     /// alongside it so consumers can migrate at their own pace.
@@ -56,8 +56,7 @@ namespace CryptoTrading.App.Exchange.BinanceNet
                     case TradingVenue.Futures:
                         return new BinanceNetUsdFuturesExchangeProvider(rest, socket);
                     case TradingVenue.Margin:
-                        throw new NotSupportedException(
-                            "Margin venue is implemented in PR 4 (BinanceNetMarginExchangeProvider).");
+                        return new BinanceNetMarginExchangeProvider(rest, socket);
                     default:
                         throw new ArgumentOutOfRangeException(
                             nameof(config.TradingVenue), config.TradingVenue, "Unknown trading venue.");
