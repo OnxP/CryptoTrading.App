@@ -392,7 +392,7 @@ namespace CryptoTrading.App.Monitor
                 // fill worse than the current market price.
                 var marketPrice = candleStick.Candlestick.Close;
                 var fillPrice = string.Equals(entryDecision.OrderType?.ToString(), "LIMIT", StringComparison.OrdinalIgnoreCase)
-                    ? (Request.OrderSide == OrderSide.Buy
+                    ? (Request.OrderSide == ExchangeOrderSide.Buy
                         ? Math.Min(entryDecision.Price, marketPrice)
                         : Math.Max(entryDecision.Price, marketPrice))
                     : marketPrice;

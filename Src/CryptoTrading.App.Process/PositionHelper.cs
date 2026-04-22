@@ -1,20 +1,24 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Position;
 
 namespace CryptoTrading.App.Process
 {
     internal class PositionHelper
     {
-        public static void CheckDifferences(IPositions tradeProcessorPositions, List<AccountBalance> positions)
+        // `positions` is now neutral (ExchangeBalance) — any exchange adapter can
+        // feed it. Only the Asset + Free fields are read, which both Binance
+        // AccountBalance and ExchangeBalance expose identically.
+        public static void CheckDifferences(IPositions tradeProcessorPositions, List<ExchangeBalance> positions)
         {
-            foreach (var positionBinance in positions.Where(x=>x.Free!= 0.0m))
+            foreach (var balance in positions.Where(x => x.Free != 0.0m))
             {
-                var position = tradeProcessorPositions.GetPosition(positionBinance.Asset);
+                var position = tradeProcessorPositions.GetPosition(balance.Asset);
                 if (!position.HasOpenPosition)
                 {
-                    var diff = positionBinance.Free - position.FreeAmount;
+                    var diff = balance.Free - position.FreeAmount;
                     if (diff != 0.0m)
                     {
                         position.CreateTransaction(diff);
@@ -23,7 +27,7 @@ namespace CryptoTrading.App.Process
             }
         }
 
-        public static void AddPositions(List<Symbol> symbols, List<AccountBalance> accountPositions, IPositions tradeProcessorPositions)
+        public static void AddPositions(List<Symbol> symbols, List<ExchangeBalance> accountPositions, IPositions tradeProcessorPositions)
         {
             foreach (var symbol in symbols)
             {
@@ -32,7 +36,7 @@ namespace CryptoTrading.App.Process
 
             foreach (var accountPosition in accountPositions)
             {
-                tradeProcessorPositions.AjdustPosition(accountPosition.Asset,accountPosition.Free);
+                tradeProcessorPositions.AjdustPosition(accountPosition.Asset, accountPosition.Free);
             }
         }
     }

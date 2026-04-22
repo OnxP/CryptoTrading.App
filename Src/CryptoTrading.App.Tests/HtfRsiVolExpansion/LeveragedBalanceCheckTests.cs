@@ -1,4 +1,5 @@
 using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 using FluentAssertions;
@@ -23,7 +24,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         }
 
         private Mock<ITradeRequest> CreateMockRequest(
-            OrderSide side, decimal amount, int leverage,
+            ExchangeOrderSide side, decimal amount, int leverage,
             string baseSymbol = "BTC", string quoteSymbol = "USDT")
         {
             var mock = new Mock<ITradeRequest>();
@@ -43,7 +44,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             var positions = CreatePositionsWithUsdt(50_000m);
 
             // 5x leveraged Buy: Amount = 200,000 USDT notional, margin = 40,000
-            var request = CreateMockRequest(OrderSide.Buy, 200_000m, 5);
+            var request = CreateMockRequest(ExchangeOrderSide.Buy, 200_000m, 5);
 
             var result = positions.CheckHasEnoughBalance(request.Object);
 
@@ -57,7 +58,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             var positions = CreatePositionsWithUsdt(10_000m);
 
             // 5x leveraged: Amount = 200,000, margin = 40,000 > 10,000
-            var request = CreateMockRequest(OrderSide.Buy, 200_000m, 5);
+            var request = CreateMockRequest(ExchangeOrderSide.Buy, 200_000m, 5);
 
             var result = positions.CheckHasEnoughBalance(request.Object);
 
@@ -76,7 +77,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             // 5x leveraged Sell: Amount = 200,000 USDT notional, margin = 40,000
             // Before fix, this would check BTC balance (0) and fail
-            var request = CreateMockRequest(OrderSide.Sell, 200_000m, 5);
+            var request = CreateMockRequest(ExchangeOrderSide.Sell, 200_000m, 5);
 
             var result = positions.CheckHasEnoughBalance(request.Object);
 
@@ -89,7 +90,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             var positions = CreatePositionsWithUsdt(10_000m);
 
-            var request = CreateMockRequest(OrderSide.Sell, 200_000m, 5);
+            var request = CreateMockRequest(ExchangeOrderSide.Sell, 200_000m, 5);
 
             var result = positions.CheckHasEnoughBalance(request.Object);
 
@@ -106,7 +107,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         {
             var positions = CreatePositionsWithUsdt(50_000m);
 
-            var request = CreateMockRequest(OrderSide.Buy, 10_000m, 1);
+            var request = CreateMockRequest(ExchangeOrderSide.Buy, 10_000m, 1);
 
             var result = positions.CheckHasEnoughBalance(request.Object);
 
@@ -119,7 +120,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             var positions = CreatePositionsWithUsdt(50_000m);
 
             // BTC balance is 0 — spot sell should fail
-            var request = CreateMockRequest(OrderSide.Sell, 1m, 1);
+            var request = CreateMockRequest(ExchangeOrderSide.Sell, 1m, 1);
 
             var result = positions.CheckHasEnoughBalance(request.Object);
 
@@ -138,7 +139,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             var positions = CreatePositionsWithUsdt(110_000m);
 
             // Simulates the actual trade: Short BTCUSDT at 5x, ~500k notional
-            var request = CreateMockRequest(OrderSide.Sell, 500_000m, 5);
+            var request = CreateMockRequest(ExchangeOrderSide.Sell, 500_000m, 5);
 
             var result = positions.CheckRequest(request.Object);
 

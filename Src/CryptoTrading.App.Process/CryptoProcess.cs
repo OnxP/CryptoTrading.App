@@ -19,7 +19,10 @@ namespace CryptoTrading.App.Process
         private Func<IAlgorithm> Algorithm { get; set; }
         private IConfig Config { get; }
         private IAccountConfig AccountConfig { get; set; }
-        private List<Symbol> Symbols { get; set; }
+        // Neutral pair strings (e.g. "BTCUSDT"). Exchange-specific info
+        // (Binance.Symbol) is resolved at the boundary when dispatching to
+        // the algorithm / market-data code, which still consumes it.
+        private List<string> Symbols { get; set; }
         public CryptoProcess(CryptoDbConfigContext context)
         {
             Config = context.CryptoConfigs.First(x => x.Id == 1);
@@ -31,8 +34,24 @@ namespace CryptoTrading.App.Process
         {
             Symbols = await AccountConfig.LoadCurrencies();
             var accountPositions = await AccountConfig.LoadPositions();
-            PositionHelper.AddPositions(Symbols, accountPositions,TradeProcessor.Positions);
-            ProcessHelper.WireMarketDataEvents(MarketData, Symbols, Config, Algorithm);
+            // PositionHelper.AddPositions + WireMarketDataEvents still consume
+            // Binance.Symbol (algorithm/market-data internals). Resolve the
+            // neutral pair strings back to Binance.Symbol here — one-shot at
+            // the boundary — until those consumers are migrated themselves.
+            var binanceSymbols = ResolveBinanceSymbols(Symbols);
+            PositionHelper.AddPositions(binanceSymbols, accountPositions, TradeProcessor.Positions);
+            ProcessHelper.WireMarketDataEvents(MarketData, binanceSymbols, Config, Algorithm);
+        }
+
+        private static List<Symbol> ResolveBinanceSymbols(IEnumerable<string> pairs)
+        {
+            var list = new List<Symbol>();
+            foreach (var pair in pairs)
+            {
+                var s = Symbol.Cache?.Get(pair);
+                if (s != null) list.Add(s);
+            }
+            return list;
         }
 
         //Load the config from the database and set it in the services.
@@ -85,15 +104,17 @@ namespace CryptoTrading.App.Process
         public async void RefreshSymbols()
         {
             var symbols = await AccountConfig.LoadCurrencies();
-            if (ProcessHelper.HasSymbols(true,Symbols, symbols, out var newSymbols))
+            if (ProcessHelper.HasSymbols(true, Symbols, symbols, out var newSymbols))
             {
-                newSymbols.ForEach(x=>TradeProcessor.Positions.GetPosition(x));
-                ProcessHelper.WireMarketDataEvents(MarketData, newSymbols, Config, Algorithm);
+                // newSymbols are pair strings; GetPosition wants an asset key and
+                // ProcessHelper.WireMarketDataEvents still needs Binance.Symbol.
+                newSymbols.ForEach(x => TradeProcessor.Positions.GetPosition(x));
+                ProcessHelper.WireMarketDataEvents(MarketData, ResolveBinanceSymbols(newSymbols), Config, Algorithm);
             }
 
-            if (ProcessHelper.HasSymbols(false,Symbols, symbols, out var removeSymbols))
+            if (ProcessHelper.HasSymbols(false, Symbols, symbols, out var removeSymbols))
             {
-                ProcessHelper.RemoveMarketDataEvents(MarketData, removeSymbols, Config);
+                ProcessHelper.RemoveMarketDataEvents(MarketData, ResolveBinanceSymbols(removeSymbols), Config);
             }
             MarketData.Configure(Config);
         }
@@ -103,6 +124,10 @@ namespace CryptoTrading.App.Process
             var positions = await AccountConfig.LoadPositions();
             PositionHelper.CheckDifferences(TradeProcessor.Positions, positions);
         }
+
+        // NOTE: Algorithm.Subscribe(Symbol) still consumes Binance.Symbol; the
+        // neutral string list is converted at call sites only. When the
+        // algorithm consumer migrates (PR 5) this helper can go.
         //Refresh data from the database, check what properties have changed and act on those that have.
         public void RefreshDatabaseConfig()
         {

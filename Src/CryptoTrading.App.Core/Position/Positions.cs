@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Core.Trade;
+﻿using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 
@@ -39,7 +40,7 @@ namespace CryptoTrading.App.Core.Position
             // only the margin portion needs to be available.
             var balanceSymbol = what.Leverage > 1
                 ? what.QuoteSymbol
-                : (what.OrderSide == Binance.OrderSide.Buy
+                : (what.OrderSide == ExchangeOrderSide.Buy
                     ? what.QuoteSymbol
                     : what.BaseSymbol);
 

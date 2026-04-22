@@ -1,4 +1,5 @@
-﻿using Binance;
+using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +7,12 @@ using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Core.Database
 {
-    internal class DatabaseAccountConfig :IAccountConfig
+    internal class DatabaseAccountConfig : IAccountConfig
     {
+        // Backtest account tag. We don't care which live exchange the data
+        // came from — everything is synthetic for replay.
+        private const string ExchangeName = "Backtest";
+
         public DatabaseAccountConfig(IConfig config)
         {
             Config = config;
@@ -15,13 +20,16 @@ namespace CryptoTrading.App.Core.Database
 
         public IConfig Config { get; }
 
-        //public 
-        public async Task<List<Symbol>> LoadCurrencies()
+        public async Task<List<string>> LoadCurrencies()
         {
             using var context = new CryptoDbContext();
-            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x=>x.Symbol).Distinct().ToList();
-            var list = new List<Symbol>();
-            foreach (var symbol in res.Where(x=>x=="BTCUSDT"))
+            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval)
+                .Select(x => x.Symbol).Distinct().ToList();
+
+            // Warm the Binance.Symbol cache for any downstream code that still
+            // looks up exchange-info by pair string. The public return value
+            // is the neutral list of pair strings.
+            foreach (var symbol in res.Where(x => x == "BTCUSDT"))
             {
                 var symbolObject = Symbol.Cache.Get(symbol);
                 if (symbolObject == null)
@@ -57,25 +65,25 @@ namespace CryptoTrading.App.Core.Database
                             OrderType.Limit, OrderType.LimitMaker, OrderType.Market, OrderType.StopLossLimit,
                             OrderType.TakeProfitLimit
                         });
-                    Symbol.Cache.Set(symbol,symbolObject);
+                    Symbol.Cache.Set(symbol, symbolObject);
                 }
-
-                list.Add(symbolObject);
             }
 
-            return list;
+            return res.Where(x => x == "BTCUSDT").ToList();
         }
 
         private string Symbols => @"select * from CandleStickDbs where (opentime=@p0 OR opentime=@p1) and Interval=@p2";
 
-        public async Task<List<AccountBalance>> LoadPositions()
+        public async Task<List<ExchangeBalance>> LoadPositions()
         {
             using var context = new CryptoDbContext();
-            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval).Select(x => x.Symbol).Distinct().ToList();
+            var res = context.CandleSticks.SqlQuery(Symbols, Config.From, Config.To, Config.Interval)
+                .Select(x => x.Symbol).Distinct().ToList();
 
-            var list = new List<AccountBalance>();
-            list.Add(new AccountBalance(Asset.USDT, Convert.ToDecimal(Config.StartBtcAmount*200000), 0m));
-            //list.Add(new AccountBalance(Asset.BTC, Convert.ToDecimal(Config.StartBtcAmount), 0m));
+            var list = new List<ExchangeBalance>
+            {
+                new ExchangeBalance(ExchangeName, Asset.USDT, Convert.ToDecimal(Config.StartBtcAmount * 200000), 0m)
+            };
 
             foreach (var symbol in res)
             {
@@ -84,7 +92,7 @@ namespace CryptoTrading.App.Core.Database
                 decimal free = 0m;
                 if (asset.Symbol == "BNB") free = Convert.ToDecimal(Config.StartBnbAmount);
 
-                list.Add(new AccountBalance(asset, free, 0m));
+                list.Add(new ExchangeBalance(ExchangeName, asset, free, 0m));
             }
             return list;
         }

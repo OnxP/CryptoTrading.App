@@ -42,7 +42,10 @@ namespace CryptoTrading.App.Process
             return historicTrades;
         }
 
-        public static bool HasSymbols(bool added, List<Symbol> currentSymbols, List<Symbol> newSymbols, out List<Symbol> symbols)
+        // Operates on neutral pair strings (e.g. "BTCUSDT") so the caller can
+        // stay on the exchange-agnostic side; Binance.Symbol resolution happens
+        // later, only when dispatching to market-data/algorithm consumers.
+        public static bool HasSymbols(bool added, List<string> currentSymbols, List<string> newSymbols, out List<string> symbols)
         {
             symbols = added ? newSymbols.Except(currentSymbols).ToList() : currentSymbols.Except(newSymbols).ToList();
             return symbols.Any();

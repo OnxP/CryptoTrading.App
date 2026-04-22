@@ -1,4 +1,5 @@
-﻿using Binance;
+using Binance;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using System;
@@ -7,25 +8,39 @@ namespace CryptoTrading.App.Algorithm
 {
     internal class TradeRequest : ITradeRequest
     {
+        // Binance lot-size / tick-size / notional info is still carried in a
+        // Binance.Symbol because the rest of the algorithm's sizing path
+        // depends on it. The ITradeRequest surface hides that by exposing
+        // the pair as a string; IStrategyResult is mapped Binance -> neutral.
+        private readonly Symbol _binanceSymbol;
+
         public TradeRequest(IStrategyResult strategyResult, IExecutionStrategy executionStrategy, Symbol symbol, DateTime closeTime)
         {
             StrategyResult = strategyResult;
             Strategy = executionStrategy;
-            Symbol = symbol;
+            _binanceSymbol = symbol;
             RequestDateTime = closeTime;
         }
 
         public IStrategyResult StrategyResult { get; }
 
-        public Symbol Symbol { get; }
+        public string Symbol => _binanceSymbol;  // implicit Symbol -> string
+        public string BaseSymbol => _binanceSymbol.BaseAsset;
+        public string QuoteSymbol => _binanceSymbol.QuoteAsset;
 
-        public string BaseSymbol => Symbol.BaseAsset;
+        public decimal Amount => StrategyResult.Amount;
+        public int Leverage => StrategyResult.Leverage;
 
-        public string QuoteSymbol => Symbol.QuoteAsset;
+        /// <summary>
+        /// Maps <see cref="IStrategyResult.OrderSide"/> (still Binance-typed
+        /// in this PR) to the neutral <see cref="ExchangeOrderSide"/> at the
+        /// Core-facing boundary. Migration of IStrategyResult itself is
+        /// deferred to the algorithm consumer PR.
+        /// </summary>
+        public ExchangeOrderSide OrderSide => StrategyResult.OrderSide == Binance.OrderSide.Buy
+            ? ExchangeOrderSide.Buy
+            : ExchangeOrderSide.Sell;
 
-        public decimal Amount { get => StrategyResult.Amount; }
-        public int Leverage { get => StrategyResult.Leverage; }
-        public OrderSide OrderSide { get => StrategyResult.OrderSide; }
         public DateTime? RequestDateTime { get; }
         public IExecutionStrategy Strategy { get; set; }
 
