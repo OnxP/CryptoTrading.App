@@ -53,12 +53,11 @@ namespace CryptoTrading.App.Exchange.BinanceNet
                 {
                     case TradingVenue.Spot:
                         return new BinanceNetSpotExchangeProvider(rest, socket);
+                    case TradingVenue.Futures:
+                        return new BinanceNetUsdFuturesExchangeProvider(rest, socket);
                     case TradingVenue.Margin:
                         throw new NotSupportedException(
                             "Margin venue is implemented in PR 4 (BinanceNetMarginExchangeProvider).");
-                    case TradingVenue.Futures:
-                        throw new NotSupportedException(
-                            "Futures venue is implemented in PR 3 (BinanceNetUsdFuturesExchangeProvider).");
                     default:
                         throw new ArgumentOutOfRangeException(
                             nameof(config.TradingVenue), config.TradingVenue, "Unknown trading venue.");
