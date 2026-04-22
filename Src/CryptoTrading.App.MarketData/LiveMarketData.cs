@@ -127,12 +127,8 @@ namespace CryptoTrading.App.MarketData
             int numberOfCandleSticks,
             IList<Action<IEnumerable<ExchangeCandlestick>>> callback)
         {
-            // CandleStickIntervalHelper still takes the bundled CandlestickInterval
-            // (retyped in PR 5d). Translate the neutral interval here via the
-            // bridge; translation is ordinal-preserving so this is lossless.
-            var bundledInterval = BundledSdkBridge.ToBundledInterval(symbol.interval);
             var calculatedFrom = CandleStickIntervalHelper
-                .CalculateCandleStickTimeFrom(DateTime.Now, bundledInterval, numberOfCandleSticks)
+                .CalculateCandleStickTimeFrom(DateTime.Now, symbol.interval, numberOfCandleSticks)
                 .ToUniversalTime();
 
             var neutralCandles = await _exchange.GetCandlesticksAsync(

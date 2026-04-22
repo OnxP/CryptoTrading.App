@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using Microsoft.Extensions.Logging;
 using System;
@@ -36,7 +37,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             Logger.LogInformation(Builder.ToString());
             Builder.Clear();
         }
-        protected bool CheckLastTrade(System.DateTime endDateTime, System.DateTime closeTime, CandlestickInterval interval)
+        protected bool CheckLastTrade(System.DateTime endDateTime, System.DateTime closeTime, CandleInterval interval)
         {
             var nextTradeDate = CandleStickIntervalHelper.NextCandleStickTime(endDateTime, interval);
             return nextTradeDate < closeTime;
