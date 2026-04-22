@@ -56,6 +56,19 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
         private DateTime _lastBarSeen;
         private bool _aborted;
 
+        // Per-bar decision cache. The production TradeMonitor calls
+        // GetNextEntry twice per 1M tick (once inside
+        // SimpleExecutionStrategy.ProcessStrategy to decide whether to
+        // return OpenTrade, once inside TradeMonitor.ExecuteEntryStrategy
+        // to actually submit the order). Without caching, the second call
+        // would re-enter the BbGuide state machine, trip the _lastBarSeen
+        // dedupe guard, and return ShouldTrade=false — the order would
+        // never be submitted. We evaluate the decision once per distinct
+        // bar (including the setup rebase side-effect) and replay the
+        // cached TradeDetails for any repeated calls on the same bar.
+        private TradeDetails _lastDecision;
+        private DateTime _lastDecisionBarTime;
+
         /// <summary>
         /// Immediate-fill ctor. No defer — the next tick fires a market order.
         /// Kept for back-compat with exec strategies that don't want BbGuide.
@@ -123,6 +136,14 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             var lastQuote = _quoteHub.Quotes.Last();
             var barTime = lastQuote.Timestamp;
 
+            // Idempotent within a bar — replay the cached decision (and
+            // any setup-rebase side effects already applied) for repeated
+            // calls on the same bar. The production TradeMonitor calls
+            // this twice per tick; we only want the BbGuide state machine
+            // to advance once.
+            if (_lastDecisionBarTime == barTime && _lastDecision != null)
+                return _lastDecision;
+
             // De-dupe — only act once per distinct bar close. SetQuotes
             // pushes quotes through the hub and ProcessStrategy may be
             // invoked more frequently than bars arrive.
@@ -141,7 +162,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             if (slBreached)
             {
                 _aborted = true;
-                return new TradeDetails { ShouldTrade = false };
+                return CacheDecision(barTime, new TradeDetails { ShouldTrade = false });
             }
 
             decimal previousClose = _priorClose1mSet ? _priorClose1m : barClose;
@@ -157,7 +178,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             bool budgetExpired = elapsed >= BbGuideBudgetMinutes;
 
             if (!aligned && !budgetExpired)
-                return new TradeDetails { ShouldTrade = false };
+                return CacheDecision(barTime, new TradeDetails { ShouldTrade = false });
 
             // Fire. Rebase the setup's prices to the 1M fill and mark the
             // setup final so SimpleExecutionStrategy skips its rebase.
@@ -176,14 +197,21 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             _setup.EntryTime = barTime;
             _setup.EntryPriceFinal = true;
 
-            return new TradeDetails
+            return CacheDecision(barTime, new TradeDetails
             {
                 ShouldTrade = true,
                 EntryPrice = barClose,
                 Quantity = remaining,
                 Price = barClose,
                 OrderType = "MARKET"
-            };
+            });
+        }
+
+        private TradeDetails CacheDecision(DateTime barTime, TradeDetails decision)
+        {
+            _lastDecisionBarTime = barTime;
+            _lastDecision = decision;
+            return decision;
         }
     }
 }
