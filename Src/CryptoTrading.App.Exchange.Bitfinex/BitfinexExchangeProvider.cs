@@ -27,6 +27,12 @@ namespace CryptoTrading.App.Exchange.BitfinexAdapter
 
         public string ExchangeId => BitfinexMapper.ExchangeName;
 
+        /// <summary>
+        /// Bitfinex adapter currently supports exchange (spot) wallets only.
+        /// Margin funding / derivatives would route through a separate provider.
+        /// </summary>
+        public TradingVenue Venue => TradingVenue.Spot;
+
         public BitfinexExchangeProvider(string apiKey, string apiSecret, HttpClient httpClient = null)
         {
             _apiKey = apiKey;
@@ -119,8 +125,15 @@ namespace CryptoTrading.App.Exchange.BitfinexAdapter
 
         #region Orders
 
-        public async Task<ExchangeOrder> PlaceMarketOrderAsync(string symbol, ExchangeOrderSide side, decimal quantity)
+        public async Task<ExchangeOrder> PlaceMarketOrderAsync(
+            string symbol,
+            ExchangeOrderSide side,
+            decimal quantity,
+            PositionSide positionSide = PositionSide.Both,
+            MarginSideEffect marginSideEffect = MarginSideEffect.None,
+            bool reduceOnly = false)
         {
+            GuardSpotOnlyParams(positionSide, marginSideEffect, reduceOnly);
             var bfxSymbol = BitfinexMapper.TobitfinexSymbol(symbol);
             var amount = side == ExchangeOrderSide.Buy ? quantity : -quantity;
 
@@ -138,8 +151,16 @@ namespace CryptoTrading.App.Exchange.BitfinexAdapter
             return ParseOrderResponse(result, symbol);
         }
 
-        public async Task<ExchangeOrder> PlaceLimitOrderAsync(string symbol, ExchangeOrderSide side, decimal price, decimal quantity)
+        public async Task<ExchangeOrder> PlaceLimitOrderAsync(
+            string symbol,
+            ExchangeOrderSide side,
+            decimal price,
+            decimal quantity,
+            PositionSide positionSide = PositionSide.Both,
+            MarginSideEffect marginSideEffect = MarginSideEffect.None,
+            bool reduceOnly = false)
         {
+            GuardSpotOnlyParams(positionSide, marginSideEffect, reduceOnly);
             var bfxSymbol = BitfinexMapper.TobitfinexSymbol(symbol);
             var amount = side == ExchangeOrderSide.Buy ? quantity : -quantity;
 
@@ -158,8 +179,17 @@ namespace CryptoTrading.App.Exchange.BitfinexAdapter
             return ParseOrderResponse(result, symbol);
         }
 
-        public async Task<ExchangeOrder> PlaceStopLimitOrderAsync(string symbol, ExchangeOrderSide side, decimal stopPrice, decimal limitPrice, decimal quantity)
+        public async Task<ExchangeOrder> PlaceStopLimitOrderAsync(
+            string symbol,
+            ExchangeOrderSide side,
+            decimal stopPrice,
+            decimal limitPrice,
+            decimal quantity,
+            PositionSide positionSide = PositionSide.Both,
+            MarginSideEffect marginSideEffect = MarginSideEffect.None,
+            bool reduceOnly = false)
         {
+            GuardSpotOnlyParams(positionSide, marginSideEffect, reduceOnly);
             var bfxSymbol = BitfinexMapper.TobitfinexSymbol(symbol);
             var amount = side == ExchangeOrderSide.Buy ? quantity : -quantity;
 
@@ -262,6 +292,41 @@ namespace CryptoTrading.App.Exchange.BitfinexAdapter
         {
             _candlestickCallbacks.Clear();
             return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region Positions, Leverage, User Stream (spot-only = empty / not supported)
+
+        public Task<IEnumerable<ExchangePosition>> GetPositionsAsync()
+            => Task.FromResult<IEnumerable<ExchangePosition>>(Array.Empty<ExchangePosition>());
+
+        public Task SetLeverageAsync(string symbol, int leverage)
+        {
+            if (leverage != 1)
+                throw new NotSupportedException(
+                    $"{nameof(BitfinexExchangeProvider)} is spot-only; leverage={leverage} is not supported.");
+            return Task.CompletedTask;
+        }
+
+        public Task SubscribeUserStreamAsync(Action<ExchangeFill> onFill)
+        {
+            throw new NotImplementedException(
+                "User-stream fills require Bitfinex WS v2 auth channel integration.");
+        }
+
+        private static void GuardSpotOnlyParams(
+            PositionSide positionSide, MarginSideEffect marginSideEffect, bool reduceOnly)
+        {
+            if (positionSide != PositionSide.Both)
+                throw new NotSupportedException(
+                    $"{nameof(BitfinexExchangeProvider)} is spot-only; positionSide={positionSide} is not supported.");
+            if (marginSideEffect != MarginSideEffect.None)
+                throw new NotSupportedException(
+                    $"{nameof(BitfinexExchangeProvider)} is spot-only; marginSideEffect={marginSideEffect} is not supported.");
+            if (reduceOnly)
+                throw new NotSupportedException(
+                    $"{nameof(BitfinexExchangeProvider)} is spot-only; reduceOnly=true is not supported.");
         }
 
         #endregion
