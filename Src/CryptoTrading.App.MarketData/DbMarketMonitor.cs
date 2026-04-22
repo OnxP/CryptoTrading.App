@@ -1,36 +1,31 @@
-﻿using Binance;
-using Binance.Client;
+using Binance;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Trade;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CryptoTrading.App.Core.MarketMonitorFactory;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
-    //Class monitors the position in the open trade and adjusts the stop loss, this could work on live streaming data 
-    //Input(Initial) - Trade details.
-    //Input(continuous) - CandleStick Processing.
-    //StaticInput - Stop loss type and limit.
-    //Output - Change Stop Limit Order
-
-    //Processing logic
-    //Initial - Configure Stoploss Monitor from Open trade. and set a stop limit order.
-    //Continuous - Monitor price and once it hits a threshold reset stoploss to limit order X% below threshold then adjust threshold
-
+    /// <summary>
+    /// DB-backed monitor for backtests. PR 5c: subscriber fan-out is neutral
+    /// (<see cref="ExchangeCandlestickEvent"/>); the EF DB layer still surfaces
+    /// bundled <see cref="Candlestick"/> rows, translated at the seam via
+    /// <see cref="BundledSdkBridge"/>.
+    /// </summary>
     public class DbMarketMonitor : IMarketMonitor
     {
         ICandleStickManagement _mangement;
         IDbData _data;
-        private Dictionary<string, Dictionary<string, Action<CandlestickEventArgs>>> actions;
+        private Dictionary<string, Dictionary<string, Action<ExchangeCandlestickEvent>>> actions;
         public DbMarketMonitor(ICandleStickManagement management, IDbData data)
         {
             _mangement = management;
             _data = data;
-            actions = new Dictionary<string, Dictionary<string,Action<CandlestickEventArgs>>>();
-            //_mangement.AddMonitor(this);
+            actions = new Dictionary<string, Dictionary<string, Action<ExchangeCandlestickEvent>>>();
         }
 
         public CandlestickInterval Interval { get; set; }
@@ -89,21 +84,22 @@ namespace CryptoTrading.App.MarketData
 
         public async Task InvokeCandleStick()
         {
-            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x=>x.Key.Item2==CandlestickInterval.Minute).ToList();
+            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x => x.Key.Item2 == CandlestickInterval.Minute).ToList();
             if (candleSticks.All(x => x.Value == null)) return;
 
             foreach (var kvp in candleSticks)
             {
                 if (!actions.ContainsKey(kvp.Key.Item1)) continue;
+                var neutralCandle = BundledSdkBridge.ToNeutralCandle(kvp.Value);
+                var evt = new ExchangeCandlestickEvent(neutralCandle, _mangement.CurrentTick);
                 foreach (var action in actions[kvp.Key.Item1])
                 {
-                    action.Value.Invoke(new CandlestickEventArgs(_mangement.CurrentTick, kvp.Value, 0, 0,
-                        true));
+                    action.Value.Invoke(evt);
 
-                    if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key.Item1,kvp.Key.Item2))
+                    if (!_data.CheckNextTick(_mangement.NextTick, kvp.Key.Item1, kvp.Key.Item2))
                     {
-                        await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, 
-                            new List<string>() { kvp.Key.Item1 }, 0,0);
+                        await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick,
+                            new List<string>() { kvp.Key.Item1 }, 0, 0);
                     }
                 }
             }
@@ -112,23 +108,24 @@ namespace CryptoTrading.App.MarketData
             _data.ClearHistoric(_mangement.CurrentTick);
         }
 
-        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
+        public async Task<List<ExchangeCandlestick>> GetHistoricCandleSticks(string symbol)
         {
             var rows = await _data.LoadData(SQL_HISTORIC_QUERY,
                 DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minute, -201), _mangement.CurrentTick,
                 [symbol], 0, -1);
-            return _data.GetData(symbol,CandlestickInterval.Minute);
+            var bundled = _data.GetData(symbol, CandlestickInterval.Minute);
+            return bundled.Select(BundledSdkBridge.ToNeutralCandle).ToList();
         }
 
-        public async Task Subscribe(string symbol, string keyValue,Action<CandlestickEventArgs> processCandleStick)
+        public async Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)
         {
             if (actions.ContainsKey(symbol))
-                actions[symbol].Add(keyValue,processCandleStick);
+                actions[symbol].Add(keyValue, processCandleStick);
             else
             {
-                var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol}, 0, pageNumber);
+                var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, _mangement.FinalTick, new List<string>() { symbol }, 0, pageNumber);
                 pageNumber++;
-                actions.Add(symbol, new Dictionary<string, Action<CandlestickEventArgs>>() { { keyValue, processCandleStick } });
+                actions.Add(symbol, new Dictionary<string, Action<ExchangeCandlestickEvent>>() { { keyValue, processCandleStick } });
             }
 
             _data.ClearHistoric(_mangement.PreviousTick);

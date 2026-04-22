@@ -1,6 +1,4 @@
-﻿using Binance;
-using Binance.Client;
-using CryptoTrading.App.Algorithm.RegimeBased;
+﻿using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database.StoreTrades;
@@ -133,7 +131,7 @@ namespace CryptoTrading.App.Monitor
 
         //for the database it is 1m candles but for live trading it is the live market price.
         //so the candle needs to be final before processing.
-        public async void ProcessCandleStick(CandlestickEventArgs candleStick)
+        public async void ProcessCandleStick(ExchangeCandlestickEvent candleStick)
         {
             if (!candleStick.IsFinal) return;
             _quoteHub.Add(new Quote
@@ -211,7 +209,7 @@ namespace CryptoTrading.App.Monitor
             // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
         }
 
-        private async Task HandleNoPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleNoPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
@@ -233,7 +231,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleBuildingPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleBuildingPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Continue building position using entry strategy
             if (result.StrategyAction == StrategyAction.OpenTrade)
@@ -286,7 +284,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleFullyOpenPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleFullyOpenPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Safety check: if position has no quantity, reset to NoPosition
             if (Trade.TotalOpenBaseQuantity <= 0)
@@ -314,7 +312,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleInProfitPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleInProfitPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Safety check: if position has no quantity, reset to NoPosition
             if (Trade.TotalOpenBaseQuantity <= 0)
@@ -339,7 +337,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task HandleClosingPosition(StrategyStatus result, CandlestickEventArgs candleStick)
+        private async Task HandleClosingPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
             // Continue executing exit strategy until position is fully closed
             if (Trade.RemainingQuantity > 0 && Trade.TotalOpenBaseQuantity > 0)
@@ -373,7 +371,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task ExecuteEntryStrategy(CandlestickEventArgs candleStick)
+        private async Task ExecuteEntryStrategy(ExchangeCandlestickEvent candleStick)
         {
             // Entry strategy determines how to build the position.
             // Use the execution strategy's computed Quantity (from PositionSizer)
@@ -421,7 +419,7 @@ namespace CryptoTrading.App.Monitor
             }
         }
 
-        private async Task ExecuteExitStrategy(CandlestickEventArgs candleStick, TradeDetails cachedExit = null)
+        private async Task ExecuteExitStrategy(ExchangeCandlestickEvent candleStick, TradeDetails cachedExit = null)
         {
             // Use the cached exit decision from ProcessStrategy if available,
             // to avoid calling GetNextExit twice (which double-increments BarsHeld).

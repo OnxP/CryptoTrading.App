@@ -1,7 +1,7 @@
 ﻿using Binance;
-using Binance.Client;
 using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
@@ -189,12 +189,12 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             }
 
             // 4H for regime detection
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Hours_4, ProcessHistoricData4H);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Hours_4, ProcessLiveCandle4H);
+            marketData.InitialDataLoadSubscribe(symbol, CandleInterval.Hour_4, ProcessHistoricData4H);
+            marketData.InitialDataStreamSubscribe(symbol, CandleInterval.Hour_4, ProcessLiveCandle4H);
 
             // 15M for setup detection
-            marketData.InitialDataLoadSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessHistoricData15M);
-            marketData.InitialDataStreamSubscribe(symbol, CandlestickInterval.Minutes_15, ProcessLiveCandle15M);
+            marketData.InitialDataLoadSubscribe(symbol, CandleInterval.Minute_15, ProcessHistoricData15M);
+            marketData.InitialDataStreamSubscribe(symbol, CandleInterval.Minute_15, ProcessLiveCandle15M);
 
 
             _logger.LogInformation($"Subscribed to {symbol} on 4H, 15M, and 1M timeframes");
@@ -202,7 +202,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
         #region Historic Data Loading
 
-        private void ProcessHistoricData4H(IEnumerable<Candlestick> candlesticks)
+        private void ProcessHistoricData4H(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             foreach (var candle in candlesticks)
             {
@@ -225,7 +225,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                 $"Initial regime: {_currentRegime?.MarketRegime}");
         }
 
-        private void ProcessHistoricData15M(IEnumerable<Candlestick> candlesticks)
+        private void ProcessHistoricData15M(IEnumerable<ExchangeCandlestick> candlesticks)
         {
             foreach (var candle in candlesticks)
             {
@@ -251,7 +251,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         /// <summary>
         /// Process 4H candle - Update market regime
         /// </summary>
-        private void ProcessLiveCandle4H(CandlestickEventArgs args)
+        private void ProcessLiveCandle4H(ExchangeCandlestickEvent args)
         {
             try
             {
@@ -308,7 +308,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         /// <summary>
         /// Process 15M candle - Evaluate setups
         /// </summary>
-        private void ProcessLiveCandle15M(CandlestickEventArgs args)
+        private void ProcessLiveCandle15M(ExchangeCandlestickEvent args)
         {
             try
             {

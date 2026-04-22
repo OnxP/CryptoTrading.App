@@ -111,5 +111,34 @@ namespace CryptoTrading.App.MarketData
             var eventTime = c.CloseTime == default ? DateTime.UtcNow : c.CloseTime;
             return new CandlestickEventArgs(eventTime, candle, firstTradeId: 0, lastTradeId: 0, isFinal: c.IsClosed);
         }
+
+        /// <summary>
+        /// Reverse mapping: bundled <see cref="Binance.Candlestick"/> (e.g.
+        /// returned by the EF DB layer or legacy test fixtures) to neutral
+        /// <see cref="ExchangeCandlestick"/>. Used by <c>DbMarketData</c> and
+        /// <c>DbMarketMonitor</c> to translate at the EF boundary before
+        /// fanning out to neutral subscribers in PR 5c. The symbol is copied
+        /// verbatim and the exchange id is left null (DB rows are
+        /// Binance-only — populated in PR 6 when the EF layer goes neutral).
+        /// </summary>
+        public static ExchangeCandlestick ToNeutralCandle(Candlestick c)
+        {
+            return new ExchangeCandlestick
+            {
+                ExchangeId = null,
+                Symbol = c.Symbol,
+                Interval = ToNeutralInterval(c.Interval),
+                OpenTime = c.OpenTime,
+                CloseTime = c.CloseTime,
+                Open = c.Open,
+                High = c.High,
+                Low = c.Low,
+                Close = c.Close,
+                Volume = c.Volume,
+                QuoteVolume = c.QuoteAssetVolume,
+                NumberOfTrades = c.NumberOfTrades,
+                IsClosed = true,
+            };
+        }
     }
 }

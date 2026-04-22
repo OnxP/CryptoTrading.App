@@ -1,7 +1,7 @@
 ﻿using Binance;
-using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -111,17 +111,21 @@ namespace CryptoTrading.App.DatabaseLoad
             {
                 foreach (var interval in intervals)
                 {
-                    marketDate.InitialDataLoadSubscribe(symbol, interval, SaveHistoricCandleStick);
-                    marketDate.InitialDataStreamSubscribe(symbol, interval, AddCandleStick);
+                    // Bridge bundled CandlestickInterval to neutral CandleInterval for the PR 5c
+                    // IMarketData surface. PR 5d migrates this utility to the neutral interval end-to-end.
+                    var neutralInterval = (CandleInterval)(int)interval;
+                    marketDate.InitialDataLoadSubscribe(symbol, neutralInterval, SaveHistoricCandleStick);
+                    marketDate.InitialDataStreamSubscribe(symbol, neutralInterval, AddCandleStick);
                 }
             }
         }
         public static CryptoDbContext context = new CryptoDbContext();
-        private static void AddCandleStick(CandlestickEventArgs obj)
+        private static void AddCandleStick(ExchangeCandlestickEvent obj)
         {
             lock (_object)
             {
-                context.CandleSticks.Add(new CandleStickDb(obj.Candlestick));
+                // CandleStickDb ctor is still bundled; bridge at the EF seam until PR 5d.
+                context.CandleSticks.Add(new CandleStickDb(ExchangeCandlestickBridge.ToBundled(obj.Candlestick)));
                 Check();
             }
         }
@@ -152,11 +156,11 @@ namespace CryptoTrading.App.DatabaseLoad
         }
 
         static object _object = new object();
-        private static void SaveHistoricCandleStick(IEnumerable<Candlestick> obj)
+        private static void SaveHistoricCandleStick(IEnumerable<ExchangeCandlestick> obj)
         {
             lock (_object)
             {
-                var sticks = obj.Select(x => new CandleStickDb(x)).ToList();
+                var sticks = obj.Select(x => new CandleStickDb(ExchangeCandlestickBridge.ToBundled(x))).ToList();
                 Check(sticks);
             }
         }

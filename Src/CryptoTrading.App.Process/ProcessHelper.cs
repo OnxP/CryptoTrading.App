@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 
@@ -24,7 +25,9 @@ namespace CryptoTrading.App.Process
         }
         public static void RemoveMarketDataEvents(IMarketDataEvents marketData, List<Symbol> removeSymbols, IConfig config)
         {
-            var interval = config.Interval;
+            // Bridge IConfig.Interval (bundled) to neutral CandleInterval for the
+            // PR 5c IMarketDataEvents surface. PR 5d retypes IConfig.Interval.
+            var interval = (CandleInterval)(int)config.Interval;
             foreach (var symbol in removeSymbols)
             {
                 marketData.InitialDataLoadUnSubscribe(symbol, interval);

@@ -190,7 +190,9 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         public override double Calculate(CandleStickDictionary closePrices, IStopLimitTracker StopLimitTrackers)
         {
             var psar = base.Calculate(closePrices,StopLimitTrackers);
-            var candles = closePrices.Values.ToList();
+            var candles = closePrices.Values
+                .Select(c => ExchangeCandlestickBridge.ToBundled(c, (CandlestickInterval)(int)closePrices.Interval))
+                .ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);
 

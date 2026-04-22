@@ -1,5 +1,3 @@
-using Binance;
-using Binance.Client;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
@@ -12,25 +10,22 @@ using System.Threading.Tasks;
 
 namespace CryptoTrading.App.MarketData
 {
-    // Class monitors the position in the open trade and adjusts the stop loss
-    // against live streaming 1m candles.
-    //
-    // PR 5b: was previously wired directly to the bundled-SDK
-    // IBinanceApi / ICandlestickClient / IBinanceWebSocketStream. Now it
-    // goes through IExchangeProvider (Binance.Net) with the bundled-SDK
-    // types only surfacing at the IMarketMonitor boundary so the 15+
-    // callers don't have to change in this PR. A follow-up PR migrates
-    // IMarketMonitor itself to neutral types.
+    /// <summary>
+    /// Monitors the open position and adjusts the stop loss against a
+    /// live 1-minute candle stream.
+    ///
+    /// PR 5c: IMarketMonitor is now fully neutral
+    /// (<see cref="ExchangeCandlestickEvent"/> / <see cref="ExchangeCandlestick"/>)
+    /// so this file no longer translates at the boundary — neutral candles
+    /// from the provider flow straight to the TradeMonitor callback.
+    /// </summary>
     public class LiveMarketMonitor : AbstractMarketData, IMarketMonitor
     {
         protected IExchangeProvider _exchange;
         protected ILogger Logger;
 
         // Interval used for the 1m live feed this monitor subscribes to.
-        // Kept as a field so the fixed choice is visible in one place; any
-        // future per-symbol override lands here.
         private static readonly CandleInterval StreamInterval = CandleInterval.Minute_1;
-        private static readonly CandlestickInterval StreamIntervalBundled = CandlestickInterval.Minute;
 
         public LiveMarketMonitor(ILogger<LiveMarketMonitor> logger, IExchangeProvider exchange)
         {
@@ -65,7 +60,7 @@ namespace CryptoTrading.App.MarketData
             return newOrder.Status == ExchangeOrderStatus.Filled;
         }
 
-        public async Task Subscribe(string symbol, string keyValue, Action<CandlestickEventArgs> processCandleStick)
+        public async Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)
         {
             if (!symbols.Contains(symbol))
             {
@@ -82,8 +77,11 @@ namespace CryptoTrading.App.MarketData
                 {
                     try
                     {
-                        var args = BundledSdkBridge.ToBundledEventArgs(neutralCandle, StreamIntervalBundled);
-                        processCandleStick.Invoke(args);
+                        var eventTime = neutralCandle.CloseTime == default
+                            ? DateTime.UtcNow
+                            : neutralCandle.CloseTime;
+                        var evt = new ExchangeCandlestickEvent(neutralCandle, eventTime);
+                        processCandleStick.Invoke(evt);
                     }
                     catch (Exception e)
                     {
@@ -103,9 +101,6 @@ namespace CryptoTrading.App.MarketData
 
             // IExchangeProvider only exposes UnsubscribeAllAsync today; call
             // it when the last symbol drops so we don't leak sockets.
-            // Single-symbol unsubscribe is a follow-up on the provider
-            // interface — for the 1-symbol BTCUSDT runtime this is a no-op
-            // while other symbols are active.
             if (!symbols.Any())
             {
                 try
@@ -124,14 +119,16 @@ namespace CryptoTrading.App.MarketData
             throw new NotImplementedException();
         }
 
-        public async Task<List<Candlestick>> GetHistoricCandleSticks(string symbol)
+        public async Task<List<ExchangeCandlestick>> GetHistoricCandleSticks(string symbol)
         {
-            // 200 bars of 1m data is the shape the legacy bundled-SDK
-            // implementation returned; preserved byte-for-byte so downstream
-            // indicators (TradeMonitor.QuoteHub seed) don't see a behavioural
-            // change from this PR.
+            // 200 bars of 1m data preserves the shape the legacy bundled-SDK
+            // implementation returned; downstream indicators (TradeMonitor.QuoteHub
+            // seed) don't see a behavioural change from this PR.
+            // CandleStickIntervalHelper still speaks bundled CandlestickInterval;
+            // translate via the bridge (ordinal-preserving so lossless) until PR 5d.
+            var bundledStreamInterval = BundledSdkBridge.ToBundledInterval(StreamInterval);
             var calculatedFrom = CandleStickIntervalHelper
-                .CalculateCandleStickTimeFrom(DateTime.Now, StreamIntervalBundled, 200)
+                .CalculateCandleStickTimeFrom(DateTime.Now, bundledStreamInterval, 200)
                 .ToUniversalTime();
 
             var neutralCandles = await _exchange.GetCandlesticksAsync(
@@ -140,14 +137,10 @@ namespace CryptoTrading.App.MarketData
                 calculatedFrom,
                 DateTime.Now.ToUniversalTime()).ConfigureAwait(false);
 
-            var list = neutralCandles
-                .Reverse()
-                .Select(c => BundledSdkBridge.ToBundledCandlestick(c, StreamIntervalBundled))
-                .ToList();
+            var list = neutralCandles.Reverse().ToList();
 
-            // Legacy code called .Reverse() again on the materialized list.
-            // Keeping the same double-reverse behaviour so the surface-level
-            // ordering is identical to the bundled-SDK path.
+            // Legacy code double-reversed here; preserve the same surface-level
+            // ordering so TradeMonitor's seed is byte-for-byte identical.
             list.Reverse();
             return list;
         }
