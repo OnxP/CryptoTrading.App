@@ -424,7 +424,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 PostTrade = true,
                 Amount = quantity * entryPrice, // USDT notional
                 Leverage = Leverage,
-                OrderSide = direction == TradeDirection.Long ? OrderSide.Buy : OrderSide.Sell,
+                OrderSide = direction == TradeDirection.Long ? ExchangeOrderSide.Buy : ExchangeOrderSide.Sell,
                 Setup = setup
             };
 

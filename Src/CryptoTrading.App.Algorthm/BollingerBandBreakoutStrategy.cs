@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
 using Skender.Stock.Indicators;
@@ -9,7 +9,7 @@ namespace CryptoTrading.App.Algorithm
     internal class BollingerBandBreakoutStrategy : IExecutionStrategy
     {
         public IReadOnlyList<BollingerBandsResult> Bbands { get; set; }
-        public BollingerBandBreakoutStrategy(QuoteHub<IQuote> quoteHub, OrderSide buy)
+        public BollingerBandBreakoutStrategy(QuoteHub<IQuote> quoteHub, ExchangeOrderSide buy)
         {
             Bbands = quoteHub.Quotes.ToBollingerBands();
             EntryStrategy = new SrsiEntryStrategy(quoteHub, buy);
