@@ -1,6 +1,7 @@
 ﻿using Binance;
 using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -76,7 +77,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             AverageCandleSize /= ((decimal)(Candles.Count));
             return AverageCandleSize;
         }
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var atr = indicatorOutputs["atr"][0].ToList();
             var close = indicatorOutputs["close"][0].ToList();

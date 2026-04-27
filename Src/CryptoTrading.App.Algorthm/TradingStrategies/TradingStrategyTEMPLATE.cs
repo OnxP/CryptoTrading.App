@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Algorithm.TradingStrategies
@@ -17,7 +18,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             throw new NotImplementedException();
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             throw new NotImplementedException();
         }

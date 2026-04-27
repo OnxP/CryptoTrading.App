@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +42,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             dict.Add("close", close);
             return dict;
         }
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             var mediumWma = indicatorOutputs["MediumWma"][0].ToList();
@@ -93,7 +94,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         }
 
 
-        protected override bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             if (!StopLimitTrackers.IsOpen)

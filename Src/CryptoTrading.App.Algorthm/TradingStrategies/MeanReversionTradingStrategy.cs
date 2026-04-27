@@ -1,6 +1,7 @@
 ﻿using System;
 using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var close = indicatorOutputs["Close"][0].ToList();
             var open = indicatorOutputs["Close"][4].ToList();
@@ -43,7 +44,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             {
                 //var diff = closePrice.Close - Last10Low;
                 //volume and profitability conditions.
-                if (closePrice.QuoteAssetVolume > 2.0m && closePrice.NumberOfTrades > 10m && Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 3 < (decimal)prevStd)
+                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m && Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 3 < (decimal)prevStd)
                 {
                     //if(diff < 3* Symbol.Cache.Get(closePrice.Symbol).Price.Increment) return false;
                     StopLimitTrackers.CurrentPrice = closePrice.Close;

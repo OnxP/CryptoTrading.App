@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         {
             
         }
-        public virtual int SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, bool conditions, Action<string> logInformation)
+        public virtual int SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, bool conditions, Action<string> logInformation)
         {
             if (conditions)
             {
@@ -52,7 +53,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             return 0;
         }
 
-        public virtual int SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, bool conditions, bool closeConditions,decimal last10Low, Action<string> logInformation)
+        public virtual int SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, bool conditions, bool closeConditions,decimal last10Low, Action<string> logInformation)
         {
             if (conditions)
             {
@@ -65,13 +66,13 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             return 0;
         }
 
-        protected virtual bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, Action<string> logInformation)
+        protected virtual bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, Action<string> logInformation)
         {
             if (IsOpen) return false;
             //var diff = closePrice.Close - Last10Low;
             var atr = indicatorOutputs["atr"][0].ToList();
             //volume and profitability conditions.
-            if (closePrice.QuoteAssetVolume <= 2.0m || closePrice.NumberOfTrades <= 10m ||
+            if (closePrice.QuoteVolume <= 2.0m || closePrice.NumberOfTrades <= 10m ||
                 Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 >= 2 * (decimal)atr.Last()) return false;
 
             var sl = closePrice.Close - 3m * (decimal)atr.Last();
@@ -93,14 +94,14 @@ namespace CryptoTrading.App.Algorithm.StopLimits
         }
 
         private decimal tradePrice;
-        protected virtual bool SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,decimal last10Low, Action<string> logInformation)
+        protected virtual bool SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,decimal last10Low, Action<string> logInformation)
         {
             if (IsOpen) return false;
             //var diff = closePrice.Close - Last10Low;
             var diff = closePrice.Close - last10Low;
             var perc = (diff / closePrice.Close) * 100;
             //volume and profitability conditions.
-            if ((closePrice.QuoteAssetVolume <= 4.0m && closePrice.NumberOfTrades <= 30m &&
+            if ((closePrice.QuoteVolume <= 4.0m && closePrice.NumberOfTrades <= 30m &&
                  Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * diff) && Math.Abs(perc) >2) return false;
 
             CurrentPrice = closePrice.Close;
@@ -119,7 +120,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
 
         }
 
-        protected virtual void UpdateStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, Action<string> logInformation)
+        protected virtual void UpdateStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, Action<string> logInformation)
         {
             var atr = indicatorOutputs["atr"][0].ToList();
             var currentSl = closePrice.Close - 1m * (decimal)atr.Last();
@@ -130,7 +131,7 @@ namespace CryptoTrading.App.Algorithm.StopLimits
             }
         }
 
-        protected virtual void UpdateSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,bool closeConditions, Action<string> logInformation)
+        protected virtual void UpdateSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,bool closeConditions, Action<string> logInformation)
         {
             var currentSl = closePrice.Close;
             if (closeConditions && tradePrice > StopLimitPrice)

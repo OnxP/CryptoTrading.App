@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 
@@ -22,9 +23,9 @@ namespace CryptoTrading.App.Core
         bool RequestUpdateOfStopLimit(decimal closePrice);
         void ManualChangeSL(decimal sl);
         void SetLimits(decimal quoteClosePrice);
-        int SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, bool conditions, Action<string> logInformation);
+        int SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, bool conditions, Action<string> logInformation);
 
-        int SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        int SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             bool conditions, bool closeConditions, decimal last10Low, Action<string> logInformation);
     }
 }
