@@ -68,8 +68,13 @@ namespace CryptoTrading.App.DatabaseLoad
             };
 
             // --- Gap fill: check the DB per symbol and download only what is missing ---
+            // PR 6e: MissingCandleDetector now takes IExchangeProvider directly —
+            // no more bundled IBinanceApi inside the gap-fill pipeline. Symbol
+            // enumeration above (Api.GetSymbolsAsync) still uses the bundled
+            // IBinanceApi; that boundary moves in a later slice.
             var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
-            var detector = new MissingCandleDetector(Api, gapLogger);
+            var exchangeProvider = ServiceProvider.GetService<IExchangeProvider>();
+            var detector = new MissingCandleDetector(exchangeProvider, gapLogger);
             var symbolNames = symbols.Select(s => s.ToString()).ToList();
 
             // Process all symbols concurrently — each symbol checks all its intervals in

@@ -1,4 +1,3 @@
-using Binance;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
@@ -23,24 +22,25 @@ namespace CryptoTrading.App.DatabaseLoad
     /// </summary>
     public class MissingCandleDetector
     {
-        // PR 6b: public API is neutral CandleInterval / ExchangeCandlestick.
-        // The bundled IBinanceApi dependency is kept for the actual HTTP call —
-        // converting that to IExchangeProvider is later PR 6 work. Bundled
-        // candles returned by the API are mapped to neutral immediately.
-        private readonly IBinanceApi _api;
+        // Fully neutral: candles come from IExchangeProvider, which returns
+        // ExchangeCandlestick directly — no bundled-SDK types in this class.
+        private readonly IExchangeProvider _exchangeProvider;
         private readonly ILogger<MissingCandleDetector> _logger;
         private readonly SemaphoreSlim _apiSemaphore;
+        // Binance caps a single klines REST call at 1000 candles. Each fetch
+        // window in DownloadAndSaveRangeAsync is sized so the provider's
+        // single-shot GetCandlesticksAsync stays under that ceiling.
         private const int BinanceMaxLimit = 1000;
 
         /// <param name="maxConcurrency">
-        /// Maximum number of simultaneous Binance API calls.
+        /// Maximum number of simultaneous exchange API calls.
         /// Binance allows up to 1 200 requests/min; 10 concurrent callers
         /// is a safe default that keeps well inside that limit.
         /// </param>
-        public MissingCandleDetector(IBinanceApi api, ILogger<MissingCandleDetector> logger,
+        public MissingCandleDetector(IExchangeProvider exchangeProvider, ILogger<MissingCandleDetector> logger,
             int maxConcurrency = 10)
         {
-            _api = api;
+            _exchangeProvider = exchangeProvider ?? throw new ArgumentNullException(nameof(exchangeProvider));
             _logger = logger;
             _apiSemaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
         }
@@ -160,9 +160,6 @@ namespace CryptoTrading.App.DatabaseLoad
             DateTime rangeEnd,
             HashSet<DateTime> alreadyExisting)
         {
-            // Bridge the neutral interval to bundled at the API call boundary.
-            // Ordinals are 1:1 (PR 5e/5f invariant) so the cast is lossless.
-            var bundledInterval = (CandlestickInterval)(int)interval;
             var intervalSpan = GetIntervalSpan(interval);
             // Include the last candle in the range by advancing the API end time by one interval
             var apiEnd = rangeEnd + intervalSpan;
@@ -175,7 +172,8 @@ namespace CryptoTrading.App.DatabaseLoad
 
             while (current <= rangeEnd)
             {
-                // Cap the batch end so we never request more than BinanceMaxLimit candles
+                // Cap the batch end so we never request more than BinanceMaxLimit
+                // candles in a single GetCandlesticksAsync call (Binance per-request limit).
                 var batchEnd = current + TimeSpan.FromTicks(intervalSpan.Ticks * BinanceMaxLimit);
                 if (batchEnd > apiEnd) batchEnd = apiEnd;
 
@@ -183,16 +181,15 @@ namespace CryptoTrading.App.DatabaseLoad
                     $"[Download] {symbol} {interval} | " +
                     $"Batch {current:yyyy-MM-dd HH:mm} – {batchEnd:yyyy-MM-dd HH:mm}");
 
-                IEnumerable<Candlestick> candles;
+                IEnumerable<ExchangeCandlestick> candles;
                 await _apiSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
                     var startTime = current.ToUniversalTime();
                     var endTime = batchEnd.ToUniversalTime();
                     if (startTime > endTime) continue;
-                    candles = await _api.GetCandlesticksAsync(
-                        symbol, bundledInterval, BinanceMaxLimit,
-                        startTime, endTime)
+                    candles = await _exchangeProvider.GetCandlesticksAsync(
+                        symbol, interval, startTime, endTime)
                         .ConfigureAwait(false);
                 }
                 catch (Exception ex)
@@ -206,8 +203,7 @@ namespace CryptoTrading.App.DatabaseLoad
                     _apiSemaphore.Release();
                 }
 
-                var candleList = candles?.Select(c => ToNeutral(c, interval)).ToList()
-                                  ?? new List<ExchangeCandlestick>();
+                var candleList = candles?.ToList() ?? new List<ExchangeCandlestick>();
 
                 if (!candleList.Any())
                 {
@@ -239,32 +235,6 @@ namespace CryptoTrading.App.DatabaseLoad
                 // Advance past the last returned candle
                 current = candleList.Last().OpenTime + intervalSpan;
             }
-        }
-
-        // -------------------------------------------------------------------------
-        // Bundled → neutral mapping (PR 6b). Replaces the deleted
-        // ExchangeCandlestickBridge.ToNeutral. Local copy to keep the change
-        // self-contained until PR 6 swaps IBinanceApi for IExchangeProvider.
-        // -------------------------------------------------------------------------
-
-        private static ExchangeCandlestick ToNeutral(Candlestick c, CandleInterval interval)
-        {
-            return new ExchangeCandlestick
-            {
-                ExchangeId = null,
-                Symbol = c.Symbol,
-                Interval = interval,
-                OpenTime = c.OpenTime,
-                CloseTime = c.CloseTime,
-                Open = c.Open,
-                High = c.High,
-                Low = c.Low,
-                Close = c.Close,
-                Volume = c.Volume,
-                QuoteVolume = c.QuoteAssetVolume,
-                NumberOfTrades = c.NumberOfTrades,
-                IsClosed = true,
-            };
         }
 
         // -------------------------------------------------------------------------
