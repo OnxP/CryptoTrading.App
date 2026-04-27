@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 
@@ -18,7 +18,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
         }
 
 //--------------------------------------------------------------------
-        private decimal TrendMA(List<Candlestick> Candles, int startBar, int period)
+        private decimal TrendMA(List<ExchangeCandlestick> Candles, int startBar, int period)
         {
             return MovingAverage.Get(Candles, startBar, period, MaMethod.LWMA, AppliedPrice.Close);
         }
@@ -48,7 +48,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
         }
 
 //--------------------------------------------------------------------
-        public void Refresh(List<Candlestick> Candles)
+        public void Refresh(List<ExchangeCandlestick> Candles)
         {
             int limit = Candles.Count - 30;
             _trendNone = new decimal[Candles.Count];

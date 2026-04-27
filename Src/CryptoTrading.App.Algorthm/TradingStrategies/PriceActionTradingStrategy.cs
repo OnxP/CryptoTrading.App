@@ -1,5 +1,4 @@
-﻿using Binance;
-using CryptoTrading.App.Algorithm.CustomIndicators;
+﻿using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
@@ -45,7 +44,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             _signal.Indicators.Add(new CustomIndicators.Indicator("S&R"));
             return dict;
         }
-        public Signal Process(List<Candlestick> Candles)
+        public Signal Process(List<ExchangeCandlestick> Candles)
         {
             if (Candles == null) return _signal;
             if (Candles.Count == 0) return _signal;
@@ -178,7 +177,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return _signal;
         }
 
-        public decimal AverageCandleSize(List<Candlestick> Candles)
+        public decimal AverageCandleSize(List<ExchangeCandlestick> Candles)
         {
             decimal AverageCandleSize = 0.0m;
             for (int i = 1; i < Candles.Count; ++i)
@@ -189,26 +188,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return AverageCandleSize;
         }
 
-        // PR 5h: local replacement for the deleted ExchangeCandlestickBridge.
-        // The legacy CustomIndicators (ZigZag, Mbfx, TrendLine, SupportResistance,
-        // Signal) still consume bundled Candlestick — flipping those is PR 6
-        // when the bundled SDK is removed.
-        private static Candlestick ToBundled(ExchangeCandlestick c, CandlestickInterval interval)
-        {
-            var qv = c.QuoteVolume < 0 ? 0m : c.QuoteVolume;
-            var n = c.NumberOfTrades < 0 ? 0 : c.NumberOfTrades;
-            return new Candlestick(c.Symbol, interval, c.OpenTime, c.Open, c.High, c.Low, c.Close,
-                c.Volume, c.CloseTime, qv, n,
-                takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m);
-        }
-
         public override double Calculate(CandleStickDictionary closePrices, IStopLimitTracker StopLimitTrackers)
         {
             var psar = base.Calculate(closePrices,StopLimitTrackers);
-            var bundledInterval = (CandlestickInterval)(int)closePrices.Interval;
-            var candles = closePrices.Values
-                .Select(c => ToBundled(c, bundledInterval))
-                .ToList();
+            var candles = closePrices.Values.ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);
 

@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -23,7 +23,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
     }
 public class Signal
 {
-        public List<Candlestick> Candles { get; set; }
+        public List<ExchangeCandlestick> Candles { get; set; }
         public SignalType Type { get; set; }
         public List<Indicator> Indicators { get; set; }
         public decimal CloseAtPrice { get; set; }
@@ -41,7 +41,7 @@ public class Signal
             Indicators = new List<Indicator>();
 }
 
-        public void Reset(List<Candlestick> Candles)
+        public void Reset(List<ExchangeCandlestick> Candles)
         {
             Type = SignalType.None;
             foreach (var indicator in Indicators)
