@@ -1,7 +1,9 @@
-using Binance;
+using Binance.Net.Clients;
+using Binance.Net.Interfaces.Clients;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Exchange;
+using CryptoTrading.App.Exchange.BinanceNet;
 using CryptoTrading.App.MarketData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,16 +31,24 @@ namespace CryptoTrading.App.DatabaseLoad
                 .AddUserSecrets<Program>() // for access to API key and secret.
                 .Build();
 
-            // Configure services.
+            // PR 6h: register IExchangeProvider directly via Binance.Net rest/socket
+            // clients instead of pulling in the bundled SDK's AddBinance(...).
+            // DatabaseLoad only needs public market data (kline history + symbol
+            // list) so we wire the spot venue with no credentials. Build process
+            // is single-shot, so transient lifetimes match the rest/socket
+            // singletons fine.
             var ServiceProvider = new ServiceCollection()
-                .AddBinance(useSingleCombinedStream: true)
+                .AddSingleton<IBinanceRestClient>(_ => new BinanceRestClient())
+                .AddSingleton<IBinanceSocketClient>(_ => new BinanceSocketClient())
+                .AddTransient<IExchangeProvider>(p => new BinanceNetSpotExchangeProvider(
+                    p.GetRequiredService<IBinanceRestClient>(),
+                    p.GetRequiredService<IBinanceSocketClient>()))
                 .AddHistoricMarketData()
-                // Configure logging.
-                .AddLogging(builder => builder // configure logging.
+                .AddLogging(builder => builder
                         .SetMinimumLevel(LogLevel.Trace)
-                        .AddConsole()
-                        )
+                        .AddConsole())
                 .BuildServiceProvider();
+
             HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
 
             // PR 6f: symbol enumeration goes through IExchangeProvider — the
