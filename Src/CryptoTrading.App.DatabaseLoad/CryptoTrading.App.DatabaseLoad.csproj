@@ -24,10 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Binance\Binance.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Exchange.BinanceNet\CryptoTrading.App.Exchange.BinanceNet.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.MarketData\CryptoTrading.App.MarketData.csproj" />
-    <ProjectReference Include="..\Samples\Binance.Application\Binance.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
