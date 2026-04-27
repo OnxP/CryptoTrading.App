@@ -1,4 +1,5 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -20,9 +21,12 @@ namespace CryptoTrading.App.Core.Database
         private IQueryable<CandleStickDb> data;
         public void Initialise(DateTime from, DateTime to, List<string> symbols, CandlestickInterval interval)
         {
-
+            // PR 5f: CandleStickDb.Interval is now neutral. Translate the
+            // bundled parameter once so the EF query parameter type matches.
+            var neutralInterval = (CandleInterval)(int)interval;
+            const CandleInterval neutralMinute = CandleInterval.Minute_1;
             data = context.CandleSticks.Where(
-                x => x.CloseTime >= from && x.CloseTime <= to && symbols.Contains(x.Symbol) && (x.Interval == interval || x.Interval == CandlestickInterval.Minute)).AsNoTracking();
+                x => x.CloseTime >= from && x.CloseTime <= to && symbols.Contains(x.Symbol) && (x.Interval == neutralInterval || x.Interval == neutralMinute)).AsNoTracking();
         }
 
         private Dictionary<DateTime, Dictionary<(string,CandlestickInterval), Candlestick>> _data = new Dictionary<DateTime, Dictionary<(string, CandlestickInterval), Candlestick>>();
@@ -30,10 +34,12 @@ namespace CryptoTrading.App.Core.Database
         public async Task<int> LoadData(string sQL_STREAM_QUERY, DateTime currentTick, DateTime finalTick, List<string> symbols, 
             int interval,int pageNumber)
         {
+            // PR 5f: CandleStickDb.Interval is now neutral CandleInterval.
+            var neutralInterval = (CandleInterval)interval;
             var query = context.CandleSticks
                 .Where(p => p.CloseTime >= currentTick &&
                             (pageNumber == -1 ? p.CloseTime < finalTick : p.CloseTime <= finalTick) &&
-                            p.Interval == (CandlestickInterval)interval &&
+                            p.Interval == neutralInterval &&
                             symbols.Contains(p.Symbol))
                 .OrderBy(p => p.CloseTime)
                 .AsNoTracking();
@@ -54,16 +60,19 @@ namespace CryptoTrading.App.Core.Database
                 {
                     foreach (var candleStick in candleStickList)
                     {
-                        if (_data[candleStickList.Key].ContainsKey((candleStick.Symbol,candleStick.Interval))) continue;
+                        // PR 5f: candleStick.Interval is neutral; the in-memory
+                        // dictionary keeps the bundled enum key shape for now.
+                        var bundledKey = (CandlestickInterval)(int)candleStick.Interval;
+                        if (_data[candleStickList.Key].ContainsKey((candleStick.Symbol, bundledKey))) continue;
 
-                        _data[candleStickList.Key].Add((candleStick.Symbol,candleStick.Interval),
+                        _data[candleStickList.Key].Add((candleStick.Symbol, bundledKey),
                             CandleStickDb.ConvertObject(candleStick));
                     }
                 }
                 else
                 {
                     _data.Add(candleStickList.Key,
-                        candleStickList.ToDictionary(x => (x.Symbol,x.Interval), CandleStickDb.ConvertObject));
+                        candleStickList.ToDictionary(x => (x.Symbol, (CandlestickInterval)(int)x.Interval), CandleStickDb.ConvertObject));
                 }
             }
             return count;            

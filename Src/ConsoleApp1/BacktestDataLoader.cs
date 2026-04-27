@@ -1,5 +1,6 @@
 using Binance;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -20,10 +21,12 @@ namespace CryptoTrading.App.BackTesting
             ctx.Configuration.LazyLoadingEnabled = false;
             ctx.Database.CommandTimeout = 600;
 
+            // PR 5f: CandleStickDb.Interval is neutral CandleInterval; bridge here.
+            var neutralInterval = (CandleInterval)(int)interval;
             var rows = ctx.CandleSticks
                 .AsNoTracking()
                 .Where(c => c.Symbol == symbol
-                            && c.Interval == interval
+                            && c.Interval == neutralInterval
                             && c.OpenTime >= from
                             && c.OpenTime < to)
                 .OrderBy(c => c.OpenTime)
@@ -31,7 +34,7 @@ namespace CryptoTrading.App.BackTesting
 
             return rows.Select(r => new Candlestick(
                 symbol: r.Symbol,
-                interval: r.Interval,
+                interval: (CandlestickInterval)(int)r.Interval,
                 openTime: r.OpenTime,
                 open: (decimal)r.Open,
                 high: (decimal)r.High,

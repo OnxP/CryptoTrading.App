@@ -55,9 +55,8 @@ namespace CryptoTrading.App.MarketDataValidation
                         first = false;
                         continue;
                     }
-                    // CandleStickDb.Interval is still bundled until PR 5f — ordinals match 0-14,
-                    // so the cast is safe for the time-arithmetic lookup.
-                    var nextOpenTime = CandleStickIntervalHelper.NextCandleStickTime(openTime, (CandleInterval)(int)candlestick.Interval);
+                    // PR 5f: CandleStickDb.Interval is now neutral CandleInterval.
+                    var nextOpenTime = CandleStickIntervalHelper.NextCandleStickTime(openTime, candlestick.Interval);
 
                     if (nextOpenTime == candlestick.OpenTime)
                     {
