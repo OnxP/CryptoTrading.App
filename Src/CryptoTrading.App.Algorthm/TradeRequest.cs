@@ -31,15 +31,7 @@ namespace CryptoTrading.App.Algorithm
         public decimal Amount => StrategyResult.Amount;
         public int Leverage => StrategyResult.Leverage;
 
-        /// <summary>
-        /// Maps <see cref="IStrategyResult.OrderSide"/> (still Binance-typed
-        /// in this PR) to the neutral <see cref="ExchangeOrderSide"/> at the
-        /// Core-facing boundary. Migration of IStrategyResult itself is
-        /// deferred to the algorithm consumer PR.
-        /// </summary>
-        public ExchangeOrderSide OrderSide => StrategyResult.OrderSide == Binance.OrderSide.Buy
-            ? ExchangeOrderSide.Buy
-            : ExchangeOrderSide.Sell;
+        public ExchangeOrderSide OrderSide => StrategyResult.OrderSide;
 
         public DateTime? RequestDateTime { get; }
         public IExecutionStrategy Strategy { get; set; }
