@@ -57,13 +57,14 @@ namespace CryptoTrading.App.DatabaseLoad
             marketDate.From = new DateTime(2026, 02, 28,23,00,00);
             marketDate.To = new DateTime(2026, 04, 01,23,00,00);
 
-            List<CandlestickInterval> intervals = new List<CandlestickInterval>()
+            // PR 6b: MissingCandleDetector / CandleGapFiller now take neutral CandleInterval.
+            List<CandleInterval> intervals = new List<CandleInterval>()
             {
-              CandlestickInterval.Hours_4,
-              CandlestickInterval.Hour,
-              CandlestickInterval.Minutes_15,
-              CandlestickInterval.Minutes_5
-              , CandlestickInterval.Minute
+              CandleInterval.Hour_4,
+              CandleInterval.Hour_1,
+              CandleInterval.Minute_15,
+              CandleInterval.Minute_5
+              , CandleInterval.Minute_1
             };
 
             // --- Gap fill: check the DB per symbol and download only what is missing ---
@@ -105,17 +106,14 @@ namespace CryptoTrading.App.DatabaseLoad
             await con.Task.ConfigureAwait(false);
         }
 
-        private static void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandlestickInterval> intervals)
+        private static void AddEvents(AbstractMarketData marketDate, List<Symbol> symbols, List<CandleInterval> intervals)
         {
             foreach (var symbol in symbols)
             {
                 foreach (var interval in intervals)
                 {
-                    // Bridge bundled CandlestickInterval to neutral CandleInterval for the PR 5c
-                    // IMarketData surface. PR 5d migrates this utility to the neutral interval end-to-end.
-                    var neutralInterval = (CandleInterval)(int)interval;
-                    marketDate.InitialDataLoadSubscribe(symbol, neutralInterval, SaveHistoricCandleStick);
-                    marketDate.InitialDataStreamSubscribe(symbol, neutralInterval, AddCandleStick);
+                    marketDate.InitialDataLoadSubscribe(symbol, interval, SaveHistoricCandleStick);
+                    marketDate.InitialDataStreamSubscribe(symbol, interval, AddCandleStick);
                 }
             }
         }

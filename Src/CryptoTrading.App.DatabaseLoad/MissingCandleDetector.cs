@@ -23,6 +23,10 @@ namespace CryptoTrading.App.DatabaseLoad
     /// </summary>
     public class MissingCandleDetector
     {
+        // PR 6b: public API is neutral CandleInterval / ExchangeCandlestick.
+        // The bundled IBinanceApi dependency is kept for the actual HTTP call —
+        // converting that to IExchangeProvider is later PR 6 work. Bundled
+        // candles returned by the API are mapped to neutral immediately.
         private readonly IBinanceApi _api;
         private readonly ILogger<MissingCandleDetector> _logger;
         private readonly SemaphoreSlim _apiSemaphore;
@@ -47,7 +51,7 @@ namespace CryptoTrading.App.DatabaseLoad
         /// </summary>
         public Task FillMissingCandlesAsync(
             IEnumerable<string> symbols,
-            IEnumerable<CandlestickInterval> intervals,
+            IEnumerable<CandleInterval> intervals,
             DateTime from,
             DateTime to)
         {
@@ -65,7 +69,7 @@ namespace CryptoTrading.App.DatabaseLoad
         /// </summary>
         public Task FillMissingForSymbolAsync(
             string symbol,
-            IEnumerable<CandlestickInterval> intervals,
+            IEnumerable<CandleInterval> intervals,
             DateTime from,
             DateTime to)
         {
@@ -80,7 +84,7 @@ namespace CryptoTrading.App.DatabaseLoad
 
         private async Task FillMissingForSymbolIntervalAsync(
             string symbol,
-            CandlestickInterval interval,
+            CandleInterval interval,
             DateTime from,
             DateTime to)
         {
@@ -90,14 +94,12 @@ namespace CryptoTrading.App.DatabaseLoad
                     $"[GapCheck] {symbol} {interval} | Range: {from:yyyy-MM-dd HH:mm} – {to:yyyy-MM-dd HH:mm}");
 
                 // 1. Fetch existing OpenTimes from the DB
-                // PR 5f: CandleStickDb.Interval is now neutral CandleInterval; bridge once.
-                var neutralInterval = (CandleInterval)(int)interval;
                 HashSet<DateTime> existing;
                 using (var ctx = new CryptoDbContext())
                 {
                     existing = ctx.CandleSticks
                         .Where(c => c.Symbol == symbol
-                                 && c.Interval == neutralInterval
+                                 && c.Interval == interval
                                  && c.OpenTime >= from
                                  && c.OpenTime < to)
                         .Select(c => c.OpenTime)
@@ -153,11 +155,14 @@ namespace CryptoTrading.App.DatabaseLoad
 
         private async Task DownloadAndSaveRangeAsync(
             string symbol,
-            CandlestickInterval interval,
+            CandleInterval interval,
             DateTime rangeStart,
             DateTime rangeEnd,
             HashSet<DateTime> alreadyExisting)
         {
+            // Bridge the neutral interval to bundled at the API call boundary.
+            // Ordinals are 1:1 (PR 5e/5f invariant) so the cast is lossless.
+            var bundledInterval = (CandlestickInterval)(int)interval;
             var intervalSpan = GetIntervalSpan(interval);
             // Include the last candle in the range by advancing the API end time by one interval
             var apiEnd = rangeEnd + intervalSpan;
@@ -186,7 +191,7 @@ namespace CryptoTrading.App.DatabaseLoad
                     var endTime = batchEnd.ToUniversalTime();
                     if (startTime > endTime) continue;
                     candles = await _api.GetCandlesticksAsync(
-                        symbol, interval, BinanceMaxLimit,
+                        symbol, bundledInterval, BinanceMaxLimit,
                         startTime, endTime)
                         .ConfigureAwait(false);
                 }
@@ -201,7 +206,8 @@ namespace CryptoTrading.App.DatabaseLoad
                     _apiSemaphore.Release();
                 }
 
-                var candleList = candles?.ToList() ?? new List<Candlestick>();
+                var candleList = candles?.Select(c => ToNeutral(c, interval)).ToList()
+                                  ?? new List<ExchangeCandlestick>();
 
                 if (!candleList.Any())
                 {
@@ -236,6 +242,32 @@ namespace CryptoTrading.App.DatabaseLoad
         }
 
         // -------------------------------------------------------------------------
+        // Bundled → neutral mapping (PR 6b). Replaces the deleted
+        // ExchangeCandlestickBridge.ToNeutral. Local copy to keep the change
+        // self-contained until PR 6 swaps IBinanceApi for IExchangeProvider.
+        // -------------------------------------------------------------------------
+
+        private static ExchangeCandlestick ToNeutral(Candlestick c, CandleInterval interval)
+        {
+            return new ExchangeCandlestick
+            {
+                ExchangeId = null,
+                Symbol = c.Symbol,
+                Interval = interval,
+                OpenTime = c.OpenTime,
+                CloseTime = c.CloseTime,
+                Open = c.Open,
+                High = c.High,
+                Low = c.Low,
+                Close = c.Close,
+                Volume = c.Volume,
+                QuoteVolume = c.QuoteAssetVolume,
+                NumberOfTrades = c.NumberOfTrades,
+                IsClosed = true,
+            };
+        }
+
+        // -------------------------------------------------------------------------
         // Expected timestamp generation
         // -------------------------------------------------------------------------
 
@@ -243,7 +275,7 @@ namespace CryptoTrading.App.DatabaseLoad
         /// Generates all expected OpenTime values for the given interval in [from, to).
         /// </summary>
         private List<DateTime> GenerateExpectedOpenTimes(
-            CandlestickInterval interval, DateTime from, DateTime to)
+            CandleInterval interval, DateTime from, DateTime to)
         {
             var result = new List<DateTime>();
             var step = GetIntervalSpan(interval);
@@ -261,9 +293,9 @@ namespace CryptoTrading.App.DatabaseLoad
         /// <summary>
         /// Advances a DateTime by one interval. Uses calendar arithmetic for Month.
         /// </summary>
-        private static DateTime AdvanceByInterval(DateTime dt, CandlestickInterval interval, TimeSpan step)
+        private static DateTime AdvanceByInterval(DateTime dt, CandleInterval interval, TimeSpan step)
         {
-            return interval == CandlestickInterval.Month
+            return interval == CandleInterval.Month_1
                 ? dt.AddMonths(1)
                 : dt + step;
         }
@@ -277,7 +309,7 @@ namespace CryptoTrading.App.DatabaseLoad
         /// so that each range can be fetched with a minimal number of API calls.
         /// </summary>
         private List<(DateTime Start, DateTime End)> GroupIntoRanges(
-            List<DateTime> missingTimes, CandlestickInterval interval)
+            List<DateTime> missingTimes, CandleInterval interval)
         {
             var ranges = new List<(DateTime, DateTime)>();
             if (!missingTimes.Any()) return ranges;
@@ -316,24 +348,24 @@ namespace CryptoTrading.App.DatabaseLoad
         /// Month returns 30 days as an approximation (calendar months are handled
         /// separately in AdvanceByInterval).
         /// </summary>
-        private static TimeSpan GetIntervalSpan(CandlestickInterval interval) => interval switch
+        private static TimeSpan GetIntervalSpan(CandleInterval interval) => interval switch
         {
-            CandlestickInterval.Minute    => TimeSpan.FromMinutes(1),
-            CandlestickInterval.Minutes_3 => TimeSpan.FromMinutes(3),
-            CandlestickInterval.Minutes_5 => TimeSpan.FromMinutes(5),
-            CandlestickInterval.Minutes_15 => TimeSpan.FromMinutes(15),
-            CandlestickInterval.Minutes_30 => TimeSpan.FromMinutes(30),
-            CandlestickInterval.Hour      => TimeSpan.FromHours(1),
-            CandlestickInterval.Hours_2   => TimeSpan.FromHours(2),
-            CandlestickInterval.Hours_4   => TimeSpan.FromHours(4),
-            CandlestickInterval.Hours_6   => TimeSpan.FromHours(6),
-            CandlestickInterval.Hours_8   => TimeSpan.FromHours(8),
-            CandlestickInterval.Hours_12  => TimeSpan.FromHours(12),
-            CandlestickInterval.Day       => TimeSpan.FromDays(1),
-            CandlestickInterval.Days_3    => TimeSpan.FromDays(3),
-            CandlestickInterval.Week      => TimeSpan.FromDays(7),
-            CandlestickInterval.Month     => TimeSpan.FromDays(30), // approximate; calendar logic in AdvanceByInterval
-            _                             => TimeSpan.FromMinutes(1)
+            CandleInterval.Minute_1   => TimeSpan.FromMinutes(1),
+            CandleInterval.Minute_3   => TimeSpan.FromMinutes(3),
+            CandleInterval.Minute_5   => TimeSpan.FromMinutes(5),
+            CandleInterval.Minute_15  => TimeSpan.FromMinutes(15),
+            CandleInterval.Minute_30  => TimeSpan.FromMinutes(30),
+            CandleInterval.Hour_1     => TimeSpan.FromHours(1),
+            CandleInterval.Hour_2     => TimeSpan.FromHours(2),
+            CandleInterval.Hour_4     => TimeSpan.FromHours(4),
+            CandleInterval.Hour_6     => TimeSpan.FromHours(6),
+            CandleInterval.Hour_8     => TimeSpan.FromHours(8),
+            CandleInterval.Hour_12    => TimeSpan.FromHours(12),
+            CandleInterval.Day_1      => TimeSpan.FromDays(1),
+            CandleInterval.Day_3      => TimeSpan.FromDays(3),
+            CandleInterval.Week_1     => TimeSpan.FromDays(7),
+            CandleInterval.Month_1    => TimeSpan.FromDays(30), // approximate; calendar logic in AdvanceByInterval
+            _                         => TimeSpan.FromMinutes(1)
         };
     }
 }

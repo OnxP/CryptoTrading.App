@@ -1,4 +1,3 @@
-using Binance;
 using CryptoTrading.App.Core.Exchange;
 using System;
 
@@ -10,32 +9,15 @@ namespace CryptoTrading.App.Core.Database
         {
 
         }
-        public CandleStickDb(Candlestick candlestick)
-        {
-            Symbol = candlestick.Symbol;
-            // PR 5f: column is now neutral CandleInterval; the bundled
-            // CandlestickInterval ordinals are 1:1 with CandleInterval, so
-            // the EF int column stays byte-identical.
-            Interval = (CandleInterval)(int)candlestick.Interval;
-            OpenTime = candlestick.OpenTime;
-            Open =  Convert.ToDouble(candlestick.Open);
-            High =  Convert.ToDouble(candlestick.High);
-            Low =   Convert.ToDouble(candlestick.Low);
-            Close = Convert.ToDouble(candlestick.Close);
-            Volume = candlestick.Volume;
-            CloseTime = candlestick.CloseTime;
-            QuoteAssetVolume = candlestick.QuoteAssetVolume;
-            NumberOfTrades = candlestick.NumberOfTrades;
-            TakerBuyBaseAssetVolume = candlestick.TakerBuyBaseAssetVolume;
-            TakerBuyQuoteAssetVolume = candlestick.TakerBuyQuoteAssetVolume;
-        }
 
         /// <summary>
-        /// PR 5h: neutral-typed ctor. Used by the backtest data-load and
-        /// historic-stream paths that now hand neutral candles to the EF
-        /// layer directly. ExchangeCandlestick does not carry the
-        /// taker-buy volume breakdowns, so those columns are zeroed; existing
-        /// rows already in the DB keep whatever value they were inserted with.
+        /// PR 6b: only neutral ctor remains. The bundled CandlestickInterval
+        /// path was removed when CandleGapFiller and MissingCandleDetector
+        /// switched to mapping bundled candles to ExchangeCandlestick
+        /// immediately after the API call. ExchangeCandlestick does not
+        /// carry the taker-buy volume breakdowns, so those columns are
+        /// zeroed for new rows; existing rows already in the DB keep
+        /// whatever value they were inserted with.
         /// </summary>
         public CandleStickDb(ExchangeCandlestick candlestick)
         {
