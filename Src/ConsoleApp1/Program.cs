@@ -46,15 +46,15 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine("----------------------------------------------------------------");
 
                 Console.Write("  Loading 4H...  ");
-                var candles4H = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Hours_4, opts.From.AddDays(-30), opts.To);
+                var candles4H = BacktestDataLoader.Load(opts.Symbol, CandleInterval.Hour_4, opts.From.AddDays(-30), opts.To);
                 Console.WriteLine($"{candles4H.Count} bars");
 
                 Console.Write("  Loading 15M... ");
-                var candles15M = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Minutes_15, opts.From, opts.To);
+                var candles15M = BacktestDataLoader.Load(opts.Symbol, CandleInterval.Minute_15, opts.From, opts.To);
                 Console.WriteLine($"{candles15M.Count} bars");
 
                 Console.Write("  Loading 1M...  ");
-                var candles1M = BacktestDataLoader.Load(opts.Symbol, CandlestickInterval.Minute, opts.From, opts.To);
+                var candles1M = BacktestDataLoader.Load(opts.Symbol, CandleInterval.Minute_1, opts.From, opts.To);
                 Console.WriteLine($"{candles1M.Count} bars");
 
                 if (candles4H.Count == 0 || candles15M.Count == 0 || candles1M.Count == 0)
@@ -87,9 +87,9 @@ namespace CryptoTrading.App.BackTesting
 
         private static ReplayResult Replay(
             BacktestOptions opts,
-            List<Candlestick> candles4H,
-            List<Candlestick> candles15M,
-            List<Candlestick> candles1M)
+            List<ExchangeCandlestick> candles4H,
+            List<ExchangeCandlestick> candles15M,
+            List<ExchangeCandlestick> candles1M)
         {
             _ = RequestTracker.Instance;
             RequestTracker.Requests.Clear();
@@ -112,8 +112,8 @@ namespace CryptoTrading.App.BackTesting
             var seed4H = candles4H.Where(c => c.CloseTime < firstStreamTime).ToList();
             var live4H = candles4H.Where(c => c.CloseTime >= firstStreamTime).ToList();
 
-            md.FireHistoric15M(Array.Empty<CryptoTrading.App.Core.Exchange.ExchangeCandlestick>());
-            md.FireHistoric4H(seed4H.Select(ExchangeCandlestickBridge.ToNeutral));
+            md.FireHistoric15M(Array.Empty<ExchangeCandlestick>());
+            md.FireHistoric4H(seed4H);
 
             // Reach into the algorithm for its trading state — the harness
             // needs to read/mutate equity on the same instance the algorithm
@@ -143,11 +143,11 @@ namespace CryptoTrading.App.BackTesting
                 switch (ev.Type)
                 {
                     case EvType.Hours4:
-                        md.FireLive4H(ExchangeCandlestickBridge.ToNeutral(ev.Candle));
+                        md.FireLive4H(ev.Candle);
                         break;
 
                     case EvType.Minutes15:
-                        md.FireLive15M(ExchangeCandlestickBridge.ToNeutral(ev.Candle));
+                        md.FireLive15M(ev.Candle);
 
                         if (sim == null)
                         {
@@ -224,10 +224,10 @@ namespace CryptoTrading.App.BackTesting
         /// on the higher timeframe are updated BEFORE the 15M bar that could
         /// fire a signal, and BEFORE the 1M bar that could drive exit logic.
         /// </summary>
-        private static IEnumerable<(Candlestick Candle, EvType Type)> MergeCandleStreams(
-            IEnumerable<Candlestick> candles4H,
-            IEnumerable<Candlestick> candles15M,
-            IEnumerable<Candlestick> candles1M)
+        private static IEnumerable<(ExchangeCandlestick Candle, EvType Type)> MergeCandleStreams(
+            IEnumerable<ExchangeCandlestick> candles4H,
+            IEnumerable<ExchangeCandlestick> candles15M,
+            IEnumerable<ExchangeCandlestick> candles1M)
         {
             using var e4 = candles4H.GetEnumerator();
             using var e15 = candles15M.GetEnumerator();

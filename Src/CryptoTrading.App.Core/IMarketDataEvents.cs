@@ -8,9 +8,7 @@ namespace CryptoTrading.App.Core
     /// Market-data subscription surface. All types are neutral
     /// (<see cref="ExchangeCandlestick"/> / <see cref="ExchangeCandlestickEvent"/> /
     /// <see cref="CandleInterval"/>) so consumers don't depend on the bundled
-    /// Binance SDK. Callers that still hold a bundled <c>CandlestickInterval</c>
-    /// (e.g. via <see cref="IConfig.Interval"/>) translate at the seam via
-    /// <c>BundledSdkBridge</c> until PR 5d retypes <see cref="IConfig"/> itself.
+    /// Binance SDK. <see cref="IConfig.Interval"/> is also neutral (PR 5e).
     /// </summary>
     public interface IMarketDataEvents
     {

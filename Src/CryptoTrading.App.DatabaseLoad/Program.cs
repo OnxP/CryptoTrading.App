@@ -124,8 +124,8 @@ namespace CryptoTrading.App.DatabaseLoad
         {
             lock (_object)
             {
-                // CandleStickDb ctor is still bundled; bridge at the EF seam until PR 5d.
-                context.CandleSticks.Add(new CandleStickDb(ExchangeCandlestickBridge.ToBundled(obj.Candlestick)));
+                // PR 5h: neutral CandleStickDb ctor — no bridge needed.
+                context.CandleSticks.Add(new CandleStickDb(obj.Candlestick));
                 Check();
             }
         }
@@ -160,7 +160,7 @@ namespace CryptoTrading.App.DatabaseLoad
         {
             lock (_object)
             {
-                var sticks = obj.Select(x => new CandleStickDb(ExchangeCandlestickBridge.ToBundled(x))).ToList();
+                var sticks = obj.Select(x => new CandleStickDb(x)).ToList();
                 Check(sticks);
             }
         }

@@ -1,4 +1,4 @@
-using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using Skender.Stock.Indicators;
 using System;
@@ -39,7 +39,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine("  SL POSTMORTEM");
             Console.WriteLine("================================================================");
             Console.WriteLine($"  Trade CSV:  {tradesCsv}");
-            Console.WriteLine($"  Lookahead:  {LookaheadBars15M} × 15M bars ({LookaheadBars15M * 15.0 / 60:F1} hours)");
+            Console.WriteLine($"  Lookahead:  {LookaheadBars15M} Ã— 15M bars ({LookaheadBars15M * 15.0 / 60:F1} hours)");
             Console.WriteLine($"  Output:     {outputCsv ?? "(stdout only)"}");
 
             var trades = ReadTrades(tradesCsv)
@@ -57,19 +57,19 @@ namespace CryptoTrading.App.BackTesting
             }
 
             // Range needs to cover both the intra-trade period (from EntryTime)
-            // and the post-exit lookahead. Use ALL trades, not just losers — we
+            // and the post-exit lookahead. Use ALL trades, not just losers â€” we
             // compute winner features too for the fakeout-detection comparison.
             var minTime = trades.Min(t => t.EntryTime);
             var maxTime = trades.Max(t => t.ExitTime).AddHours(LookaheadBars15M * 0.25 + 4);
-            Console.Write($"  Loading 15M candles {minTime:yyyy-MM-dd} → {maxTime:yyyy-MM-dd}...  ");
-            var candles15M = BacktestDataLoader.Load(symbol, CandlestickInterval.Minutes_15,
+            Console.Write($"  Loading 15M candles {minTime:yyyy-MM-dd} â†’ {maxTime:yyyy-MM-dd}...  ");
+            var candles15M = BacktestDataLoader.Load(symbol, CandleInterval.Minute_15,
                                                      minTime.Date, maxTime.Date.AddDays(1));
             Console.WriteLine($"{candles15M.Count} bars");
 
             // Also load 4H candles for HTF regime tracking during the trade.
             // Include 30 days of warmup before the earliest entry so RSI(14) is valid.
             Console.Write($"  Loading 4H candles (with 30d warmup)...  ");
-            var candles4H = BacktestDataLoader.Load(symbol, CandlestickInterval.Hours_4,
+            var candles4H = BacktestDataLoader.Load(symbol, CandleInterval.Hour_4,
                                                     minTime.Date.AddDays(-30), maxTime.Date.AddDays(1));
             Console.WriteLine($"{candles4H.Count} bars");
 
@@ -85,7 +85,7 @@ namespace CryptoTrading.App.BackTesting
             }).ToList();
             var rsi4H = quotes4H.ToRsi(14).ToList();
 
-            // Aggregate 15M → 30M and 1H series, compute RSI(14) and EMA(8/21) once.
+            // Aggregate 15M â†’ 30M and 1H series, compute RSI(14) and EMA(8/21) once.
             // Intermediate TFs sit between the 15M execution clock and the slow 4H
             // bias. They should see ~4 bar closes (30M) / ~2 closes (1H) per trade,
             // which is a sweet spot: fast enough to react within the 4-hour time
@@ -190,14 +190,14 @@ namespace CryptoTrading.App.BackTesting
                     ? (t.ExitPrice + mfeAbsolute) >= t.EntryPrice
                     : (t.ExitPrice - mfeAbsolute) <= t.EntryPrice;
 
-                // Classify: Recoverable (TP would have hit), Marginal (≥1R recovery
+                // Classify: Recoverable (TP would have hit), Marginal (â‰¥1R recovery
                 // but not TP), Pure (barely moved favorable).
                 if (tpTouched) row.Classification = LossClass.Recoverable;
                 else if (row.MfeR >= 1.0m) row.Classification = LossClass.Marginal;
                 else row.Classification = LossClass.Pure;
 
                 // ---- INTRA-TRADE FEATURES ----
-                // Features visible while the trade is live (entry → exit). These
+                // Features visible while the trade is live (entry â†’ exit). These
                 // are predictors we could wire into an early-exit or skip rule.
                 ComputeIntraTradeFeatures(row, t, candles15M, byClose, initialRisk);
                 ComputeHtfRsiFeatures(row, t, rsi4H);
@@ -256,7 +256,7 @@ namespace CryptoTrading.App.BackTesting
         {
             Console.WriteLine();
             Console.WriteLine("================================================================");
-            Console.WriteLine("  AGGREGATE — were stops too tight?");
+            Console.WriteLine("  AGGREGATE â€” were stops too tight?");
             Console.WriteLine("================================================================");
 
             int n = rows.Count;
@@ -267,7 +267,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine($"  Total SL P&L:                  {rows.Sum(r => r.Pnl):F2}");
             Console.WriteLine();
 
-            // MFE buckets — how far did price recover after we stopped out?
+            // MFE buckets â€” how far did price recover after we stopped out?
             int recoverHalfR = rows.Count(r => r.MfeR >= 0.5m);
             int recover1R    = rows.Count(r => r.MfeR >= 1.0m);
             int recover15R   = rows.Count(r => r.MfeR >= 1.5m);
@@ -275,10 +275,10 @@ namespace CryptoTrading.App.BackTesting
             int wouldHitTp   = rows.Count(r => r.TpTouched);
 
             Console.WriteLine("  After SL, price recovered (MFE in R measured from exit price):");
-            Console.WriteLine($"    ≥ 0.5R  recovery:            {recoverHalfR,3}  ({(double)recoverHalfR/n:P1})");
-            Console.WriteLine($"    ≥ 1.0R  recovery:            {recover1R,3}  ({(double)recover1R/n:P1})");
-            Console.WriteLine($"    ≥ 1.5R  recovery:            {recover15R,3}  ({(double)recover15R/n:P1})");
-            Console.WriteLine($"    ≥ 2.0R  recovery:            {recover2R,3}  ({(double)recover2R/n:P1})");
+            Console.WriteLine($"    â‰¥ 0.5R  recovery:            {recoverHalfR,3}  ({(double)recoverHalfR/n:P1})");
+            Console.WriteLine($"    â‰¥ 1.0R  recovery:            {recover1R,3}  ({(double)recover1R/n:P1})");
+            Console.WriteLine($"    â‰¥ 1.5R  recovery:            {recover15R,3}  ({(double)recover15R/n:P1})");
+            Console.WriteLine($"    â‰¥ 2.0R  recovery:            {recover2R,3}  ({(double)recover2R/n:P1})");
             Console.WriteLine($"    Original TP touched later:   {wouldHitTp,3}  ({(double)wouldHitTp/n:P1})");
             Console.WriteLine();
 
@@ -286,16 +286,16 @@ namespace CryptoTrading.App.BackTesting
             {
                 Console.WriteLine($"  Avg MFE after SL:              {withMfe.Average(r => r.MfeR):F2} R  ({withMfe.Average(r => r.MfeAtrs):F2} ATRs)");
                 Console.WriteLine($"  Median MFE after SL:           {Median(withMfe.Select(r => r.MfeR)):F2} R");
-                Console.WriteLine($"  Avg bars to MFE:               {withMfe.Average(r => r.BarsToMfe):F1} × 15M");
+                Console.WriteLine($"  Avg bars to MFE:               {withMfe.Average(r => r.BarsToMfe):F1} Ã— 15M");
             }
 
             Console.WriteLine($"  Avg adverse-past-SL excursion: {rows.Average(r => r.MaePastSlR):F2} R (how far price went past SL before reversing)");
             Console.WriteLine();
 
             Console.WriteLine("  Interpretation:");
-            Console.WriteLine("    - High % with TP touched later  → SL too tight");
-            Console.WriteLine("    - High avg MFE (≥1R)            → stops are premature");
-            Console.WriteLine("    - High MAE past SL              → SL triggered on real reversal, stop OK");
+            Console.WriteLine("    - High % with TP touched later  â†’ SL too tight");
+            Console.WriteLine("    - High avg MFE (â‰¥1R)            â†’ stops are premature");
+            Console.WriteLine("    - High MAE past SL              â†’ SL triggered on real reversal, stop OK");
             Console.WriteLine("================================================================");
 
             // ---- Grouped by ProbabilityScore & Direction ----
@@ -324,7 +324,7 @@ namespace CryptoTrading.App.BackTesting
 
         // ---- Intra-trade feature computation ----------------------------
         //
-        // For each losing trade, walk the 15M candles from EntryTime → ExitTime
+        // For each losing trade, walk the 15M candles from EntryTime â†’ ExitTime
         // and extract features that would have been visible while the trade
         // was live. These are the candidate signals for an early-exit rule or
         // a smarter entry filter.
@@ -343,7 +343,7 @@ namespace CryptoTrading.App.BackTesting
         private static void ComputeIntraTradeFeatures(
             PostmortemRow row,
             TradeRow t,
-            List<Candlestick> candles15M,
+            List<ExchangeCandlestick> candles15M,
             Dictionary<DateTime, int> byClose,
             decimal initialRisk)
         {
@@ -387,7 +387,7 @@ namespace CryptoTrading.App.BackTesting
                 pathLen += Math.Abs(c.Close - prevClose);
                 prevClose = c.Close;
 
-                // Price change at specific bar indices (1,2,3) — signed, favorable=+
+                // Price change at specific bar indices (1,2,3) â€” signed, favorable=+
                 decimal signedMove = isLong
                     ? (c.Close - t.EntryPrice)
                     : (t.EntryPrice - c.Close);
@@ -427,7 +427,7 @@ namespace CryptoTrading.App.BackTesting
             List<RsiResult> rsi4H)
         {
             // Find the RSI reading for the last 4H bar that closed strictly BEFORE
-            // each anchor time — that's what the live algorithm would have seen.
+            // each anchor time â€” that's what the live algorithm would have seen.
             double? EntryRsi = RsiAtOrBefore(rsi4H, t.EntryTime);
             double? ExitRsi  = RsiAtOrBefore(rsi4H, t.ExitTime);
 
@@ -476,13 +476,13 @@ namespace CryptoTrading.App.BackTesting
         // ---- Entry-timing analysis ---------------------------------------
         //
         // For each historical trade, re-simulate entry with a deeper pullback
-        // limit: (signalPrice − X × InitialRisk) for longs, the mirror for
+        // limit: (signalPrice âˆ’ X Ã— InitialRisk) for longs, the mirror for
         // shorts. Within the 15M bar after signalTime, fill at the limit if
         // the bar's low (long) / high (short) touches it. If the limit never
-        // hits: skip the trade entirely (no market-fill fallback — that's
+        // hits: skip the trade entirely (no market-fill fallback â€” that's
         // the whole point of requiring a deeper pullback).
         //
-        // After fill, rebase SL and TP to the new entry price (same 1.5×ATR
+        // After fill, rebase SL and TP to the new entry price (same 1.5Ã—ATR
         // distance, same 1:1 R:R). Walk the next 15M bars, exiting on the
         // first close that breaches SL or TP (matching TradeSimulator logic).
         //
@@ -490,20 +490,20 @@ namespace CryptoTrading.App.BackTesting
         //   RECOVERABLES: how many we'd SAVE (either no-fill OR fill+TP)
         //     vs still-SL-at-deeper-entry (wasted).
         //   WINNERS:      how many we'd MISS (no-fill) vs still-win.
-        //   PURE:         how many we'd skip (no-fill) — pure save.
+        //   PURE:         how many we'd skip (no-fill) â€” pure save.
         //
         // The useful fraction is the one that saves the most recoverables
         // and pures without missing too many winners.
         private static void PrintEntryTimingAnalysis(
             List<PostmortemRow> loserRows,
             List<TradeRow> trades,
-            List<Candlestick> candles15M)
+            List<ExchangeCandlestick> candles15M)
         {
             var recoverables = loserRows.Where(r => r.Classification == LossClass.Recoverable).ToList();
             var pures        = loserRows.Where(r => r.Classification == LossClass.Pure).ToList();
             var marginals    = loserRows.Where(r => r.Classification == LossClass.Marginal).ToList();
 
-            // Map index → TradeRow for losers so we can re-derive signalTime/price.
+            // Map index â†’ TradeRow for losers so we can re-derive signalTime/price.
             var tradeByIdx = trades.ToDictionary(t => t.Index);
 
             var winners = trades.Where(t => t.PnlUsdt > 0 && !t.ExitReason.StartsWith("EntryCancelled")).ToList();
@@ -511,7 +511,7 @@ namespace CryptoTrading.App.BackTesting
 
             Console.WriteLine();
             Console.WriteLine("================================================================");
-            Console.WriteLine("  ENTRY TIMING — would deeper pullback save Recoverables?");
+            Console.WriteLine("  ENTRY TIMING â€” would deeper pullback save Recoverables?");
             Console.WriteLine("================================================================");
             Console.WriteLine($"  n Winners:       {winners.Count}   P&L {winners.Sum(w => w.PnlUsdt),16:F2}");
             Console.WriteLine($"  n Pure loss:     {pures.Count}   P&L {pures.Sum(r => r.Pnl),16:F2}");
@@ -523,7 +523,7 @@ namespace CryptoTrading.App.BackTesting
             // How deep (in R) did price go against signalPrice before reversing?
             // If Recoverables dip deeper than Winners, a pullback entry has edge.
             Console.WriteLine("  MAX ADVERSE EXCURSION FROM SIGNAL PRICE (in R, during trade life)");
-            Console.WriteLine("  — how far price went against us before the eventual exit/recovery");
+            Console.WriteLine("  â€” how far price went against us before the eventual exit/recovery");
             Console.WriteLine();
             Console.WriteLine($"    {"Group",-14}  {"n",4}  {"avg",6}  {"med",6}  {">0.10R",7}  {">0.25R",7}  {">0.50R",7}  {">1.00R",7}");
             Console.WriteLine($"    {new string('-', 72)}");
@@ -534,7 +534,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine();
 
             // ---- Per-pullback-fraction simulation ----
-            Console.WriteLine("  SIMULATION: limit-only entry at signalPrice − X × InitialRisk");
+            Console.WriteLine("  SIMULATION: limit-only entry at signalPrice âˆ’ X Ã— InitialRisk");
             Console.WriteLine("  Outcome counts if we'd used pullback fraction X and skipped any trade that");
             Console.WriteLine("  didn't fill within one 15M bar.");
             Console.WriteLine();
@@ -556,7 +556,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine("    - High Recoverable NewSL at X = deeper pullback still didn't help.");
         }
 
-        private static decimal MaxAdverseR(TradeRow t, List<Candlestick> candles15M)
+        private static decimal MaxAdverseR(TradeRow t, List<ExchangeCandlestick> candles15M)
         {
             if (t.AtrAtSignal <= 0) return 0m;
             decimal initialRisk = t.AtrAtSignal * 1.5m;
@@ -598,13 +598,13 @@ namespace CryptoTrading.App.BackTesting
         private enum SimOutcome { NoFill, StopLoss, TakeProfit, TimeStop }
 
         private static SimOutcome SimulateEntry(
-            TradeRow t, decimal pullbackFrac, List<Candlestick> candles15M)
+            TradeRow t, decimal pullbackFrac, List<ExchangeCandlestick> candles15M)
         {
             if (t.AtrAtSignal <= 0) return SimOutcome.NoFill;
             decimal initialRisk = t.AtrAtSignal * 1.5m;
             if (initialRisk <= 0) return SimOutcome.NoFill;
 
-            // First 15M bar strictly AFTER signalTime — this is our entry window.
+            // First 15M bar strictly AFTER signalTime â€” this is our entry window.
             int startIdx = candles15M.FindIndex(c => c.CloseTime > t.SignalTime);
             if (startIdx < 0) return SimOutcome.NoFill;
 
@@ -659,7 +659,7 @@ namespace CryptoTrading.App.BackTesting
             return SimOutcome.NoFill; // using as "still open" sentinel
         }
 
-        private static void PrintSimRow(decimal frac, string label, List<TradeRow> group, List<Candlestick> candles15M)
+        private static void PrintSimRow(decimal frac, string label, List<TradeRow> group, List<ExchangeCandlestick> candles15M)
         {
             int nf = 0, sl = 0, tp = 0, ts = 0;
             foreach (var t in group)
@@ -685,7 +685,7 @@ namespace CryptoTrading.App.BackTesting
         // cost: how many winners the rule would have killed.
         private static void PrintWinnerStructureBreakRate(
             List<TradeRow> trades,
-            List<Candlestick> candles15M,
+            List<ExchangeCandlestick> candles15M,
             Dictionary<DateTime, int> byClose,
             TfSeries tf30M,
             TfSeries tf1H)
@@ -720,14 +720,14 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine("================================================================");
             Console.WriteLine($"  n Winners: {winners.Count}");
             Console.WriteLine();
-            Console.WriteLine("  Rate at which each candidate rule fires on winning trades —");
+            Console.WriteLine("  Rate at which each candidate rule fires on winning trades â€”");
             Console.WriteLine("  high rate means the rule would kill winners if used as early exit.");
             Console.WriteLine();
             Console.WriteLine($"    30m Structure broken                  {(double)structure30 / winners.Count,7:P1}");
             Console.WriteLine($"    1h Structure broken                   {(double)structure1h / winners.Count,7:P1}");
             Console.WriteLine($"    30m RSI crossed neutral               {(double)rsi30Cross / winners.Count,7:P1}");
             Console.WriteLine($"    30m EMA crossed against us            {(double)ema30Cross / winners.Count,7:P1}");
-            Console.WriteLine($"    30m Structure + RSI adverse ≥ 5pts    {(double)combo30 / winners.Count,7:P1}");
+            Console.WriteLine($"    30m Structure + RSI adverse â‰¥ 5pts    {(double)combo30 / winners.Count,7:P1}");
         }
 
         // ---- Fakeout detection: Winners vs Losers signature --------------
@@ -759,7 +759,7 @@ namespace CryptoTrading.App.BackTesting
 
             Console.WriteLine();
             Console.WriteLine("================================================================");
-            Console.WriteLine("  FAKEOUT DETECTION — Winners vs Losers (intra-trade signature)");
+            Console.WriteLine("  FAKEOUT DETECTION â€” Winners vs Losers (intra-trade signature)");
             Console.WriteLine("================================================================");
             Console.WriteLine("  Fakeout = losing trade where price reversed fast.");
             Console.WriteLine("  Real move = winning trade where price followed through.");
@@ -778,7 +778,7 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine(
                     $"    {name,-28}  Win avg {wAvg.ToString(fmt),7} med {wMed.ToString(fmt),7}   " +
                     $"|   Loss avg {lAvg.ToString(fmt),7} med {lMed.ToString(fmt),7}   " +
-                    $"|   Δ {(lAvg - wAvg).ToString(fmt)}");
+                    $"|   Î” {(lAvg - wAvg).ToString(fmt)}");
             }
             // Double variant: filters out NaN (RSI warmup gaps, etc.).
             void RowD(string name, Func<PostmortemRow, double> f, string fmt = "F2")
@@ -793,7 +793,7 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine(
                     $"    {name,-28}  Win avg {wAvg.ToString(fmt),7} med {wMed.ToString(fmt),7}   " +
                     $"|   Loss avg {lAvg.ToString(fmt),7} med {lMed.ToString(fmt),7}   " +
-                    $"|   Δ {(lAvg - wAvg).ToString(fmt)}  (nW={wVals.Count} nL={lVals.Count})");
+                    $"|   Î” {(lAvg - wAvg).ToString(fmt)}  (nW={wVals.Count} nL={lVals.Count})");
             }
             void BoolRow4(string name, Func<PostmortemRow, bool> f)
             {
@@ -802,7 +802,7 @@ namespace CryptoTrading.App.BackTesting
                 Console.WriteLine(
                     $"    {name,-28}  Win {wRate,7:P1}                  " +
                     $"|   Loss {lRate,7:P1}                  " +
-                    $"|   Δ {(lRate - wRate),+7:P1}");
+                    $"|   Î” {(lRate - wRate),+7:P1}");
             }
 
             Console.WriteLine("  EARLY PRICE ACTION (first 1-3 bars after entry):");
@@ -827,8 +827,8 @@ namespace CryptoTrading.App.BackTesting
             decimal avgLoss = loserRows.Average(r => r.Pnl); // negative
 
             // ---- Early-exit rules (fire DURING the trade) ----
-            Console.WriteLine("  EARLY-EXIT RULES (fire after entry — cut the trade early)");
-            Console.WriteLine("  Assumes we'd bail at ~50% of a full stop-loss (1R → ~0.5R realized).");
+            Console.WriteLine("  EARLY-EXIT RULES (fire after entry â€” cut the trade early)");
+            Console.WriteLine("  Assumes we'd bail at ~50% of a full stop-loss (1R â†’ ~0.5R realized).");
             Console.WriteLine();
             Console.WriteLine($"    {"Rule",-42}  {"WinCut",8}  {"LossSav",8}  {"Pure",5}  {"Rec",5}  {"ExpP&L",14}");
             Console.WriteLine($"    {new string('-', 96)}");
@@ -841,7 +841,7 @@ namespace CryptoTrading.App.BackTesting
                 int rc = recs.Count(trigger);
                 double wRate = (double)w / winnerRows.Count;
                 double lRate = (double)l / loserRows.Count;
-                // Rough P&L: save ~½ of a loss per loser cut, give up a full win per winner cut.
+                // Rough P&L: save ~Â½ of a loss per loser cut, give up a full win per winner cut.
                 decimal saved = l * Math.Abs(avgLoss) * 0.5m;
                 decimal cost  = w * avgWin;
                 decimal exp   = saved - cost;
@@ -925,7 +925,7 @@ namespace CryptoTrading.App.BackTesting
             public List<EmaResult> Ema21;
         }
 
-        private static TfSeries BuildTfSeries(List<Candlestick> src15M, int minutes)
+        private static TfSeries BuildTfSeries(List<ExchangeCandlestick> src15M, int minutes)
         {
             var quotes = new List<IQuote>();
             decimal aggOpen = 0, aggHigh = 0, aggLow = 0, aggClose = 0, aggVol = 0;
@@ -986,7 +986,7 @@ namespace CryptoTrading.App.BackTesting
         //   - Whether RSI crossed neutral (50) against us
         //   - EMA(8) vs EMA(21) state at entry; did they cross against us?
         //   - Did any in-trade bar close break the entry bar's low (long) /
-        //     high (short)? — simple structure break.
+        //     high (short)? â€” simple structure break.
         //
         // Bar closes count tells us how useful each TF is: a signal that never
         // fires because no bars close during the trade is dead weight.
@@ -1042,8 +1042,8 @@ namespace CryptoTrading.App.BackTesting
                 if (e8.HasValue && e21.HasValue)
                 {
                     bool bullish = e8.Value > e21.Value;
-                    // For a LONG, adverse = bullish→bearish (e8 falls below e21).
-                    // For a SHORT, adverse = bearish→bullish.
+                    // For a LONG, adverse = bullishâ†’bearish (e8 falls below e21).
+                    // For a SHORT, adverse = bearishâ†’bullish.
                     if (isLong && prevBullish && !bullish) emaCrossAgainst = true;
                     if (!isLong && !prevBullish && bullish) emaCrossAgainst = true;
                     prevBullish = bullish;
@@ -1136,7 +1136,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine("  LOSS CLASSIFICATION (all losing trades)");
             Console.WriteLine("================================================================");
             Console.WriteLine("    Pure        = MFE < 1R after exit (price never came back)");
-            Console.WriteLine("    Marginal    = MFE ≥ 1R after exit but never reached original TP");
+            Console.WriteLine("    Marginal    = MFE â‰¥ 1R after exit but never reached original TP");
             Console.WriteLine("    Recoverable = Original TP was touched within lookahead window");
             Console.WriteLine();
 
@@ -1157,14 +1157,14 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine($"  {"TOTAL",-12}  {n,5}  {1.0,11:P1}  {rows.Sum(r => r.Pnl),14:F2}");
         }
 
-        // ---- Direction × Score matrix ---------------------------------
+        // ---- Direction Ã— Score matrix ---------------------------------
         private static void PrintByDirectionScoreMatrix(List<TradeRow> allTrades, List<PostmortemRow> loserRows)
         {
             Console.WriteLine();
             Console.WriteLine("================================================================");
-            Console.WriteLine("  WIN-RATE + LOSS-CLASSIFICATION BY DIRECTION × SCORE BUCKET");
+            Console.WriteLine("  WIN-RATE + LOSS-CLASSIFICATION BY DIRECTION Ã— SCORE BUCKET");
             Console.WriteLine("================================================================");
-            Console.WriteLine("  AdjWR = (wins + recoverable losses) / total — ceiling if we could hold longer");
+            Console.WriteLine("  AdjWR = (wins + recoverable losses) / total â€” ceiling if we could hold longer");
             Console.WriteLine();
 
             // Build index: trade index -> loss classification (for losers)
@@ -1248,14 +1248,14 @@ namespace CryptoTrading.App.BackTesting
                 decimal rMed = Median(rec.Select(f));
                 decimal delta = rAvg - pAvg;
                 return $"  {name,-26}  Pure: avg {pAvg.ToString(fmt),8} med {pMed.ToString(fmt),8}   |   " +
-                       $"Rec: avg {rAvg.ToString(fmt),8} med {rMed.ToString(fmt),8}   |   Δ(R-P) {delta.ToString(fmt)}";
+                       $"Rec: avg {rAvg.ToString(fmt),8} med {rMed.ToString(fmt),8}   |   Î”(R-P) {delta.ToString(fmt)}";
             }
 
             string BoolRow(string name, Func<PostmortemRow, bool> f)
             {
                 double pRate = (double)pure.Count(f) / pure.Count;
                 double rRate = (double)rec.Count(f) / rec.Count;
-                return $"  {name,-26}  Pure: {pRate,7:P1}                    |   Rec: {rRate,7:P1}                    |   Δ {rRate - pRate,+7:P1}";
+                return $"  {name,-26}  Pure: {pRate,7:P1}                    |   Rec: {rRate,7:P1}                    |   Î” {rRate - pRate,+7:P1}";
             }
 
             Console.WriteLine($"  n Pure: {pure.Count}   n Recoverable: {rec.Count}");
@@ -1285,7 +1285,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine(BoolRow("HtfRsiCrossedNeutral(50)", r => r.HtfRsiCrossedNeutral));
             Console.WriteLine();
 
-            Console.WriteLine("  INTERMEDIATE TF — 30M DURING TRADE:");
+            Console.WriteLine("  INTERMEDIATE TF â€” 30M DURING TRADE:");
             Console.WriteLine(Row("30mRsiAtEntry",            r => (decimal)r.Rsi30mAtEntry, "F1"));
             Console.WriteLine(Row("30mRsiAtExit",             r => (decimal)r.Rsi30mAtExit, "F1"));
             Console.WriteLine(Row("30mRsiChange(Exit-Entry)", r => (decimal)r.Rsi30mChange, "F2"));
@@ -1297,7 +1297,7 @@ namespace CryptoTrading.App.BackTesting
             Console.WriteLine(BoolRow("30mStructureBroken",        r => r.Structure30mBroken));
             Console.WriteLine();
 
-            Console.WriteLine("  INTERMEDIATE TF — 1H DURING TRADE:");
+            Console.WriteLine("  INTERMEDIATE TF â€” 1H DURING TRADE:");
             Console.WriteLine(Row("1hRsiAtEntry",             r => (decimal)r.Rsi1hAtEntry, "F1"));
             Console.WriteLine(Row("1hRsiAtExit",              r => (decimal)r.Rsi1hAtExit, "F1"));
             Console.WriteLine(Row("1hRsiChange(Exit-Entry)",  r => (decimal)r.Rsi1hChange, "F2"));
