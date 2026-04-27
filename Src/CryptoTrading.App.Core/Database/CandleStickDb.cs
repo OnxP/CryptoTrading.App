@@ -1,4 +1,4 @@
-﻿using Binance;
+using Binance;
 using CryptoTrading.App.Core.Exchange;
 using System;
 
@@ -30,24 +30,55 @@ namespace CryptoTrading.App.Core.Database
             TakerBuyQuoteAssetVolume = candlestick.TakerBuyQuoteAssetVolume;
         }
 
-        public static Candlestick ConvertObject(CandleStickDb stick)
+        /// <summary>
+        /// PR 5h: neutral-typed ctor. Used by the backtest data-load and
+        /// historic-stream paths that now hand neutral candles to the EF
+        /// layer directly. ExchangeCandlestick does not carry the
+        /// taker-buy volume breakdowns, so those columns are zeroed; existing
+        /// rows already in the DB keep whatever value they were inserted with.
+        /// </summary>
+        public CandleStickDb(ExchangeCandlestick candlestick)
         {
-            return new Candlestick(
+            Symbol = candlestick.Symbol;
+            Interval = candlestick.Interval;
+            OpenTime = candlestick.OpenTime;
+            Open = Convert.ToDouble(candlestick.Open);
+            High = Convert.ToDouble(candlestick.High);
+            Low = Convert.ToDouble(candlestick.Low);
+            Close = Convert.ToDouble(candlestick.Close);
+            Volume = candlestick.Volume;
+            CloseTime = candlestick.CloseTime;
+            QuoteAssetVolume = candlestick.QuoteVolume;
+            NumberOfTrades = candlestick.NumberOfTrades;
+            TakerBuyBaseAssetVolume = 0m;
+            TakerBuyQuoteAssetVolume = 0m;
+        }
 
-                stick.Symbol,
-                (CandlestickInterval)(int)stick.Interval,
-                stick.OpenTime,
-                Convert.ToDecimal(stick.Open),
-                Convert.ToDecimal(stick.High),
-                Convert.ToDecimal(stick.Low),
-                Convert.ToDecimal(stick.Close),
-                stick.Volume,
-                stick.CloseTime,
-                stick.QuoteAssetVolume,
-                stick.NumberOfTrades,
-                stick.TakerBuyBaseAssetVolume,
-                stick.TakerBuyQuoteAssetVolume
-            );
+        /// <summary>
+        /// PR 5h: ConvertObject now returns the neutral
+        /// <see cref="ExchangeCandlestick"/>. The bundled-SDK columns
+        /// (TakerBuy*) remain on this row for back-compat with the EF schema
+        /// but are not surfaced through the neutral type — neutral consumers
+        /// only need OHLCV + timestamps + quote volume.
+        /// </summary>
+        public static ExchangeCandlestick ConvertObject(CandleStickDb stick)
+        {
+            return new ExchangeCandlestick
+            {
+                ExchangeId = null,
+                Symbol = stick.Symbol,
+                Interval = stick.Interval,
+                OpenTime = stick.OpenTime,
+                CloseTime = stick.CloseTime,
+                Open = Convert.ToDecimal(stick.Open),
+                High = Convert.ToDecimal(stick.High),
+                Low = Convert.ToDecimal(stick.Low),
+                Close = Convert.ToDecimal(stick.Close),
+                Volume = stick.Volume,
+                QuoteVolume = stick.QuoteAssetVolume,
+                NumberOfTrades = stick.NumberOfTrades,
+                IsClosed = true,
+            };
         }
 
         public int ID { get; set; }

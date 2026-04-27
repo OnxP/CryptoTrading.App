@@ -1,4 +1,3 @@
-using Binance;
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Exchange;
@@ -113,7 +112,7 @@ namespace CryptoTrading.App.BackTesting
         /// strategy. Returns the completed trade when this candle closes the
         /// position, otherwise null.
         /// </summary>
-        public SimulatedTrade Step(Candlestick m1)
+        public SimulatedTrade Step(ExchangeCandlestick m1)
         {
             _hub.Add(new Quote
             {

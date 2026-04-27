@@ -268,19 +268,23 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             var live4H = quotes4H.Where(q => q.Timestamp >= firstCandleTime)
                 .ToDictionary(q => q.Timestamp);
 
-            var seedCandlesticks4H = seed4H.Select(q => new Candlestick(
-                symbol: "BTCUSDT",
-                interval: CandlestickInterval.Hours_4,
-                openTime: q.Timestamp.AddHours(-4),
-                open: q.Open, high: q.High, low: q.Low, close: q.Close,
-                volume: q.Volume, closeTime: q.Timestamp,
-                quoteAssetVolume: 0m, numberOfTrades: 0,
-                takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m));
+            var seedCandlesticks4H = seed4H.Select(q => new ExchangeCandlestick
+            {
+                Symbol = "BTCUSDT",
+                Interval = CandleInterval.Hour_4,
+                OpenTime = q.Timestamp.AddHours(-4),
+                CloseTime = q.Timestamp,
+                Open = q.Open, High = q.High, Low = q.Low, Close = q.Close,
+                Volume = q.Volume,
+                QuoteVolume = 0m,
+                NumberOfTrades = 0,
+                IsClosed = true,
+            });
 
             // Empty 15M historic load — algorithm warms up from the live stream
             fakeMd.HistoricLoad15M?.Invoke(Enumerable.Empty<ExchangeCandlestick>());
             // Seed 4H historic — bars before the 15M data starts
-            fakeMd.HistoricLoad4H?.Invoke(seedCandlesticks4H.Select(ExchangeCandlestickBridge.ToNeutral));
+            fakeMd.HistoricLoad4H?.Invoke(seedCandlesticks4H);
 
             // Reflect to access the private _tradingState so we can reset
             // the "in position" flag after each captured setup.
@@ -296,38 +300,41 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 // BEFORE the 15M candle so the algorithm's RSI is up-to-date.
                 if (live4H.TryGetValue(c.CloseTime, out var htf))
                 {
-                    var cs4H = new Candlestick(
-                        symbol: "BTCUSDT",
-                        interval: CandlestickInterval.Hours_4,
-                        openTime: htf.Timestamp.AddHours(-4),
-                        open: htf.Open, high: htf.High,
-                        low: htf.Low, close: htf.Close,
-                        volume: htf.Volume, closeTime: htf.Timestamp,
-                        quoteAssetVolume: 0m, numberOfTrades: 0,
-                        takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m);
-                    fakeMd.LiveStream4H?.Invoke(new ExchangeCandlestickEvent(
-                        ExchangeCandlestickBridge.ToNeutral(cs4H), DateTime.UtcNow));
+                    var cs4H = new ExchangeCandlestick
+                    {
+                        Symbol = "BTCUSDT",
+                        Interval = CandleInterval.Hour_4,
+                        OpenTime = htf.Timestamp.AddHours(-4),
+                        CloseTime = htf.Timestamp,
+                        Open = htf.Open, High = htf.High,
+                        Low = htf.Low, Close = htf.Close,
+                        Volume = htf.Volume,
+                        QuoteVolume = 0m,
+                        NumberOfTrades = 0,
+                        IsClosed = true,
+                    };
+                    fakeMd.LiveStream4H?.Invoke(new ExchangeCandlestickEvent(cs4H, DateTime.UtcNow));
                 }
 
                 // Feed the 15M candle
                 var volume = c.Volume < 0 ? 0m : c.Volume;
-                var cs = new Candlestick(
-                    symbol: "BTCUSDT",
-                    interval: CandlestickInterval.Minutes_15,
-                    openTime: c.OpenTime,
-                    open: c.Open,
-                    high: c.High,
-                    low: c.Low,
-                    close: c.Close,
-                    volume: volume,
-                    closeTime: c.CloseTime,
-                    quoteAssetVolume: 0m,
-                    numberOfTrades: 0,
-                    takerBuyBaseAssetVolume: 0m,
-                    takerBuyQuoteAssetVolume: 0m);
+                var cs = new ExchangeCandlestick
+                {
+                    Symbol = "BTCUSDT",
+                    Interval = CandleInterval.Minute_15,
+                    OpenTime = c.OpenTime,
+                    CloseTime = c.CloseTime,
+                    Open = c.Open,
+                    High = c.High,
+                    Low = c.Low,
+                    Close = c.Close,
+                    Volume = volume,
+                    QuoteVolume = 0m,
+                    NumberOfTrades = 0,
+                    IsClosed = true,
+                };
 
-                var args = new ExchangeCandlestickEvent(
-                    ExchangeCandlestickBridge.ToNeutral(cs), DateTime.UtcNow);
+                var args = new ExchangeCandlestickEvent(cs, DateTime.UtcNow);
 
                 fakeMd.LiveStream15M?.Invoke(args);
 

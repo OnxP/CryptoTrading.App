@@ -1,4 +1,3 @@
-using Binance;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Exchange;
 using System;
@@ -10,9 +9,12 @@ namespace CryptoTrading.App.BackTesting
 {
     internal static class BacktestDataLoader
     {
-        public static List<Candlestick> Load(
+        // PR 5h: returns neutral ExchangeCandlestick directly. Callers that
+        // were threading bundled Candlestick through the backtest now consume
+        // the neutral type end-to-end.
+        public static List<ExchangeCandlestick> Load(
             string symbol,
-            CandlestickInterval interval,
+            CandleInterval interval,
             DateTime from,
             DateTime to)
         {
@@ -21,31 +23,16 @@ namespace CryptoTrading.App.BackTesting
             ctx.Configuration.LazyLoadingEnabled = false;
             ctx.Database.CommandTimeout = 600;
 
-            // PR 5f: CandleStickDb.Interval is neutral CandleInterval; bridge here.
-            var neutralInterval = (CandleInterval)(int)interval;
             var rows = ctx.CandleSticks
                 .AsNoTracking()
                 .Where(c => c.Symbol == symbol
-                            && c.Interval == neutralInterval
+                            && c.Interval == interval
                             && c.OpenTime >= from
                             && c.OpenTime < to)
                 .OrderBy(c => c.OpenTime)
                 .ToList();
 
-            return rows.Select(r => new Candlestick(
-                symbol: r.Symbol,
-                interval: (CandlestickInterval)(int)r.Interval,
-                openTime: r.OpenTime,
-                open: (decimal)r.Open,
-                high: (decimal)r.High,
-                low: (decimal)r.Low,
-                close: (decimal)r.Close,
-                volume: r.Volume < 0 ? 0m : r.Volume,
-                closeTime: r.CloseTime,
-                quoteAssetVolume: r.QuoteAssetVolume,
-                numberOfTrades: r.NumberOfTrades,
-                takerBuyBaseAssetVolume: r.TakerBuyBaseAssetVolume,
-                takerBuyQuoteAssetVolume: r.TakerBuyQuoteAssetVolume)).ToList();
+            return rows.Select(CandleStickDb.ConvertObject).ToList();
         }
     }
 }

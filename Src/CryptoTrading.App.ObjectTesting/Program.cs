@@ -1,31 +1,33 @@
-﻿// See https://aka.ms/new-console-template for more information
+// See https://aka.ms/new-console-template for more information
 
-using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
+// PR 5h: directly construct neutral ExchangeCandlestick — the bridge is gone.
+static ExchangeCandlestick NewCandle(DateTime openTime, DateTime closeTime) => new ExchangeCandlestick
+{
+    Symbol = "TEST",
+    Interval = CandleInterval.Minute_15,
+    OpenTime = openTime,
+    CloseTime = closeTime,
+    Open = 0.1m,
+    High = 0.2m,
+    Low = 0.1m,
+    Close = 0.15m,
+    Volume = 10m,
+    QuoteVolume = 0m,
+    NumberOfTrades = 10,
+    IsClosed = true,
+};
+
 var dic = new CandleStickDictionary(5);
 
-var openDateTime = new DateTime(2021, 09, 10, 10, 00, 00);
-dic.Add(ExchangeCandlestickBridge.ToNeutral(
-    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
-        0.15m, 10, new DateTime(2021, 09, 10, 10, 15, 00), 0m, 10, 10, 10)));
-
-openDateTime = new DateTime(2021, 09, 10, 10, 15, 00);
-dic.Add(ExchangeCandlestickBridge.ToNeutral(
-    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
-        0.15m, 10, new DateTime(2021, 09, 10, 10, 30, 00), 0m, 10, 10, 10)));
-
-openDateTime = new DateTime(2021, 09, 10, 10, 30, 00);
-dic.Add(ExchangeCandlestickBridge.ToNeutral(
-    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
-        0.15m, 10, new DateTime(2021, 09, 10, 10, 45, 00), 0m, 10, 10, 10)));
-
-openDateTime = new DateTime(2021, 09, 10, 10, 45, 00);
-dic.Add(ExchangeCandlestickBridge.ToNeutral(
-    new Candlestick("TEST", CandlestickInterval.Minutes_15, openDateTime, 0.1m, 0.2m, 0.1m,
-        0.15m, 10, new DateTime(2021, 09, 10, 11, 00, 00), 0m, 10, 10, 10)));
+dic.Add(NewCandle(new DateTime(2021, 09, 10, 10, 00, 00), new DateTime(2021, 09, 10, 10, 15, 00)));
+dic.Add(NewCandle(new DateTime(2021, 09, 10, 10, 15, 00), new DateTime(2021, 09, 10, 10, 30, 00)));
+dic.Add(NewCandle(new DateTime(2021, 09, 10, 10, 30, 00), new DateTime(2021, 09, 10, 10, 45, 00)));
+dic.Add(NewCandle(new DateTime(2021, 09, 10, 10, 45, 00), new DateTime(2021, 09, 10, 11, 00, 00)));
 
 
 foreach (var candle in dic.GroupCandleSticks(2))

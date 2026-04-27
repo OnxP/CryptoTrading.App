@@ -1,4 +1,3 @@
-using Binance;
 using Binance.Utility;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Database;
@@ -14,12 +13,10 @@ namespace CryptoTrading.App.MarketData
 {
     /// <summary>
     /// Backtest market-data feed backed by the <c>CandleStickDbs</c> SQL
-    /// table via <see cref="IDbData"/>. PR 5c: subscriber fan-out is now
-    /// neutral (<see cref="ExchangeCandlestickEvent"/> /
-    /// <see cref="ExchangeCandlestick"/>); the DB boundary (EF row shape)
-    /// keeps the bundled <see cref="Candlestick"/> type for this PR and we
-    /// translate at the seam via <see cref="BundledSdkBridge"/>. The EF
-    /// layer migrates to neutral types in PR 5e (not scheduled for 5c).
+    /// table via <see cref="IDbData"/>. PR 5h: the EF row layer now surfaces
+    /// neutral <see cref="ExchangeCandlestick"/> values directly, so this
+    /// class is bundled-SDK-free end-to-end. The
+    /// <see cref="ExchangeCandlestickEvent"/> subscriber fan-out is unchanged.
     /// </summary>
     public class DbMarketData : AbstractMarketData, IMarketData
     {
@@ -119,9 +116,7 @@ select * from candlestick order by Opentime
             _mangement.AddMarketStream(InvokeCandleStick);
             foreach (var interval in subscribers.Keys.Select(x => x.interval).Distinct())
             {
-                // The DB column Interval stores the bundled enum's ordinal. The
-                // neutral CandleInterval ordinals were defined to be 1:1 with
-                // bundled CandlestickInterval so (int)neutral is safe to pass.
+                // The DB column Interval stores the neutral CandleInterval ordinal.
                 var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.CurrentTick, To,
                     subscribers.Keys.Select(x => x.symbol).ToList(), (int)interval, 0);
 
@@ -137,26 +132,24 @@ select * from candlestick order by Opentime
             var candleSticks = _data.GetData(_mangement.CurrentTick).Values.ToList();//gets all the data for the current tick
             if (candleSticks.Any())
             {
-                foreach (var bundledInterval in candleSticks.Select(x => x.Interval).Distinct())
+                foreach (var interval in candleSticks.Select(x => x.Interval).Distinct())
                 {
-                    if (bundledInterval == CandlestickInterval.Minute) continue;
-                    var neutralInterval = BundledSdkBridge.ToNeutralInterval(bundledInterval);
+                    if (interval == CandleInterval.Minute_1) continue;
 
-                    candleSticks.Where(x => x.Interval == bundledInterval)
+                    candleSticks.Where(x => x.Interval == interval)
                         .OrderByDescending(x => x.Interval)
                         .OrderBy(x => x.Volume)
                         .ToList()
                         .ForEach(x =>
                         {
-                            if (!subscribers.TryGetValue((x.Symbol, neutralInterval), out var list)) return;
-                            var neutralCandle = BundledSdkBridge.ToNeutralCandle(x);
-                            var evt = new ExchangeCandlestickEvent(neutralCandle, _mangement.CurrentTick);
+                            if (!subscribers.TryGetValue((x.Symbol, interval), out var list)) return;
+                            var evt = new ExchangeCandlestickEvent(x, _mangement.CurrentTick);
                             foreach (var action in list)
                             {
                                 action.Invoke(evt);
                             }
                         });
-                    await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(), bundledInterval);
+                    await LoadNextCandleSticks(candleSticks.Select(x => x.Symbol).ToList(), interval);
                 }
 
                 _data.ClearHistoric(_mangement.PreviousTick);
@@ -164,7 +157,7 @@ select * from candlestick order by Opentime
         }
 
 
-        private async Task LoadNextCandleSticks(List<string> toList, CandlestickInterval interval)
+        private async Task LoadNextCandleSticks(List<string> toList, CandleInterval interval)
         {
             if (_data.Count() == 0)
             {
@@ -175,19 +168,17 @@ select * from candlestick order by Opentime
             if (_data.CheckNextTick(DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, interval, 1),
                     toList.FirstOrDefault(), interval)) return;
 
-            var neutralInterval = BundledSdkBridge.ToNeutralInterval(interval);
             var rows = await _data.LoadData(SQL_STREAM_QUERY, _mangement.FirstTick, _mangement.FinalTick,
-                toList, (int)interval, pageNumber[neutralInterval]);
-            pageNumber[neutralInterval] += 1;
+                toList, (int)interval, pageNumber[interval]);
+            pageNumber[interval] += 1;
         }
 
         private async Task LoadHistoricData()
         {
             foreach (var sub in historicDataSubscribers.Keys.Select(x => x.interval).Distinct())
             {
-                var bundledSub = BundledSdkBridge.ToBundledInterval(sub);
                 await _data.LoadData(SQL_HISTORIC_QUERY,
-                    DbMarketDataHelpers.CalculateFrom(From, bundledSub, -201), From,
+                    DbMarketDataHelpers.CalculateFrom(From, sub, -201), From,
                     historicDataSubscribers.Keys.Select(x => x.symbol).Distinct().ToList(),
                     (int)sub, -1);
             }
@@ -204,13 +195,11 @@ select * from candlestick order by Opentime
         {
             try
             {
-                var bundledInterval = BundledSdkBridge.ToBundledInterval(symbol.interval);
-                var bundledCandles = _data.GetData(symbol.symbol, bundledInterval);
-                if (!bundledCandles.Any()) return;
-                var neutralCandles = bundledCandles.Select(BundledSdkBridge.ToNeutralCandle).ToList();
+                var candles = _data.GetData(symbol.symbol, symbol.interval);
+                if (!candles.Any()) return;
                 foreach (var action in callback)
                 {
-                    action.Invoke(neutralCandles);
+                    action.Invoke(candles);
                 }
             }
             catch

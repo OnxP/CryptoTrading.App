@@ -188,11 +188,26 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             AverageCandleSize /= ((decimal)(Candles.Count));
             return AverageCandleSize;
         }
+
+        // PR 5h: local replacement for the deleted ExchangeCandlestickBridge.
+        // The legacy CustomIndicators (ZigZag, Mbfx, TrendLine, SupportResistance,
+        // Signal) still consume bundled Candlestick — flipping those is PR 6
+        // when the bundled SDK is removed.
+        private static Candlestick ToBundled(ExchangeCandlestick c, CandlestickInterval interval)
+        {
+            var qv = c.QuoteVolume < 0 ? 0m : c.QuoteVolume;
+            var n = c.NumberOfTrades < 0 ? 0 : c.NumberOfTrades;
+            return new Candlestick(c.Symbol, interval, c.OpenTime, c.Open, c.High, c.Low, c.Close,
+                c.Volume, c.CloseTime, qv, n,
+                takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m);
+        }
+
         public override double Calculate(CandleStickDictionary closePrices, IStopLimitTracker StopLimitTrackers)
         {
             var psar = base.Calculate(closePrices,StopLimitTrackers);
+            var bundledInterval = (CandlestickInterval)(int)closePrices.Interval;
             var candles = closePrices.Values
-                .Select(c => ExchangeCandlestickBridge.ToBundled(c, (CandlestickInterval)(int)closePrices.Interval))
+                .Select(c => ToBundled(c, bundledInterval))
                 .ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);

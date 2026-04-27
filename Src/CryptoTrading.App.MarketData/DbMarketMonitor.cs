@@ -1,4 +1,3 @@
-using Binance;
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
@@ -11,10 +10,9 @@ using System.Threading.Tasks;
 namespace CryptoTrading.App.MarketData
 {
     /// <summary>
-    /// DB-backed monitor for backtests. PR 5c: subscriber fan-out is neutral
-    /// (<see cref="ExchangeCandlestickEvent"/>); the EF DB layer still surfaces
-    /// bundled <see cref="Candlestick"/> rows, translated at the seam via
-    /// <see cref="BundledSdkBridge"/>.
+    /// DB-backed monitor for backtests. PR 5h: the EF row layer surfaces
+    /// neutral <see cref="ExchangeCandlestick"/> values directly, so this
+    /// class is bundled-SDK-free end-to-end.
     /// </summary>
     public class DbMarketMonitor : IMarketMonitor
     {
@@ -28,7 +26,7 @@ namespace CryptoTrading.App.MarketData
             actions = new Dictionary<string, Dictionary<string, Action<ExchangeCandlestickEvent>>>();
         }
 
-        public CandlestickInterval Interval { get; set; }
+        public CandleInterval Interval { get; set; }
         public int pageNumber { get; set; } = 0;
 
         private string SQL_STREAM_QUERY = @"SELECT [ID]
@@ -84,14 +82,13 @@ namespace CryptoTrading.App.MarketData
 
         public async Task InvokeCandleStick()
         {
-            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x => x.Key.Item2 == CandlestickInterval.Minute).ToList();
+            var candleSticks = _data.GetData(_mangement.CurrentTick).Where(x => x.Key.Item2 == CandleInterval.Minute_1).ToList();
             if (candleSticks.All(x => x.Value == null)) return;
 
             foreach (var kvp in candleSticks)
             {
                 if (!actions.ContainsKey(kvp.Key.Item1)) continue;
-                var neutralCandle = BundledSdkBridge.ToNeutralCandle(kvp.Value);
-                var evt = new ExchangeCandlestickEvent(neutralCandle, _mangement.CurrentTick);
+                var evt = new ExchangeCandlestickEvent(kvp.Value, _mangement.CurrentTick);
                 foreach (var action in actions[kvp.Key.Item1])
                 {
                     action.Value.Invoke(evt);
@@ -111,10 +108,9 @@ namespace CryptoTrading.App.MarketData
         public async Task<List<ExchangeCandlestick>> GetHistoricCandleSticks(string symbol)
         {
             var rows = await _data.LoadData(SQL_HISTORIC_QUERY,
-                DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandlestickInterval.Minute, -201), _mangement.CurrentTick,
+                DbMarketDataHelpers.CalculateFrom(_mangement.CurrentTick, CandleInterval.Minute_1, -201), _mangement.CurrentTick,
                 [symbol], 0, -1);
-            var bundled = _data.GetData(symbol, CandlestickInterval.Minute);
-            return bundled.Select(BundledSdkBridge.ToNeutralCandle).ToList();
+            return _data.GetData(symbol, CandleInterval.Minute_1);
         }
 
         public async Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)
