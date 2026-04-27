@@ -97,8 +97,8 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             Last10Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(10).Min(x => x.Low);
             Last5Low = closePrices.Values.OrderByDescending(x => x.OpenTime).Take(5).Min(x => x.Low);
             ClosePrices = closePrices;
-            var bundledCurrent = ExchangeCandlestickBridge.ToBundled(closePrices.Current, (CandlestickInterval)(int)closePrices.Interval);
-            return Calculate(indicatorOutputs, bundledCurrent, stopLimitTrackers) * StrategyWeight;
+            // PR 5g: Calculate overrides now take neutral ExchangeCandlestick directly.
+            return Calculate(indicatorOutputs, closePrices.Current, stopLimitTrackers) * StrategyWeight;
         }
         //indicators work in reverse order, so the first item is the earliest candlestick.
         private double[][] BuildInputs(IndicatorSetUp indicator, CandleStickDictionary closePrices)
@@ -118,16 +118,17 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         protected decimal Last5Low { get; set; }
 
         //return +1 for buy Trade, -1 for sell, and 0 for Hold.
-        protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers);
+        // PR 5g: closePrice is now neutral ExchangeCandlestick.
+        protected abstract double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers);
 
-        protected virtual bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected virtual bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             if (!StopLimitTrackers.IsOpen)
             {
                 //var diff = closePrice.Close - Last10Low;
                 var atr = indicatorOutputs["atr"][0].ToList();
                 //volume and profitability conditions.
-                if (closePrice.QuoteAssetVolume > 2.0m && closePrice.NumberOfTrades > 10m && Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * (decimal)atr.Last())
+                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m && Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * (decimal)atr.Last())
                 {
                     //if(diff < 3* Symbol.Cache.Get(closePrice.Symbol).Price.Increment) return false;
                     StopLimitTrackers.CurrentPrice = closePrice.Close;
@@ -153,14 +154,14 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             return false;
         }
-        protected virtual bool SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected virtual bool SetSwingLowStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             if (!StopLimitTrackers.IsOpen)
             {
                 var diff = closePrice.Close - Last10Low;
                 //var atr = indicatorOutputs["atr"][0].ToList();
 
-                if (closePrice.QuoteAssetVolume > 2.0m && closePrice.NumberOfTrades > 10m &&
+                if (closePrice.QuoteVolume > 2.0m && closePrice.NumberOfTrades > 10m &&
                     Symbol.Cache.Get(closePrice.Symbol).Price.Increment * 4 < 2 * diff)
                 {
                     StopLimitTrackers.CurrentPrice = closePrice.Close;
@@ -183,7 +184,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             return false;
         }
-        protected void SetStopLimit(Candlestick closePrice, IStopLimitTracker stopLimitTrackers, double stopLimit, double target, double trail)
+        protected void SetStopLimit(ExchangeCandlestick closePrice, IStopLimitTracker stopLimitTrackers, double stopLimit, double target, double trail)
         {
             if (!stopLimitTrackers.IsOpen)
             {

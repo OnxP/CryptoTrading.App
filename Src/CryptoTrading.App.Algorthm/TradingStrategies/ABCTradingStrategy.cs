@@ -1,6 +1,7 @@
 ﻿using System;
 using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
         public bool lastMinima { get; set; } = false;
         public double err_allowed = 10d/100d;
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             var maxima = indicatorOutputs["maxima"][0].ToList();
@@ -37,8 +38,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
             //take last 10 candle sticks work out the min and max and select the closest one.
 
-            lastMinima = LastMaxCalc(closePrice,ClosePrices.GetCandlesticks.Skip(1).Take(10)
-                .Select(c => ExchangeCandlestickBridge.ToBundled(c, (CandlestickInterval)(int)ClosePrices.Interval)));
+            lastMinima = LastMaxCalc(closePrice, ClosePrices.GetCandlesticks.Skip(1).Take(10));
 
             if (lastMinima)
             {
@@ -179,10 +179,10 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return false;
         }
 
-        private bool LastMaxCalc(Candlestick closePrice, IEnumerable<Candlestick> take)
+        private bool LastMaxCalc(ExchangeCandlestick closePrice, IEnumerable<ExchangeCandlestick> take)
         {
-            Candlestick max = closePrice;
-            Candlestick min = closePrice;
+            ExchangeCandlestick max = closePrice;
+            ExchangeCandlestick min = closePrice;
             foreach (var stick in take)
             {
                 if (max.High > stick.High) max = stick;

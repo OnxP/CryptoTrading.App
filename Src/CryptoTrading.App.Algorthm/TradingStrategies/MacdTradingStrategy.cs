@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,7 +52,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var macd = indicatorOutputs["MACD"][0].ToList();
             var signal = indicatorOutputs["MACD"][1].ToList();
@@ -98,7 +99,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
              return 0;
         }
 
-        private bool EmaBounce(List<double> wma, Candlestick closePrice)
+        private bool EmaBounce(List<double> wma, ExchangeCandlestick closePrice)
         {
             if (lastClose == null)
             {
@@ -114,6 +115,6 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             lastClose = closePrice;
             return bounce && previousPassThrough;
         }
-        public Candlestick lastClose;
+        public ExchangeCandlestick lastClose;
     }
 }

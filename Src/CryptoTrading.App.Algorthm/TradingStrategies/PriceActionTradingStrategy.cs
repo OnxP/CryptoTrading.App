@@ -1,6 +1,7 @@
 ﻿using Binance;
 using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -216,7 +217,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             }
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice, IStopLimitTracker StopLimitTrackers)
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice, IStopLimitTracker StopLimitTrackers)
         {
             var pSar = indicatorOutputs["PSAR"][0].ToList();
             return pSar.Last();//does nothing

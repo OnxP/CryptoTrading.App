@@ -1,5 +1,6 @@
 ﻿using Binance;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +43,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
             return dict;
         }
 
-        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override double Calculate(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             var longWma = indicatorOutputs["LongWma"][0].ToList();
@@ -110,7 +111,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
         }
 
 
-        protected override bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, Candlestick closePrice,
+        protected override bool SetStopLimit(Dictionary<string, double[][]> indicatorOutputs, ExchangeCandlestick closePrice,
             IStopLimitTracker StopLimitTrackers)
         {
             if (!StopLimitTrackers.IsOpen)
@@ -145,7 +146,7 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
 
     public class HeikinAshi
     {
-        public HeikinAshi(Candlestick closePrice, double open,double close)
+        public HeikinAshi(ExchangeCandlestick closePrice, double open,double close)
         {
             ClosePrice = (decimal)close;
             Open = 0.5m * (decimal)(close + open);
