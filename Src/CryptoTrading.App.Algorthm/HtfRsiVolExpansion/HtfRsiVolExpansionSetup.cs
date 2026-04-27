@@ -1,4 +1,3 @@
-using Binance;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
 using System;
