@@ -1,10 +1,11 @@
 ﻿using Binance;
+using CryptoTrading.App.Core.Exchange;
 using System;
 
 namespace CryptoTrading.App.Core.Database
 {
     public class CandleStickDb
-    { 
+    {
         public CandleStickDb()
         {
 
@@ -12,7 +13,10 @@ namespace CryptoTrading.App.Core.Database
         public CandleStickDb(Candlestick candlestick)
         {
             Symbol = candlestick.Symbol;
-            Interval = candlestick.Interval;
+            // PR 5f: column is now neutral CandleInterval; the bundled
+            // CandlestickInterval ordinals are 1:1 with CandleInterval, so
+            // the EF int column stays byte-identical.
+            Interval = (CandleInterval)(int)candlestick.Interval;
             OpenTime = candlestick.OpenTime;
             Open =  Convert.ToDouble(candlestick.Open);
             High =  Convert.ToDouble(candlestick.High);
@@ -29,9 +33,9 @@ namespace CryptoTrading.App.Core.Database
         public static Candlestick ConvertObject(CandleStickDb stick)
         {
             return new Candlestick(
-                
+
                 stick.Symbol,
-                stick.Interval,
+                (CandlestickInterval)(int)stick.Interval,
                 stick.OpenTime,
                 Convert.ToDecimal(stick.Open),
                 Convert.ToDecimal(stick.High),
@@ -50,9 +54,12 @@ namespace CryptoTrading.App.Core.Database
         public string Symbol { get; set; }
 
         /// <summary>
-        /// Get the interval.
+        /// Get the interval. PR 5f: retyped to neutral
+        /// <see cref="CandleInterval"/>; EF persists the int ordinal, which
+        /// matches the bundled CandlestickInterval values 0–14, so existing
+        /// rows are read back unchanged.
         /// </summary>
-        public CandlestickInterval Interval { get; set; }
+        public CandleInterval Interval { get; set; }
 
         /// <summary>
         /// Get the open time.

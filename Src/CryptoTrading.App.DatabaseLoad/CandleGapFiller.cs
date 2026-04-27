@@ -1,5 +1,6 @@
 using Binance;
 using CryptoTrading.App.Core.Database;
+using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -99,12 +100,14 @@ namespace CryptoTrading.App.DatabaseLoad
                     $"{from:yyyy-MM-dd HH:mm} – {to:yyyy-MM-dd HH:mm}");
 
                 // ── PHASE 1: determine what is already in the DB ──────────────────
+                // PR 5f: CandleStickDb.Interval is now neutral CandleInterval; bridge once.
+                var neutralInterval = (CandleInterval)(int)interval;
                 HashSet<DateTime> existing;
                 using (var ctx = new CryptoDbContext())
                 {
                     existing = ctx.CandleSticks
                         .Where(c => c.Symbol   == symbol
-                                 && c.Interval == interval
+                                 && c.Interval == neutralInterval
                                  && c.OpenTime >= from
                                  && c.OpenTime <  to)
                         .Select(c => c.OpenTime)
