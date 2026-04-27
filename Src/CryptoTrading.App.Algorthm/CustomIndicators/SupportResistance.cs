@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,20 +23,20 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
         public DateTime EndDate { get; set; }
         public decimal Price { get; set; }
         public int Touches { get; set; }
-        public CandlestickInterval Timeframe { get; set; }
+        public CandleInterval Timeframe { get; set; }
     };
 
     public class SupportResistance
     {
         private int _barsHistory = 3000;
         private Details _detailLevel = Details.Medium;
-        private List<Candlestick> _candles;
+        private List<ExchangeCandlestick> _candles;
         private decimal _maxDistance;
         private int _previousDay;
         private List<SRLine> _lines;
 
 //+------------------------------------------------------------------+
-        public SupportResistance(List<Candlestick> Candles)
+        public SupportResistance(List<ExchangeCandlestick> Candles)
         {
             _candles = Candles;
             _previousDay = -1;
@@ -136,7 +136,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
         {
             get
             {
-                Candlestick maxCandle = null;
+                ExchangeCandlestick maxCandle = null;
                 int maxIndex = 0;
                 for (int i = 0; i < _candles.Count; ++i)
                 {
@@ -159,7 +159,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
 {
 get
 {
-                Candlestick minCandle = null;
+                ExchangeCandlestick minCandle = null;
                 int minIndex = 0;
                 for (int i = 0; i < _candles.Count; ++i)
                 {

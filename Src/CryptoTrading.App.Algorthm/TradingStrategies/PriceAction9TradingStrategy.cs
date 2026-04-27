@@ -1,5 +1,4 @@
-﻿using Binance;
-using CryptoTrading.App.Algorithm.CustomIndicators;
+﻿using CryptoTrading.App.Algorithm.CustomIndicators;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using Microsoft.Extensions.Logging;
@@ -58,28 +57,14 @@ namespace CryptoTrading.App.Algorithm.TradingStrategies
                     break;
             }
 
-
-            var bundledInterval = (CandlestickInterval)(int)closePrices.Interval;
-            var candles = closePrices.Values
-                .Select(c => ToBundled(c, bundledInterval))
-                .ToList();
+            var candles = closePrices.Values.ToList();
             candles.Reverse();
             _supportResistance = new SupportResistance(candles);
             _average = AverageCandleSize(candles);
             return base.Calculate(closePrices, StopLimitTrackers);
         }
 
-        // PR 5h: local replacement for the deleted ExchangeCandlestickBridge.
-        // CustomIndicators still consume bundled Candlestick (PR 6).
-        private static Candlestick ToBundled(ExchangeCandlestick c, CandlestickInterval interval)
-        {
-            var qv = c.QuoteVolume < 0 ? 0m : c.QuoteVolume;
-            var n = c.NumberOfTrades < 0 ? 0 : c.NumberOfTrades;
-            return new Candlestick(c.Symbol, interval, c.OpenTime, c.Open, c.High, c.Low, c.Close,
-                c.Volume, c.CloseTime, qv, n,
-                takerBuyBaseAssetVolume: 0m, takerBuyQuoteAssetVolume: 0m);
-        }
-        public decimal AverageCandleSize(List<Candlestick> Candles)
+        public decimal AverageCandleSize(List<ExchangeCandlestick> Candles)
         {
             decimal AverageCandleSize = 0.0m;
             for (int i = 1; i < Candles.Count; ++i)

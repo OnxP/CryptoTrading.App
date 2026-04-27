@@ -1,4 +1,4 @@
-﻿using Binance;
+﻿using CryptoTrading.App.Core.Exchange;
 using System;
 using System.Collections.Generic;
 
@@ -36,7 +36,7 @@ namespace CryptoTrading.App.Algorithm.CustomIndicators
             return _mbfxRed[bar];
 }
 
-        public void Refresh(List<Candlestick> Candles)
+        public void Refresh(List<ExchangeCandlestick> Candles)
         {
             _mbfxYellow = new decimal[Candles.Count];
             _mbfxRed = new decimal[Candles.Count];
