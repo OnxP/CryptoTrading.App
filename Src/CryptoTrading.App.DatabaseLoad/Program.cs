@@ -44,12 +44,12 @@ namespace CryptoTrading.App.DatabaseLoad
             //context.Database.ExecuteSqlCommand("TRUNCATE TABLE CandleStickDbs");
             HistoricalMarketData marketDate = ServiceProvider.GetService<IMarketData>() as HistoricalMarketData;
 
-            var Api = ServiceProvider.GetService<IBinanceApi>();
-            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            //var symbols = await Api.GetSymbolsAsync().ConfigureAwait(false).Where(x=> x.QuoteAsset.Symbol.Contains("USD")).ToList();//count
-            /* TODO: avoid blocking on async — consider replacing .Result/.Wait() with await */
-            var sym = await Api.GetSymbolsAsync().ConfigureAwait(false);
-            var symbols = sym.Where(x => x.QuoteAsset.Symbol == "USDT").ToList();//count
+            // PR 6f: symbol enumeration goes through IExchangeProvider — the
+            // bundled IBinanceApi is no longer touched anywhere in DatabaseLoad.
+            var exchangeProvider = ServiceProvider.GetService<IExchangeProvider>();
+            //var symbols = (await exchangeProvider.GetSymbolsAsync().ConfigureAwait(false)).Where(x => x.QuoteAsset.Contains("USD")).ToList();//count
+            var sym = await exchangeProvider.GetSymbolsAsync().ConfigureAwait(false);
+            var symbols = sym.Where(x => x.QuoteAsset == "USDT").ToList();//count
 
             // PR 5b: HistoricalMarketData no longer needs an IBinanceApi passed in;
             // it resolves IExchangeProvider from DI. Configure(IConfig) is a no-op
@@ -68,14 +68,12 @@ namespace CryptoTrading.App.DatabaseLoad
             };
 
             // --- Gap fill: check the DB per symbol and download only what is missing ---
-            // PR 6e: MissingCandleDetector now takes IExchangeProvider directly —
-            // no more bundled IBinanceApi inside the gap-fill pipeline. Symbol
-            // enumeration above (Api.GetSymbolsAsync) still uses the bundled
-            // IBinanceApi; that boundary moves in a later slice.
+            // PR 6e: MissingCandleDetector takes IExchangeProvider directly. PR 6f
+            // routed symbol enumeration through the same provider, so DatabaseLoad
+            // no longer references IBinanceApi at all.
             var gapLogger = ServiceProvider.GetService<ILogger<MissingCandleDetector>>();
-            var exchangeProvider = ServiceProvider.GetService<IExchangeProvider>();
             var detector = new MissingCandleDetector(exchangeProvider, gapLogger);
-            var symbolNames = symbols.Select(s => s.ToString()).ToList();
+            var symbolNames = symbols.Select(s => s.Ticker).ToList();
 
             // Process all symbols concurrently — each symbol checks all its intervals in
             // parallel too.  Concurrency towards the Binance API is capped by the
