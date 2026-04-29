@@ -149,10 +149,14 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             public decimal CalculatePnl(decimal exitPrice)
             {
+                // Mirror the production formula in SimpleExitStrategy /
+                // HtfRsiVolExpansionExitStrategy: priceDelta × quantity.
+                // Quantity already encodes leverage from sizing — multiplying
+                // again would inflate the result by the leverage factor.
                 if (Setup.Direction == TradeDirection.Long)
-                    return (exitPrice - _rebasedEntry) * Setup.Quantity * Setup.Leverage;
+                    return (exitPrice - _rebasedEntry) * Setup.Quantity;
                 else
-                    return (_rebasedEntry - exitPrice) * Setup.Quantity * Setup.Leverage;
+                    return (_rebasedEntry - exitPrice) * Setup.Quantity;
             }
 
             private void AddQuote(decimal close, decimal high, decimal low)
@@ -393,8 +397,11 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                     _output.WriteLine($"PnL: {pnl:F2} USDT (1R loss)");
 
                     pnl.Should().BeLessThan(0, "stop loss = controlled loss");
-                    // Loss should be approximately 1R × quantity × leverage
-                    var expectedLoss = -risk * pipeline.Setup.Quantity * pipeline.Setup.Leverage;
+                    // Loss ≈ 1R × quantity. Leverage is NOT a multiplier here:
+                    // qty is already sized as notional/price = equity*lev/price,
+                    // so per-unit pnl is just priceDelta. Multiplying by
+                    // leverage again would double-count.
+                    var expectedLoss = -risk * pipeline.Setup.Quantity;
                     pnl.Should().BeApproximately(expectedLoss, 300m,
                         "loss should be close to 1R risk");
                     break;
@@ -542,7 +549,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                     var pnl = pipeline.CalculatePnl(trailLevel);
                     _output.WriteLine($"TRAILING STOP EXIT at reversal bar {i + 1}: price {price:F2}");
                     _output.WriteLine($"Exit at trail: {trailLevel:F2}");
-                    _output.WriteLine($"PnL: {pnl:F2} USDT (saved from {-risk * pipeline.Setup.Quantity * pipeline.Setup.Leverage:F2} full SL loss)");
+                    _output.WriteLine($"PnL: {pnl:F2} USDT (saved from {-risk * pipeline.Setup.Quantity:F2} full SL loss)");
 
                     pnl.Should().BeGreaterThan(0,
                         "trailing stop locks in partial profit instead of $0 breakeven or -1R SL");
