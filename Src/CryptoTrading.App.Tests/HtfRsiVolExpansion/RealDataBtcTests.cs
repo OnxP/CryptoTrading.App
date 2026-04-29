@@ -177,9 +177,12 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             public decimal CalculatePnl(decimal exitPrice)
             {
+                // Mirror SimpleExitStrategy / HtfRsiVolExpansionExitStrategy:
+                // priceDelta × quantity. Quantity already encodes leverage from
+                // sizing — multiplying by leverage again would double-count.
                 return Setup.Direction == TradeDirection.Long
-                    ? (exitPrice - _fillPrice) * Setup.Quantity * Setup.Leverage
-                    : (_fillPrice - exitPrice) * Setup.Quantity * Setup.Leverage;
+                    ? (exitPrice - _fillPrice) * Setup.Quantity
+                    : (_fillPrice - exitPrice) * Setup.Quantity;
             }
         }
 
@@ -311,7 +314,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 _output.WriteLine($"Exit:      bar {exitBar} ({exitReason}) at ~{exitPrice:F2}");
                 _output.WriteLine($"Hold time: {holdTime.TotalMinutes:F0} minutes");
                 _output.WriteLine($"PnL:       {pnl:F2} USDT");
-                _output.WriteLine($"R-multiple: {pnl / (risk * pipeline.Setup.Quantity * pipeline.Setup.Leverage):F1}R");
+                _output.WriteLine($"R-multiple: {pnl / (risk * pipeline.Setup.Quantity):F1}R");
 
                 // This was a losing trade — price reversed against the short
                 pnl.Should().BeLessThan(0, "real data shows price reversed against the short");

@@ -346,21 +346,24 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 takeProfit = entryPrice - initialRisk;
             }
 
-            // Position sizing: full equity × leverage / price
-            var equity = _tradingState.CurrentEquity;
-            var notional = equity * Leverage;
-            var quantity = notional / entryPrice;
+            // Position sizing: full equity × leverage / price, via HtfRsiPositionSizer
+            // so the bankruptcy / min-qty / increment guards are unit-testable.
+            // The first guard (equity > 0) is the safety net: without it the
+            // algorithm would keep emitting setups against a blown-up account.
+            var sizing = HtfRsiPositionSizer.Compute(
+                equity: _tradingState.CurrentEquity,
+                leverage: Leverage,
+                entryPrice: entryPrice,
+                minimumQuantity: _symbol?.Quantity?.Minimum ?? 0m,
+                quantityIncrement: _symbol?.Quantity?.Increment ?? 0m);
 
-            // Respect symbol constraints
-            if (_symbol?.Quantity?.Minimum > 0 && quantity < _symbol.Quantity.Minimum)
+            if (!sizing.Ok)
             {
-                _logger.LogWarning($"[HTF-RSI {ts}] Quantity {quantity:F6} below minimum {_symbol.Quantity.Minimum}. Skipping.");
+                _logger.LogWarning($"[HTF-RSI {ts}] Skipping setup: {sizing.SkipReason}");
                 return;
             }
-            if (_symbol?.Quantity?.Increment > 0)
-            {
-                quantity = Math.Floor(quantity / _symbol.Quantity.Increment) * _symbol.Quantity.Increment;
-            }
+
+            var quantity = sizing.Quantity;
 
             // Get 15M RSI (Wilder) for probability score
             double rsi15M = _quoteHub15M.Quotes.ToRsi(14).LastOrDefault()?.Rsi ?? 50;
@@ -437,7 +440,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 $"SL:{stopLoss:F2} | TP:{takeProfit:F2} | ATR:{currentAtr:F2} | " +
                 $"VolExp:{expansionRatio:F2} | 4H RSI:{currentRsi.Value:F1} | " +
                 $"15M RSI:{rsi15M:F1} | Score:{score} | Qty:{quantity:F6} | " +
-                $"Equity:{equity:F2} | {_tradingState.GetStatus()}");
+                $"Equity:{_tradingState.CurrentEquity:F2} | {_tradingState.GetStatus()}");
 
             RequestTracker.Instance.Add(
                 candle.Symbol,

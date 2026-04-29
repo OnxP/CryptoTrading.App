@@ -192,11 +192,16 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
 
         private void RecordExit(string reason, decimal exitPrice, decimal quantity)
         {
+            // Perp-style realised PnL: priceDelta × quantity. Quantity already
+            // encodes leverage at sizing time (notional = equity × leverage,
+            // qty = notional / entryPrice — see HtfRsiPositionSizer), so an
+            // extra "× Leverage" here would double-count and inflate every
+            // exit by the leverage factor.
             decimal pnl;
             if (_setup.Direction == TradeDirection.Long)
-                pnl = (exitPrice - _setup.EntryPrice) * quantity * _setup.Leverage;
+                pnl = (exitPrice - _setup.EntryPrice) * quantity;
             else
-                pnl = (_setup.EntryPrice - exitPrice) * quantity * _setup.Leverage;
+                pnl = (_setup.EntryPrice - exitPrice) * quantity;
 
             _tradingState.RecordTradeComplete(reason, pnl);
 
