@@ -86,34 +86,18 @@ namespace CryptoTrading.App.Process
             var winPcts = trades.Where(x => x.Profit > 0).Select(x => x.Profit).ToList();
             var lossPcts = trades.Where(x => x.Profit < 0).Select(x => x.Profit).ToList();
 
-            // Compute USDT equity: assume each trade's P&L % is applied to the running balance
-            // Starting with the first trade's bought price * quantity as the position size
-            var orderedTrades = trades.OrderBy(x => x.StartDate).ToList();
-            double startUsdt = 0;
-            double endUsdt = 0;
-            if (orderedTrades.Count > 0)
-            {
-                // Estimate starting capital from the first trade's position value
-                startUsdt = orderedTrades.First().BoughtPrice * orderedTrades.First().Quantity;
-                // If that looks like a tiny BTC amount, use a default
-                if (startUsdt < 1) startUsdt = 100000;
-
-                double equity = startUsdt;
-                foreach (var trade in orderedTrades)
-                {
-                    double positionValue = trade.BoughtPrice * trade.Quantity;
-                    if (positionValue < 0.0001) positionValue = equity * 0.01; // fallback: 1% position
-                    double tradePnl = positionValue * (trade.Profit / 100.0);
-                    equity += tradePnl;
-                }
-                endUsdt = equity;
-            }
+            // Total realised P&L in USDT = sum of (position notional × profit %).
+            // We do NOT know the real account balance, so we no longer try to
+            // reconstruct an equity curve from one trade's notional — that
+            // produced fictitious returns below -100% (impossible on a spot
+            // account) once cumulative losses exceeded the seeded "balance".
+            var totalPnlUsdt = trades.Sum(t => t.BoughtPrice * t.Quantity * (t.Profit / 100.0));
+            var avgTradeReturnPct = trades.Average(t => t.Profit);
 
             var sb = new StringBuilder();
             sb.AppendLine("=== OVERALL SUMMARY ===");
-            sb.AppendLine($"Start Amount:    {startUsdt:F2} USDT");
-            sb.AppendLine($"Final Amount:    {endUsdt:F2} USDT");
-            sb.AppendLine($"Net P&L:         {endUsdt - startUsdt:F2} USDT ({(startUsdt > 0 ? (endUsdt - startUsdt) / startUsdt * 100 : 0):F2}%)");
+            sb.AppendLine($"Total Net P&L:    {totalPnlUsdt:F2} USDT");
+            sb.AppendLine($"Avg Trade Return: {avgTradeReturnPct:F2}%");
             sb.AppendLine();
             sb.AppendLine($"Total Trades:    {count}");
             sb.AppendLine($"Winning Trades:  {wins} ({(double)wins / count * 100:F1}%)");
