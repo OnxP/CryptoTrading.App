@@ -5,9 +5,10 @@ using CryptoTrading.App.Broker;
 using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
+using CryptoTrading.App.Monitor.Trade;
 using System.Threading;
-using Trade = CryptoTrading.App.Core.Trade.Trade;
-using CryptoTrading.App.Core.Position;
+using Trade = CryptoTrading.App.Monitor.Trade.Trade;
+using CryptoTrading.App.Broker.Position;
 
 namespace CryptoTrading.App.BrokerTesting
 {
@@ -22,12 +23,11 @@ namespace CryptoTrading.App.BrokerTesting
             //bindings for the test broker (algo testing)
             IMarket  market = new TestMarket();
             //ILogger<CryptoBroker> logger = new FileLogger(@"C:\temp\BrokerTest.csv", LogLevel.Information) as ILogger<CryptoBroker>;
-            ITradeFactory factory = new TestTradeFactory();
             Dictionary<string, IPosition> dictionaryPositions = new Dictionary<string, IPosition>();
-            dictionaryPositions.Add("XRP", new Position("XRP",0m));
-            dictionaryPositions.Add("BTC", new Position("BTC",10)); 
-            dictionaryPositions.Add("BNB", new Position("BNB",10));
-            IPositions positions = new Positions(null,factory, dictionaryPositions);
+            dictionaryPositions.Add("XRP", new BrokerPosition("XRP",0m));
+            dictionaryPositions.Add("BTC", new BrokerPosition("BTC",10));
+            dictionaryPositions.Add("BNB", new BrokerPosition("BNB",10));
+            IPositions positions = new BrokerPositions(null, dictionaryPositions);
             //IMarketDataEvents marketDataEvents = new 
 
             //var broker = new CryptoBroker(market, logger);

@@ -1,7 +1,6 @@
 ﻿using CryptoTrading.App.Algorithm.RegimeBased.EntryStrategies;
 using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core.Strategy;
-using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System.Linq;
@@ -65,7 +64,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             return (_setup.EntryZoneHigh + _setup.EntryZoneLow) / 2;
         }
 
-        public StrategyStatus ProcessStrategy(ITrade trade)
+        public StrategyStatus ProcessStrategy(TradeState tradeState)
         {
             var status = new StrategyStatus
             {
@@ -83,7 +82,7 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             var ts = _quoteHub.Quotes.Last().Timestamp.ToString("yyyy-MM-dd HH:mm");
 
             // Not in trade - check for entry
-            if (!trade.Open)
+            if (!tradeState.IsOpen)
             {
                 var entryDetails = EntryStrategy.GetNextEntry(0, Quantity, currentPrice);
                 if (entryDetails.ShouldTrade)
@@ -97,13 +96,12 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
 
             // In trade - check for exit
             status.StrategyState = StrategyState.WaitingForExit;
-            var exitDetails = ExitStrategy.GetNextExit(trade.TotalOpenBaseQuantity, currentPrice, trade.ProfitPct);
+            var exitDetails = ExitStrategy.GetNextExit(tradeState.TotalOpenBaseQuantity, currentPrice, tradeState.ProfitPct);
             if (exitDetails.ShouldTrade)
             {
-                _logger?.LogInformation($"[1M {ts}] EXIT SIGNAL: {_setup.RecommendedExitStrategy} | Price: {currentPrice:F2} | PnL: {trade.ProfitPct:F2}% | Qty: {exitDetails.Quantity}");
+                _logger?.LogInformation($"[1M {ts}] EXIT SIGNAL: {_setup.RecommendedExitStrategy} | Price: {currentPrice:F2} | PnL: {tradeState.ProfitPct:F2}% | Qty: {exitDetails.Quantity}");
                 status.StrategyAction = StrategyAction.CloseTrade;
                 status.StrategyState = StrategyState.ExitSubmitted;
-                // Cache the exit decision so ExecuteExitStrategy doesn't call GetNextExit again
                 status.ExitDetails = exitDetails;
             }
 

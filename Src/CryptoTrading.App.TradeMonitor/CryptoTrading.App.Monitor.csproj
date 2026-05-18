@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Skender.Stock.Indicators" Version="3.0.0-preview.1" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CryptoTrading.App.Algorthm\CryptoTrading.App.Algorithm.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Broker\CryptoTrading.App.Broker.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
   </ItemGroup>
 

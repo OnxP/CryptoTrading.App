@@ -1,5 +1,4 @@
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Core.Trade;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ namespace CryptoTrading.App.Core.MarketMonitorFactory
     /// </summary>
     public interface IMarketMonitor
     {
-        Task<bool> CheckOrder(ITransaction order);
+        Task<ExchangeOrder> CheckOrder(string orderId, string symbol);
         Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick);
         bool IsSubscribed(string symbol, string keyValue);
         void UnSubscribe(string symbol, string keyValue);

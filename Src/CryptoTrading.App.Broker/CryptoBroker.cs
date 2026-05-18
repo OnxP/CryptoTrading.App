@@ -1,103 +1,120 @@
-using System;
 using System.Threading.Tasks;
+using CryptoTrading.App.Broker.Account;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
-using CryptoTrading.App.Core.Message_Broker;
 using CryptoTrading.App.Core.Trade;
 using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.Broker
 {
-    public class CryptoBroker: IBroker
+    public class CryptoBroker : IBroker
     {
         private readonly IMarket _market;
+        private readonly IAccount _account;
         private readonly ILogger<CryptoBroker> _logger;
         private string KeyValue { get; set; }
-        public CryptoBroker(IMarket market, ILogger<CryptoBroker> logger)
+
+        public CryptoBroker(IMarket market, IAccount account, ILogger<CryptoBroker> logger)
         {
             _market = market;
+            _account = account;
             _logger = logger;
             KeyValue = string.IsNullOrEmpty(KeyValue) ? "1" : KeyValue;
-            ConfigureMessageBroker();
         }
 
-        public CryptoBroker(IMarket market, ILogger<CryptoBroker> logger, IKey key) : this(market,logger)
+        public CryptoBroker(IMarket market, IAccount account, ILogger<CryptoBroker> logger, IKey key)
+            : this(market, account, logger)
         {
             KeyValue = key.KeyValue;
-
         }
 
+        public IAccount Account => _account;
 
-        private void ConfigureMessageBroker()
+        public async Task<IBrokerResult> SubmitTradeRequest(ITradeRequest request)
         {
-            IMessageBroker messageBroker = MessageBroker.Instance;
+            if (!_account.HasSufficientBalance(request))
+            {
+                _logger.LogWarning("Trade rejected for {Symbol}: insufficient balance", request.Symbol);
+                return OrderResult.Rejected($"Insufficient balance for {request.Symbol}");
+            }
 
-            Func<MessagePayload<IMarketRequest>,Task> MarketTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, MarketTradeMesssage);
+            if (_account.Positions.GetPosition(request.BaseSymbol).HasOpenPosition)
+            {
+                _logger.LogWarning("Trade rejected for {Symbol}: position already open", request.Symbol);
+                return OrderResult.Rejected($"Position already open for {request.BaseSymbol}");
+            }
 
-            Func<MessagePayload<ILimitRequest>, Task> LimitTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, LimitTradeMesssage);
+            var side = request.OrderSide;
+            var order = await _market.SetMarketOrder(new BrokerMarketRequest
+            {
+                Symbol = request.Symbol,
+                OrderType = side,
+                Quantity = CalculateQuantity(request),
+                Price = 0m
+            }).ConfigureAwait(false);
 
-            Func<MessagePayload<ICancelRequest>,Task> CancelTransactionMessage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, CancelTransactionMessage);
+            if (order.IsFilled)
+            {
+                _account.UpdatePositionFromFill(order, request);
+                _logger.LogInformation("Trade filled for {Symbol}: {Qty} @ {Price}", order.Symbol, order.FilledQuantity, order.Price);
+            }
 
-            Func<MessagePayload<IStopLimitRequest>,Task> StoplimitTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, StoplimitTradeMessage);
-
+            return OrderResult.Success(order);
         }
 
-        private async Task ProcessMessageAction(MessagePayload<IMarketRequest> obj)
+        private decimal CalculateQuantity(ITradeRequest request)
         {
-            IMarketRequest request = obj.What;
-            //set market order
+            if (request.Leverage > 1)
+                return request.Amount;
+            return request.Amount;
+        }
+
+        public async Task<ExchangeOrder> SubmitMarketOrder(string symbol, ExchangeOrderSide side, decimal quantity)
+        {
+            var request = new BrokerMarketRequest
+            {
+                Symbol = symbol,
+                OrderType = side,
+                Quantity = quantity,
+                Price = 0m
+            };
             var order = await _market.SetMarketOrder(request).ConfigureAwait(false);
-            //confirm market order has been met
-            LogOrder(order, ExchangeOrderStatus.Filled);
-            await MessageBroker.Instance.Publish(order.Symbol, obj.Who, order);
+            _logger.LogInformation("Order {OrderId} {Symbol} {Status}", order.OrderId, order.Symbol, order.Status);
+            return order;
         }
 
-        private async Task ProcessMessageAction(MessagePayload<ILimitRequest> obj)
+        public async Task<ExchangeOrder> SubmitLimitOrder(string symbol, ExchangeOrderSide side, decimal quantity, decimal price)
         {
-            ILimitRequest request = obj.What;
-            //set market order
+            var request = new BrokerLimitRequest
+            {
+                Symbol = symbol,
+                OrderType = side,
+                Quantity = quantity,
+                Price = price
+            };
             var order = await _market.SetLimitOrder(request).ConfigureAwait(false);
-            //confirm market order has been met
-            LogOrder(order, ExchangeOrderStatus.Filled);
-            await MessageBroker.Instance.Publish(order.Symbol, obj.Who, order);
+            _logger.LogInformation("Order {OrderId} {Symbol} {Status}", order.OrderId, order.Symbol, order.Status);
+            return order;
         }
 
-        private async Task ProcessMessageAction(MessagePayload<ICancelRequest> obj)
+        public async Task<ExchangeOrder> CancelOrder(string symbol, string orderId)
         {
-            ICancelRequest request = obj.What;
-            //set market order
-            var order = await _market.CancelOrder(request).ConfigureAwait(false);
-            //confirm market order has been met
-            await MessageBroker.Instance.Publish(request.Symbol, obj.Who, order);
-        }
-        private async Task ProcessMessageAction(MessagePayload<IStopLimitRequest> obj)
-        {
-            IStopLimitRequest request = obj.What;
-            //set market order
-            var order = await _market.SetStopLimitOrder(request).ConfigureAwait(false);
-            //confirm market order has been met
-            LogOrder(order, ExchangeOrderStatus.New);
-            await MessageBroker.Instance.Publish(order.Symbol, obj.Who, order);
+            var request = new CancelRequest(orderId, symbol);
+            var cancelledId = await _market.CancelOrder(request).ConfigureAwait(false);
+            _logger.LogInformation("Order {OrderId} cancelled for {Symbol}", orderId, symbol);
+            return new ExchangeOrder
+            {
+                OrderId = orderId,
+                Symbol = symbol,
+                Status = ExchangeOrderStatus.Cancelled
+            };
         }
 
         private void LogOrder(ExchangeOrder order, ExchangeOrderStatus status)
         {
-            //todo log order to the database.
-        }
-
-        public void ClosePosition(ITrade trade)
-        {
-            //IEnumerable<ExchangeOrder> orders = await _market.GetAllOpenOrders().ConfigureAwait(false);
-            //foreach (var order in orders)
-            //{
-            //    await _market.CancelOrder(order).ConfigureAwait(false);
-            //}
+            _logger.LogInformation("Order {OrderId} {Symbol} {Status}", order.OrderId, order.Symbol, order.Status);
         }
     }
 }

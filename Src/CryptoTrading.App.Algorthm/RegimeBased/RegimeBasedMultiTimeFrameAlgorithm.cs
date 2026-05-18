@@ -1,10 +1,10 @@
 ﻿using Binance;
-using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
+using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
@@ -362,10 +362,6 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                     _activeSetup = regimeResult?.Setup;
                     _activeExecutionStrategy = executionStrategy;
 
-                    // Pass logger to execution strategy and its entry/exit strategies
-                    (executionStrategy as RegimeBasedExecutionStrategy)?.SetLogger(_logger);
-
-                    // Submit trade request to RequestTracker for execution by TradeMonitor
                     if (_activeSetup != null)
                     {
                         _logger.LogInformation(
@@ -379,10 +375,31 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
                             $"[15M {ts15M}] Entry: {_activeSetup.RecommendedEntryStrategy} | Exit: {_activeSetup.RecommendedExitStrategy} | " +
                             $"Conf: {_activeSetup.Confidence:P0}");
 
-                        RequestTracker.Instance.Add(
-                            args.Candlestick.Symbol,
-                            new CryptoTrading.App.Algorithm.TradeRequest(strategyResult, executionStrategy, _symbol, args.Candlestick.CloseTime),
-                            KeyValue);
+                        var atr = _activeSetup.StopLoss != 0 && _activeSetup.EntryZoneHigh != 0
+                            ? Math.Abs(_activeSetup.EntryZoneHigh - _activeSetup.StopLoss)
+                            : 0m;
+
+                        var signal = new TradeSignal
+                        {
+                            Symbol = _symbol,
+                            BaseSymbol = _symbol.BaseAsset,
+                            QuoteSymbol = _symbol.QuoteAsset,
+                            Direction = _activeSetup.Direction,
+                            Leverage = strategyResult.Leverage,
+                            Quantity = executionStrategy.Quantity,
+                            SignalTime = args.Candlestick.CloseTime,
+                            EntryPrice = _activeSetup.EntryZoneHigh,
+                            StopLoss = _activeSetup.StopLoss,
+                            TakeProfit = _activeSetup.TakeProfit,
+                            AtrAtSignal = atr,
+                            InitialRisk = atr,
+                            ProbabilityScore = _activeSetup.Confidence,
+                            SetupType = _activeSetup.SetupType.ToString(),
+                            RecommendedEntryStrategy = _activeSetup.RecommendedEntryStrategy.ToString(),
+                            RecommendedExitStrategy = _activeSetup.RecommendedExitStrategy.ToString()
+                        };
+
+                        RequestTracker.Instance.Add(args.Candlestick.Symbol, signal, KeyValue);
                     }
                 }
             }

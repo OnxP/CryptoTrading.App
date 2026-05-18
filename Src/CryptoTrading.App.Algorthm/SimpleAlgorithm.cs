@@ -5,7 +5,6 @@ using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -62,13 +61,10 @@ namespace CryptoTrading.App.Algorithm
                 CandleStickTracker.Instance.UpdateCandleStick(candlestickEventArgs);
                 if (!candlestickEventArgs.IsFinal) return;
                 _candleSticks.Add(candlestickEventArgs.Candlestick);
-                //Logger.LogInformation($"Processing Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm}");
-                var request = CalculateTradeStrategies(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteVolume, candlestickEventArgs.Candlestick.NumberOfTrades);
-                //Logger.LogInformation($"Finished processing for Strategies for {candlestickEventArgs.Candlestick.Symbol} at {candlestickEventArgs.Candlestick.CloseTime:yyyy/MM/dd hh:mm:ss}");
-                if (request==null) return;
-                if (request.Amount <= 0) return;
-                RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, request, KeyValue);
-                //MessageBroker.Instance.Publish(KeyValue, this, request);
+                var signal = CalculateTradeSignal(candlestickEventArgs.Candlestick.Symbol, candlestickEventArgs.Candlestick.CloseTime, candlestickEventArgs.Candlestick.QuoteVolume, candlestickEventArgs.Candlestick.NumberOfTrades);
+                if (signal == null) return;
+                if (signal.Quantity <= 0) return;
+                RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, signal, KeyValue);
             }
             catch(Exception e)
             {
@@ -76,30 +72,33 @@ namespace CryptoTrading.App.Algorithm
             }
         }
 
-        public ITradeRequest CalculateTradeStrategies(string symbol, DateTime closeTime,decimal volume ,long numberOfTrades)
+        public ITradeSignal CalculateTradeSignal(string symbol, DateTime closeTime, decimal volume, long numberOfTrades)
         {
             if (!_candleSticks.Ready)
-            {
                 return null;
-            }
 
             if (_candleSticks.HasMissing)
-            {
-                //TODO Trigger backfill.
                 return null;
-            }
 
             var result = TradingStrategies.Calculate(_candleSticks, StopLimitTracker);
-            
-            if(result == 0) return RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
 
+            if (result == 0) return null;
 
-            
-            result = ( (Config.UseFixedAmount?Config.FixedAmount:1) / Config.NoOfTrades);
-            //need access to config here.
-            var request = RequestBuilder.BuildTradeRequest(result, Config.UseFixedAmount, symbol, _candleSticks.Current.Close, closeTime, StopLimitTracker, volume , (decimal)Config.PercentDailyVolume);
+            result = ((Config.UseFixedAmount ? Config.FixedAmount : 1) / Config.NoOfTrades);
+            var close = _candleSticks.Current.Close;
 
-            return request;
+            return new TradeSignal
+            {
+                Symbol = symbol,
+                Direction = TradeDirection.Long,
+                Quantity = (decimal)result / close,
+                SignalTime = closeTime,
+                EntryPrice = close,
+                StopLoss = StopLimitTracker?.StopLimitPrice ?? 0m,
+                TakeProfit = 0m,
+                AtrAtSignal = 0m,
+                InitialRisk = 0m
+            };
         }
 
         public void Subscribe(Symbol symbol, IMarketDataEvents marketData)

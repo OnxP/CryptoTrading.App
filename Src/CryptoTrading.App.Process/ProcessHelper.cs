@@ -6,6 +6,8 @@ using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Monitor;
+using CryptoTrading.App.Monitor.Trade;
 
 namespace CryptoTrading.App.Process
 {
@@ -17,7 +19,6 @@ namespace CryptoTrading.App.Process
 
             foreach (var symbol in symbols)
             {
-                //need to create a unique instance of algo
                 var algorithm = getAlgorithm.Invoke();
                 algorithm.Configure(config);
                 algorithm.Subscribe(symbol,marketData);
@@ -39,7 +40,7 @@ namespace CryptoTrading.App.Process
             tradeProcessor.ClearInactiveTrades();
             var factory = new ArchiveTradeFactory(config);
             var historicTrades = new List<HistoricTrades>();
-            completedTrades.ForEach(x => factory.CreateHistoricTrades(x,historicTrades));
+            completedTrades.ForEach(x => factory.CreateHistoricTrades(x, historicTrades));
             return historicTrades;
         }
 

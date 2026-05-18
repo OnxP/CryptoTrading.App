@@ -92,7 +92,7 @@ namespace CryptoTrading.App.BackTesting
             List<ExchangeCandlestick> candles1M)
         {
             _ = RequestTracker.Instance;
-            RequestTracker.Requests.Clear();
+            RequestTracker.Signals.Clear();
 
             var logger = NullLogger<HtfRsiVolExpansionAlgorithm>.Instance;
             var algo = new HtfRsiVolExpansionAlgorithm(logger);
@@ -161,16 +161,27 @@ namespace CryptoTrading.App.BackTesting
 
                         // Capture any signal the algorithm fired on this bar.
                         if (sim != null
-                            && RequestTracker.Requests.TryRemove(opts.Symbol, out var pair)
+                            && RequestTracker.Signals.TryRemove(opts.Symbol, out var pair)
                             && !sim.HasActive)
                         {
-                            var request = pair.Item2;
-                            var srProp = request.GetType().GetProperty("StrategyResult");
-                            var sr = srProp?.GetValue(request) as HtfRsiVolExpansionStrategyResult;
-                            var stratProp = request.GetType().GetProperty("Strategy");
-                            var exec = stratProp?.GetValue(request) as CryptoTrading.App.Core.Strategy.IExecutionStrategy;
-                            if (sr?.Setup != null && exec != null)
-                                sim.OpenFromSignal(exec, sr.Setup);
+                            var signal = pair.Signal;
+                            var setup = new HtfRsiVolExpansionSetup
+                            {
+                                Direction = signal.Direction,
+                                EntryPrice = signal.EntryPrice,
+                                StopLoss = signal.StopLoss,
+                                TakeProfit = signal.TakeProfit,
+                                AtrAtEntry = signal.AtrAtSignal,
+                                InitialRisk = signal.InitialRisk,
+                                HtfRsi = (double)(signal.HtfRsi ?? 50m),
+                                VolExpansionRatio = (double)(signal.VolExpansionRatio ?? 1m),
+                                ProbabilityScore = (int)(signal.ProbabilityScore ?? 50m),
+                                Quantity = signal.Quantity,
+                                Leverage = signal.Leverage,
+                                EntryTime = signal.SignalTime
+                            };
+                            var exec = new SimpleExecutionStrategy(setup, (HtfRsiTradingState)tsField.GetValue(algo));
+                            sim.OpenFromSignal(exec, setup);
                         }
                         break;
 

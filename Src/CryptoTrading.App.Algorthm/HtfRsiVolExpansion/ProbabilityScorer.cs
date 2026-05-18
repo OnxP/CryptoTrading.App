@@ -1,4 +1,5 @@
 using CryptoTrading.App.Algorithm.RegimeBased;
+using CryptoTrading.App.Core.Strategy;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;

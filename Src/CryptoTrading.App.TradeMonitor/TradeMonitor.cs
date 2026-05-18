@@ -1,55 +1,67 @@
-﻿using CryptoTrading.App.Algorithm.RegimeBased;
-using CryptoTrading.App.Algorithm.RegimeBased.ExitStrategies;
 using CryptoTrading.App.Core;
-using CryptoTrading.App.Core.Database.StoreTrades;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
-using CryptoTrading.App.Core.Message_Broker;
-using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
-using CryptoTrading.App.Core.TradeRequest;
+using CryptoTrading.App.Monitor.Position;
+using CryptoTrading.App.Monitor.Strategies;
+using CryptoTrading.App.Monitor.Strategies.RegimeBased.ExitStrategies;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CryptoTrading.App.Monitor
 {
-    //Monitors a Trade, and manages transactions.
-    //Each transaction is linked to an order.
-    //The trade is considered to be live if there are open transactions
     public class TradeMonitor : ITradeMonitor
     {
         private ILogger<TradeMonitor> Logger { get; set; }
         private IConfig Config { get; set; }
-        public TradeMonitor(ILogger<TradeMonitor>logger,IMarketMonitor monitor,IConfig config)
+        private readonly IBroker _broker;
+        private readonly StrategySelector _strategySelector;
+
+        private readonly PositionTracker _position = new();
+        public List<HistoricTradeRecord> CompletedTrades { get; } = new();
+
+        public ITradeSignal Signal { get; set; }
+        private ITradeSignal _pendingSignal;
+        private IExecutionStrategy _strategy;
+        private ExchangeOrder _pendingOrder;
+
+        public IMarketMonitor marketMonitor { get; set; }
+        public DateTime currentCloseTime { get; set; }
+        public decimal CurrentStopLimit { get; set; }
+        private readonly QuoteHub<IQuote> _quoteHub;
+
+        public TradeMonitor(ILogger<TradeMonitor> logger, IMarketMonitor monitor, IConfig config, IBroker broker)
         {
             marketMonitor = monitor;
             Logger = logger;
             Config = config;
+            _broker = broker;
             _quoteHub = new QuoteHub<IQuote>(300);
+            _strategySelector = new StrategySelector(logger);
         }
 
-        public ITrade Trade => HistoricTrades.Last();
+        public bool Live => _position.IsOpen;
+        public string Symbol => Signal?.Symbol;
+        public string KeyValue { get; set; } = "1";
 
-        public List<ITrade> HistoricTrades { get; set; } = new List<ITrade>();
-        public decimal CurrentStopLimit { get; set; } 
-        public IMarketMonitor marketMonitor { get; set; }
-        public DateTime currentCloseTime { get; set; }
-        public ITradeRequest Request { get; set; }
-        private readonly QuoteHub<IQuote> _quoteHub;
-        private PositionState _positionState = PositionState.NoPosition;
-        private ITradeRequest _pendingRequest;
-        // Stale setup detection moved to the execution strategy (SL/TP breach check).
+        public void AcceptSignal(ITradeSignal signal)
+        {
+            Signal = signal;
+            _position.Symbol = signal.Symbol;
+            _position.Direction = signal.Direction;
+            _position.TargetQty = signal.Quantity;
+            _strategy = _strategySelector.CreateStrategy(signal, _quoteHub);
+        }
 
         public async Task SubscribetToMarketData()
         {
-            if (!marketMonitor.IsSubscribed(Request.Symbol, KeyValue))
+            if (!marketMonitor.IsSubscribed(Signal.Symbol, KeyValue))
             {
-                var candleSticks = await marketMonitor.GetHistoricCandleSticks(Request.Symbol);
+                var candleSticks = await marketMonitor.GetHistoricCandleSticks(Signal.Symbol);
                 foreach (var candle in candleSticks)
                     _quoteHub.Add(new Quote
                     {
@@ -60,77 +72,89 @@ namespace CryptoTrading.App.Monitor
                         Close = candle.Close,
                         Volume = candle.Volume
                     });
-                Request.Strategy.SetQuotes(_quoteHub);
-                await marketMonitor.Subscribe(Request.Symbol, KeyValue, ProcessCandleStick);
+                _strategy.SetQuotes(_quoteHub);
+                await marketMonitor.Subscribe(Signal.Symbol, KeyValue, ProcessCandleStick);
             }
         }
-        public async Task SetNewRequest(ITradeRequest what)
+
+        public async Task SetNewSignal(ITradeSignal signal)
         {
-            var compareResults = CompareRequests(Request, what);
+            var compareResults = CompareSignals(Signal, signal);
 
             switch (compareResults)
             {
                 case CompareResults.SameDirection:
-                    // Same direction: update the request with fresh setup/prices
-                    // but only if we're not currently in an active position
-                    if (_positionState == PositionState.NoPosition)
+                    if (_position.State == PositionState.NoPosition)
                     {
                         Logger.LogInformation($"Updating setup for {Symbol} (same direction). New entry zone from 15M.");
-                        Request = what;
-                        Request.Strategy.SetQuotes(_quoteHub);
-                        // Fresh 15M setup received
+                        Signal = signal;
+                        _strategy = _strategySelector.CreateStrategy(signal, _quoteHub);
                     }
                     else
                     {
-                        // Store the new request so CompleteTrade can pick it up after the current trade closes
-                        Logger.LogDebug($"In position ({_positionState}) for {Symbol}, queuing new setup for next trade.");
-                        _pendingRequest = what;
+                        Logger.LogDebug($"In position ({_position.State}) for {Symbol}, queuing new setup for next trade.");
+                        _pendingSignal = signal;
 
-                        // Also update the current exit strategy's SL/TP with fresh levels
-                        // so the active trade uses current risk management, not stale values
-                        if (what.Strategy.ExitStrategy is RegimeBasedExitStrategyBase newExit
-                            && Request.Strategy.ExitStrategy is RegimeBasedExitStrategyBase currentExit)
+                        var newStrategy = _strategySelector.CreateStrategy(signal, _quoteHub);
+                        if (newStrategy.ExitStrategy is RegimeBasedExitStrategyBase newExit
+                            && _strategy.ExitStrategy is RegimeBasedExitStrategyBase currentExit)
                         {
                             currentExit.UpdateSetup(newExit.Setup);
                         }
                     }
                     break;
                 case CompareResults.ChangeDirection:
-                    //need to exit out of the existing one.
-                    if(Trade.GetCurrentTransaction() != null && marketMonitor != null)
+                    if (_position.IsOpen && marketMonitor != null)
                     {
-                        await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
-                        if(!Trade.GetCurrentTransaction().IsFilled)
+                        if (_pendingOrder != null)
                         {
-                            await CancelOrder(Trade.GetCurrentTransaction());
+                            var orderId = _pendingOrder.OrderId ?? _pendingOrder.ClientOrderId;
+                            var updatedOrder = await marketMonitor.CheckOrder(orderId, Signal.Symbol);
+                            if (updatedOrder != null && updatedOrder.FilledQuantity > _pendingOrder.FilledQuantity)
+                            {
+                                var delta = updatedOrder.FilledQuantity - _pendingOrder.FilledQuantity;
+                                _position.RecordFill(new ExchangeOrder
+                                {
+                                    FilledQuantity = delta,
+                                    Price = updatedOrder.Price,
+                                    Timestamp = updatedOrder.Timestamp
+                                });
+                            }
+
+                            if (_pendingOrder.Status == ExchangeOrderStatus.New)
+                            {
+                                await _broker.CancelOrder(Signal.Symbol, _pendingOrder.OrderId);
+                            }
+                            _pendingOrder = null;
                         }
-                        if (Trade.GetCurrentTransaction().IsFilled || Trade.GetCurrentTransaction().IsPartiallyFilled)
+
+                        if (_position.RemainingQty > 0)
                         {
-                            //close existing trade
-                            var transaction = Trade.CompleteTrade();
-                            await SubmitOrder(transaction);
+                            var side = _position.Direction == TradeDirection.Long
+                                ? ExchangeOrderSide.Sell : ExchangeOrderSide.Buy;
+                            var order = await _broker.SubmitMarketOrder(Signal.Symbol, side, _position.RemainingQty);
+                            _position.RecordExit(order);
                         }
+
+                        CompleteTrade();
                     }
-                    Request = what;
-                    Request.Strategy.SetQuotes(_quoteHub);
-                    // Fresh setup on direction change
-                    break;
-                default:
+                    Signal = signal;
+                    _strategy = _strategySelector.CreateStrategy(signal, _quoteHub);
+                    _position.Symbol = signal.Symbol;
+                    _position.Direction = signal.Direction;
+                    _position.TargetQty = signal.Quantity;
                     break;
             }
         }
 
-        private CompareResults CompareRequests(ITradeRequest request, ITradeRequest what)
+        private CompareResults CompareSignals(ITradeSignal current, ITradeSignal incoming)
         {
-            if(request.OrderSide == what.OrderSide)
-                //if(request.Is)
+            if (current.Direction == incoming.Direction)
                 return CompareResults.SameDirection;
             else
                 return CompareResults.ChangeDirection;
         }
 
-        //for the database it is 1m candles but for live trading it is the live market price.
-        //so the candle needs to be final before processing.
         public async void ProcessCandleStick(ExchangeCandlestickEvent candleStick)
         {
             if (!candleStick.IsFinal) return;
@@ -145,68 +169,73 @@ namespace CryptoTrading.App.Monitor
             });
 
             var ts = candleStick.Candlestick.CloseTime.ToString("yyyy-MM-dd HH:mm");
-
-            // Reset daily circuit breaker tracking at day boundary
+            var close = candleStick.Candlestick.Close;
             currentCloseTime = candleStick.Candlestick.CloseTime;
 
-            //only get pending transactions
-            if (Trade.PendingEntryTransactions.Count >0  && Trade.PendingExitTransactions.Count >0)
-                await marketMonitor.CheckOrder(Trade.GetCurrentTransaction());
+            if (_pendingOrder != null)
+            {
+                var orderId = _pendingOrder.OrderId ?? _pendingOrder.ClientOrderId;
+                var updatedOrder = await marketMonitor.CheckOrder(orderId, Signal.Symbol);
+                if (updatedOrder != null)
+                {
+                    if (updatedOrder.FilledQuantity > _pendingOrder.FilledQuantity)
+                    {
+                        var delta = updatedOrder.FilledQuantity - _pendingOrder.FilledQuantity;
+                        var fillOrder = new ExchangeOrder
+                        {
+                            FilledQuantity = delta,
+                            Price = updatedOrder.Price,
+                            Timestamp = updatedOrder.Timestamp
+                        };
 
-            var strategyResult = Request.Strategy.ProcessStrategy(Trade);
-            var previousState = _positionState;
+                        if (_position.State == PositionState.Building)
+                            _position.RecordFill(fillOrder);
+                        else if (_position.State == PositionState.Closing)
+                            _position.RecordExit(fillOrder);
+                    }
 
-            // Log state at Info level when entry/exit signals fire (not just Debug)
+                    if (updatedOrder.Status != ExchangeOrderStatus.New
+                        && updatedOrder.Status != ExchangeOrderStatus.PartiallyFilled)
+                        _pendingOrder = null;
+                    else
+                        _pendingOrder = updatedOrder;
+                }
+            }
+
+            var tradeState = new TradeState(
+                _position.IsOpen,
+                _position.ProfitPct(close),
+                _position.FilledQty,
+                _position.RemainingQty);
+            var strategyResult = _strategy.ProcessStrategy(tradeState);
+            var previousState = _position.State;
+
             if (strategyResult.StrategyAction != StrategyAction.NoAction)
-                Logger.LogInformation($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} TradeOpen:{Trade.Open} Qty:{Trade.TotalOpenBaseQuantity} Price:{candleStick.Candlestick.Close:F2}");
+                Logger.LogInformation($"[1M TM {ts}] {Symbol} State:{_position.State} Action:{strategyResult.StrategyAction} TradeOpen:{_position.IsOpen} Qty:{_position.FilledQty} Price:{close:F2}");
             else
-                Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_positionState} Action:{strategyResult.StrategyAction} Price:{candleStick.Candlestick.Close:F2} Quotes:{_quoteHub.Quotes.Count}");
+                Logger.LogDebug($"[1M TM {ts}] {Symbol} State:{_position.State} Action:{strategyResult.StrategyAction} Price:{close:F2} Quotes:{_quoteHub.Quotes.Count}");
 
-            switch (_positionState)
+            switch (_position.State)
             {
                 case PositionState.NoPosition:
                     await HandleNoPosition(strategyResult, candleStick);
                     break;
-
                 case PositionState.Building:
                     await HandleBuildingPosition(strategyResult, candleStick);
                     break;
-
                 case PositionState.FullyOpen:
                     await HandleFullyOpenPosition(strategyResult, candleStick);
                     break;
-
                 case PositionState.InProfit:
                     await HandleInProfitPosition(strategyResult, candleStick);
                     break;
-
                 case PositionState.Closing:
                     await HandleClosingPosition(strategyResult, candleStick);
                     break;
             }
 
-            if (_positionState != previousState)
-                Logger.LogInformation($"[1M TM {ts}] {Symbol} STATE CHANGE: {previousState} -> {_positionState}");
-
-            //3 options Open/Move position, Exit position, Hold position.
-
-            ///several options or flows here
-            ///strategy want to open a new position
-            ///strategy wants to open a new position but there is already one open.-> move limit order (assume that its partially filled)
-            ///Strategy wants to close position -> cancel limit order and exit position.
-            ///Strategy wants to hold position -> do nothing.
-            ///Strategy changed what to do then??
-            /// - and there is no position -> open position
-            /// - and there is a un filled position -> cancel and open a new one.
-            /// - and there is a filled position -> we may need to exit depending on the strategy
-            ///     need the best way to decide what to do here 
-            ///         - leave it alone
-            ///         - exit position at profit then open a new one.
-            ///         - exit position at a loss then open a new one. (assuming long short filp) do we wait for it to go into profit first? 
-            ///             leave it open for now and close once the open order is ready, hopefully this situation does not arise often.
-
-
-            // Replace the empty switch block in ProcessCandleStick with cases for each StrategyAction
+            if (_position.State != previousState)
+                Logger.LogInformation($"[1M TM {ts}] {Symbol} STATE CHANGE: {previousState} -> {_position.State}");
         }
 
         private async Task HandleNoPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
@@ -216,24 +245,20 @@ namespace CryptoTrading.App.Monitor
                 try
                 {
                     Logger.LogInformation($"Starting new position for {Symbol}");
-                    _positionState = PositionState.Building;
-
-                    // Reset exit strategy state for the new trade (BarsHeld, EntryPrice, etc.)
-                    Request.Strategy.ExitStrategy?.ResetForNewTrade();
-
+                    _position.State = PositionState.Building;
+                    _strategy.ExitStrategy?.ResetForNewTrade();
                     await ExecuteEntryStrategy(candleStick);
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, $"[1M TM] Exception in HandleNoPosition for {Symbol}. Resetting to NoPosition.");
-                    _positionState = PositionState.NoPosition;
+                    _position.State = PositionState.NoPosition;
                 }
             }
         }
 
         private async Task HandleBuildingPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
-            // Continue building position using entry strategy
             if (result.StrategyAction == StrategyAction.OpenTrade)
             {
                 try
@@ -243,111 +268,109 @@ namespace CryptoTrading.App.Monitor
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, $"[1M TM] Exception in HandleBuildingPosition for {Symbol}. Resetting to NoPosition.");
-                    _positionState = PositionState.NoPosition;
+                    _position.State = PositionState.NoPosition;
                     return;
                 }
             }
             else if (result.StrategyAction == StrategyAction.CloseTrade)
             {
-                // Strategy changed, need to exit early
                 Logger.LogInformation($"Exiting position early during build phase for {Symbol}");
-                await CancelAllPendingEntries();
 
-                // If nothing was filled, go straight back to NoPosition
-                if (Trade.TotalOpenBaseQuantity <= 0)
+                if (_pendingOrder != null)
+                {
+                    await _broker.CancelOrder(Signal.Symbol, _pendingOrder.OrderId);
+                    _pendingOrder = null;
+                }
+
+                if (_position.FilledQty <= 0)
                 {
                     Logger.LogInformation($"No filled quantity to close for {Symbol}. Returning to NoPosition");
-                    _positionState = PositionState.NoPosition;
+                    _position.State = PositionState.NoPosition;
                     CompleteTrade();
                     return;
                 }
 
-                _positionState = PositionState.Closing;
+                _position.State = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick, result.ExitDetails);
-                return; // Don't fall through to the FullyOpen check
-            }
-
-            // Safety: if Building but nothing filled and no pending entries, reset to NoPosition.
-            // This prevents getting stuck in Building state when entries repeatedly fail.
-            if (Trade.TotalOpenBaseQuantity <= 0 && Trade.PendingEntryTransactions.Count == 0)
-            {
-                Logger.LogInformation($"[1M TM] Building with no entries for {Symbol} — resetting to NoPosition");
-                _positionState = PositionState.NoPosition;
                 return;
             }
 
-            // Check if position is fully built (has filled quantity and no pending entries)
-            if (Trade.TotalOpenBaseQuantity > 0 && Trade.PendingEntryTransactions.Count == 0)
+            if (_position.FilledQty <= 0 && _pendingOrder == null)
             {
-                Logger.LogInformation($"Position fully built for {Symbol}. Size: {Trade.TotalOpenBaseQuantity}");
-                _positionState = PositionState.FullyOpen;
+                Logger.LogInformation($"[1M TM] Building with no entries for {Symbol} — resetting to NoPosition");
+                _position.State = PositionState.NoPosition;
+                return;
+            }
+
+            if (_position.FilledQty > 0 && _pendingOrder == null)
+            {
+                Logger.LogInformation($"Position fully built for {Symbol}. Size: {_position.FilledQty}");
+                _position.State = PositionState.FullyOpen;
             }
         }
 
         private async Task HandleFullyOpenPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
-            // Safety check: if position has no quantity, reset to NoPosition
-            if (Trade.TotalOpenBaseQuantity <= 0)
+            var close = candleStick.Candlestick.Close;
+
+            if (_position.FilledQty <= 0)
             {
                 Logger.LogWarning($"Position has zero quantity for {Symbol}. Resetting to NoPosition");
-                _positionState = PositionState.NoPosition;
+                _position.State = PositionState.NoPosition;
                 CompleteTrade();
                 return;
             }
 
-            // Check for exit signal first (takes priority)
             if (result.StrategyAction == StrategyAction.CloseTrade)
             {
                 Logger.LogInformation($"Exit signal received for {Symbol}");
-                _positionState = PositionState.Closing;
+                _position.State = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick, result.ExitDetails);
                 return;
             }
 
-            // Check if position is in profit
-            if (Trade.ProfitPct > 0)
+            if (_position.ProfitPct(close) > 0)
             {
-                Logger.LogInformation($"Position in profit for {Symbol}. Profit: {Trade.ProfitPct}%");
-                _positionState = PositionState.InProfit;
+                Logger.LogInformation($"Position in profit for {Symbol}. Profit: {_position.ProfitPct(close)}%");
+                _position.State = PositionState.InProfit;
             }
         }
 
         private async Task HandleInProfitPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
-            // Safety check: if position has no quantity, reset to NoPosition
-            if (Trade.TotalOpenBaseQuantity <= 0)
+            var close = candleStick.Candlestick.Close;
+
+            if (_position.FilledQty <= 0)
             {
                 Logger.LogWarning($"InProfit position has zero quantity for {Symbol}. Resetting to NoPosition");
-                _positionState = PositionState.NoPosition;
+                _position.State = PositionState.NoPosition;
                 CompleteTrade();
                 return;
             }
 
-            // Once in profit, use exit strategy
             if (result.StrategyAction == StrategyAction.CloseTrade)
             {
-                Logger.LogInformation($"Closing profitable position for {Symbol}. Profit: {Trade.ProfitPct}%");
-                _positionState = PositionState.Closing;
+                Logger.LogInformation($"Closing profitable position for {Symbol}. Profit: {_position.ProfitPct(close)}%");
+                _position.State = PositionState.Closing;
                 await ExecuteExitStrategy(candleStick, result.ExitDetails);
             }
-            else if (Trade.ProfitPct <= 0)
+            else if (_position.ProfitPct(close) <= 0)
             {
-                // Went back below breakeven
-                _positionState = PositionState.FullyOpen;
+                _position.State = PositionState.FullyOpen;
             }
         }
 
         private async Task HandleClosingPosition(StrategyStatus result, ExchangeCandlestickEvent candleStick)
         {
-            // Continue executing exit strategy until position is fully closed
-            if (Trade.RemainingQuantity > 0 && Trade.TotalOpenBaseQuantity > 0)
+            var close = candleStick.Candlestick.Close;
+
+            if (_position.RemainingQty > 0 && _position.FilledQty > 0)
             {
-                // After a partial exit, return to active monitoring (not closing)
-                // so the ScaleOut strategy can fire subsequent partials at 2R, 3R etc.
-                if (Trade.TotalOpenBaseQuantity > 0 && Trade.PendingExitTransactions.Count == 0)
+                if (_position.RemainingQty > 0 && _pendingOrder == null)
                 {
-                    Logger.LogInformation($"Partial exit complete for {Symbol}. Remaining: {Trade.TotalOpenBaseQuantity}. Returning to active monitoring.");
-                    _positionState = Trade.ProfitPct > 0 ? PositionState.InProfit : PositionState.FullyOpen;
+                    Logger.LogInformation($"Partial exit complete for {Symbol}. Remaining: {_position.RemainingQty}. Returning to active monitoring.");
+                    _position.State = _position.ProfitPct(close) > 0
+                        ? PositionState.InProfit : PositionState.FullyOpen;
                     return;
                 }
                 await ExecuteExitStrategy(candleStick);
@@ -355,245 +378,119 @@ namespace CryptoTrading.App.Monitor
             else
             {
                 Logger.LogInformation($"Position fully closed for {Symbol}");
-                _positionState = PositionState.NoPosition;
+                _position.State = PositionState.NoPosition;
                 CompleteTrade();
-            }
-        }
-
-        private async Task CancelAllPendingEntries()
-        {
-            foreach (var transaction in Trade.PendingEntryTransactions.ToList())
-            {
-                if (!transaction.IsFilled && !transaction.IsPartiallyFilled)
-                {
-                    await CancelOrder(transaction);
-                }
             }
         }
 
         private async Task ExecuteEntryStrategy(ExchangeCandlestickEvent candleStick)
         {
-            // Entry strategy determines how to build the position.
-            // Use the execution strategy's computed Quantity (from PositionSizer)
-            // instead of hardcoded 1.
-            var targetQty = Request.Strategy.Quantity > 0 ? Request.Strategy.Quantity : 0.1m;
-            var entryDecision = Request.Strategy.EntryStrategy.GetNextEntry(
-                Trade.RemainingQuantity,
+            var targetQty = _strategy.Quantity > 0 ? _strategy.Quantity : 0.1m;
+            var entryDecision = _strategy.EntryStrategy.GetNextEntry(
+                _position.FilledQty,
                 targetQty,
                 candleStick.Candlestick.Close
             );
 
             if (entryDecision.ShouldTrade)
             {
-                // For backtest LIMIT orders: a limit buy fills at min(limit, market),
-                // a limit sell fills at max(limit, market). The exchange would never
-                // fill worse than the current market price.
+                var orderSide = Signal.Direction == TradeDirection.Long
+                    ? ExchangeOrderSide.Buy : ExchangeOrderSide.Sell;
                 var marketPrice = candleStick.Candlestick.Close;
-                var fillPrice = string.Equals(entryDecision.OrderType?.ToString(), "LIMIT", StringComparison.OrdinalIgnoreCase)
-                    ? (Request.OrderSide == ExchangeOrderSide.Buy
+                var isLimit = string.Equals(entryDecision.OrderType?.ToString(), "LIMIT", StringComparison.OrdinalIgnoreCase);
+                var fillPrice = isLimit
+                    ? (orderSide == ExchangeOrderSide.Buy
                         ? Math.Min(entryDecision.Price, marketPrice)
                         : Math.Max(entryDecision.Price, marketPrice))
                     : marketPrice;
 
-                if (fillPrice != entryDecision.Price)
+                if (fillPrice != entryDecision.Price && isLimit)
                 {
                     Logger.LogInformation(
                         $"Entry LIMIT price adjusted: {entryDecision.Price:F2} -> {fillPrice:F2} (market: {marketPrice:F2})");
                 }
 
-                // CreateOpenTransaction expects QuoteAmount (USDT), but entryDecision.Quantity
-                // is in base currency (BTC) from PositionSizer. Convert: USDT = BTC × price.
-                var quoteAmount = entryDecision.Quantity * fillPrice;
+                ExchangeOrder order;
+                if (isLimit)
+                    order = await _broker.SubmitLimitOrder(Signal.Symbol, orderSide, entryDecision.Quantity, fillPrice);
+                else
+                    order = await _broker.SubmitMarketOrder(Signal.Symbol, orderSide, entryDecision.Quantity);
 
-                var transaction = Trade.CreateOpenTransaction(
-                    fillPrice,
-                    candleStick.Candlestick.CloseTime,
-                    quoteAmount
-                );
-                await SubmitOrder(transaction);
+                if (order.FilledQuantity > 0)
+                    _position.RecordFill(order);
+
+                if (order.Status == ExchangeOrderStatus.New || order.Status == ExchangeOrderStatus.PartiallyFilled)
+                    _pendingOrder = order;
 
                 Logger.LogInformation(
                     $"Entry order placed: {Symbol} Price: {fillPrice}, " +
-                    $"Qty: {entryDecision.Quantity:F6} BTC ({quoteAmount:F2} USDT), Type: {entryDecision.OrderType}"
-                );
+                    $"Qty: {entryDecision.Quantity:F6} BTC, Type: {entryDecision.OrderType}");
             }
         }
 
         private async Task ExecuteExitStrategy(ExchangeCandlestickEvent candleStick, TradeDetails cachedExit = null)
         {
-            // Use the cached exit decision from ProcessStrategy if available,
-            // to avoid calling GetNextExit twice (which double-increments BarsHeld).
+            var close = candleStick.Candlestick.Close;
             var exitDecision = cachedExit?.ShouldTrade == true
                 ? cachedExit
-                : Request.Strategy.ExitStrategy.GetNextExit(
-                    Trade.RemainingQuantity,
-                    candleStick.Candlestick.Close,
-                    Trade.ProfitPct
-                );
+                : _strategy.ExitStrategy.GetNextExit(
+                    _position.RemainingQty,
+                    close,
+                    _position.ProfitPct(close));
 
             if (exitDecision.ShouldTrade)
             {
-                // Use the exit decision's quantity for partial exits (ScaleOut strategy),
-                // capped at the total open quantity to prevent over-selling.
-                var exitQty = exitDecision.Quantity > 0 && exitDecision.Quantity < Trade.TotalOpenBaseQuantity
+                var exitQty = exitDecision.Quantity > 0 && exitDecision.Quantity < _position.RemainingQty
                     ? exitDecision.Quantity
-                    : Trade.TotalOpenBaseQuantity;
+                    : _position.RemainingQty;
 
-                var transaction = Trade.CreateCloseTransaction(
-                    exitDecision.Price,
-                    candleStick.Candlestick.CloseTime,
-                    exitQty
-                );
+                var exitSide = _position.Direction == TradeDirection.Long
+                    ? ExchangeOrderSide.Sell : ExchangeOrderSide.Buy;
+                var order = await _broker.SubmitMarketOrder(Signal.Symbol, exitSide, exitQty);
 
-                await SubmitOrder(transaction);
+                if (order.FilledQuantity > 0)
+                    _position.RecordExit(order);
+
+                if (order.Status == ExchangeOrderStatus.New || order.Status == ExchangeOrderStatus.PartiallyFilled)
+                    _pendingOrder = order;
 
                 Logger.LogInformation(
                     $"Exit order placed: {Symbol} Price: {exitDecision.Price}, " +
-                    $"Qty: {exitQty} (requested: {exitDecision.Quantity}), Type: {exitDecision.OrderType}"
-                );
+                    $"Qty: {exitQty} (requested: {exitDecision.Quantity}), Type: {exitDecision.OrderType}");
             }
         }
 
-        private async Task SubmitOrder(ITransaction transaction)
-        {
-            switch(transaction.Type)
-            {
-                case TransactionType.MarketTransaction:
-                    IMarketRequest marketRequest = new MarketRequest(Trade.GetCurrentTransaction());
-                    await MessageBroker.Instance.Publish(KeyValue, Trade.GetCurrentTransaction(), marketRequest);
-                    break;
-                case TransactionType.LimitTransaction:
-                    ILimitRequest limitRequest = new LimitRequest(Trade.GetCurrentTransaction());
-                    await MessageBroker.Instance.Publish(KeyValue, Trade.GetCurrentTransaction(), limitRequest);
-                    break;
-                case TransactionType.StopLimitTransaction:
-                    IStopLimitRequest stopLimitRequest = new StopLimitRequest(Trade.GetCurrentTransaction());
-                    await MessageBroker.Instance.Publish(KeyValue, Trade.GetCurrentTransaction(), stopLimitRequest);
-                    break;
-            }
-        }
-
-        private async Task CancelOrder(ITransaction transaction)
-        {
-            if (transaction.Order != null)
-            {
-                var orderId = transaction.Order.OrderId;
-                ICancelRequest request = new CancelRequest(orderId, Trade.Pair);
-                await MessageBroker.Instance.Publish(KeyValue, transaction, request);
-            }
-        }
-
-        public bool Live => Trade.Open;
         public override string ToString()
         {
             return $"{Symbol} - {currentCloseTime:s}";
         }
 
-        public string Symbol => Trade.Pair;
-
-        public string KeyValue { get; set; } = "1";
-        private IPositions _positions;
-
-        public void AddRequest(ITradeRequest request, IPositions positions)
-        {
-            Request = request;
-            _positions = positions;
-            var trade = _positions.CreateTrade(Request);
-            HistoricTrades.Add(trade);
-            IMessageBroker messageBroker = MessageBroker.Instance;
-
-            Func<MessagePayload<ExchangeOrder>, Task> newTradeMesssage = ProcessMessageAction;
-            messageBroker.Subscribe(Request.Symbol, newTradeMesssage);
-
-            Func<MessagePayload<string>, Task> CancelTradeMessage = ProcessMessageAction;
-            messageBroker.Subscribe(Request.Symbol, CancelTradeMessage);
-        }
-
-        //Order Placed Message
-        private Task ProcessMessageAction(MessagePayload<ExchangeOrder> obj)
-        {
-            if (obj.Who is ITransaction transaction)
-            {
-                transaction.UpdateOrder(obj.What);
-            }
-            return Task.CompletedTask;
-        }
-
-        //Cancel Order Message
-        private Task ProcessMessageAction(MessagePayload<string> obj)
-        {
-            if (obj.Who is ITransaction transaction)
-            {
-                transaction.Cancel();
-            }
-            return Task.CompletedTask;
-        }
-
         public void CompleteTrade()
         {
-            // Note: marketMonitor is intentionally kept alive here so the monitor
-            // can continue processing candles and handling new requests for the next trade.
-            if (Config != null)
-            {
-                var factory = new ArchiveTradeFactory(Config);
-                var trade = factory.CreateHistoricTrades(Trade);
-                //StoreTradesToDb(trade, Config);
-            }
+            var historicTrade = _position.ToHistoricTrade();
+            CompletedTrades.Add(historicTrade);
 
-            // Update performance tracker with trade P&L for anti-martingale sizing and circuit breaker
-            try
-            {
-                var pnl = Trade.Profit;
-                if (Request?.Strategy is RegimeBasedExecutionStrategy execStrategy)
-                {
-                    // Try to reach the performance tracker through the algorithm chain
-                    // The tracker is updated so the next setup evaluation uses correct sizing
-                    Logger.LogDebug($"[1M TM] Trade completed for {Symbol}. PnL: {pnl:F4}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogDebug(ex, $"[1M TM] Non-critical: failed to update performance tracker");
-            }
+            Logger.LogDebug($"[1M TM] Trade completed for {Symbol}. PnL: {historicTrade.Profit:F4}");
 
-            // Adopt the pending request if a newer setup arrived while in position
-            if (_pendingRequest != null)
+            if (_pendingSignal != null)
             {
                 Logger.LogInformation($"Adopting queued setup for {Symbol} with fresh prices.");
-                Request = _pendingRequest;
-                Request.Strategy.SetQuotes(_quoteHub);
-                _pendingRequest = null;
-                // Fresh setup adopted
+                Signal = _pendingSignal;
+                _strategy = _strategySelector.CreateStrategy(_pendingSignal, _quoteHub);
+                _pendingSignal = null;
             }
             else
             {
-                // No fresh setup available — execution strategy will check SL/TP validity
                 Logger.LogDebug($"[1M TM] No pending setup for {Symbol} after trade close.");
             }
 
-            // Reset exit strategy state for the next trade
-            Request.Strategy.ExitStrategy?.ResetForNewTrade();
+            _strategy.ExitStrategy?.ResetForNewTrade();
 
-            var newTrade = _positions.CreateTrade(Request);
-            HistoricTrades.Add(newTrade);
+            _position.Reset();
+            _position.Symbol = Signal.Symbol;
+            _position.Direction = Signal.Direction;
+            _position.TargetQty = Signal.Quantity;
+            _pendingOrder = null;
         }
-        public static void StoreTradesToDb(HistoricTrades completedTrade, IConfig config)
-        {
-            if (config != null)
-            {
-                using var context = new HistoricTradeContext(config.StoreTradesConnectionString);
-                context.HistoricTrades.Add(completedTrade);
-                context.SaveChanges();
-            }
-        }
-
-    }
-    public enum PositionState
-    {
-        NoPosition,      // No open position
-        Building,        // Building position with entry strategy
-        FullyOpen,       // Position fully built but not in profit
-        InProfit,        // Position in profit, ready for exit
-        Closing          // Executing exit strategy
     }
 }

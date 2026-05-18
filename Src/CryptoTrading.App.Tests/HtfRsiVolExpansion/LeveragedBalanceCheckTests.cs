@@ -1,6 +1,6 @@
 using Binance;
+using CryptoTrading.App.Broker.Position;
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 using FluentAssertions;
 using Moq;
@@ -10,17 +10,16 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 {
     public class LeveragedBalanceCheckTests
     {
-        private Positions CreatePositionsWithUsdt(decimal usdtBalance)
+        private BrokerPositions CreatePositionsWithUsdt(decimal usdtBalance)
         {
-            var logger = new Mock<Microsoft.Extensions.Logging.ILogger<Positions>>();
-            var factory = new Mock<ITradeFactory>();
+            var logger = new Mock<Microsoft.Extensions.Logging.ILogger<BrokerPositions>>();
             var dict = new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 0m),
-                ["USDT"] = new Position("USDT", usdtBalance),
-                ["BNB"] = new Position("BNB", 1m)
+                ["BTC"] = new BrokerPosition("BTC", 0m),
+                ["USDT"] = new BrokerPosition("USDT", usdtBalance),
+                ["BNB"] = new BrokerPosition("BNB", 1m)
             };
-            return new Positions(logger.Object, factory.Object, dict);
+            return new BrokerPositions(logger.Object, dict);
         }
 
         private Mock<ITradeRequest> CreateMockRequest(

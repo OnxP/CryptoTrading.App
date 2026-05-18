@@ -176,44 +176,5 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
         }
     }
 
-    /// <summary>
-    /// Result of the leverage probability calculation.
-    /// Contains the composite score, component scores, and leverage recommendation.
-    /// </summary>
-    public class LeverageRecommendation
-    {
-        /// <summary>Weighted composite of all factors (0.0 - 1.0)</summary>
-        public decimal CompositeScore { get; set; }
-
-        /// <summary>Regime detection confidence component</summary>
-        public decimal RegimeScore { get; set; }
-
-        /// <summary>Setup quality component</summary>
-        public decimal SetupScore { get; set; }
-
-        /// <summary>Volatility suitability component</summary>
-        public decimal VolatilityScore { get; set; }
-
-        /// <summary>Zone confluence component</summary>
-        public decimal ZoneScore { get; set; }
-
-        /// <summary>Leverage that would be used if enabled</summary>
-        public int RecommendedLeverage { get; set; }
-
-        /// <summary>Leverage actually used (1x when leverage is disabled)</summary>
-        public int ActualLeverage { get; set; }
-
-        /// <summary>Confidence tier: None, Low, Medium, High</summary>
-        public string ConfidenceTier { get; set; }
-
-        /// <summary>Whether leverage was enabled for this calculation</summary>
-        public bool IsLeverageEnabled { get; set; }
-
-        public override string ToString()
-        {
-            return $"Score: {CompositeScore:P0} ({ConfidenceTier}) | " +
-                   $"Recommended: {RecommendedLeverage}x | Actual: {ActualLeverage}x | " +
-                   $"[Regime={RegimeScore:P0} Setup={SetupScore:P0} Vol={VolatilityScore:P0} Zone={ZoneScore:P0}]";
-        }
-    }
+    // LeverageRecommendation moved to CryptoTrading.App.Core.Strategy
 }

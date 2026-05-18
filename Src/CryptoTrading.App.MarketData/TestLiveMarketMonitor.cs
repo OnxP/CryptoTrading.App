@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoTrading.App.MarketData
@@ -15,11 +14,15 @@ namespace CryptoTrading.App.MarketData
         {
         }
 
-        public override async Task<bool> CheckOrder(ITransaction transaction)
+        public override Task<ExchangeOrder> CheckOrder(string orderId, string symbol)
         {
-            transaction.Complete();
-            await Task.CompletedTask;
-            return true;
+            var filledOrder = new ExchangeOrder
+            {
+                OrderId = orderId,
+                Symbol = symbol,
+                Status = ExchangeOrderStatus.Filled
+            };
+            return Task.FromResult(filledOrder);
         }
     }
 }

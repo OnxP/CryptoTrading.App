@@ -1,5 +1,5 @@
+using CryptoTrading.App.Broker.Position;
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -24,15 +24,14 @@ namespace CryptoTrading.App.Tests.CorePosition
     /// </summary>
     public class PositionsTests
     {
-        private static (Positions positions, Mock<ITradeFactory> factory) Build(
+        private static (BrokerPositions positions, Mock<ILogger<BrokerPositions>> logger) Build(
             Dictionary<string, IPosition> dict = null)
         {
-            var logger = new Mock<ILogger<Positions>>();
-            var factory = new Mock<ITradeFactory>();
+            var logger = new Mock<ILogger<BrokerPositions>>();
             var positions = dict == null
-                ? new Positions(logger.Object, factory.Object)
-                : new Positions(logger.Object, factory.Object, dict);
-            return (positions, factory);
+                ? new BrokerPositions(logger.Object)
+                : new BrokerPositions(logger.Object, dict);
+            return (positions, logger);
         }
 
         private static Mock<ITradeRequest> Request(
@@ -56,11 +55,11 @@ namespace CryptoTrading.App.Tests.CorePosition
         [Fact]
         public void GetPosition_KnownAsset_ReturnsSameInstance()
         {
-            var btc = new Position("BTC", 5m);
+            var btc = new BrokerPosition("BTC", 5m);
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
                 ["BTC"] = btc,
-                ["USDT"] = new Position("USDT", 1_000m)
+                ["USDT"] = new BrokerPosition("USDT", 1_000m)
             });
 
             positions.GetPosition("BTC").Should().BeSameAs(btc);
@@ -100,7 +99,7 @@ namespace CryptoTrading.App.Tests.CorePosition
             // No USDT in dictionary at all - must not NPE, just return false.
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 1m)
+                ["BTC"] = new BrokerPosition("BTC", 1m)
             });
             var req = Request(ExchangeOrderSide.Buy, 100m, leverage: 1);
 
@@ -115,8 +114,8 @@ namespace CryptoTrading.App.Tests.CorePosition
             // 1.02 = 100.98 > 100 -> fail.
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 0m),
-                ["USDT"] = new Position("USDT", 100m)
+                ["BTC"] = new BrokerPosition("BTC", 0m),
+                ["USDT"] = new BrokerPosition("USDT", 100m)
             });
             var req = Request(ExchangeOrderSide.Buy, 99m, leverage: 1);
 
@@ -130,8 +129,8 @@ namespace CryptoTrading.App.Tests.CorePosition
             // 100 USDT, ask for 90 -> 90 * 1.02 = 91.80 < 100 -> ok.
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 0m),
-                ["USDT"] = new Position("USDT", 100m)
+                ["BTC"] = new BrokerPosition("BTC", 0m),
+                ["USDT"] = new BrokerPosition("USDT", 100m)
             });
             var req = Request(ExchangeOrderSide.Buy, 90m, leverage: 1);
 
@@ -158,7 +157,7 @@ namespace CryptoTrading.App.Tests.CorePosition
         {
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 0m)
+                ["BTC"] = new BrokerPosition("BTC", 0m)
             });
 
             var result = positions.CheckHasOpenPositionAndVolume(
@@ -170,7 +169,7 @@ namespace CryptoTrading.App.Tests.CorePosition
         [Fact]
         public void CheckHasOpenPositionAndVolume_TrueWhenPendingLegExists()
         {
-            var btc = new Position("BTC", 1m);
+            var btc = new BrokerPosition("BTC", 1m);
             btc.CreatePendingTransaction(0.5m); // pending buy
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
@@ -186,7 +185,7 @@ namespace CryptoTrading.App.Tests.CorePosition
         [Fact]
         public void CheckHasOpenPositionAndVolume_TrueWhenLocked()
         {
-            var btc = new Position("BTC", 0m) { IsLocked = true };
+            var btc = new BrokerPosition("BTC", 0m) { IsLocked = true };
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
                 ["BTC"] = btc
@@ -200,79 +199,6 @@ namespace CryptoTrading.App.Tests.CorePosition
 
         #endregion
 
-        #region CreateTrade
-
-        [Fact]
-        public void CreateTrade_PassesBaseQuoteFeePositions_ToFactory()
-        {
-            var btc = new Position("BTC", 0m);
-            var usdt = new Position("USDT", 1_000m);
-            var (positions, factory) = Build(new Dictionary<string, IPosition>
-            {
-                ["BTC"] = btc,
-                ["USDT"] = usdt
-            });
-            var trade = new Mock<ITrade>();
-            factory.Setup(f => f.CreateTrade(btc, usdt, usdt))
-                   .Returns(trade.Object);
-            var req = Request();
-
-            var result = positions.CreateTrade(req.Object);
-
-            result.Should().BeSameAs(trade.Object);
-            factory.Verify(f => f.CreateTrade(btc, usdt, usdt), Times.Once);
-        }
-
-        [Fact]
-        public void CreateTrade_LocksBasePositionDuringFactoryCall()
-        {
-            // Captured snapshot: when the factory is invoked, IsLocked must
-            // be true. After CreateTrade returns it must be false again.
-            var btc = new Position("BTC", 0m);
-            var usdt = new Position("USDT", 1_000m);
-            var (positions, factory) = Build(new Dictionary<string, IPosition>
-            {
-                ["BTC"] = btc,
-                ["USDT"] = usdt
-            });
-            bool? lockStateInsideFactory = null;
-            factory.Setup(f => f.CreateTrade(
-                It.IsAny<IPosition>(), It.IsAny<IPosition>(), It.IsAny<IPosition>()))
-                .Callback(() => lockStateInsideFactory = btc.IsLocked)
-                .Returns(new Mock<ITrade>().Object);
-
-            positions.CreateTrade(Request().Object);
-
-            lockStateInsideFactory.Should().BeTrue(
-                "base must be locked while the factory is constructing the trade");
-            btc.IsLocked.Should().BeFalse(
-                "lock must be released once the factory returns");
-        }
-
-        [Fact]
-        public void CreateTrade_UsesUsdtAsFeePosition_EvenForNonUsdtPair()
-        {
-            var btc = new Position("BTC", 1m);
-            var eth = new Position("ETH", 0m);
-            var usdt = new Position("USDT", 1_000m);
-            var (positions, factory) = Build(new Dictionary<string, IPosition>
-            {
-                ["BTC"] = btc,
-                ["ETH"] = eth,
-                ["USDT"] = usdt
-            });
-            factory.Setup(f => f.CreateTrade(
-                It.IsAny<IPosition>(), It.IsAny<IPosition>(), It.IsAny<IPosition>()))
-                .Returns(new Mock<ITrade>().Object);
-
-            // ETHBTC pair: base=ETH, quote=BTC, but fee is still USDT.
-            var req = Request(baseSymbol: "ETH", quoteSymbol: "BTC");
-            positions.CreateTrade(req.Object);
-
-            factory.Verify(f => f.CreateTrade(eth, btc, usdt), Times.Once);
-        }
-
-        #endregion
 
         #region CheckRequest
 
@@ -281,8 +207,8 @@ namespace CryptoTrading.App.Tests.CorePosition
         {
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 0m),
-                ["USDT"] = new Position("USDT", 100_000m)
+                ["BTC"] = new BrokerPosition("BTC", 0m),
+                ["USDT"] = new BrokerPosition("USDT", 100_000m)
             });
             var req = Request(ExchangeOrderSide.Buy, 1_000m, leverage: 1);
 
@@ -294,8 +220,8 @@ namespace CryptoTrading.App.Tests.CorePosition
         {
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
-                ["BTC"] = new Position("BTC", 0m),
-                ["USDT"] = new Position("USDT", 100m)
+                ["BTC"] = new BrokerPosition("BTC", 0m),
+                ["USDT"] = new BrokerPosition("USDT", 100m)
             });
             var req = Request(ExchangeOrderSide.Buy, 100_000m, leverage: 1);
 
@@ -307,12 +233,12 @@ namespace CryptoTrading.App.Tests.CorePosition
         {
             // Plenty of USDT, but BTC already has an in-flight order.
             // The trade must be rejected even though balance is ample.
-            var btc = new Position("BTC", 0m);
+            var btc = new BrokerPosition("BTC", 0m);
             btc.CreatePendingTransaction(0.5m);
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
                 ["BTC"] = btc,
-                ["USDT"] = new Position("USDT", 100_000m)
+                ["USDT"] = new BrokerPosition("USDT", 100_000m)
             });
             var req = Request(ExchangeOrderSide.Buy, 1_000m, leverage: 1);
 
@@ -324,11 +250,11 @@ namespace CryptoTrading.App.Tests.CorePosition
         public void CheckRequest_FalseWhenBaseLocked()
         {
             // Same as above but via the lock flag rather than a pending leg.
-            var btc = new Position("BTC", 0m) { IsLocked = true };
+            var btc = new BrokerPosition("BTC", 0m) { IsLocked = true };
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
                 ["BTC"] = btc,
-                ["USDT"] = new Position("USDT", 100_000m)
+                ["USDT"] = new BrokerPosition("USDT", 100_000m)
             });
             var req = Request(ExchangeOrderSide.Buy, 1_000m, leverage: 1);
 
@@ -342,7 +268,7 @@ namespace CryptoTrading.App.Tests.CorePosition
         [Fact]
         public void AjdustPosition_AddsCompletedLeg_ToExistingAsset()
         {
-            var usdt = new Position("USDT", 100m);
+            var usdt = new BrokerPosition("USDT", 100m);
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
                 ["USDT"] = usdt
@@ -371,7 +297,7 @@ namespace CryptoTrading.App.Tests.CorePosition
         {
             // Exchange-driven correction: balance went down (withdrawal,
             // funding fee, etc.) - we record it as a negative completed leg.
-            var usdt = new Position("USDT", 100m);
+            var usdt = new BrokerPosition("USDT", 100m);
             var (positions, _) = Build(new Dictionary<string, IPosition>
             {
                 ["USDT"] = usdt
