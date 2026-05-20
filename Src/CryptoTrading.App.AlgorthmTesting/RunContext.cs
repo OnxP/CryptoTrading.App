@@ -10,12 +10,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CryptoTrading.App.Monitor;
-using CryptoTrading.App.Core.Position;
+using CryptoTrading.App.Monitor.Position;
+using CryptoTrading.App.Monitor.Trade;
+using CryptoTrading.App.Broker.Position;
 using CryptoTrading.App.Core.Trade;
 using System.Text;
 using System.Linq;
 using Tulip;
-using CryptoTrading.App.Core.Database.StoreTrades;
+using CryptoTrading.App.Monitor.Database;
 using CryptoTrading.App.Core.Strategy;
 
 namespace CryptoTrading.App.AlgorithmTesting
@@ -24,7 +26,7 @@ namespace CryptoTrading.App.AlgorithmTesting
     {
         void AddPosition(string symbol, Dictionary<string, IPosition> positions, decimal amount = 0.0m)
         {
-            positions.Add(symbol, new Position(symbol, amount));
+            positions.Add(symbol, new BrokerPosition(symbol, amount));
 
         }
 
@@ -100,7 +102,7 @@ namespace CryptoTrading.App.AlgorithmTesting
             }
         }
 
-        private string PrintSummary(ITradeProcessor processor, List<ITrade> completedTrades)
+        private string PrintSummary(ITradeProcessor processor, List<HistoricTradeRecord> completedTrades)
         {
             var count = completedTrades.Count();
             var sb = new StringBuilder();
@@ -112,19 +114,22 @@ namespace CryptoTrading.App.AlgorithmTesting
             sb.Append(Environment.NewLine);
             sb.Append($"Total Profit: [{completedTrades.Sum(x => x.ProfitPct)}]%");
             sb.Append(Environment.NewLine);
-            sb.Append($"Total BTC: {Math.Round(processor.Positions.GetPosition("BTC").FreeAmount,4)} : {Math.Round((processor.Positions.GetPosition("BTC").FreeAmount-1) * 100,4)}%");
-            sb.Append(Environment.NewLine);
+            if (processor.Positions != null)
+            {
+                sb.Append($"Total BTC: {Math.Round(processor.Positions.GetPosition("BTC").FreeAmount,4)} : {Math.Round((processor.Positions.GetPosition("BTC").FreeAmount-1) * 100,4)}%");
+                sb.Append(Environment.NewLine);
+            }
             return sb.ToString();
         }
 
-        private string PrintTrades(List<ITrade> trades)
+        private string PrintTrades(List<HistoricTradeRecord> trades)
         {
-            return trades.ToStringTable(x => x.Pair,
-                x => x.OpenPrice, //.FirstTransaction.Price.ToString("0.#########"), 
-                x => x.OpenPrice,//.CurrentTransaction.Price.ToString("0.#########"), 
-                x => x.TotalOpenBaseQuantity, //CurrentTransaction.Base.Quantity.ToString("0.####"), 
-                x => x.StartDate, //FirstTransaction.TransactionDate.ToString(), 
-                x => x.CloseDate, //CurrentTransaction.TransactionDate.ToString(), 
+            return trades.ToStringTable(x => x.Symbol,
+                x => x.EntryPrice,
+                x => x.ExitPrice,
+                x => x.Quantity,
+                x => x.EntryTime,
+                x => x.ExitTime,
                 x => x.ProfitPct);
         }
 

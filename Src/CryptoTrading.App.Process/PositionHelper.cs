@@ -2,7 +2,7 @@
 using System.Linq;
 using Binance;
 using CryptoTrading.App.Core.Exchange;
-using CryptoTrading.App.Core.Position;
+using CryptoTrading.App.Broker.Position;
 
 namespace CryptoTrading.App.Process
 {

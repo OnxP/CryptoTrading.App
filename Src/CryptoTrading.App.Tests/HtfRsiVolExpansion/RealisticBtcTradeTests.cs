@@ -1,9 +1,7 @@
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
-using CryptoTrading.App.Core.Trade;
 using FluentAssertions;
-using Moq;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
@@ -70,7 +68,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             public QuoteHub<IQuote> QuoteHub { get; }
             public TradeLog Log { get; } = new();
 
-            private readonly Mock<ITrade> _tradeMock;
+            private TradeState _tradeState;
             private DateTime _currentTime;
             private int _barCount;
             private decimal _rebasedEntry;
@@ -113,10 +111,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 QuoteHub = new QuoteHub<IQuote>(300);
                 ExecutionStrategy.SetQuotes(QuoteHub);
 
-                _tradeMock = new Mock<ITrade>();
-                _tradeMock.Setup(t => t.Open).Returns(false);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(0m);
-                _tradeMock.Setup(t => t.ProfitPct).Returns(0m);
+                _tradeState = new TradeState(false, 0m, 0m, 0m);
 
                 _currentTime = startTime;
 
@@ -129,22 +124,20 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             {
                 _barCount++;
                 AddQuote(close, high, low);
-                var status = ExecutionStrategy.ProcessStrategy(_tradeMock.Object);
+                var status = ExecutionStrategy.ProcessStrategy(_tradeState);
                 Log.Add(_barCount, close, high, low, status.StrategyAction, note);
                 return status.StrategyAction;
             }
 
             public void Fill(decimal fillPrice)
             {
-                _tradeMock.Setup(t => t.Open).Returns(true);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(Setup.Quantity);
+                _tradeState = new TradeState(true, 0m, Setup.Quantity, 0m);
                 _rebasedEntry = fillPrice;
             }
 
             public void Close()
             {
-                _tradeMock.Setup(t => t.Open).Returns(false);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(0m);
+                _tradeState = new TradeState(false, 0m, 0m, 0m);
             }
 
             public decimal CalculatePnl(decimal exitPrice)

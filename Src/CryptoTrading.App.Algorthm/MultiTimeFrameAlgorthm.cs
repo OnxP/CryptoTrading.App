@@ -4,6 +4,7 @@ using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.KeyClass;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
+using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
@@ -113,7 +114,25 @@ namespace CryptoTrading.App.Algorithm
                 });
                 var strategyResult = TradingStrategy.Calculate(MarketStructure);
                 if (strategyResult.Item1.PostTrade)
-                    RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, new TradeRequest(strategyResult.Item1,strategyResult.Item2,_symbol,candlestickEventArgs.Candlestick.CloseTime), KeyValue);
+                {
+                    var signal = new TradeSignal
+                    {
+                        Symbol = _symbol,
+                        BaseSymbol = _symbol.BaseAsset,
+                        QuoteSymbol = _symbol.QuoteAsset,
+                        Direction = strategyResult.Item1.OrderSide == ExchangeOrderSide.Buy
+                            ? TradeDirection.Long : TradeDirection.Short,
+                        Leverage = strategyResult.Item1.Leverage,
+                        Quantity = strategyResult.Item2?.Quantity ?? 0m,
+                        SignalTime = candlestickEventArgs.Candlestick.CloseTime,
+                        EntryPrice = candlestickEventArgs.Candlestick.Close,
+                        StopLoss = 0m,
+                        TakeProfit = 0m,
+                        AtrAtSignal = 0m,
+                        InitialRisk = 0m
+                    };
+                    RequestTracker.Instance.Add(candlestickEventArgs.Candlestick.Symbol, signal, KeyValue);
+                }
             }
             catch(Exception e)
             {

@@ -1,10 +1,9 @@
-﻿using Binance;
+using CryptoTrading.App.Broker.Position;
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.KeyClass;
-using CryptoTrading.App.Core.MarketMonitorFactory;
 using CryptoTrading.App.Core.Message_Broker;
-using CryptoTrading.App.Core.Position;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Monitor.Position;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,20 +15,14 @@ namespace CryptoTrading.App.Monitor
     public class TradeProcessor : ITradeProcessor
     {
         public IPositions Positions { get; set; }
-        private IMarketMonitorFactory TradeFactory {get;}
+        private IMarketMonitorFactory TradeFactory { get; }
         public List<ITradeMonitor> OrderMonitors { get; set; }
-        public IEnumerable<ITrade> LiveTrades => OrderMonitors.Where(x => x.Live).Select(x=>x.HistoricTrades.Last());
         public string KeyValue { get; set; }
-        public IEnumerable<ITradeMonitor> CurrentMonitors
-        {
-            get
-            {
-                return OrderMonitors.Where(x => x.Live).ToList();
-            }
-        }
+        public IEnumerable<ITradeMonitor> CurrentMonitors => OrderMonitors.Where(x => x.Live).ToList();
 
         private ILogger<TradeProcessor> Logger { get; set; }
-        public TradeProcessor(ILogger<TradeProcessor> logger ,IMarketMonitorFactory factory)
+
+        public TradeProcessor(ILogger<TradeProcessor> logger, IMarketMonitorFactory factory)
         {
             TradeFactory = factory;
             OrderMonitors = new List<ITradeMonitor>();
@@ -37,54 +30,50 @@ namespace CryptoTrading.App.Monitor
             Logger = logger;
             ConfigureMessageBroker();
         }
-        public TradeProcessor(ILogger<TradeProcessor> logger,IPositions positions, IMarketMonitorFactory factory):this(logger,factory)
+
+        public TradeProcessor(ILogger<TradeProcessor> logger, IPositions positions, IMarketMonitorFactory factory)
+            : this(logger, factory)
         {
             Positions = positions;
         }
 
-        public TradeProcessor(IPositions positions, ILogger<TradeProcessor> logger,IMarketMonitorFactory factory, IKey key): this(logger,positions, factory)
+        public TradeProcessor(IPositions positions, ILogger<TradeProcessor> logger, IMarketMonitorFactory factory, IKey key)
+            : this(logger, positions, factory)
         {
             KeyValue = key.KeyValue;
         }
+
         private void ConfigureMessageBroker()
         {
             IMessageBroker messageBroker = MessageBroker.Instance;
 
-            Func<MessagePayload<ITradeRequest>, Task> TradeRequestMessage = ProcessMessageAction;
-            messageBroker.Subscribe(KeyValue, TradeRequestMessage);
+            Func<MessagePayload<ITradeSignal>, Task> signalHandler = ProcessSignal;
+            messageBroker.Subscribe(KeyValue, signalHandler);
         }
 
-        private async Task ProcessMessageAction(MessagePayload<ITradeRequest> obj)
+        private async Task ProcessSignal(MessagePayload<ITradeSignal> payload)
         {
-            var symbol = obj.What.BaseSymbol + obj.What.QuoteSymbol;
+            var signal = payload.What;
+            var symbol = signal.Symbol;
+            if (string.IsNullOrEmpty(symbol))
+                symbol = signal.BaseSymbol + signal.QuoteSymbol;
 
-            // Find ANY existing monitor for this symbol (Live or not).
-            // A non-Live monitor still has its 1M subscription active and should receive
-            // fresh setups via SetNewRequest so it can trade again with updated SL/TP.
-            // Previously only checked CurrentMonitors (Live=true), so after a trade closed
-            // new 15M setups created duplicate monitors instead of updating the existing one.
             var existingMonitor = OrderMonitors.LastOrDefault(x => x.Symbol == symbol);
             if (existingMonitor != null)
             {
-                await existingMonitor.SetNewRequest(obj.What);
+                await existingMonitor.SetNewSignal(signal);
             }
-            else if (Positions.CheckRequest(obj.What) && LiveTrades.Count()<=Config.NoOfTrades)
+            else if (CurrentMonitors.Count() <= Config.NoOfTrades)
             {
-                var tradeMonitor = await TradeFactory.CreateMonitor(obj.What, Positions);
+                var tradeMonitor = await TradeFactory.CreateMonitor(signal);
                 tradeMonitor.KeyValue = KeyValue;
                 OrderMonitors.Add(tradeMonitor);
             }
         }
 
-        private bool CheckCurrentOrderMonitors(string symbol)
-        {
-            if (CurrentMonitors.Count() == 0) return false;
-            return CurrentMonitors.LastOrDefault(x => x.Symbol == symbol) != null && CurrentMonitors.LastOrDefault(x => x.Symbol == symbol)!.Live;
-        }
-
         public void CompleteAllTransactions()
         {
-            OrderMonitors.ToList().ForEach(x=>x.CompleteTrade());
+            OrderMonitors.ToList().ForEach(x => x.CompleteTrade());
         }
 
         public void ClearInactiveTrades()
@@ -92,10 +81,11 @@ namespace CryptoTrading.App.Monitor
             OrderMonitors.RemoveAll(x => !x.Live);
         }
 
-        public List<ITrade> GetCompletedTrades()
+        public List<HistoricTradeRecord> GetCompletedTrades()
         {
-            return OrderMonitors.SelectMany(x=>x.HistoricTrades).ToList();
+            return OrderMonitors.SelectMany(x => x.CompletedTrades).ToList();
         }
+
         public IConfig Config { get; set; }
         public void Configure(IConfig config)
         {
@@ -103,4 +93,3 @@ namespace CryptoTrading.App.Monitor
         }
     }
 }
-

@@ -1,5 +1,5 @@
-﻿using CryptoTrading.App.Core.Position;
-using CryptoTrading.App.Core.Trade;
+﻿using CryptoTrading.App.Broker.Position;
+using CryptoTrading.App.Monitor.Trade;
 
 namespace CryptoTrading.App.Monitor
 {
@@ -7,10 +7,7 @@ namespace CryptoTrading.App.Monitor
     {
         public ITrade CreateTrade(IPosition buyPosition, IPosition sellPosition, IPosition feePosition)
         {
-            var trade = new Trade(buyPosition, sellPosition, feePosition);
-            return trade;
-            //should add a transaction for each ccy, seperate one for the fee.
-            //since the same trade is used for the stop loss we can combine the transactions.
+            return new Trade.Trade(buyPosition, sellPosition, feePosition);
         }
     }
 }

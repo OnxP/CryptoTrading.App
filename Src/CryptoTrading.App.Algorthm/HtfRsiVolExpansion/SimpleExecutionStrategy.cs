@@ -1,6 +1,5 @@
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
-using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System.Linq;
@@ -64,7 +63,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             return _setup?.EntryPrice ?? 0;
         }
 
-        public StrategyStatus ProcessStrategy(ITrade trade)
+        public StrategyStatus ProcessStrategy(TradeState tradeState)
         {
             var status = new StrategyStatus
             {
@@ -78,7 +77,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             var currentPrice = (decimal)_quoteHub.Quotes.Last().Close;
 
             // Not in trade — enter immediately
-            if (!trade.Open)
+            if (!tradeState.IsOpen)
             {
                 _entryPriceAdjusted = false;
 
@@ -147,7 +146,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             // In trade — check SL and TP only
             status.StrategyState = StrategyState.WaitingForExit;
             var exitDetails = ExitStrategy.GetNextExit(
-                trade.TotalOpenBaseQuantity, currentPrice, trade.ProfitPct);
+                tradeState.TotalOpenBaseQuantity, currentPrice, tradeState.ProfitPct);
 
             if (exitDetails.ShouldTrade)
             {

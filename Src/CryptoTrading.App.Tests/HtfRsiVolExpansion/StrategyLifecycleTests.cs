@@ -1,9 +1,7 @@
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
-using CryptoTrading.App.Core.Trade;
 using FluentAssertions;
-using Moq;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
@@ -20,7 +18,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
     /// seams between components (double-gating, re-entry loops, stale setups, etc.)
     /// that unit tests with mocks miss.
     ///
-    /// The only mock is ITrade — a thin wrapper tracking Open/Closed and position size.
+    /// TradeState is passed directly as a simple record — no mocking needed.
     /// Everything else is real.
     /// </summary>
     public class StrategyLifecycleTests
@@ -37,7 +35,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             public HtfRsiVolExpansionSetup Setup { get; }
             public HtfRsiVolExpansionExecutionStrategy ExecutionStrategy { get; }
             public QuoteHub<IQuote> QuoteHub { get; }
-            private readonly Mock<ITrade> _tradeMock;
+            private TradeState _tradeState;
             private DateTime _currentTime;
 
             public int CandleCount { get; private set; }
@@ -80,10 +78,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 QuoteHub = new QuoteHub<IQuote>(300);
                 ExecutionStrategy.SetQuotes(QuoteHub);
 
-                _tradeMock = new Mock<ITrade>();
-                _tradeMock.Setup(t => t.Open).Returns(false);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(0m);
-                _tradeMock.Setup(t => t.ProfitPct).Returns(0m);
+                _tradeState = new TradeState(false, 0m, 0m, 0m);
 
                 _currentTime = new DateTime(2025, 7, 25, 4, 15, 0);
 
@@ -107,7 +102,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 AddCandle(close, high.Value, low.Value);
                 CandleCount++;
 
-                var status = ExecutionStrategy.ProcessStrategy(_tradeMock.Object);
+                var status = ExecutionStrategy.ProcessStrategy(_tradeState);
                 return status.StrategyAction;
             }
 
@@ -116,8 +111,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             /// </summary>
             public void SimulateTradeOpened(decimal positionSize = 1.0m)
             {
-                _tradeMock.Setup(t => t.Open).Returns(true);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(positionSize);
+                _tradeState = new TradeState(true, 0m, positionSize, 0m);
             }
 
             /// <summary>
@@ -125,8 +119,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             /// </summary>
             public void SimulateTradeClosed()
             {
-                _tradeMock.Setup(t => t.Open).Returns(false);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(0m);
+                _tradeState = new TradeState(false, 0m, 0m, 0m);
             }
 
             /// <summary>

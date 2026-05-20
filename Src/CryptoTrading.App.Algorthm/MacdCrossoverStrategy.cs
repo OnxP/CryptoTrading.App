@@ -1,5 +1,4 @@
 ﻿using CryptoTrading.App.Core.Strategy;
-using CryptoTrading.App.Core.Trade;
 using Skender.Stock.Indicators;
 using System.Collections.Generic;
 
@@ -22,7 +21,7 @@ namespace CryptoTrading.App.Algorithm
             throw new System.NotImplementedException();
         }
 
-        public StrategyStatus ProcessStrategy(ITrade trade)
+        public StrategyStatus ProcessStrategy(TradeState tradeState)
         {
             throw new System.NotImplementedException();
         }

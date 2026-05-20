@@ -20,8 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CryptoTrading.App.Broker\CryptoTrading.App.Broker.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Algorthm\CryptoTrading.App.Algorithm.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.TradeMonitor\CryptoTrading.App.Monitor.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Exchange.Binance\CryptoTrading.App.Exchange.Binance.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Exchange.BinanceNet\CryptoTrading.App.Exchange.BinanceNet.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.Exchange.Bitfinex\CryptoTrading.App.Exchange.Bitfinex.csproj" />

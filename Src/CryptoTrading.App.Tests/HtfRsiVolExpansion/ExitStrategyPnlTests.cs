@@ -1,5 +1,6 @@
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
+using CryptoTrading.App.Core.Strategy;
 using FluentAssertions;
 using Skender.Stock.Indicators;
 using System;

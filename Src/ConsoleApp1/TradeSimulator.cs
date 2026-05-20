@@ -3,6 +3,7 @@ using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Trade;
+using CryptoTrading.App.Monitor.Trade;
 using Skender.Stock.Indicators;
 using System;
 using System.Collections.Generic;
@@ -126,7 +127,7 @@ namespace CryptoTrading.App.BackTesting
 
             if (_active == null) return null;
 
-            var status = _executionStrategy.ProcessStrategy(_fakeTrade);
+            var status = _executionStrategy.ProcessStrategy(new TradeState(_fakeTrade.Open, _fakeTrade.ProfitPct, _fakeTrade.TotalOpenBaseQuantity, _fakeTrade.RemainingQuantity));
 
             if (status.StrategyAction == StrategyAction.OpenTrade)
             {
@@ -214,44 +215,17 @@ namespace CryptoTrading.App.BackTesting
         }
     }
 
-    /// <summary>
-    /// Minimal <see cref="ITrade"/> stub. The execution and exit strategies
-    /// only ever read <see cref="ITrade.Open"/>, <see cref="ITrade.TotalOpenBaseQuantity"/>
-    /// and <see cref="ITrade.ProfitPct"/>; everything else throws to make any
-    /// accidental use loud in a backtest.
-    /// </summary>
-    internal class FakeTrade : ITrade
+    internal class FakeTrade
     {
         public bool Open { get; set; }
         public decimal TotalOpenBaseQuantity { get; set; }
         public decimal ProfitPct => 0m;
+        public decimal RemainingQuantity => 0m;
 
         public void Reset()
         {
             Open = false;
             TotalOpenBaseQuantity = 0m;
         }
-
-        // --- Unused surface ---
-        public string Pair => "BTCUSDT";
-        public decimal TotalCloseBaseQuantity => 0m;
-        public decimal RemainingQuantity => 0m;
-        public decimal CurrentPrice { get; set; }
-        public decimal Profit => 0m;
-        public decimal OpenPrice => 0m;
-        public decimal ClosePrice => 0m;
-        public DateTime StartDate => default;
-        public DateTime CloseDate => default;
-        public string Comment => "";
-        public decimal FeeBnb => 0m;
-        public List<ITransaction> PendingEntryTransactions => new List<ITransaction>();
-        public List<ITransaction> PendingExitTransactions => new List<ITransaction>();
-
-        public ITransaction GetCurrentTransaction() => null;
-        public void CancelCurrentTransaction() { }
-        public void UpdateCurrentTransaction(ExchangeOrder order) { }
-        public ITransaction CompleteTrade() => null;
-        public ITransaction CreateOpenTransaction(decimal price, DateTime closeTime, decimal amount) => null;
-        public ITransaction CreateCloseTransaction(decimal price, DateTime closeTime, decimal amount) => null;
     }
 }

@@ -1,7 +1,6 @@
 using CryptoTrading.App.Core.Database;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
-using CryptoTrading.App.Core.Trade;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,10 +67,15 @@ namespace CryptoTrading.App.MarketData
   OFFSET @p3 ROWS
   FETCH NEXT @p4 ROWS ONLY";
 
-        public async Task<bool> CheckOrder(ITransaction transaction)
+        public Task<ExchangeOrder> CheckOrder(string orderId, string symbol)
         {
-            transaction.Complete();
-            return true;
+            var filledOrder = new ExchangeOrder
+            {
+                OrderId = orderId,
+                Symbol = symbol,
+                Status = ExchangeOrderStatus.Filled
+            };
+            return Task.FromResult(filledOrder);
         }
 
         public void Dispose()

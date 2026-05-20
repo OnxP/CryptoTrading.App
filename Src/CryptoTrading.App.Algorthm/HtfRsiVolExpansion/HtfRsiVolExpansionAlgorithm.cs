@@ -4,6 +4,7 @@ using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
 using CryptoTrading.App.Core.Strategy;
+using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System;
@@ -399,42 +400,31 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
             // Conclusion: Phase 3's threshold tightening already captures this edge
             // implicitly. No additional filter here.
 
-            // Create setup
-            var setup = new HtfRsiVolExpansionSetup
-            {
-                Direction = direction,
-                EntryPrice = entryPrice,
-                StopLoss = stopLoss,
-                TakeProfit = takeProfit,
-                AtrAtEntry = currentAtr,
-                InitialRisk = initialRisk,
-                HtfRsi = currentRsi.Value,
-                VolExpansionRatio = (double)expansionRatio,
-                Rsi15M = rsi15M,
-                ProbabilityScore = score,
-                EntryTime = candle.CloseTime,
-                Quantity = quantity,
-                Leverage = Leverage
-            };
-
-            // Create execution strategy (simple: just SL/TP, no trailing/breakeven/time stop)
-            var executionStrategy = new SimpleExecutionStrategy(setup, _tradingState);
-            executionStrategy.SetLogger(_logger);
-
-            // Create strategy result
-            var strategyResult = new HtfRsiVolExpansionStrategyResult
-            {
-                PostTrade = true,
-                Amount = quantity * entryPrice, // USDT notional
-                Leverage = Leverage,
-                OrderSide = direction == TradeDirection.Long ? ExchangeOrderSide.Buy : ExchangeOrderSide.Sell,
-                Setup = setup
-            };
-
             // Mark as in position
             _tradingState.IsInPosition = true;
 
-            // Fire setup
+            var signal = new TradeSignal
+            {
+                Symbol = _symbol,
+                BaseSymbol = _symbol.BaseAsset,
+                QuoteSymbol = _symbol.QuoteAsset,
+                Direction = direction,
+                Leverage = Leverage,
+                Quantity = quantity,
+                SignalTime = candle.CloseTime,
+                EntryPrice = entryPrice,
+                StopLoss = stopLoss,
+                TakeProfit = takeProfit,
+                AtrAtSignal = currentAtr,
+                InitialRisk = initialRisk,
+                HtfRsi = (decimal)currentRsi.Value,
+                VolExpansionRatio = expansionRatio,
+                ProbabilityScore = score,
+                SetupType = "HtfRsiVolExpansion",
+                RecommendedEntryStrategy = "Simple",
+                RecommendedExitStrategy = "Simple"
+            };
+
             _logger.LogInformation(
                 $"[HTF-RSI {ts}] SETUP FIRED: {direction} | Price:{entryPrice:F2} | " +
                 $"SL:{stopLoss:F2} | TP:{takeProfit:F2} | ATR:{currentAtr:F2} | " +
@@ -442,10 +432,7 @@ namespace CryptoTrading.App.Algorithm.HtfRsiVolExpansion
                 $"15M RSI:{rsi15M:F1} | Score:{score} | Qty:{quantity:F6} | " +
                 $"Equity:{_tradingState.CurrentEquity:F2} | {_tradingState.GetStatus()}");
 
-            RequestTracker.Instance.Add(
-                candle.Symbol,
-                new TradeRequest(strategyResult, executionStrategy, _symbol, candle.CloseTime),
-                KeyValue);
+            RequestTracker.Instance.Add(candle.Symbol, signal, KeyValue);
         }
 
         /// <summary>

@@ -3,6 +3,7 @@ using Binance.Client;
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core;
+using CryptoTrading.App.Core.Strategy;
 using CryptoTrading.App.Core.Database.Config;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.RequestTracker;
@@ -240,9 +241,9 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
         private List<CapturedSetup> ReplayAlgorithm(List<Candle15M> candles)
         {
             // Clear singleton state (important — RequestTracker is a static singleton)
-            RequestTracker.Requests?.Clear();
+            RequestTracker.Signals?.Clear();
             _ = RequestTracker.Instance; // forces init
-            RequestTracker.Requests.Clear();
+            RequestTracker.Signals.Clear();
 
             var logger = Mock.Of<ILogger<HtfRsiVolExpansionAlgorithm>>();
             var algo = new HtfRsiVolExpansionAlgorithm(logger);
@@ -339,27 +340,20 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 fakeMd.LiveStream15M?.Invoke(args);
 
                 // Check for a fired setup on BTCUSDT
-                if (RequestTracker.Requests.TryRemove("BTCUSDT", out var tuple))
+                if (RequestTracker.Signals.TryRemove("BTCUSDT", out var tuple))
                 {
-                    var request = tuple.Item2;
+                    var signal = tuple.Signal;
 
-                    // TradeRequest is internal — use reflection to get StrategyResult
-                    var srProp = request.GetType().GetProperty("StrategyResult");
-                    var sr = srProp?.GetValue(request) as HtfRsiVolExpansionStrategyResult;
-
-                    if (sr?.Setup != null)
-                    {
-                        captured.Add(new CapturedSetup(
-                            EntryTime: sr.Setup.EntryTime,
-                            Direction: sr.Setup.Direction,
-                            EntryPrice: sr.Setup.EntryPrice,
-                            StopLoss: sr.Setup.StopLoss,
-                            TakeProfit: sr.Setup.TakeProfit,
-                            AtrAtEntry: sr.Setup.AtrAtEntry,
-                            HtfRsi: sr.Setup.HtfRsi,
-                            ProbabilityScore: sr.Setup.ProbabilityScore,
-                            VolExpansion: sr.Setup.VolExpansionRatio));
-                    }
+                    captured.Add(new CapturedSetup(
+                        EntryTime: signal.SignalTime,
+                        Direction: signal.Direction,
+                        EntryPrice: signal.EntryPrice,
+                        StopLoss: signal.StopLoss,
+                        TakeProfit: signal.TakeProfit,
+                        AtrAtEntry: signal.AtrAtSignal,
+                        HtfRsi: (double)(signal.HtfRsi ?? 0m),
+                        ProbabilityScore: (int)(signal.ProbabilityScore ?? 0m),
+                        VolExpansion: (double)(signal.VolExpansionRatio ?? 0m)));
 
                     // Simulate an instantaneous, successful trade close so
                     // the production gap/cooldown logic applies naturally:

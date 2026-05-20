@@ -1,7 +1,6 @@
 using CryptoTrading.App.Core;
 using CryptoTrading.App.Core.Exchange;
 using CryptoTrading.App.Core.MarketMonitorFactory;
-using CryptoTrading.App.Core.Trade;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -39,25 +38,15 @@ namespace CryptoTrading.App.MarketData
         {
         }
 
-        public virtual async Task<bool> CheckOrder(ITransaction transaction)
+        public virtual async Task<ExchangeOrder> CheckOrder(string orderId, string symbol)
         {
-            // Prefer the exchange-assigned order id (populated on place); fall
-            // back to the client id only because legacy paper-trade paths can
-            // leave OrderId blank — the neutral provider tolerates both via
-            // the upstream get-order call.
-            var id = !string.IsNullOrEmpty(transaction.Order?.OrderId)
-                ? transaction.Order.OrderId
-                : transaction.Order?.ClientOrderId;
-
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(orderId))
             {
-                Logger?.LogWarning("CheckOrder invoked with no order id on transaction for {Pair}", transaction.Pair);
-                return false;
+                Logger?.LogWarning("CheckOrder invoked with no order id for {Symbol}", symbol);
+                return null;
             }
 
-            var newOrder = await _exchange.GetOrderAsync(transaction.Pair, id).ConfigureAwait(false);
-            transaction.UpdateOrder(newOrder);
-            return newOrder.Status == ExchangeOrderStatus.Filled;
+            return await _exchange.GetOrderAsync(symbol, orderId).ConfigureAwait(false);
         }
 
         public async Task Subscribe(string symbol, string keyValue, Action<ExchangeCandlestickEvent> processCandleStick)

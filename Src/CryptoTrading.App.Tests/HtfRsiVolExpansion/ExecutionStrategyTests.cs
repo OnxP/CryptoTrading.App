@@ -2,7 +2,6 @@ using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
 using FluentAssertions;
-using Moq;
 using Skender.Stock.Indicators;
 using Xunit;
 
@@ -76,10 +75,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Price dropped below SL
             FillQuoteHub(quoteHub, 99_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.NoAction,
                 "price below SL means setup is stale for a Long");
@@ -95,10 +92,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Price surged above TP
             FillQuoteHub(quoteHub, 101_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.NoAction,
                 "price above TP means setup is stale for a Long");
@@ -114,10 +109,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Price rose above SL
             FillQuoteHub(quoteHub, 101_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.NoAction,
                 "price above SL means setup is stale for a Short");
@@ -133,10 +126,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Price dropped below TP
             FillQuoteHub(quoteHub, 99_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.NoAction,
                 "price below TP means setup is stale for a Short");
@@ -156,10 +147,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Price is within SL-TP range
             FillQuoteHub(quoteHub, 100_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.OpenTrade);
         }
@@ -174,10 +163,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Price is within TP-SL range
             FillQuoteHub(quoteHub, 100_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.OpenTrade);
         }
@@ -195,10 +182,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Only add 10 quotes (need at least 15)
             FillQuoteHub(quoteHub, 100_000m, 10);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             result.StrategyAction.Should().Be(StrategyAction.NoAction,
                 "insufficient quotes should prevent any action");
@@ -216,12 +201,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             FillQuoteHub(quoteHub, 100_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(true);
-            mockTrade.Setup(t => t.TotalOpenBaseQuantity).Returns(1.0m);
-            mockTrade.Setup(t => t.ProfitPct).Returns(0.5m);
-
-            var result = strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(true, 0.5m, 1.0m, 0m);
+            var result = strategy.ProcessStrategy(tradeState);
 
             // When trade is open, strategy state should be WaitingForExit
             result.StrategyState.Should().Be(StrategyState.WaitingForExit);
@@ -242,12 +223,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             // Fill with price at 100,300 (different from setup entry of 100k)
             FillQuoteHub(quoteHub, 100_300m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(true);
-            mockTrade.Setup(t => t.TotalOpenBaseQuantity).Returns(1.0m);
-            mockTrade.Setup(t => t.ProfitPct).Returns(0m);
-
-            strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(true, 0m, 1.0m, 0m);
+            strategy.ProcessStrategy(tradeState);
 
             // SL/TP should be recalculated from actual price (100,300), not setup (100,000)
             setup.EntryPrice.Should().Be(100_300m);
@@ -265,12 +242,8 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             FillQuoteHub(quoteHub, 99_800m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(true);
-            mockTrade.Setup(t => t.TotalOpenBaseQuantity).Returns(1.0m);
-            mockTrade.Setup(t => t.ProfitPct).Returns(0m);
-
-            strategy.ProcessStrategy(mockTrade.Object);
+            var tradeState = new TradeState(true, 0m, 1.0m, 0m);
+            strategy.ProcessStrategy(tradeState);
 
             setup.EntryPrice.Should().Be(99_800m);
             setup.StopLoss.Should().Be(99_800m + originalRisk);
@@ -285,13 +258,10 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             FillQuoteHub(quoteHub, 100_300m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(true);
-            mockTrade.Setup(t => t.TotalOpenBaseQuantity).Returns(1.0m);
-            mockTrade.Setup(t => t.ProfitPct).Returns(0m);
+            var tradeState = new TradeState(true, 0m, 1.0m, 0m);
 
             // First call rebases
-            strategy.ProcessStrategy(mockTrade.Object);
+            strategy.ProcessStrategy(tradeState);
             setup.EntryPrice.Should().Be(100_300m);
 
             // Add quote at different price and call again
@@ -301,7 +271,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 Open = 100_500m, High = 100_510m, Low = 100_490m,
                 Close = 100_500m, Volume = 100
             });
-            strategy.ProcessStrategy(mockTrade.Object);
+            strategy.ProcessStrategy(tradeState);
 
             // Entry should NOT change to 100,500
             setup.EntryPrice.Should().Be(100_300m,
@@ -320,11 +290,10 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
 
             FillQuoteHub(quoteHub, 100_000m);
 
-            var mockTrade = new Mock<Core.Trade.ITrade>();
-            mockTrade.Setup(t => t.Open).Returns(false);
+            var tradeState = new TradeState(false, 0m, 0m, 0m);
 
             // First call: enters trade
-            var result1 = strategy.ProcessStrategy(mockTrade.Object);
+            var result1 = strategy.ProcessStrategy(tradeState);
             result1.StrategyAction.Should().Be(StrategyAction.OpenTrade);
 
             // Simulate trade completing (exit strategy records it)
@@ -335,7 +304,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 tradingState.OnNewCandle();
 
             // Second call with trade closed: setup is consumed, should NOT re-enter
-            var result2 = strategy.ProcessStrategy(mockTrade.Object);
+            var result2 = strategy.ProcessStrategy(tradeState);
             result2.StrategyAction.Should().Be(StrategyAction.NoAction,
                 "setup is consumed after one trade; algorithm must provide a fresh setup");
         }

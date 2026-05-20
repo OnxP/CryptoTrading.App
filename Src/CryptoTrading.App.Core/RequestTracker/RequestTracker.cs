@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using CryptoTrading.App.Core.Message_Broker;
@@ -15,48 +14,33 @@ namespace CryptoTrading.App.Core.RequestTracker
         {
             get
             {
-                if (_instance == null) Requests = new ConcurrentDictionary<string, Tuple<string, ITradeRequest>>();
+                if (_instance == null) Signals = new ConcurrentDictionary<string, (string KeyValue, ITradeSignal Signal)>();
                 return _instance ??= new RequestTracker();
             }
         }
 
-        private readonly object _lock = new object();
-        //store up the request here.
-        public static ConcurrentDictionary<string,Tuple<string,ITradeRequest>> Requests 
-        {
-            get;
-            set;
-        }
-        public void Add(string symbol, ITradeRequest request, string keyValue)
-        {
-            // Use AddOrUpdate so newer setups replace older pending ones for the same symbol
-            Requests.AddOrUpdate(
-                symbol,
-                new Tuple<string, ITradeRequest>(keyValue, request),
-                (key, existing) => new Tuple<string, ITradeRequest>(keyValue, request));
+        public static ConcurrentDictionary<string, (string KeyValue, ITradeSignal Signal)> Signals { get; set; }
 
-            //if (CandleStickTracker.Instance.IsFinal) ProcessRequests();
+        public void Add(string symbol, ITradeSignal signal, string keyValue)
+        {
+            Signals.AddOrUpdate(
+                symbol,
+                (keyValue, signal),
+                (key, existing) => (keyValue, signal));
         }
 
         public async Task SubmitRequests()
         {
-            if (Requests.Any())
+            if (Signals.Any())
             {
-                //var req = Requests.OrderByDescending(x => x.Value.Item2.Volume);
-
-                //should submit request at in parrellel.
-                //foreach (var request in req)
-                //{
-                //    await MessageBroker.Instance.Publish(request.Value.Item1, this, request.Value.Item2);
-                //}
                 await Task.WhenAll(
-                                Requests.Select(r =>
-                                    MessageBroker.Instance.Publish(
-                                        r.Value.Item1,
-                                        this,
-                                        r.Value.Item2)));
+                    Signals.Select(r =>
+                        MessageBroker.Instance.Publish(
+                            r.Value.KeyValue,
+                            this,
+                            r.Value.Signal)));
 
-                Requests.Clear();
+                Signals.Clear();
             }
         }
     }

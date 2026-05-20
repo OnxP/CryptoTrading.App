@@ -1,9 +1,7 @@
 using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Core.Strategy;
-using CryptoTrading.App.Core.Trade;
 using FluentAssertions;
-using Moq;
 using Skender.Stock.Indicators;
 using System;
 using Xunit;
@@ -29,7 +27,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
             public HtfRsiVolExpansionSetup Setup { get; }
             public SimpleExecutionStrategy ExecutionStrategy { get; }
             public QuoteHub<IQuote> QuoteHub { get; }
-            private readonly Mock<ITrade> _tradeMock;
+            private TradeState _tradeState;
             private DateTime _currentTime;
 
             public SimplePipeline(
@@ -63,10 +61,7 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 QuoteHub = new QuoteHub<IQuote>(300);
                 ExecutionStrategy.SetQuotes(QuoteHub);
 
-                _tradeMock = new Mock<ITrade>();
-                _tradeMock.Setup(t => t.Open).Returns(false);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(0m);
-                _tradeMock.Setup(t => t.ProfitPct).Returns(0m);
+                _tradeState = new TradeState(false, 0m, 0m, 0m);
 
                 _currentTime = new DateTime(2025, 7, 25, 4, 15, 0);
 
@@ -82,19 +77,17 @@ namespace CryptoTrading.App.Tests.HtfRsiVolExpansion
                 high ??= close + 10;
                 low ??= close - 10;
                 AddCandle(close, high.Value, low.Value);
-                return ExecutionStrategy.ProcessStrategy(_tradeMock.Object).StrategyAction;
+                return ExecutionStrategy.ProcessStrategy(_tradeState).StrategyAction;
             }
 
             public void SimulateTradeOpened(decimal positionSize = 1.0m)
             {
-                _tradeMock.Setup(t => t.Open).Returns(true);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(positionSize);
+                _tradeState = new TradeState(true, 0m, positionSize, 0m);
             }
 
             public void SimulateTradeClosed()
             {
-                _tradeMock.Setup(t => t.Open).Returns(false);
-                _tradeMock.Setup(t => t.TotalOpenBaseQuantity).Returns(0m);
+                _tradeState = new TradeState(false, 0m, 0m, 0m);
             }
 
             private void AddCandle(decimal close, decimal? high = null, decimal? low = null)
