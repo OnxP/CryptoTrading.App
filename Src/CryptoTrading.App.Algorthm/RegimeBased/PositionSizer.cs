@@ -110,6 +110,11 @@ namespace CryptoTrading.App.Algorithm.RegimeBased
             if (constraints.MaxQuantity > 0)
                 maxQuantity = Math.Min(maxQuantity, constraints.MaxQuantity);
 
+            // If equity is too small for even the minimum order at our risk budget,
+            // use the minimum order size (accepts higher risk % on this trade)
+            if (maxQuantity < constraints.MinQuantity)
+                return constraints.MinQuantity;
+
             quantity = Math.Max(quantity, constraints.MinQuantity);
             quantity = Math.Min(quantity, maxQuantity);
 
