@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option csharp_namespace = "CryptoTrading.App.ServiceContracts";
+
+package cryptotrading.marketdata;
+
+import "google/protobuf/timestamp.proto";
+
+service MarketDataService {
+  rpc GetCandles (GetCandlesRequest) returns (GetCandlesResponse);
+  rpc SubscribeCandles (SubscribeCandlesRequest) returns (stream CandleUpdate);
+  rpc GetSymbols (GetSymbolsRequest) returns (GetSymbolsResponse);
+  rpc GetServiceStatus (ServiceStatusRequest) returns (ServiceStatusResponse);
+}
+
+message GetCandlesRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string interval = 3;
+  google.protobuf.Timestamp from = 4;
+  google.protobuf.Timestamp to = 5;
+}
+
+message GetCandlesResponse {
+  repeated Candle candles = 1;
+}
+
+message Candle {
+  string exchange_id = 1;
+  string symbol = 2;
+  string interval = 3;
+  google.protobuf.Timestamp open_time = 4;
+  google.protobuf.Timestamp close_time = 5;
+  double open = 6;
+  double high = 7;
+  double low = 8;
+  double close = 9;
+  double volume = 10;
+  double quote_volume = 11;
+  int64 number_of_trades = 12;
+  bool is_closed = 13;
+}
+
+message SubscribeCandlesRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string interval = 3;
+}
+
+message CandleUpdate {
+  Candle candle = 1;
+  google.protobuf.Timestamp event_time = 2;
+}
+
+message GetSymbolsRequest {
+  string exchange_id = 1;
+  string quote_asset_filter = 2;
+}
+
+message GetSymbolsResponse {
+  repeated SymbolInfo symbols = 1;
+}
+
+message SymbolInfo {
+  string exchange_id = 1;
+  string ticker = 2;
+  string base_asset = 3;
+  string quote_asset = 4;
+  double min_quantity = 5;
+  double max_quantity = 6;
+  double step_size = 7;
+  double min_notional = 8;
+  double tick_size = 9;
+  bool is_active = 10;
+}
+
+message ServiceStatusRequest {}
+
+message ServiceStatusResponse {
+  int32 active_subscriptions = 1;
+  int64 cached_candle_count = 2;
+  repeated string active_exchanges = 3;
+}

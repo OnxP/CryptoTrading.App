@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: CryptoDb
+      POSTGRES_USER: crypto
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crypto -d CryptoDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  market-data:
+    build:
+      context: ./Src
+      dockerfile: CryptoTrading.App.MarketDataService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    environment:
+      - ConnectionStrings__CryptoDb=Host=postgres;Database=CryptoDb;Username=crypto;Password=${POSTGRES_PASSWORD}
+      - Exchange__Binance__ApiKey=${BINANCE_API_KEY}
+      - Exchange__Binance__ApiSecret=${BINANCE_API_SECRET}
+      - MarketData__CacheIntervals=15m,1h,4h
+      - MarketData__CacheDays=90
+      - ASPNETCORE_URLS=http://+:5001
+
+  broker:
+    build:
+      context: ./Src
+      dockerfile: CryptoTrading.App.BrokerService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5002:5002"
+    environment:
+      - Exchange__Binance__ApiKey=${BINANCE_API_KEY}
+      - Exchange__Binance__ApiSecret=${BINANCE_API_SECRET}
+      - Exchange__Binance__Venues=Spot,Futures
+      - ASPNETCORE_URLS=http://+:5002
+
+volumes:
+  pgdata:

@@ -1,0 +1,185 @@
+syntax = "proto3";
+
+option csharp_namespace = "CryptoTrading.App.ServiceContracts";
+
+package cryptotrading.broker;
+
+import "google/protobuf/timestamp.proto";
+
+service BrokerService {
+  rpc PlaceMarketOrder (PlaceMarketOrderRequest) returns (OrderResponse);
+  rpc PlaceLimitOrder (PlaceLimitOrderRequest) returns (OrderResponse);
+  rpc PlaceStopLimitOrder (PlaceStopLimitOrderRequest) returns (OrderResponse);
+  rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
+  rpc GetOrder (GetOrderRequest) returns (OrderResponse);
+  rpc GetOpenOrders (GetOpenOrdersRequest) returns (GetOpenOrdersResponse);
+  rpc GetPositions (GetPositionsRequest) returns (GetPositionsResponse);
+  rpc GetBalances (GetBalancesRequest) returns (GetBalancesResponse);
+  rpc GetFeeSchedule (GetFeeScheduleRequest) returns (FeeScheduleResponse);
+  rpc SetLeverage (SetLeverageRequest) returns (SetLeverageResponse);
+  rpc SubscribeOrderUpdates (SubscribeOrderUpdatesRequest) returns (stream OrderFillEvent);
+}
+
+// --- Order Placement ---
+
+message PlaceMarketOrderRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string side = 3;
+  double quantity = 4;
+  string venue = 5;
+  string position_side = 6;
+  string margin_side_effect = 7;
+  bool reduce_only = 8;
+}
+
+message PlaceLimitOrderRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string side = 3;
+  double price = 4;
+  double quantity = 5;
+  string venue = 6;
+  string position_side = 7;
+  string margin_side_effect = 8;
+  bool reduce_only = 9;
+}
+
+message PlaceStopLimitOrderRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string side = 3;
+  double stop_price = 4;
+  double limit_price = 5;
+  double quantity = 6;
+  string venue = 7;
+  string position_side = 8;
+  string margin_side_effect = 9;
+  bool reduce_only = 10;
+}
+
+message CancelOrderRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string order_id = 3;
+}
+
+message GetOrderRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  string order_id = 3;
+}
+
+message GetOpenOrdersRequest {
+  string exchange_id = 1;
+}
+
+message GetOpenOrdersResponse {
+  repeated OrderResponse orders = 1;
+}
+
+// --- Order Response ---
+
+message OrderResponse {
+  string exchange_id = 1;
+  string order_id = 2;
+  string client_order_id = 3;
+  string symbol = 4;
+  string side = 5;
+  string type = 6;
+  string status = 7;
+  double price = 8;
+  double stop_price = 9;
+  double quantity = 10;
+  double filled_quantity = 11;
+  double quote_quantity = 12;
+  google.protobuf.Timestamp timestamp = 13;
+}
+
+// --- Positions ---
+
+message GetPositionsRequest {
+  string exchange_id = 1;
+}
+
+message GetPositionsResponse {
+  repeated PositionInfo positions = 1;
+}
+
+message PositionInfo {
+  string exchange_id = 1;
+  string symbol = 2;
+  string side = 3;
+  double quantity = 4;
+  double entry_price = 5;
+  double mark_price = 6;
+  int32 leverage = 7;
+  double unrealized_pnl = 8;
+  double notional = 9;
+  google.protobuf.Timestamp timestamp = 10;
+}
+
+// --- Balances ---
+
+message GetBalancesRequest {
+  string exchange_id = 1;
+}
+
+message GetBalancesResponse {
+  repeated BalanceInfo balances = 1;
+}
+
+message BalanceInfo {
+  string exchange_id = 1;
+  string asset = 2;
+  double free = 3;
+  double locked = 4;
+}
+
+// --- Fees ---
+
+message GetFeeScheduleRequest {
+  string exchange_id = 1;
+}
+
+message FeeScheduleResponse {
+  string exchange_id = 1;
+  double maker_fee = 2;
+  double taker_fee = 3;
+  string fee_asset = 4;
+  bool has_fee_discount = 5;
+  double discount_rate = 6;
+}
+
+// --- Leverage ---
+
+message SetLeverageRequest {
+  string exchange_id = 1;
+  string symbol = 2;
+  int32 leverage = 3;
+}
+
+message SetLeverageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// --- User Stream ---
+
+message SubscribeOrderUpdatesRequest {
+  string exchange_id = 1;
+}
+
+message OrderFillEvent {
+  string exchange_id = 1;
+  string order_id = 2;
+  string client_order_id = 3;
+  string symbol = 4;
+  string side = 5;
+  double filled_quantity = 6;
+  double price = 7;
+  double commission = 8;
+  string commission_asset = 9;
+  string status = 10;
+  google.protobuf.Timestamp timestamp = 11;
+}

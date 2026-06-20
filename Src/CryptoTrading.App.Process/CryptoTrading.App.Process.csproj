@@ -9,14 +9,14 @@
   <ItemGroup>
     <PackageReference Include="log4net" Version="3.3.1" />
     <PackageReference Include="MailKit" Version="4.16.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.8" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
-    <PackageReference Include="Z.EntityFramework.Extensions" Version="10.105.4" />
+    <PackageReference Include="Z.EntityFramework.Extensions" Version="10.105.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +25,8 @@
     <ProjectReference Include="..\CryptoTrading.App.Core\CryptoTrading.App.Core.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.MarketData\CryptoTrading.App.MarketData.csproj" />
     <ProjectReference Include="..\CryptoTrading.App.TradeMonitor\CryptoTrading.App.Monitor.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.GrpcClients\CryptoTrading.App.GrpcClients.csproj" />
+    <ProjectReference Include="..\CryptoTrading.App.Persistence\CryptoTrading.App.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>
