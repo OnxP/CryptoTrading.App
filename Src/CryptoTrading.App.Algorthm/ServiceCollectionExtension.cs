@@ -1,4 +1,5 @@
-﻿using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
+﻿using CryptoTrading.App.Algorithm.DualRegime;
+using CryptoTrading.App.Algorithm.HtfRsiVolExpansion;
 using CryptoTrading.App.Algorithm.RegimeBased;
 using CryptoTrading.App.Algorithm.StopLimits;
 using CryptoTrading.App.Algorithm.TradingStrategies;
@@ -63,6 +64,13 @@ namespace CryptoTrading.App.Algorithm
             // Use trailing stop limit (not actively used by this strategy but required by DI)
             services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
 
+            return services;
+        }
+
+        public static IServiceCollection AddDualRegimeAlgorithm(this IServiceCollection services)
+        {
+            services.AddTransient<IAlgorithm, DualRegimeAlgorithm>();
+            services.AddTransient<IStopLimitTracker, TrailingStopLimit>();
             return services;
         }
 

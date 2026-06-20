@@ -36,6 +36,19 @@ namespace CryptoTrading.App.BackTesting
                 if (!string.IsNullOrEmpty(opts.AnalyzeSlCsv))
                     return SlPostmortem.Run(opts.Symbol, opts.AnalyzeSlCsv, opts.OutputCsv);
 
+                if (opts.Strategy == "dualregime")
+                {
+                    var dr = new DualRegimeBacktest.Options();
+                    if (!string.IsNullOrWhiteSpace(opts.Csv)) dr.CsvPath = opts.Csv;
+                    if (!string.IsNullOrWhiteSpace(opts.ModelDir)) dr.ModelDir = opts.ModelDir;
+                    if (!string.IsNullOrWhiteSpace(opts.RefCsv)) dr.RefTradesCsv = opts.RefCsv;
+                    if (!string.IsNullOrWhiteSpace(opts.OutputCsv)) dr.OutputCsv = opts.OutputCsv;
+                    if (!string.IsNullOrWhiteSpace(opts.ValidatePyRows)) dr.ValidatePyRowsCsv = opts.ValidatePyRows;
+                    if (opts.TestStart.HasValue) dr.TestStart = opts.TestStart.Value;
+                    if (opts.TestEnd.HasValue) dr.TestEnd = opts.TestEnd.Value;
+                    return DualRegimeBacktest.Run(dr);
+                }
+
                 Console.WriteLine("================================================================");
                 Console.WriteLine("  HTF RSI Vol Expansion — BACKTEST");
                 Console.WriteLine("================================================================");
@@ -371,6 +384,13 @@ namespace CryptoTrading.App.BackTesting
             public double StartBtc = 2.0;
             public string OutputCsv;
             public string AnalyzeSlCsv;
+            public string Strategy = "htfrsi";
+            public string Csv;        // dualregime: raw 15M CSV
+            public string ModelDir;   // dualregime: ONNX artifact dir
+            public string RefCsv;     // dualregime: Python reference trades CSV
+            public string ValidatePyRows; // dualregime: py_test_df.csv replay (decisive validation)
+            public DateTime? TestStart;   // dualregime: override test-window start
+            public DateTime? TestEnd;     // dualregime: override test-window end
         }
 
         private static BacktestOptions ParseArgs(string[] args)
@@ -383,11 +403,16 @@ namespace CryptoTrading.App.BackTesting
                 switch (a.ToLowerInvariant())
                 {
                     case "--strategy":
-                        // Accepted for backward-compatibility with old command lines,
-                        // but the only supported strategy is HtfRsiVolExpansionAlgorithm
-                        // (Wilder RSI on native 4H). Value is ignored.
-                        Next();
+                        // "htfrsi" (default) runs the SQL replay + SimpleExecutionStrategy.
+                        // "dualregime" runs the DualRegime signal-pipeline backtest harness.
+                        opts.Strategy = Next().ToLowerInvariant();
                         break;
+                    case "--csv": opts.Csv = Next(); break;
+                    case "--model-dir": opts.ModelDir = Next(); break;
+                    case "--ref": opts.RefCsv = Next(); break;
+                    case "--validate-pyrows": opts.ValidatePyRows = Next(); break;
+                    case "--test-start": opts.TestStart = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
+                    case "--test-end": opts.TestEnd = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--symbol": opts.Symbol = Next().ToUpperInvariant(); break;
                     case "--from": opts.From = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--to": opts.To = DateTime.Parse(Next(), CultureInfo.InvariantCulture); break;
@@ -402,7 +427,7 @@ namespace CryptoTrading.App.BackTesting
                     default: throw new ArgumentException($"Unknown argument: {a}");
                 }
             }
-            if (string.IsNullOrEmpty(opts.AnalyzeSlCsv) && opts.To <= opts.From)
+            if (string.IsNullOrEmpty(opts.AnalyzeSlCsv) && opts.Strategy != "dualregime" && opts.To <= opts.From)
                 throw new ArgumentException("--to must be after --from");
             return opts;
         }

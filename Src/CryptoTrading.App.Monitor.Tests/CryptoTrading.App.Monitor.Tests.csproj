@@ -21,11 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="MSTest.TestAdapter" Version="4.2.1" />
+    <PackageReference Update="MSTest.TestAdapter" Version="4.2.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="MSTest.TestFramework" Version="4.2.1" />
+    <PackageReference Update="MSTest.TestFramework" Version="4.2.3" />
   </ItemGroup>
 
 </Project>

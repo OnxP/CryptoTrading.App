@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
-    <PackageReference Include="Z.EntityFramework.Extensions" Version="10.105.4" />
+    <PackageReference Include="Z.EntityFramework.Extensions" Version="10.105.5" />
   </ItemGroup>
 
   <ItemGroup>
