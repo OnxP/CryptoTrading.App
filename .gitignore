@@ -7,3 +7,10 @@ packages
 Src/CryptoTrading.App/.vs/CryptoTrading.App/v16/.suo
 Src/CryptoTrading.App.Config/Program.cs
 Release/Debug/*
+
+# Kronos service (Python)
+kronos-service/.venv/
+kronos-service/third_party/
+__pycache__/
+*.pyc
+.workflow/runtime/

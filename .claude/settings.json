@@ -10,5 +10,10 @@
       "Bash(git *)",
       "Bash(npm *)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "py -3.11 scripts/claude_status.py",
+    "refreshInterval": 60
   }
 }
