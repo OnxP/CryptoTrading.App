@@ -52,6 +52,10 @@ Answers change M2+, not M1, because M1 is fixture-only.
 5. **Email**: sender/provider, recipient allowlist, timezone, cadence. Not needed until the reporting milestone.
 6. **Chronos**: keep as a separate research comparison for options underlyings, or drop. Not needed for M1.
 
+## Status (2026-10-15)
+
+All ten packets COMPLETE; 74 tests green; see docs/planning/OPTIONS_M1_TEST_REPORT.md. Awaiting planner review and the configuration answers below before M2.
+
 ## Acceptance for the milestone
 
 - `pytest options-research/tests` green.

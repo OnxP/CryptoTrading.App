@@ -8,7 +8,7 @@ the mock never improvises.
 Fixture file format (JSON, under fixtures/model/<role>/<prompt_version>/*.json):
 {
   "role": "news_collector", "prompt_version": "news_collector/v1",
-  "input_hash": "<sha256>" | null, "match_substring": "..." | null,
+  "input_hash": "<sha256>" | null, "match_substring": "..." | ["...", "..."] | null,
   "response": "<model text>", "input_tokens": 1200, "output_tokens": 300
 }
 """
@@ -28,7 +28,7 @@ class MockFixture:
     prompt_version: str
     response: str
     input_hash: str | None = None
-    match_substring: str | None = None
+    match_substring: str | list[str] | None = None  # all listed substrings must appear; most specific wins
     input_tokens: int | None = None
     output_tokens: int | None = None
 
@@ -59,11 +59,17 @@ class MockModelClient(ModelClient):
                 continue
             if f.input_hash is not None and f.input_hash == h:
                 return self._resp(f, request)
+        best: tuple[int, MockFixture] | None = None
         for f in self._fixtures:
             if f.role != request.role or f.prompt_version != request.prompt_version:
                 continue
-            if f.input_hash is None and f.match_substring and f.match_substring in last_user:
-                return self._resp(f, request)
+            if f.input_hash is not None or not f.match_substring:
+                continue
+            subs = [f.match_substring] if isinstance(f.match_substring, str) else list(f.match_substring)
+            if all(sub in last_user for sub in subs) and (best is None or len(subs) > best[0]):
+                best = (len(subs), f)
+        if best is not None:
+            return self._resp(best[1], request)
         raise NoFixture(f"no mock response for role={request.role} "
                         f"prompt_version={request.prompt_version} input_hash={h[:12]}")
 

@@ -49,6 +49,8 @@ class EventCandidate(_Finding):
     novelty: Literal["new", "update", "repeat"] = "new"
     independent_sources: int = Field(ge=0)
     missing_corroboration: list[str] = Field(default_factory=list)
+    implication: Literal["bullish", "bearish", "mixed", "unclear"] = "unclear"
+    catalyst: str | None = Field(default=None, description="scheduled future event named in the story, if any")
     injection_suspected: bool = False
 
     _utc = field_validator("event_time")(lambda v: require_utc(v) if v is not None else v)

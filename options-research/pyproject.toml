@@ -21,3 +21,6 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-p no:cacheprovider"
+
+[project.scripts]
+options-research = "options_research.cli:main"

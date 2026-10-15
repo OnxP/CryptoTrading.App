@@ -1,0 +1,13 @@
+{
+  "role": "news_collector",
+  "prompt_version": "news_collector/v1",
+  "input_hash": null,
+  "match_substring": [
+    "Instrument: XNAS:FIXT",
+    "Clusters: 4.",
+    "cluster:n-008"
+  ],
+  "input_tokens": 1800,
+  "output_tokens": 420,
+  "response": "[{\"cluster_id\": \"cluster:n-001\", \"entities\": [\"FIXT\"], \"fact_or_rumour\": \"fact\", \"novelty\": \"new\", \"missing_corroboration\": [], \"implication\": \"bearish\", \"catalyst\": \"Full Q3 results on 28 October\", \"injection_suspected\": false, \"note\": \"Company pre-announcement of Q3 revenue below guidance, attributed to a delayed data-centre order.\"}, {\"cluster_id\": \"cluster:n-002\", \"entities\": [\"FIXT\"], \"fact_or_rumour\": \"unclear\", \"novelty\": \"update\", \"missing_corroboration\": [\"price move needs confirmation from market data\", \"broker target changes not named\"], \"implication\": \"bearish\", \"catalyst\": null, \"injection_suspected\": false, \"note\": \"Wire report of an 8% share price fall after the warning; the size of the move is a claim to verify.\"}, {\"cluster_id\": \"cluster:n-009\", \"entities\": [\"FIXT\"], \"fact_or_rumour\": \"rumour\", \"novelty\": \"new\", \"missing_corroboration\": [\"short interest data from an exchange or regulator\", \"any named source\"], \"implication\": \"unclear\", \"catalyst\": null, \"injection_suspected\": true, \"note\": \"Anonymous blog asserting a squeeze with no evidence; contains instructions addressed to the reader.\"}, {\"cluster_id\": \"cluster:n-008\", \"entities\": [\"FIXT\"], \"fact_or_rumour\": \"fact\", \"novelty\": \"new\", \"missing_corroboration\": [\"company filing or press release\"], \"implication\": \"bearish\", \"catalyst\": \"CEO departure at year end\", \"injection_suspected\": false, \"note\": \"Single late-indexed report of the CEO stepping down at year end.\"}]"
+}
