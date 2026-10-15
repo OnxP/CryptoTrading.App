@@ -1,0 +1,9 @@
+{
+  "_note": "FIXTURE. Fictional instruments for offline tests. Not real companies, not real quotes.",
+  "instruments": [
+    {"symbol": "FIXT", "venue": "XNAS", "currency": "USD", "name": "Fixture Semiconductors Inc", "aliases": ["Fixture Semi", "Fixture Semiconductors"]},
+    {"symbol": "ACME", "venue": "XNYS", "currency": "USD", "name": "Acme Holdings Corp", "aliases": ["Acme Holdings"]},
+    {"symbol": "ACMA", "venue": "XNAS", "currency": "USD", "name": "Acme Materials Ltd", "aliases": ["Acme Materials"]},
+    {"symbol": "BRIT", "venue": "XLON", "currency": "GBP", "name": "Britannia Fixture plc", "aliases": ["Britannia Fixture"]}
+  ]
+}
