@@ -1,0 +1,24 @@
+# options-research default configuration (M1, fixtures only).
+# Nothing in this file enables live data, model spend, email or trading.
+
+[project]
+id = "options-research"
+environment = "offline-fixtures"
+
+[model]
+enabled = false                 # AnthropicModelClient refuses to construct while false
+provider = "anthropic"
+specialist_model = "claude-sonnet-5-5"
+cheap_model = "claude-haiku-5-5"
+max_calls_per_request = 8
+max_tokens_per_request = 60000
+
+[defaults]
+news_window_days = 7            # disclosed in every briefing when applied
+timezone = "UTC"
+
+[ledger]
+dir = "data"                    # relative to options-research/, git-ignored, append-only JSONL
+
+[delivery]
+inline_only = true              # email delivery rejected at intake in M1
