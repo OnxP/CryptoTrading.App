@@ -1,2 +1,0 @@
-[console_scripts]
-options-research = options_research.cli:main

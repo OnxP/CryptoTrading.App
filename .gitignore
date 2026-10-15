@@ -18,3 +18,4 @@ __pycache__/
 # options-research (Python)
 options-research/.venv/
 options-research/data/
+options-research/src/*.egg-info/
