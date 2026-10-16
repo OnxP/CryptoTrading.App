@@ -22,3 +22,19 @@ dir = "data"                    # relative to options-research/, git-ignored, ap
 
 [delivery]
 inline_only = true              # email delivery rejected at intake in M1
+
+[tradier]
+base_url = "https://sandbox.tradier.com/v1"   # sandbox: delayed data, no live account
+token_env = "TRADIER_SANDBOX_TOKEN"            # read from the environment at call time; never stored
+max_quote_age_s = 900                          # quotes older than this vs as_of are flagged stale
+wide_spread_ratio = 0.25                       # spread/mid above this is flagged wide
+
+[edgar]
+user_agent = ""                                # REQUIRED by SEC fair-access policy: "name email"; set before use
+max_rps = 10
+
+[pricing]
+risk_free_rate = 0.04                          # FIXTURE placeholder until a rate source is configured
+fees_per_contract = 0.65                       # FIXTURE; Robinhood charges 0 commission, exchange/regulatory fees vary
+spot_steps_pct = [-20, -15, -10, -5, 0, 5, 10, 15, 20]
+iv_shifts_rel = [-0.30, 0.0, 0.30]

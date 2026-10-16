@@ -1,0 +1,265 @@
+{
+ "key": "419fbc752a4484427967",
+ "note": "FICTIONAL calendar; shape per Tradier docs",
+ "received_at": "2026-10-15T20:05:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "Authorization (redacted)"
+  ],
+  "method": "GET",
+  "params": {
+   "month": "09",
+   "year": "2026"
+  },
+  "url": "https://sandbox.tradier.com/v1/markets/calendar"
+ },
+ "response": {
+  "json": {
+   "calendar": {
+    "days": {
+     "day": [
+      {
+       "date": "2026-09-01",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-02",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-03",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-04",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-05",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-06",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-07",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-08",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-09",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-10",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-11",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-12",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-13",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-14",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-15",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-16",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-17",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-18",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-19",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-20",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-21",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-22",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-23",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-24",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-25",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-26",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-27",
+       "description": "Market is closed",
+       "status": "closed"
+      },
+      {
+       "date": "2026-09-28",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-29",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      },
+      {
+       "date": "2026-09-30",
+       "description": "Market is open",
+       "open": {
+        "end": "16:00",
+        "start": "09:30"
+       },
+       "status": "open"
+      }
+     ]
+    },
+    "month": 9,
+    "year": 2026
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

@@ -28,6 +28,7 @@ class Config:
     timezone: str
     ledger_dir: Path
     inline_only: bool
+    raw: dict  # full parsed TOML for provider sections ([tradier], [edgar], [pricing], ...)
 
 
 def load_config(path: Path | None = None) -> Config:
@@ -53,4 +54,5 @@ def load_config(path: Path | None = None) -> Config:
         timezone=raw.get("defaults", {}).get("timezone", "UTC"),
         ledger_dir=ledger_dir,
         inline_only=bool(raw.get("delivery", {}).get("inline_only", True)),
+        raw=raw,
     )

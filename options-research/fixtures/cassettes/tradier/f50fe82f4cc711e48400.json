@@ -1,0 +1,54 @@
+{
+ "key": "f50fe82f4cc711e48400",
+ "note": "FICTIONAL quote",
+ "received_at": "2026-10-15T20:05:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "Authorization (redacted)"
+  ],
+  "method": "GET",
+  "params": {
+   "greeks": "false",
+   "symbols": "FIXT"
+  },
+  "url": "https://sandbox.tradier.com/v1/markets/quotes"
+ },
+ "response": {
+  "json": {
+   "quotes": {
+    "quote": {
+     "ask": 110.51,
+     "ask_date": 1792094370000,
+     "askexch": "Q",
+     "asksize": 5,
+     "average_volume": 2100000,
+     "bid": 110.49,
+     "bid_date": 1792094370000,
+     "bidexch": "Q",
+     "bidsize": 3,
+     "change": 0.1,
+     "change_percentage": 0.1,
+     "close": null,
+     "description": "Fixture Semiconductors Inc",
+     "exch": "Q",
+     "high": 111.61,
+     "last": 110.5,
+     "last_volume": 100,
+     "low": 108.85,
+     "open": 109.4,
+     "prevclose": 107.3,
+     "root_symbols": "FIXT",
+     "symbol": "FIXT",
+     "trade_date": 1792094370000,
+     "type": "stock",
+     "volume": 2500000,
+     "week_52_high": 130.0,
+     "week_52_low": 80.0
+    }
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}
