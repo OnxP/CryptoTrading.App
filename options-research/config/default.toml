@@ -43,6 +43,7 @@ live_since = ""                                # ISO instant when continuous pol
 [risk]
 max_chain_age_s = 3600                         # chain older than this at review time -> BLOCK; also bounds verdict expiry
 account_limits_configured = false              # false -> every risk review is at least REVIEW; no sizing
+iv_premium_review_points = 10                  # ATM IV minus realised forecast at/above this (vol points) -> REVIEW reason
 
 [pricing]
 risk_free_rate = 0.04                          # FIXTURE placeholder until a rate source is configured

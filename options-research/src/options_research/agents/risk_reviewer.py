@@ -28,6 +28,7 @@ from options_research.findings import (
     RiskReview,
     RiskVerdict,
     StructureComparison,
+    VolAssessment,
 )
 from options_research.intake import ResearchRequest
 from options_research.model import Budget, ModelClient, ModelRequest, NoFixture
@@ -76,17 +77,18 @@ def parse_event_date(text: str, as_of: datetime) -> date | None:
 
 class RiskReviewer:
     def __init__(self, model: ModelClient, max_chain_age_s: float = 3600.0, max_quote_age_s: float = 900.0,
-                 account_limits_configured: bool = False):
+                 account_limits_configured: bool = False, iv_premium_review_points: float = 10.0):
         self._model = model
         self._max_chain_age = float(max_chain_age_s)
         self._max_quote_age = float(max_quote_age_s)
         self._limits = bool(account_limits_configured)
+        self._premium_points = float(iv_premium_review_points)
 
     # ---- public ------------------------------------------------------------
     def run(self, pricing: Envelope, chain: OptionChainSnapshot | None, verify: Envelope | None, request: ResearchRequest,
             run_id: str, budget: Budget, project_id: str = "options-research", *, events: list[EventCandidate] | None = None,
             quarantine: Quarantine | None = None, verification_requested: bool = True,
-            now: datetime | None = None) -> Envelope:
+            now: datetime | None = None, vol: VolAssessment | None = None) -> Envelope:
         as_of = require_utc(request.as_of)
         now = require_utc(now) if now else as_of
         if request.horizon_days is None:
@@ -113,6 +115,14 @@ class RiskReviewer:
         if verification_requested and (verify is None or verify.status is Status.ERROR):
             shared_review.append("evidence verification unavailable" if verify is None else "evidence verification envelope ERROR")
         shared_checks.append(f"verification envelope: {verify.status.value if verify else 'none'}")
+        if vol is None or vol.premium_points is None:
+            shared_checks.append("implied-vs-realised vol premium: unavailable")
+        else:
+            shared_checks.append(f"implied-vs-realised vol premium {vol.premium_points:+.1f} points vs review threshold "
+                                 f"{self._premium_points:.0f}")
+            if vol.premium_points >= self._premium_points:
+                shared_review.append(f"ATM implied vol exceeds the realised-vol forecast by {vol.premium_points:.1f} points: "
+                                     f"expensive volatility can make a correct directional thesis lose money")
         catalysts = self._catalysts_in_horizon(events, as_of, horizon_end)
         shared_checks.append(f"catalyst dates inside horizon: {[d.isoformat() for d, _ in catalysts] or 'none'}")
         chain_age_reason = None

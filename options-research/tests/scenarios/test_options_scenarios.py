@@ -155,3 +155,23 @@ def test_o8_no_position_concept_exists_yet():
     offenders = [p.name for p in src.rglob("*.py")
                  if re.search(r"^\s*(from|import)\s+\S*(position|order|broker|execut)", p.read_text(encoding="utf-8"), re.M)]
     assert offenders == []
+
+
+# O9 (M3): volatility context present, unavailable, and premium review ---------------------------------------
+def test_o9_vol_context_and_expensive_iv_review(coord, token):
+    rec = run(coord)
+    adv = advisory(rec).text
+    assert "volatility context" in adv and "implied minus realised forecast: +" in adv
+    risk = next(e for e in rec.envelopes if e.agent_id == "risk_reviewer")
+    assert all(f.verdict is RiskVerdict.REVIEW and any("expensive volatility" in r for r in f.reasons) for f in risk.findings)
+    # the block is descriptive: no buy/sell-premium wording anywhere in code output
+    assert not re.search(r"\b(sell|buy|short|long)\s+(premium|vol|volatility)\b", adv, re.IGNORECASE)
+
+
+def test_o9b_vol_context_thesis_only_without_chain(coord, monkeypatch):
+    monkeypatch.delenv("TRADIER_SANDBOX_TOKEN", raising=False)
+    rec = run(coord)
+    adv = advisory(rec).text
+    assert "THESIS-ONLY" in adv and "realised: unavailable" in adv and "implied: unavailable" in adv
+    v = next(e for e in rec.envelopes if e.agent_id == "vol_specialist")
+    assert v.status is Status.ABSTAIN and v.findings[0].premium_points is None
