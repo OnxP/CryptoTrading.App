@@ -198,6 +198,40 @@ class StructureComparison(_Finding):
         return [l.quote_time for l in self.legs]
 
 
+class VolAssessment(_Finding):
+    """Vol specialist output (code only): what the underlying realised vs what the chain implies.
+
+    Numbers are annualised vol fractions unless named *_points (percentage points).
+    No probability, no direction, no recommendation to buy or sell volatility.
+    """
+
+    type: Literal["vol_assessment"] = "vol_assessment"
+    instrument: str
+    as_of: datetime
+    bars_used: int
+    realised_close_to_close: float | None = None
+    realised_parkinson: float | None = None
+    realised_yang_zhang: float | None = None
+    realised_ewma: float | None = None
+    forecast: float | None = None
+    forecast_low: float | None = None
+    forecast_high: float | None = None
+    forecast_method: str = ""
+    realised_unavailable_reason: str | None = None
+    expiry: str | None = None
+    atm_iv: float | None = None
+    atm_legs: list[str] = Field(default_factory=list)
+    skew_proxy: float | None = None
+    skew_legs: list[str] = Field(default_factory=list)
+    iv_rank: float | None = None
+    iv_rank_reason: str = "unavailable: no IV history store"
+    premium_points: float | None = None
+    implied_unavailable_reason: str | None = None
+    receipt_ids: list[str] = Field(default_factory=list)
+
+    _utc = field_validator("as_of")(require_utc)
+
+
 class RiskVerdict(str, Enum):
     PASS = "PASS"
     BLOCK = "BLOCK"
@@ -218,6 +252,7 @@ class RiskReview(_Finding):
 
 
 Finding = Annotated[
-    Union[EventCandidate, ClaimVerification, MarketSnapshotRef, BriefingSection, StructureComparison, RiskReview],
+    Union[EventCandidate, ClaimVerification, MarketSnapshotRef, BriefingSection, StructureComparison, RiskReview,
+          VolAssessment],
     Field(discriminator="type"),
 ]

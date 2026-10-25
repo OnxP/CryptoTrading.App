@@ -32,7 +32,7 @@ def test_full_options_run_adds_labelled_advisory_section_last(coord, monkeypatch
     assert rec.status == "PARTIAL"
     assert rec.valid_until == datetime(2026, 10, 15, 20, 14, 30, tzinfo=timezone.utc)
     agents = [e.agent_id for e in rec.envelopes]
-    assert agents[-2:] == ["pricing_specialist", "risk_reviewer"]
+    assert agents[-3:] == ["pricing_specialist", "vol_specialist", "risk_reviewer"]
     assert {"market_data_specialist", "news_collector", "evidence_verifier"} <= set(agents)
     adv = rec.sections[-1]
     assert adv.section == "trade_ideas_advisory" and adv.status == "PARTIAL"
@@ -92,3 +92,54 @@ def test_options_without_horizon_still_clarifies(coord, monkeypatch):
     monkeypatch.setenv("TRADIER_SANDBOX_TOKEN", "x")
     out = coord.handle(Q, as_of=AS_OF, request_time=AS_OF, analyses=[Analysis.OPTIONS_STRUCTURES])
     assert out.__class__.__name__ == "Clarification" and out.reason == "horizon_missing"
+
+
+# ---- M3: volatility context (OPT-203) ---------------------------------------------------------------
+def test_vol_context_block_precedes_structures_and_feeds_risk_review(coord, monkeypatch):
+    monkeypatch.setenv("TRADIER_SANDBOX_TOKEN", "x")
+    rec = run_options(coord)
+    vol_env = next(e for e in rec.envelopes if e.agent_id == "vol_specialist")
+    assert vol_env.model_id == "none" and vol_env.status.value == "OK"
+    v = vol_env.findings[0]
+    assert v.type == "vol_assessment" and v.bars_used == 22
+    for x in (v.realised_close_to_close, v.realised_parkinson, v.realised_yang_zhang, v.realised_ewma, v.forecast, v.atm_iv, v.skew_proxy):
+        assert x is not None
+    assert v.forecast_low <= v.forecast <= v.forecast_high and v.iv_rank is None and "no IV history" in v.iv_rank_reason
+    assert v.premium_points is not None and v.premium_points > 10  # fixture chain is priced well above realised
+    assert v.receipt_ids and all(r.startswith("rcpt:") for r in v.receipt_ids)
+    adv = rec.sections[-1].text
+    assert "volatility context" in adv and adv.index("volatility context") < adv.index("### long_call")
+    for needle in ("close-to-close", "Parkinson", "Yang-Zhang", "EWMA", "forecast", "ATM IV", "skew proxy", "IV rank: unavailable", "vol points"):
+        assert needle in adv
+    risk = next(e for e in rec.envelopes if e.agent_id == "risk_reviewer")
+    assert all(any("exceeds the realised-vol forecast" in r for r in f.reasons) for f in risk.findings)
+
+
+def test_vol_context_unavailable_without_daily_bars_structures_still_priced(tmp_path, monkeypatch):
+    monkeypatch.setenv("TRADIER_SANDBOX_TOKEN", "x")
+    from options_research.market import MarketDataUnavailable
+
+    class NoBars:
+        def load(self, *a, **k):
+            raise MarketDataUnavailable("no daily bars offline")
+
+    coord = Coordinator.offline(fixtures_dir=FIXTURES, data_dir=tmp_path / "data")
+    coord._daily = NoBars()
+    rec = run_options(coord)
+    v = next(e for e in rec.envelopes if e.agent_id == "vol_specialist").findings[0]
+    assert v.forecast is None and "no daily bars offline" in v.realised_unavailable_reason and v.atm_iv is not None
+    assert v.premium_points is None
+    adv = rec.sections[-1].text
+    assert "realised: unavailable" in adv and "### long_call" in adv
+    risk = next(e for e in rec.envelopes if e.agent_id == "risk_reviewer")
+    assert all(any("vol premium: unavailable" in c for c in f.checks_performed) for f in risk.findings)
+    assert not any("exceeds the realised-vol" in r for f in risk.findings for r in f.reasons)
+
+
+def test_premium_below_threshold_is_a_check_not_a_review_reason(coord, monkeypatch):
+    monkeypatch.setenv("TRADIER_SANDBOX_TOKEN", "x")
+    coord._cfg.raw["risk"] = {**coord._cfg.raw.get("risk", {}), "iv_premium_review_points": 1000}
+    rec = run_options(coord)
+    risk = next(e for e in rec.envelopes if e.agent_id == "risk_reviewer")
+    assert all(any("vol premium +" in c and "threshold 1000" in c for c in f.checks_performed) for f in risk.findings)
+    assert not any("exceeds the realised-vol" in r for f in risk.findings for r in f.reasons)

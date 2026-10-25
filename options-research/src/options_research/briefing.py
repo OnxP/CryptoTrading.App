@@ -16,6 +16,7 @@ from options_research.findings import (
     MarketSnapshotRef,
     RiskReview,
     StructureComparison,
+    VolAssessment,
 )
 from options_research.intake import ResearchRequest
 from options_research.policy.quarantine import Quarantine
@@ -162,7 +163,33 @@ def _money(x: float | None) -> str:
     return "n/a" if x is None else f"{x:+.2f}"
 
 
-def advisory_section(request: ResearchRequest, pricing: Envelope, risk: Envelope) -> BriefingSection:
+def _vol(x: float | None) -> str:
+    return "n/a" if x is None else f"{x * 100:.1f}%"
+
+
+def vol_context_lines(vol: VolAssessment | None) -> list[str]:
+    if vol is None:
+        return ["volatility context: unavailable"]
+    out = ["volatility context (descriptive only; annualised; no odds, no direction):"]
+    if vol.forecast is None:
+        out.append(f"- realised: unavailable ({vol.realised_unavailable_reason or 'no daily bars'})")
+    else:
+        out.append(f"- realised over {vol.bars_used} daily bars: close-to-close {_vol(vol.realised_close_to_close)}, Parkinson "
+                   f"{_vol(vol.realised_parkinson)}, Yang-Zhang {_vol(vol.realised_yang_zhang)}, EWMA {_vol(vol.realised_ewma)}")
+        out.append(f"- forecast {_vol(vol.forecast)} (range {_vol(vol.forecast_low)} to {_vol(vol.forecast_high)}); {vol.forecast_method}")
+    if vol.atm_iv is None:
+        out.append(f"- implied: unavailable ({vol.implied_unavailable_reason or 'no chain'})")
+    else:
+        out.append(f"- implied for {vol.expiry}: ATM IV {_vol(vol.atm_iv)} from {vol.atm_legs}; skew proxy (put minus call) "
+                   f"{_vol(vol.skew_proxy)} from {vol.skew_legs}")
+    out.append(f"- IV rank: {vol.iv_rank_reason if vol.iv_rank is None else f'{vol.iv_rank:.0f}'}")
+    if vol.premium_points is not None:
+        out.append(f"- implied minus realised forecast: {vol.premium_points:+.1f} vol points")
+    return out
+
+
+def advisory_section(request: ResearchRequest, pricing: Envelope, risk: Envelope,
+                     vol: VolAssessment | None = None) -> BriefingSection:
     """The ONLY place trade structures appear in a briefing. Always PARTIAL in M2 (no sizing).
 
     Requires a risk-review envelope: the coordinator never calls this without one.
@@ -174,6 +201,8 @@ def advisory_section(request: ResearchRequest, pricing: Envelope, risk: Envelope
         reason = "; ".join(pricing.missing_inputs) or pricing.rationale or "pricing unavailable"
         lines.append(f"THESIS-ONLY: {reason}. No option legs, prices or scenario P&L are given because no usable chain "
                      f"snapshot was available; a directional view, if any, is in the factual sections above.")
+        lines.append("")
+        lines.extend(vol_context_lines(vol))
         r = reviews.get("none")
         if r is not None:
             lines.append(f"risk review: {r.verdict.value} (expires {r.expires_at.isoformat()}): " + "; ".join(r.reasons))
@@ -185,6 +214,8 @@ def advisory_section(request: ResearchRequest, pricing: Envelope, risk: Envelope
     lines.append(f"direction input: {pricing.input_hashes.get('direction_input', 'both')}; horizon end "
                  f"{structures[0].horizon_end.isoformat() if structures and structures[0].horizon_end else 'n/a'}; "
                  f"one contract set per structure; fees {structures[0].fees_assumption if structures else 'n/a'}")
+    lines.append("")
+    lines.extend(vol_context_lines(vol))
     for s in structures:
         rv = reviews.get(s.comparison_id)
         lines.append("")
