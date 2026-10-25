@@ -1,0 +1,35 @@
+{
+ "key": "437512ca4b284215dcb6",
+ "note": "FICTIONAL expirations",
+ "received_at": "2026-10-15T20:05:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "Authorization (redacted)"
+  ],
+  "method": "GET",
+  "params": {
+   "includeAllRoots": "true",
+   "strikes": "false",
+   "symbol": "FIXT"
+  },
+  "url": "https://sandbox.tradier.com/v1/markets/options/expirations"
+ },
+ "response": {
+  "json": {
+   "expirations": {
+    "date": [
+     "2026-10-16",
+     "2026-10-23",
+     "2026-10-30",
+     "2026-11-06",
+     "2026-11-20",
+     "2026-12-18",
+     "2027-01-15"
+    ]
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

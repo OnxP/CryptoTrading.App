@@ -1,0 +1,52 @@
+{
+ "key": "4b17c5d744a18d9c1619",
+ "note": "FICTIONAL companies; shape per SEC docs",
+ "received_at": "2026-10-16T12:00:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {},
+  "url": "https://www.sec.gov/files/company_tickers_exchange.json"
+ },
+ "response": {
+  "json": {
+   "data": [
+    [
+     1000001,
+     "Fixture Semiconductors Inc",
+     "FIXT",
+     "Nasdaq"
+    ],
+    [
+     1000002,
+     "Acme Holdings Corp",
+     "ACME",
+     "NYSE"
+    ],
+    [
+     1000003,
+     "Acme Materials Ltd",
+     "ACMA",
+     "Nasdaq"
+    ],
+    [
+     1000004,
+     "Britannia Fixture plc",
+     "BRIT",
+     "OTC"
+    ]
+   ],
+   "fields": [
+    "cik",
+    "name",
+    "ticker",
+    "exchange"
+   ]
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

@@ -1,0 +1,16 @@
+{
+ "role": "pricing_specialist",
+ "prompt_version": "pricing_specialist/v1",
+ "input_hash": null,
+ "match_substring": [
+  "\"kind\": \"long_call\"",
+  "\"kind\": \"long_put\"",
+  "\"kind\": \"bull_call_debit\"",
+  "\"kind\": \"bear_put_debit\"",
+  "\"kind\": \"bull_put_credit\"",
+  "\"kind\": \"bear_call_credit\""
+ ],
+ "input_tokens": 2600,
+ "output_tokens": 700,
+ "response": "[{\"kind\": \"long_call\", \"narrative\": \"Long call FIXT261120C00110000 bought at the 8.30 ask costs 831.30 per contract set including fees; the payoff is unbounded above the 118.31 breakeven and the loss is capped at the premium. The grid shows the correct-direction +5% scenario still losing money at the horizon and at expiry, so expensive volatility can make a correct directional thesis lose money.\"}, {\"kind\": \"long_put\", \"narrative\": \"Long put FIXT261120P00110000 at the 7.34 ask risks 735.30 per contract set; gains below the 102.65 breakeven are capped only by the underlying reaching zero. A -5% move leaves every horizon cell negative, which is the expensive-volatility effect at work.\"}, {\"kind\": \"bull_call_debit\", \"narrative\": \"The 110/122.5 call debit spread (FIXT261120C00110000 long, FIXT261120C00122500 short) costs 4.80 per share, with max loss 482.60 and max gain 767.40 per contract set; breakeven 114.83. Compared with 100 shares it gives up the upside above 122.5 in exchange for a loss capped well below the share loss in the down scenarios.\"}, {\"kind\": \"bear_put_debit\", \"narrative\": \"The 110/100 put debit spread (FIXT261120P00110000 long, FIXT261120P00100000 short) costs 4.26 per share, max loss 428.60, max gain 571.40, breakeven 105.71. The -5% horizon cells are small positives while the expiry value at -5% is 73.90.\"}, {\"kind\": \"bull_put_credit\", \"narrative\": \"The 100/95 put credit spread (FIXT261120P00100000 short, FIXT261120P00095000 long) collects 1.09 per share; max gain 106.40 against max loss 393.60 per contract set, breakeven 98.94. It is flat-to-positive in the unchanged and up scenarios and loses most of its risk only below 95.\"}, {\"kind\": \"bear_call_credit\", \"narrative\": \"The 122.5/127.5 call credit spread (FIXT261120C00122500 short, FIXT261120C00127500 long) collects 0.89 per share; max gain 86.40 against max loss 413.60, breakeven 123.36. It keeps the credit in the flat and down scenarios and turns negative above about +5% at the horizon.\"}]"
+}

@@ -1,0 +1,13 @@
+{
+  "role": "evidence_verifier",
+  "prompt_version": "evidence_verifier/v1",
+  "input_hash": null,
+  "match_substring": [
+    "\"claim_id\": \"cluster:n-001\"",
+    "\"claim_id\": \"cluster:n-002\"",
+    "\"claim_id\": \"cluster:n-009\""
+  ],
+  "input_tokens": 900,
+  "output_tokens": 160,
+  "response": "[{\"claim_id\": \"cluster:n-001\", \"narrative\": \"Company statement available from one origin only; no independent corroboration by the cutoff.\"}, {\"claim_id\": \"cluster:n-002\", \"narrative\": \"The reported fall is consistent with the market snapshot's largest single-bar drop within tolerance.\"}, {\"claim_id\": \"cluster:n-009\", \"narrative\": \"Anonymous claim with no source; copies of the same post would not count as corroboration.\"}]"
+}

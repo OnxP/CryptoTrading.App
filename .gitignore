@@ -14,3 +14,8 @@ kronos-service/third_party/
 __pycache__/
 *.pyc
 .workflow/runtime/
+
+# options-research (Python)
+options-research/.venv/
+options-research/data/
+options-research/src/*.egg-info/

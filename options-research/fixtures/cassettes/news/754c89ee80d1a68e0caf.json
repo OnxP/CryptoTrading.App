@@ -1,0 +1,79 @@
+{
+ "key": "754c89ee80d1a68e0caf",
+ "note": "hand-written from Finnhub company-news documentation; replace with a live recording",
+ "received_at": "2026-10-15T18:00:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "X-Finnhub-Token (redacted)"
+  ],
+  "method": "GET",
+  "params": {
+   "from": "2026-10-08",
+   "symbol": "FIXT",
+   "to": "2026-10-15"
+  },
+  "url": "https://finnhub.io/api/v1/company-news"
+ },
+ "response": {
+  "json": [
+   {
+    "category": "company",
+    "datetime": 1791551100,
+    "headline": "FIXTURE: Fixture Semiconductors names interim CFO",
+    "id": 910001,
+    "image": "",
+    "related": "FIXT",
+    "source": "Fixture Wire",
+    "summary": "FIXTURE TEXT. The company said its treasurer will serve as interim CFO.",
+    "url": "https://news.example.com/fixt/interim-cfo?utm_source=feed&utm_medium=rss#top"
+   },
+   {
+    "category": "company",
+    "datetime": 1791553200,
+    "headline": "FIXTURE: Fixture Semiconductors names interim CFO",
+    "id": 910002,
+    "image": "",
+    "related": "FIXT",
+    "source": "Aggregator",
+    "summary": "FIXTURE TEXT. Syndicated copy of the wire story.",
+    "url": "https://News.Example.com/fixt/interim-cfo/"
+   },
+   {
+    "category": "company",
+    "datetime": 1791558000,
+    "headline": "FIXTURE: Fixture Semiconductors names interim CFO",
+    "id": 910003,
+    "image": "",
+    "related": "FIXT",
+    "source": "Paper Z",
+    "summary": "FIXTURE TEXT. Independent report with the same headline from a different outlet.",
+    "url": "https://paperz.example.org/markets/fixt-cfo"
+   },
+   {
+    "category": "company",
+    "datetime": 1790938800,
+    "headline": "FIXTURE: Fixture Semiconductors to present at autumn conference",
+    "id": 909990,
+    "image": "",
+    "related": "FIXT",
+    "source": "Fixture Semiconductors IR",
+    "summary": "FIXTURE TEXT. Management will present on 20 October.",
+    "url": "https://ir.example.com/fixt/events/autumn"
+   },
+   {
+    "category": "company",
+    "datetime": 1791883800,
+    "headline": "FIXTURE: Supplier flags slower orders from Fixture Semiconductors",
+    "id": 910010,
+    "image": "",
+    "related": "FIXT,SUPL",
+    "source": "Trade Daily",
+    "summary": "FIXTURE TEXT. A supplier said order intake from FIXT slowed in the quarter.",
+    "url": "https://tradedaily.example.net/supl-fixt-orders"
+   }
+  ],
+  "status": 200
+ },
+ "source": "docs"
+}

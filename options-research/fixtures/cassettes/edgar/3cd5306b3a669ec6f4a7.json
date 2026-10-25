@@ -1,0 +1,69 @@
+{
+ "key": "3cd5306b3a669ec6f4a7",
+ "note": "FICTIONAL filings; shape per SEC docs",
+ "received_at": "2026-10-16T12:00:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {},
+  "url": "https://data.sec.gov/submissions/CIK0001000001.json"
+ },
+ "response": {
+  "json": {
+   "cik": "1000001",
+   "entityType": "operating",
+   "exchanges": [
+    "Nasdaq"
+   ],
+   "filings": {
+    "recent": {
+     "acceptanceDateTime": [
+      "2026-10-10T21:30:00.000Z",
+      "2026-10-06T12:05:00.000Z",
+      "2026-08-05T20:10:00.000Z",
+      "2026-07-30T13:00:00.000Z"
+     ],
+     "accessionNumber": [
+      "0001000001-26-000031",
+      "0001000001-26-000030",
+      "0001000001-26-000029",
+      "0001000001-26-000028"
+     ],
+     "filingDate": [
+      "2026-10-10",
+      "2026-10-06",
+      "2026-08-05",
+      "2026-07-30"
+     ],
+     "form": [
+      "8-K",
+      "8-K",
+      "10-Q",
+      "4"
+     ],
+     "primaryDocDescription": [
+      "8-K: Departure of Directors or Certain Officers",
+      "8-K: Results of Operations and Financial Condition (preliminary Q3)",
+      "10-Q",
+      "4"
+     ],
+     "primaryDocument": [
+      "fixt-8k_20261010.htm",
+      "fixt-8k_20261006.htm",
+      "fixt-10q_20260630.htm",
+      "xslF345X05/form4.xml"
+     ]
+    }
+   },
+   "name": "Fixture Semiconductors Inc",
+   "tickers": [
+    "FIXT"
+   ]
+  },
+  "status": 200
+ },
+ "source": "docs"
+}
