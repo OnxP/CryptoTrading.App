@@ -13,8 +13,12 @@ from pathlib import Path
 
 from options_research.agents.evidence_verifier import Claim, EvidenceVerifier
 from options_research.agents.news_collector import NewsCollector
-from options_research.briefing import assemble
+from options_research.agents.pricing_specialist import PricingConfig, PricingSpecialist, direction_hint
+from options_research.agents.risk_reviewer import RiskReviewer
+from options_research.briefing import advisory_section, assemble
 from options_research.config import PROJECT_ROOT, Config, load_config
+from options_research.connectors import ReplayHttpClient
+from options_research.connectors.tradier import TradierClient
 from options_research.envelope import Envelope, Status
 from options_research.evidence import EvidenceStore
 from options_research.findings import EvidenceRef, EventCandidate, MarketSnapshotRef
@@ -28,6 +32,8 @@ from options_research.intake import (
 from options_research.ledger import ReportLedger, ReportRecord
 from options_research.market import MarketDataSpecialist, MarketDataUnavailable, MarketSnapshot
 from options_research.model import Budget, MockModelClient, ModelClient, UsageLedger
+from options_research.options import ChainUnavailable, OptionChainSnapshot, TradierChainSource
+from options_research.options.chain import nearest_expiration_at_or_after
 from options_research.policy.quarantine import Quarantine, QuarantinePolicy
 from options_research.timeutil import utc_now
 
@@ -36,12 +42,14 @@ MARKET_AGENT_ID = "market_data_specialist"
 
 class Coordinator:
     def __init__(self, config: Config, model: ModelClient, store: EvidenceStore,
-                 market: MarketDataSpecialist, lookup: FixtureInstrumentLookup, reports: ReportLedger):
+                 market: MarketDataSpecialist, lookup: FixtureInstrumentLookup, reports: ReportLedger,
+                 chain: TradierChainSource | None = None):
         self._cfg = config
         self._model = model
         self._store = store
         self._market = market
         self._reports = reports
+        self._chain = chain
         self._intake = IntakeValidator(lookup, config.news_window_days, inline_only=config.inline_only)
         self._lock = threading.Lock()  # bounded concurrency: one request at a time
 
@@ -57,8 +65,14 @@ class Coordinator:
         store = EvidenceStore(data / "evidence.jsonl")
         for p in sorted((fx / "news").glob("*.json")):
             store = EvidenceStore.load_fixture(data / "evidence.jsonl", p)
+        chain = None
+        cassettes = fx / "cassettes" / "tradier"
+        if cassettes.exists():  # replay only; the token env var still gates every call (no token -> thesis-only)
+            t = cfg.raw.get("tradier", {})
+            chain = TradierChainSource(TradierClient(ReplayHttpClient(cassettes), cfg),
+                                       float(t.get("max_quote_age_s", 900)), float(t.get("wide_spread_ratio", 0.25)))
         return cls(cfg, model, store, MarketDataSpecialist(fx / "market"),
-                   FixtureInstrumentLookup(fx / "instruments.json"), ReportLedger(data / "reports.jsonl"))
+                   FixtureInstrumentLookup(fx / "instruments.json"), ReportLedger(data / "reports.jsonl"), chain=chain)
 
     # ---- entry point -------------------------------------------------------
     def handle(self, question: str, *, requester: str = "local", as_of: datetime | None = None,
@@ -87,6 +101,9 @@ class Coordinator:
         budget = Budget(self._cfg.model.max_calls_per_request, self._cfg.model.max_tokens_per_request)
         envelopes: list[Envelope] = []
         want = set(req.requested_analyses)
+        options = Analysis.OPTIONS_STRUCTURES in want
+        if options:  # options advice always sits on top of the full factual pipeline
+            want |= {Analysis.MARKET_REACTION, Analysis.NEWS_SUMMARY, Analysis.EVIDENCE_VERIFICATION}
 
         market_env: Envelope | None = None
         snapshot: MarketSnapshot | None = None
@@ -117,7 +134,29 @@ class Coordinator:
                 [f for f in verify_env.findings if f.type == "claim_verification"])
 
         sections = assemble(req, run_id, news_env, market_env, verify_env, quarantine, metrics)
+        valid_until: datetime | None = None
+        if options:
+            chain, chain_reason = self._chain_job(req)
+            pricing_env = PricingSpecialist(self._model, PricingConfig(self._cfg.raw)).run(
+                req, chain, chain_reason, snapshot, run_id, budget, self._cfg.project_id,
+                direction=direction_hint(req.original_question))
+            envelopes.append(pricing_env)
+            events = [f for f in (news_env.findings if news_env else []) if isinstance(f, EventCandidate)]
+            risk_cfg = self._cfg.raw.get("risk", {})
+            risk_env = RiskReviewer(
+                self._model, max_chain_age_s=float(risk_cfg.get("max_chain_age_s", 3600)),
+                max_quote_age_s=float(self._cfg.raw.get("tradier", {}).get("max_quote_age_s", 900)),
+                account_limits_configured=bool(risk_cfg.get("account_limits_configured", False)),
+            ).run(pricing_env, chain, verify_env, req, run_id, budget, self._cfg.project_id, events=events,
+                  quarantine=quarantine, verification_requested=True)
+            envelopes.append(risk_env)
+            # the advisory section is appended AFTER every factual section and only with a risk-review envelope
+            sections.append(advisory_section(req, pricing_env, risk_env))
+            if pricing_env.status is Status.OK:
+                valid_until = pricing_env.valid_until  # earliest leg quote expiry (bounded) from the specialist
         status = "OK" if all(s.status == "OK" or s.section == "invalidation_conditions" for s in sections) else "PARTIAL"
+        if options:
+            status = "PARTIAL"  # no sizing while account limits are unknown
         input_hashes: dict[str, str] = {}
         for e in envelopes:
             for k, v in e.input_hashes.items():
@@ -126,9 +165,25 @@ class Coordinator:
             report_id="rep:" + uuid.uuid4().hex[:16], run_id=run_id, created_at=utc_now(),
             project_id=self._cfg.project_id, request=req, parent_report_id=parent_report_id,
             as_of=req.as_of, input_hashes=input_hashes, envelopes=envelopes, sections=sections,
-            status=status, disclosures=list(req.disclosures),
+            status=status, disclosures=list(req.disclosures), valid_until=valid_until,
         )
         return self._reports.append(record)
+
+    def _chain_job(self, req: ResearchRequest) -> tuple[OptionChainSnapshot | None, str | None]:
+        """Chain snapshot for the nearest monthly expiration at or beyond the horizon end; never fabricated."""
+        if self._chain is None:
+            return None, "no chain source configured"
+        horizon_end = req.as_of + timedelta(days=req.horizon_days or 0)
+        try:
+            exps = self._chain.expirations(req.instrument)
+            target = nearest_expiration_at_or_after(exps, horizon_end.date())
+            if target is None:
+                return None, f"no listed expiration at or beyond the horizon end {horizon_end.date().isoformat()}"
+            return self._chain.snapshot(req.instrument, target, req.as_of), None
+        except ChainUnavailable as exc:
+            return None, str(exc)
+        except LookupError as exc:  # replay miss (no cassette for that expiration): unavailable, never fabricated
+            return None, f"chain not available offline: {exc}"
 
     def _market_job(self, req: ResearchRequest, run_id: str) -> tuple[Envelope, MarketSnapshot | None]:
         base = dict(project_id=self._cfg.project_id, run_id=run_id, agent_id=MARKET_AGENT_ID, model_id="none",

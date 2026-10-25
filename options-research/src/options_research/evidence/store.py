@@ -78,12 +78,15 @@ class EvidenceStore:
         return [self._records[i] for i in self._order]
 
     def query(self, *, as_of: datetime, window_start: datetime, window_end: datetime,
-              entities: list[str] | None = None) -> QueryResult:
+              entities: list[str] | None = None, allow_backfill: bool = False) -> QueryResult:
+        """As-of query. Backfilled records are hidden unless `allow_backfill` (the caller must disclose it)."""
         as_of = require_utc(as_of)
         window_start, window_end = require_utc(window_start), require_utc(window_end)
         wanted = {e.upper() for e in (entities or [])}
 
         excluded_future: list[str] = []
+        excluded_backfill: list[str] = []
+        backfill_included: list[str] = []
         superseded_by_visible: set[str] = set()
         candidates: list[EvidenceRecord] = []
         for rec in self.all():
@@ -94,6 +97,11 @@ class EvidenceStore:
                 continue
             if not (window_start <= rec.published_at <= window_end):
                 continue
+            if rec.backfill:
+                if not allow_backfill:
+                    excluded_backfill.append(rec.id)
+                    continue
+                backfill_included.append(rec.id)
             candidates.append(rec)
         # A correction that was itself available by as_of hides its predecessor.
         for rec in candidates:
@@ -126,4 +134,6 @@ class EvidenceStore:
             clusters=cluster_models,
             excluded_future=excluded_future,
             excluded_superseded=sorted(superseded_by_visible),
+            excluded_backfill=excluded_backfill,
+            backfill_included=backfill_included,
         )

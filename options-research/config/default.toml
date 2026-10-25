@@ -33,8 +33,20 @@ wide_spread_ratio = 0.25                       # spread/mid above this is flagge
 user_agent = ""                                # REQUIRED by SEC fair-access policy: "name email"; set before use
 max_rps = 10
 
+[news]
+provider = "finnhub"                           # Finnhub company-news (header auth). Marketaux refused: query-param token.
+base_url = "https://finnhub.io/api/v1/company-news"
+key_env = "FINNHUB_API_KEY"                    # read from the environment at call time; never stored
+allow_backfill = false                         # backfilled history is hidden from as-of research unless disclosed
+live_since = ""                                # ISO instant when continuous polling began; empty = everything is backfill
+
+[risk]
+max_chain_age_s = 3600                         # chain older than this at review time -> BLOCK; also bounds verdict expiry
+account_limits_configured = false              # false -> every risk review is at least REVIEW; no sizing
+
 [pricing]
 risk_free_rate = 0.04                          # FIXTURE placeholder until a rate source is configured
 fees_per_contract = 0.65                       # FIXTURE; Robinhood charges 0 commission, exchange/regulatory fees vary
 spot_steps_pct = [-20, -15, -10, -5, 0, 5, 10, 15, 20]
 iv_shifts_rel = [-0.30, 0.0, 0.30]
+otm_pct = 0.05                                 # short-leg distance from spot for spreads (first usable strike beyond)

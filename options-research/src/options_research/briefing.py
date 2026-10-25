@@ -14,6 +14,8 @@ from options_research.findings import (
     EventCandidate,
     EvidenceRef,
     MarketSnapshotRef,
+    RiskReview,
+    StructureComparison,
 )
 from options_research.intake import ResearchRequest
 from options_research.policy.quarantine import Quarantine
@@ -149,6 +151,78 @@ def assemble(request: ResearchRequest, run_id: str, news: Envelope | None, marke
     secs.append(BriefingSection(section="next_investigations", status="OK", evidence_refs=refs,
                                 text="\n".join(dict.fromkeys(nxt)) if nxt else "None."))
     return secs
+
+
+ADVISORY_LABEL = ("ADVISORY, not a recommendation to trade; recheck quotes and risk before acting; "
+                  "quantities not calculated (account limits not configured)")
+ADVISORY_BLOCKED_REASON = "account limits not configured; quantities not calculated"
+
+
+def _money(x: float | None) -> str:
+    return "n/a" if x is None else f"{x:+.2f}"
+
+
+def advisory_section(request: ResearchRequest, pricing: Envelope, risk: Envelope) -> BriefingSection:
+    """The ONLY place trade structures appear in a briefing. Always PARTIAL in M2 (no sizing).
+
+    Requires a risk-review envelope: the coordinator never calls this without one.
+    """
+    refs = list(pricing.evidence_refs) + list(risk.evidence_refs) or _REPORT_REF("")
+    reviews = {f.comparison_id: f for f in risk.findings if isinstance(f, RiskReview)}
+    lines = [ADVISORY_LABEL, ""]
+    if pricing.status is not Status.OK:
+        reason = "; ".join(pricing.missing_inputs) or pricing.rationale or "pricing unavailable"
+        lines.append(f"THESIS-ONLY: {reason}. No option legs, prices or scenario P&L are given because no usable chain "
+                     f"snapshot was available; a directional view, if any, is in the factual sections above.")
+        r = reviews.get("none")
+        if r is not None:
+            lines.append(f"risk review: {r.verdict.value} (expires {r.expires_at.isoformat()}): " + "; ".join(r.reasons))
+        return BriefingSection(section="trade_ideas_advisory", status="PARTIAL", evidence_refs=refs,
+                               text="\n".join(lines), blocked_reason=ADVISORY_BLOCKED_REASON)
+
+    structures = [f for f in pricing.findings if isinstance(f, StructureComparison) and f.alternative == "structure"]
+    others = [f for f in pricing.findings if isinstance(f, StructureComparison) and f.alternative != "structure"]
+    lines.append(f"direction input: {pricing.input_hashes.get('direction_input', 'both')}; horizon end "
+                 f"{structures[0].horizon_end.isoformat() if structures and structures[0].horizon_end else 'n/a'}; "
+                 f"one contract set per structure; fees {structures[0].fees_assumption if structures else 'n/a'}")
+    for s in structures:
+        rv = reviews.get(s.comparison_id)
+        lines.append("")
+        lines.append(f"### {s.kind} (expresses a {s.direction} thesis; expiry {s.expiry.isoformat()} "
+                     f"{s.expiry_at.isoformat() if s.expiry_at else ''})")
+        for l in s.legs:
+            lines.append(f"- {'LONG ' if l.side > 0 else 'SHORT'} 1x {l.occ_symbol} {l.right} {l.strike:g} | bid {l.bid} ask {l.ask} "
+                         f"| quote {l.quote_time.isoformat()} | OI {l.open_interest} vol {l.volume}"
+                         + (f" | flags {l.liquidity_flags}" if l.liquidity_flags else ""))
+        kind = "credit" if (s.net_debit_per_share or 0) < 0 else "debit"
+        lines.append(f"- net {kind} {abs(s.net_debit_per_share or 0):.2f}/share = {abs(s.net_per_contract_set or 0):.2f} per set before fees {s.fees_total}")
+        lines.append(f"- contractual bounds (hold to expiry, after fees): max loss {_money(-(s.max_loss or 0))}, max gain "
+                     f"{'unbounded' if s.max_gain_unbounded else _money(s.max_gain)}, breakevens {s.breakevens}")
+        lines.append("- scenario P&L per set (spot move: at expiry | horizon end IV-30% / flat / +30% | 100 shares):")
+        for r in s.scenario_rows:
+            lines.append(f"    {r.spot_pct:+5.0f}% ({r.spot:.2f}): {_money(r.pnl_expiry):>10} | {_money(r.pnl_horizon_iv_down):>10} / "
+                         f"{_money(r.pnl_horizon_iv_flat):>10} / {_money(r.pnl_horizon_iv_up):>10} | {_money(r.underlying_long_100_pnl):>10}")
+        if s.liquidity_flags:
+            lines.append(f"- liquidity flags: {s.liquidity_flags}")
+        if s.correct_direction_loss_cells:
+            lines.append(f"- correct-direction scenarios that still lose: {s.correct_direction_loss_cells}")
+        lines.append("- caveats: " + " | ".join(s.caveats[:4]))
+        if s.note:
+            lines.append(f"- note: {s.note}")
+        if rv is None:
+            lines.append("- risk review: MISSING (treat as not reviewed)")
+        else:
+            lines.append(f"- risk review: {rv.verdict.value} (expires {rv.expires_at.isoformat()}): " + "; ".join(rv.reasons)
+                         + (f" | {rv.note}" if rv.note else ""))
+    for o in others:
+        lines.append("")
+        lines.append(f"### comparison row: {o.alternative} - {o.note}")
+        lines.append("    " + ", ".join(f"{r.spot_pct:+.0f}%: {_money(r.pnl_expiry)}" for r in o.scenario_rows))
+    if pricing.missing_inputs:
+        lines.append("")
+        lines.append("not priced / notes: " + "; ".join(pricing.missing_inputs))
+    return BriefingSection(section="trade_ideas_advisory", status="PARTIAL", evidence_refs=refs,
+                           text="\n".join(lines), blocked_reason=ADVISORY_BLOCKED_REASON)
 
 
 def _blocked(name, reason, refs) -> BriefingSection:

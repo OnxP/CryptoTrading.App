@@ -1,0 +1,14 @@
+{
+ "role": "risk_reviewer",
+ "prompt_version": "risk_reviewer/v1",
+ "input_hash": null,
+ "match_substring": [
+  "\"kind\": \"long_call\"",
+  "\"kind\": \"bull_call_debit\"",
+  "\"kind\": \"bull_put_credit\"",
+  "\"verdict\": \"REVIEW\""
+ ],
+ "input_tokens": 1400,
+ "output_tokens": 500,
+ "response": "[{\"kind\": \"long_call\", \"narrative\": \"Code found no stale leg and the expiry covers the horizon; the review flag stands because account limits are not configured, so no quantity can be sized and a human must set limits before anything is actionable.\"}, {\"kind\": \"bull_call_debit\", \"narrative\": \"Both legs were fresh at the check time and the spread expires after the horizon; review is required because account limits are not configured and any scheduled event listed in the reasons falls inside the horizon.\"}, {\"kind\": \"bull_put_credit\", \"narrative\": \"The short leg carries assignment risk noted elsewhere; the review verdict here reflects unconfigured account limits and nothing in the checks was stale.\"}]"
+}

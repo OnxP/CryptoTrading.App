@@ -38,6 +38,10 @@ class EvidenceRecord(BaseModel):
     text: str
     entities: list[str] = Field(default_factory=list)
     content_hash: str = ""
+    backfill: bool = Field(default=False, description="ingested as history, not observed live; excluded from as-of "
+                                                      "research unless explicitly allowed with a disclosure")
+    publisher_origin_key: str | None = Field(default=None, description="syndication key (canonical URL hash) from a provider")
+    title_hash: str | None = None
 
     _utc = field_validator("published_at", "first_available_at", "retrieved_at")(require_utc)
 
@@ -84,6 +88,8 @@ class QueryResult(BaseModel):
     clusters: list[SourceCluster]
     excluded_future: list[str] = Field(description="record ids first available after as_of")
     excluded_superseded: list[str] = Field(default_factory=list)
+    excluded_backfill: list[str] = Field(default_factory=list, description="backfilled records hidden from this query")
+    backfill_included: list[str] = Field(default_factory=list, description="backfilled records shown because allowed")
 
     _utc = field_validator("as_of", "window_start", "window_end")(require_utc)
 
@@ -94,4 +100,6 @@ class QueryResult(BaseModel):
             "records": sorted(r.id + ":" + r.content_hash for r in self.records),
             "excluded_future": sorted(self.excluded_future),
         }
+        if self.backfill_included:  # only changes the hash when backfill was deliberately included
+            payload["backfill_included"] = sorted(self.backfill_included)
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()

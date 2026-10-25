@@ -1,0 +1,17 @@
+{
+ "role": "risk_reviewer",
+ "prompt_version": "risk_reviewer/v1",
+ "input_hash": null,
+ "match_substring": [
+  "\"kind\": \"long_call\"",
+  "\"kind\": \"long_put\"",
+  "\"kind\": \"bull_call_debit\"",
+  "\"kind\": \"bear_put_debit\"",
+  "\"kind\": \"bull_put_credit\"",
+  "\"kind\": \"bear_call_credit\"",
+  "\"verdict\": \"REVIEW\""
+ ],
+ "input_tokens": 1400,
+ "output_tokens": 500,
+ "response": "[{\"kind\": \"long_call\", \"narrative\": \"Code found no stale leg and the expiry covers the horizon; the review flag stands because account limits are not configured, so no quantity can be sized and a human must set limits before anything is actionable.\"}, {\"kind\": \"long_put\", \"narrative\": \"Quotes were fresh and the expiry is beyond the horizon end; the structure remains under review only because account limits are not configured.\"}, {\"kind\": \"bull_call_debit\", \"narrative\": \"Both legs were fresh at the check time and the spread expires after the horizon; review is required because account limits are not configured and any scheduled event listed in the reasons falls inside the horizon.\"}, {\"kind\": \"bear_put_debit\", \"narrative\": \"No blocking check fired; the review reasons list what remains unconfigured or scheduled inside the horizon.\"}, {\"kind\": \"bull_put_credit\", \"narrative\": \"The short leg carries assignment risk noted elsewhere; the review verdict here reflects unconfigured account limits and nothing in the checks was stale.\"}, {\"kind\": \"bear_call_credit\", \"narrative\": \"Fresh quotes and an expiry beyond the horizon; review stands for unconfigured limits and any event dates listed.\"}]"
+}

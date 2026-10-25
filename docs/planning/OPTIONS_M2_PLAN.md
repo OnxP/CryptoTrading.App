@@ -1,4 +1,4 @@
-# options-research — Milestone M2 plan (planned 2026-10-16)
+# options-research — Milestone M2 plan (planned 2026-10-16; all packets COMPLETE 2026-10-25, see docs/planning/OPTIONS_M2_TEST_REPORT.md)
 
 Builds on M1 (docs/planning/OPTIONS_M1_PLAN.md, all packets complete). Process: docs/LEAN_BUILD_CONTEXT.md. Requirements: docs/CLAUDE_SETUP.md ("Pricing specialist", "Risk reviewer", "Market-data specialist", options bullets under reports/risk).
 
@@ -48,7 +48,7 @@ long call, long put, bull call debit spread, bear put debit spread, bull put cre
 ## Human steps (Ankur)
 
 - Create the Tradier developer sandbox account; set the token in an environment variable; tell me the variable name. (needed before OPT-103 can be recorded live; docs-based cassettes let 101–108 proceed regardless)
-- Choose the news API (Finnhub or Marketaux) and set its key the same way. (OPT-109)
+- ~~Choose the news API (Finnhub or Marketaux) and set its key the same way. (OPT-109)~~ DEFERRED 2026-10-25 by Ankur: live news API is a future feature. The OPT-109 connector stays in the repo behind `[news]` config, fixture/cassette only; news evidence continues to come from fixtures and EDGAR.
 - Later: account limits for sizing; model key for live agents.
 
 ## Out of M2

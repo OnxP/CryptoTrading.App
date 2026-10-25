@@ -30,9 +30,15 @@ class ReportRecord(BaseModel):
     sections: list[BriefingSection]
     status: Literal["OK", "PARTIAL"]
     disclosures: list[str] = Field(default_factory=list)
+    valid_until: datetime | None = Field(default=None, description="earliest leg quote expiry when an advisory section exists")
     content_hash: str = ""
 
     _utc = field_validator("created_at", "as_of")(require_utc)
+    _utc_opt = field_validator("valid_until")(lambda v: require_utc(v) if v is not None else v)
+
+    def is_stale(self, now: datetime) -> bool:
+        """True once the advisory content has passed its validity; a stale report is never actionable."""
+        return self.valid_until is not None and require_utc(now) > self.valid_until
 
     def compute_content_hash(self) -> str:
         """Hash of everything that should be identical across two identical runs.
@@ -49,6 +55,8 @@ class ReportRecord(BaseModel):
             "status": self.status,
             "disclosures": self.disclosures,
         }
+        if self.valid_until is not None:  # absent for M1-style reports so their hashes are unchanged
+            payload["valid_until"] = self.valid_until.isoformat()
         return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 

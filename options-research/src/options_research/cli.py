@@ -12,8 +12,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from options_research.briefing import render
+from options_research.config import load_config
 from options_research.coordinator import Coordinator
 from options_research.intake import Analysis, Clarification, IntakeError
+from options_research.ledger import ReportLedger
+from options_research.timeutil import utc_now
+
+STALE_BANNER = "STALE: this report's advisory content passed its valid_until ({valid_until}); it is not actionable."
 
 
 def _parse_dt(s: str) -> datetime:
@@ -37,11 +42,40 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--data-dir", type=Path, default=None, help="ledger directory (default from config)")
     r.add_argument("--fixtures-dir", type=Path, default=None)
     r.add_argument("--json", action="store_true", help="print the full report record as JSON")
+    s = sub.add_parser("show", help="reprint a stored report; prints STALE when its validity has passed")
+    s.add_argument("report_id")
+    s.add_argument("--data-dir", type=Path, default=None)
+    s.add_argument("--now", type=_parse_dt, default=None, help="evaluation time for staleness (default: now, UTC)")
+    s.add_argument("--json", action="store_true")
     return p
+
+
+def print_report(out, now: datetime) -> None:
+    stale = out.is_stale(now)
+    if stale:
+        print(STALE_BANNER.format(valid_until=out.valid_until.isoformat()))
+    print(render(out.sections))
+    tail = (f"report_id: {out.report_id}  status: {out.status}  as_of: {out.as_of.isoformat()}  "
+            f"content_hash: {out.content_hash[:16]}")
+    if out.valid_until is not None:
+        tail += f"  valid_until: {out.valid_until.isoformat()}" + ("  [STALE, not actionable]" if stale else "")
+    print(tail)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.cmd == "show":
+        data_dir = args.data_dir or load_config().ledger_dir
+        try:
+            rec = ReportLedger(data_dir / "reports.jsonl").get(args.report_id)
+        except KeyError:
+            print(f"NOT FOUND: {args.report_id}", file=sys.stderr)
+            return 4
+        if args.json:
+            print(rec.model_dump_json(indent=1))
+        else:
+            print_report(rec, args.now or utc_now())
+        return 0
     coord = Coordinator.offline(fixtures_dir=args.fixtures_dir, data_dir=args.data_dir)
     try:
         out = coord.handle(
@@ -61,9 +95,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(out.model_dump_json(indent=1))
     else:
-        print(render(out.sections))
-        print(f"report_id: {out.report_id}  status: {out.status}  as_of: {out.as_of.isoformat()}  "
-              f"content_hash: {out.content_hash[:16]}")
+        print_report(out, utc_now())
     return 0
 
 

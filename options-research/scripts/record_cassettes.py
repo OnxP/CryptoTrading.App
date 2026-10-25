@@ -55,8 +55,16 @@ def main(argv=None) -> int:
             if ins:
                 ec.submissions(ins[0].symbol)
     else:
-        print("news provider not configured yet (OPT-109)")
-        return 2
+        from datetime import date, timedelta
+
+        from options_research.connectors.news_api import NewsApiClient
+        nc = NewsApiClient(client, cfg)
+        key_env = cfg.raw.get("news", {}).get("key_env", "FINNHUB_API_KEY")
+        if not os.environ.get(key_env):
+            print(f"{key_env} is not set; refusing to record.")
+            return 2
+        sym = args.symbol or "SPY"
+        nc.company_news(sym, date.today() - timedelta(days=7), date.today())
     print(f"recorded into {out}")
     return 0
 
