@@ -21,7 +21,7 @@ from options_research.connectors.http import HttpxClient  # noqa: E402
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--provider", choices=["tradier", "edgar", "news"], required=True)
+    p.add_argument("--provider", choices=["tradier", "edgar", "news", "yahoo"], required=True)
     p.add_argument("--record", action="store_true", help="actually perform live calls")
     p.add_argument("--symbol", default=None)
     args = p.parse_args(argv)
@@ -46,6 +46,12 @@ def main(argv=None) -> int:
         exps = tc.expirations(sym)
         if exps:
             tc.chain(sym, exps[0])
+    elif args.provider == "yahoo":  # no token: public endpoints; the crumb/cookie are never stored
+        from options_research.connectors.yahoo import YahooClient
+        yc = YahooClient(client, cfg)
+        yc.chart(args.symbol or "SPY")
+        yc.screen_low_priced_by_volume(10.0, 1.0, 5)
+        yc.profile(args.symbol or "SPY")
     elif args.provider == "edgar":
         from options_research.connectors.edgar import EdgarClient
         ec = EdgarClient(client, cfg)

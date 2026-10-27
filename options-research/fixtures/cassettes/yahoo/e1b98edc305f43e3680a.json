@@ -1,0 +1,31 @@
+{
+ "key": "e1b98edc305f43e3680a",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {
+   "events": "div,splits",
+   "interval": "1d",
+   "range": "3y"
+  },
+  "url": "https://query2.finance.yahoo.com/v8/finance/chart/NOPE"
+ },
+ "response": {
+  "json": {
+   "chart": {
+    "error": {
+     "code": "Not Found",
+     "description": "No data found, symbol may be delisted"
+    },
+    "result": null
+   }
+  },
+  "status": 404
+ },
+ "source": "docs"
+}

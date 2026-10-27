@@ -1,0 +1,21 @@
+{
+ "key": "9aaae21220376bc24beb",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {},
+  "url": "https://fc.yahoo.com"
+ },
+ "response": {
+  "json": {
+   "_non_json_body": "<html>fixture cookie page</html>"
+  },
+  "status": 404
+ },
+ "source": "docs"
+}

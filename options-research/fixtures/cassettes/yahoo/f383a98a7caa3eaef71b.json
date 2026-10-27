@@ -1,0 +1,63 @@
+{
+ "key": "f383a98a7caa3eaef71b",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {
+   "crumb": "(volatile, redacted)",
+   "modules": "assetProfile,price"
+  },
+  "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/FIXT"
+ },
+ "response": {
+  "json": {
+   "quoteSummary": {
+    "error": null,
+    "result": [
+     {
+      "assetProfile": {
+       "country": "United States",
+       "industry": "Semiconductors",
+       "longBusinessSummary": "FIXTURE company.",
+       "sector": "Technology"
+      },
+      "price": {
+       "averageDailyVolume3Month": {
+        "fmt": "41000000",
+        "raw": 41000000
+       },
+       "exchange": "NMS",
+       "longName": "Fixture Semiconductors Inc (fixture)",
+       "marketCap": {
+        "fmt": "2568000000",
+        "raw": 2568000000
+       },
+       "quoteType": "EQUITY",
+       "regularMarketPrice": {
+        "fmt": "6.42",
+        "raw": 6.42
+       },
+       "regularMarketTime": {
+        "fmt": "1792094400",
+        "raw": 1792094400
+       },
+       "regularMarketVolume": {
+        "fmt": "48000000",
+        "raw": 48000000
+       },
+       "shortName": "Fixture Semiconductors Inc",
+       "symbol": "FIXT"
+      }
+     }
+    ]
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

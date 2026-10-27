@@ -1,0 +1,63 @@
+{
+ "key": "fca252e17cf4508ec8f1",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {
+   "crumb": "(volatile, redacted)",
+   "modules": "assetProfile,price"
+  },
+  "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/NEWB"
+ },
+ "response": {
+  "json": {
+   "quoteSummary": {
+    "error": null,
+    "result": [
+     {
+      "assetProfile": {
+       "country": "United States",
+       "industry": "Biotechnology",
+       "longBusinessSummary": "FIXTURE company.",
+       "sector": "Healthcare"
+      },
+      "price": {
+       "averageDailyVolume3Month": {
+        "fmt": "17000000",
+        "raw": 17000000
+       },
+       "exchange": "NMS",
+       "longName": "Newborn Listings Corp (fixture)",
+       "marketCap": {
+        "fmt": "819999999",
+        "raw": 819999999
+       },
+       "quoteType": "EQUITY",
+       "regularMarketPrice": {
+        "fmt": "2.05",
+        "raw": 2.05
+       },
+       "regularMarketTime": {
+        "fmt": "1792094400",
+        "raw": 1792094400
+       },
+       "regularMarketVolume": {
+        "fmt": "19000000",
+        "raw": 19000000
+       },
+       "shortName": "Newborn Listings Corp",
+       "symbol": "NEWB"
+      }
+     }
+    ]
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

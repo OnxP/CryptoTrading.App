@@ -1,0 +1,115 @@
+{
+ "key": "626b9aea189dd2324c13",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "POST",
+  "params": {
+   "crumb": "(volatile, redacted)",
+   "formatted": "false",
+   "lang": "en-US",
+   "region": "US"
+  },
+  "url": "https://query2.finance.yahoo.com/v1/finance/screener"
+ },
+ "response": {
+  "json": {
+   "finance": {
+    "error": null,
+    "result": [
+     {
+      "count": 4,
+      "id": "fixture",
+      "quotes": [
+       {
+        "averageDailyVolume10Day": 41000000,
+        "averageDailyVolume3Month": 41000000,
+        "currency": "USD",
+        "exchange": "NMS",
+        "fiftyTwoWeekRange": "3.21 - 11.56",
+        "fullExchangeName": "NasdaqGS",
+        "longName": "Fixture Semiconductors Inc (fixture)",
+        "marketCap": 2568000000,
+        "marketState": "CLOSED",
+        "quoteType": "EQUITY",
+        "region": "US",
+        "regularMarketChangePercent": 1.25,
+        "regularMarketPrice": 6.42,
+        "regularMarketTime": 1792094400,
+        "regularMarketVolume": 48000000,
+        "shortName": "Fixture Semiconductors Inc",
+        "symbol": "FIXT"
+       },
+       {
+        "averageDailyVolume10Day": 22000000,
+        "averageDailyVolume3Month": 22000000,
+        "currency": "USD",
+        "exchange": "NYQ",
+        "fiftyTwoWeekRange": "1.58 - 5.71",
+        "fullExchangeName": "NYSE",
+        "longName": "Acme Holdings (fixture)",
+        "marketCap": 1268000000,
+        "marketState": "CLOSED",
+        "quoteType": "EQUITY",
+        "region": "US",
+        "regularMarketChangePercent": 1.25,
+        "regularMarketPrice": 3.17,
+        "regularMarketTime": 1792094400,
+        "regularMarketVolume": 31000000,
+        "shortName": "Acme Holdings",
+        "symbol": "ACME"
+       },
+       {
+        "averageDailyVolume10Day": 17000000,
+        "averageDailyVolume3Month": 17000000,
+        "currency": "USD",
+        "exchange": "NMS",
+        "fiftyTwoWeekRange": "1.02 - 3.69",
+        "fullExchangeName": "NasdaqGS",
+        "longName": "Newborn Listings Corp (fixture)",
+        "marketCap": 819999999,
+        "marketState": "CLOSED",
+        "quoteType": "EQUITY",
+        "region": "US",
+        "regularMarketChangePercent": 1.25,
+        "regularMarketPrice": 2.05,
+        "regularMarketTime": 1792094400,
+        "regularMarketVolume": 19000000,
+        "shortName": "Newborn Listings Corp",
+        "symbol": "NEWB"
+       },
+       {
+        "averageDailyVolume10Day": 9000000,
+        "averageDailyVolume3Month": 9000000,
+        "currency": "USD",
+        "exchange": "ASE",
+        "fiftyTwoWeekRange": "0.70 - 2.52",
+        "fullExchangeName": "NYSE",
+        "longName": "Delisted Example (fixture)",
+        "marketCap": 560000000,
+        "marketState": "CLOSED",
+        "quoteType": "EQUITY",
+        "region": "US",
+        "regularMarketChangePercent": 1.25,
+        "regularMarketPrice": 1.4,
+        "regularMarketTime": 1792094400,
+        "regularMarketVolume": 12000000,
+        "shortName": "Delisted Example",
+        "symbol": "NOPE"
+       }
+      ],
+      "start": 0,
+      "title": "fixture screen",
+      "total": 937
+     }
+    ]
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

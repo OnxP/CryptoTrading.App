@@ -1,0 +1,63 @@
+{
+ "key": "ede1fbbde5db44a6c2f7",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {
+   "crumb": "(volatile, redacted)",
+   "modules": "assetProfile,price"
+  },
+  "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/ACME"
+ },
+ "response": {
+  "json": {
+   "quoteSummary": {
+    "error": null,
+    "result": [
+     {
+      "assetProfile": {
+       "country": "United States",
+       "industry": "Specialty Industrial Machinery",
+       "longBusinessSummary": "FIXTURE company.",
+       "sector": "Industrials"
+      },
+      "price": {
+       "averageDailyVolume3Month": {
+        "fmt": "22000000",
+        "raw": 22000000
+       },
+       "exchange": "NYQ",
+       "longName": "Acme Holdings (fixture)",
+       "marketCap": {
+        "fmt": "1268000000",
+        "raw": 1268000000
+       },
+       "quoteType": "EQUITY",
+       "regularMarketPrice": {
+        "fmt": "3.17",
+        "raw": 3.17
+       },
+       "regularMarketTime": {
+        "fmt": "1792094400",
+        "raw": 1792094400
+       },
+       "regularMarketVolume": {
+        "fmt": "31000000",
+        "raw": 31000000
+       },
+       "shortName": "Acme Holdings",
+       "symbol": "ACME"
+      }
+     }
+    ]
+   }
+  },
+  "status": 200
+ },
+ "source": "docs"
+}

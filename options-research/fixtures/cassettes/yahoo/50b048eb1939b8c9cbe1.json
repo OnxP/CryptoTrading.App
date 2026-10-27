@@ -1,0 +1,21 @@
+{
+ "key": "50b048eb1939b8c9cbe1",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {},
+  "url": "https://query2.finance.yahoo.com/v1/test/getcrumb"
+ },
+ "response": {
+  "json": {
+   "_non_json_body": "FIXTURECRUMB"
+  },
+  "status": 200
+ },
+ "source": "docs"
+}
