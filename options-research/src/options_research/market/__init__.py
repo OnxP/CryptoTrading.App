@@ -11,9 +11,10 @@ from options_research.market.sources import (
     FixtureBarSource,
     MarketDataUnavailable,
     TradierBarSource,
+    YahooBarSource,
 )
 
 __all__ = [
     "Bar", "BarBatch", "BarSource", "CalculationReceipt", "FixtureBarSource", "MarketDataSpecialist",
-    "MarketDataUnavailable", "MarketSnapshot", "QualityFailure", "TradierBarSource",
+    "MarketDataUnavailable", "MarketSnapshot", "QualityFailure", "TradierBarSource", "YahooBarSource",
 ]

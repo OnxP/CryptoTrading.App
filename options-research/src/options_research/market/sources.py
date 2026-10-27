@@ -102,3 +102,47 @@ class TradierBarSource:
         disc = "Tradier sandbox data is delayed; freshness reflects the vendor's last update, not the market" \
             if self._c.is_sandbox else None
         return BarBatch(bars=bars, source_label=label, sessions=sessions, delay_disclosure=disc)
+
+
+class YahooBarSource:
+    """Daily bars from the Yahoo chart endpoint (split-adjusted OHLC, exchange-local sessions)."""
+
+    def __init__(self, client, chart_range: str | None = None, now=None):
+        from options_research.connectors.yahoo import YahooClient, YahooError  # local to keep import light
+        from options_research.timeutil import utc_now
+
+        self._c: YahooClient = client
+        self._err = YahooError
+        self._range = chart_range or client.chart_range
+        self._now = now or utc_now
+
+    def daily(self, symbol: str) -> list[Bar]:
+        """Complete daily bars only: a session still open at call time is dropped (Yahoo includes it)."""
+        try:
+            rows, meta = self._c.chart(symbol, range_=self._range, interval="1d")
+        except self._err as exc:
+            raise MarketDataUnavailable(f"Yahoo error: {exc}") from exc
+        if not rows:
+            raise MarketDataUnavailable(f"Yahoo returned no daily bars for {symbol} ({self._range})")
+        tz = ZoneInfo(str(meta.get("exchangeTimezoneName") or "America/New_York"))
+        bars: list[Bar] = []
+        for r in rows:
+            d = r["time"].astimezone(tz).date()
+            if tz.key == "America/New_York":
+                o, c = ny_session_bounds(d)
+            else:
+                o = datetime.combine(d, time(0, 0), tzinfo=tz).astimezone(timezone.utc)
+                c = o + timedelta(hours=24)
+            bars.append(Bar(open_time=o, close_time=c, open=r["open"], high=r["high"], low=r["low"], close=r["close"],
+                            volume=r["volume"]))
+        now = self._now()
+        return [b for b in bars if b.close_time <= now]
+
+    def load(self, instrument: Instrument, interval: str, start: datetime, end: datetime) -> BarBatch:
+        if interval != "1d":
+            raise MarketDataUnavailable(f"interval {interval} not supported by Yahoo source")
+        bars = [b for b in self.daily(instrument.symbol) if start <= b.open_time and b.close_time <= end]
+        if not bars:
+            raise MarketDataUnavailable(f"Yahoo returned no bars for {instrument.symbol} in {start.date()}..{end.date()}")
+        return BarBatch(bars=bars, source_label=f"YAHOO:{instrument.symbol}:1d",
+                        delay_disclosure="Yahoo Finance public data is unofficial and may be delayed")

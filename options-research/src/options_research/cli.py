@@ -47,6 +47,19 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--data-dir", type=Path, default=None)
     s.add_argument("--now", type=_parse_dt, default=None, help="evaluation time for staleness (default: now, UTC)")
     s.add_argument("--json", action="store_true")
+    sc = sub.add_parser("screen", help="low-priced, high-volume US equities with a per-symbol HMM regime (Yahoo, live)")
+    sc.add_argument("--max-price", type=float, default=None)
+    sc.add_argument("--min-price", type=float, default=None)
+    sc.add_argument("--top", type=int, default=None, help="number of symbols (1..250)")
+    sc.add_argument("--symbols", default=None, help="comma-separated watchlist instead of the screener (no price filter)")
+    sc.add_argument("--benchmark", default=None, help="market symbol shown first (default SPY; '' to skip)")
+    sc.add_argument("--range", dest="chart_range", default=None, help="Yahoo chart range, e.g. 3y, 5y")
+    sc.add_argument("--replay-dir", type=Path, default=None, help="serve Yahoo responses from cassettes; no network")
+    sc.add_argument("--record-dir", type=Path, default=None, help="record live Yahoo responses as cassettes")
+    sc.add_argument("--data-dir", type=Path, default=None)
+    sc.add_argument("--detail", action="store_true", help="print each symbol's regime descriptions")
+    sc.add_argument("--json", action="store_true")
+    sc.add_argument("--quiet", action="store_true", help="no progress on stderr")
     return p
 
 
@@ -62,8 +75,38 @@ def print_report(out, now: datetime) -> None:
     print(tail)
 
 
+def run_screen_cmd(args) -> int:
+    from options_research.connectors import NoCassette, RecordingHttpClient, ReplayHttpClient
+    from options_research.connectors.yahoo import YahooClient, YahooError
+    from options_research.regime import ScreenLedger, render_screen, run_screen
+    from options_research.regime.screen import to_json
+
+    cfg = load_config()
+    if args.replay_dir is not None:
+        http = ReplayHttpClient(args.replay_dir)
+    else:
+        from options_research.connectors.http import HttpxClient
+
+        http = HttpxClient()
+        if args.record_dir is not None:
+            http = RecordingHttpClient(http, args.record_dir, source="live")
+    progress = (lambda m: None) if args.quiet else (lambda m: print(m, file=sys.stderr, flush=True))
+    try:
+        rec = run_screen(YahooClient(http, cfg), cfg, max_price=args.max_price, min_price=args.min_price, top=args.top,
+                         benchmark=args.benchmark, chart_range=args.chart_range, progress=progress,
+                         symbols=args.symbols.split(",") if args.symbols else None)
+    except (YahooError, NoCassette, ValueError) as exc:
+        print(f"UNAVAILABLE: {exc}", file=sys.stderr)
+        return 5
+    ScreenLedger((args.data_dir or cfg.ledger_dir) / "screens.jsonl").append(rec)
+    print(to_json(rec) if args.json else render_screen(rec, detail=args.detail))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.cmd == "screen":
+        return run_screen_cmd(args)
     if args.cmd == "show":
         data_dir = args.data_dir or load_config().ledger_dir
         try:

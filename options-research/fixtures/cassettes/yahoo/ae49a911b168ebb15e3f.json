@@ -1,0 +1,30 @@
+{
+ "key": "ae49a911b168ebb15e3f",
+ "note": "FIXTURE: synthetic regime-switching bars, docs-shaped response; no real quotes",
+ "received_at": "2026-10-15T20:30:00+00:00",
+ "request": {
+  "header_names": [
+   "Accept",
+   "User-Agent"
+  ],
+  "method": "GET",
+  "params": {
+   "crumb": "(volatile, redacted)",
+   "modules": "assetProfile,price"
+  },
+  "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/NOPE"
+ },
+ "response": {
+  "json": {
+   "quoteSummary": {
+    "error": {
+     "code": "Not Found",
+     "description": "Quote not found for symbol: NOPE"
+    },
+    "result": null
+   }
+  },
+  "status": 404
+ },
+ "source": "docs"
+}

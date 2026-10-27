@@ -51,3 +51,37 @@ fees_per_contract = 0.65                       # FIXTURE; Robinhood charges 0 co
 spot_steps_pct = [-20, -15, -10, -5, 0, 5, 10, 15, 20]
 iv_shifts_rel = [-0.30, 0.0, 0.30]
 otm_pct = 0.05                                 # short-leg distance from spot for spreads (first usable strike beyond)
+
+[yahoo]
+# Yahoo Finance public chart/screener endpoints (unofficial, no key). Research use only; data may be delayed/adjusted.
+base_url = "https://query2.finance.yahoo.com"
+cookie_url = "https://fc.yahoo.com"                # sets the session cookie the screener crumb is bound to
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+chart_range = "3y"                                 # daily candles pulled per symbol for regime fitting
+region = "us"
+exchanges = ["NMS", "NYQ", "ASE"]                  # Nasdaq, NYSE, NYSE American (Yahoo exchange codes)
+max_rps = 4
+
+[regime]
+states = 3                                         # Gaussian HMM states over (log return, relative volume, log range)
+restarts = 3                                       # seeded EM restarts; best log-likelihood wins
+seed = 7
+max_iter = 150
+tol = 1e-4
+min_bars = 120                                     # fewer complete daily bars -> regime unavailable, never guessed
+volume_median_days = 20                            # relative-volume baseline window
+feature_window = 5                                 # trailing-day mean of each feature: a state describes a stretch, not a day
+sticky_prior = 20.0                                # pseudo-count on self-transitions (MAP): regimes persist for weeks, not days
+trend_threshold_pct = 0.05                         # mean daily return beyond +/- this (percent/day) -> BULL / BEAR, else FLAT
+weak_posterior = 0.70                              # P(current regime) below this -> WEAKENING
+drift_days = 5
+drift_threshold = -0.25                            # P(current) fell by more than this over drift_days -> WEAKENING
+fresh_days = 3                                     # a transition this recent -> FRESH turning point
+overdue_ratio = 1.5                                # run length above this x expected duration -> OVERDUE note
+
+[screen]
+max_price = 10.0                                   # "low priced": below this
+min_price = 1.0                                    # sub-dollar names excluded (listing-standard risk)
+top = 50
+sort_field = "dayvolume"
+benchmark = "SPY"                                  # market regime shown first
